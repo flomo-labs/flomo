@@ -1,0 +1,17 @@
+# Padrão: texto em LF no repositório e na pasta de trabalho
+* text=auto eol=lf
+
+# Scripts de shell precisam de LF (quebram no Linux/Docker/CI com CRLF)
+*.sh text eol=lf
+
+# Scripts do Windows precisam de CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binários: o Git não deve tocar neles
+*.ico binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
