@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm build *)",
+      "Bash(git --no-pager *)",
+      "Bash(git status *)",
+      "Bash(gh pr view *)",
+      "PowerShell(pnpm lint *)",
+      "PowerShell(pnpm typecheck *)",
+      "PowerShell(pnpm test *)",
+      "PowerShell(pnpm build *)",
+      "PowerShell(git --no-pager *)",
+      "PowerShell(git status *)",
+      "PowerShell(gh pr view *)"
+    ],
+    "ask": [
+      "Bash(pnpm db:migrate *)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "PowerShell(pnpm db:migrate *)",
+      "PowerShell(git push *)",
+      "PowerShell(gh pr create *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git rebase *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f *)",
+      "PowerShell(git rebase *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/lint-edited.mjs"]
+          }
+        ]
+      }
+    ]
+  }
+}
