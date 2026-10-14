@@ -10,5 +10,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.{test,spec}.ts"],
+    // Testes contra o banco rodam com `pnpm test:integration`.
+    exclude: ["src/**/*.integration.test.ts"],
   },
 });
