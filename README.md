@@ -26,7 +26,14 @@ Estilo: monólito modular com casos de uso em `domain/`; a API `/api/v1` é uma 
 1. Pré-requisitos: Node 22 LTS e pnpm 10 (`npm install -g pnpm@10`)
 2. Copie `.env.example` para `.env.local` e preencha as variáveis (`Copy-Item .env.example .env.local` no PowerShell, `cp .env.example .env.local` no Linux/macOS)
 3. `pnpm install`
-4. `pnpm dev`
+4. `pnpm db:migrate` para aplicar as migrations no seu projeto Supabase de desenvolvimento
+5. `pnpm dev`
+
+### Banco de dados
+
+- Schema em `src/infra/db/schema/`, migrations em `drizzle/`. SQL que o Drizzle não modela (funções, triggers) entra em migration escrita à mão: `pnpm db:generate --custom --name=descricao`.
+- Mudou o schema: `pnpm db:generate`, revise o SQL gerado e só então `pnpm db:migrate`.
+- `pnpm test:integration` testa policies e triggers contra o banco do `.env.local`; cada teste é desfeito no fim e não grava nada.
 
 ### Variáveis de ambiente
 

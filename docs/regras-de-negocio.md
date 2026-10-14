@@ -21,13 +21,13 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 
 ## Perfil e identidade
 
-- **Handle:** 5 a 20 caracteres; letras minúsculas, números, `_` e `.`; começa e termina com letra ou número; sem dois separadores seguidos. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
-- **Unicidade do handle:** ignora `.` e `_` (`renato.silva`, `renato_silva` e `renatosilva` são o mesmo para fins de unicidade). O dono pode trocar entre as variações do próprio handle. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
-- **Nomes reservados:** handles como `api`, `admin`, `login` e `em-breve` não podem ser escolhidos, nem handles com o prefixo `u_`. _(prevista: `contracts/`)_
-- **Handle provisório:** todo usuário nasce com `u_` + 12 caracteres e escolhe o definitivo no primeiro acesso. [ADR-003, seção 7](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
+- **Handle:** 5 a 20 caracteres; letras minúsculas, números, `_` e `.`; começa e termina com letra ou número; sem dois separadores seguidos. Maiúsculas digitadas viram minúsculas. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/contracts/profile.ts`](../src/contracts/profile.ts), `CHECK` em [`drizzle/0001_profiles.sql`](../drizzle/0001_profiles.sql)
+- **Unicidade do handle:** ignora `.` e `_` (`renato.silva`, `renato_silva` e `renatosilva` são o mesmo para fins de unicidade). O dono pode trocar entre as variações do próprio handle. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), índice único em [`drizzle/0001_profiles.sql`](../drizzle/0001_profiles.sql)
+- **Nomes reservados:** handles como `admin`, `login` e `embreve` (comparados sem `.` e `_`) não podem ser escolhidos, nem handles com o prefixo `u_`. [`src/contracts/profile.ts`](../src/contracts/profile.ts)
+- **Handle provisório:** todo usuário nasce com `u_` + 12 caracteres e escolhe o definitivo no primeiro acesso. [ADR-003, seção 7](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), trigger em [`drizzle/0002_profiles_triggers.sql`](../drizzle/0002_profiles_triggers.sql)
 - **Troca de handle:** permitida a qualquer momento, se o novo estiver livre. O antigo fica livre na hora; links antigos param de funcionar. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 - **Padrões do perfil:** país `BR`, fuso `America/Sao_Paulo`, idioma `pt-BR`, perfil público. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
-- **Visibilidade:** perfil privado só é visto pelo dono. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
+- **Visibilidade:** perfil privado só é visto pelo dono. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), policies em [`src/infra/db/schema/profiles.ts`](../src/infra/db/schema/profiles.ts)
 - **Idade:** durante o TCC e o beta fechado, uso só por maiores de 18 anos. _(prevista: termos de uso)_
 
 ## Avaliações
