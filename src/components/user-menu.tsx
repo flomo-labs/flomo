@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -22,13 +23,18 @@ export function UserMenu({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger aria-label="Menu da conta">
+      <DropdownMenuTrigger
+        aria-label="Menu da conta"
+        className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
         <Avatar>
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>{label}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" sideOffset={8} className="w-auto min-w-44">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{label}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuItem render={<Link href="/configuracoes" />}>
           Configurações
         </DropdownMenuItem>
