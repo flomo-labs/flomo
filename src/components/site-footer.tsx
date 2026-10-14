@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 const LINKS = [
@@ -26,23 +25,7 @@ export function SiteFooter() {
             ))}
           </ul>
         </nav>
-        <div className="flex items-center gap-4">
-          <a
-            href="https://www.themoviedb.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="TMDB"
-          >
-            <Image
-              src="/tmdb/alt-short-blue.svg"
-              alt="Logo do TMDB"
-              width={123}
-              height={16}
-              unoptimized
-            />
-          </a>
-          <p>© Flomo</p>
-        </div>
+        <p>© Flomo</p>
       </div>
     </footer>
   );
