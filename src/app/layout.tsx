@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
-import "./globals.css";
 import { cn } from "@/lib/utils";
+import "./globals.css";
 
-const inter = Inter({subsets:['latin'],variable:'--font-inter'});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -25,7 +23,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
-      className={cn("h-full", "antialiased", "dark", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
+      className={cn(
+        "h-full antialiased dark font-sans",
+        inter.variable,
+        geistMono.variable,
+      )}
     >
       <body className="min-h-full flex flex-col">
         {children}

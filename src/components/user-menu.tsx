@@ -15,10 +15,12 @@ import {
 export function UserMenu({
   label,
   initials,
+  needsHandle,
   signOut,
 }: {
   label: string;
   initials: string;
+  needsHandle: boolean;
   signOut: () => Promise<void>;
 }) {
   return (
@@ -39,6 +41,11 @@ export function UserMenu({
         <DropdownMenuGroup>
           <DropdownMenuLabel>{label}</DropdownMenuLabel>
         </DropdownMenuGroup>
+        {needsHandle ? (
+          <DropdownMenuItem render={<Link href="/cadastro" />}>
+            Escolher nome de usuário
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem render={<Link href="/configuracoes" />}>
           Configurações
         </DropdownMenuItem>

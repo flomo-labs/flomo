@@ -87,8 +87,9 @@ export default function TermosPage() {
       <ProseSection title="Mudanças e contato">
         <p>
           Podemos atualizar estes termos; a data no topo mostra a versão em
-          vigor, e mudanças relevantes serão avisadas no app. Estes termos
-          seguem a lei brasileira. Dúvidas: <ContactInfo />.
+          vigor, e passaremos a exigir novo aceite quando a mudança for
+          relevante. Estes termos seguem a lei brasileira. Dúvidas:{" "}
+          <ContactInfo />.
         </p>
       </ProseSection>
     </Prose>
