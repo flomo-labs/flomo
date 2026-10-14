@@ -32,4 +32,18 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+
+      # Schema do Drizzle sem migration gerada, ou migrations inconsistentes.
+      # Não conecta no banco: a URL só satisfaz o drizzle.config.ts.
+      - name: Migrations em dia com o schema
+        env:
+          DATABASE_URL_MIGRATIONS: postgres://ci:ci@localhost:5432/ci
+        run: |
+          pnpm exec drizzle-kit check
+          pnpm db:generate
+          if [ -n "$(git status --porcelain drizzle)" ]; then
+            echo "::error::O schema mudou sem migration. Rode pnpm db:generate e commite a pasta drizzle/."
+            git status --porcelain drizzle
+            exit 1
+          fi
       - run: pnpm build
