@@ -1,5 +1,13 @@
 # Fase 0: checklist de bootstrap
 
+> **Histórico.** Este checklist guiou o PR 1 e está desatualizado nos pontos abaixo. Não siga as partes marcadas; vale o que está no `AGENTS.md`, nos ADRs e no README.
+>
+> - Merge: sempre "Create a merge commit", nunca *Squash and merge*.
+> - O job do CI se chama `verify` (é o check obrigatório da `main`), não `check`.
+> - O repositório é público e a `main` é protegida por ruleset; a Etapa 9 foi escrita para repositório privado.
+> - PR 2 e PR 3: chaves, conexões, `profiles`, policies e criação de perfil seguem o ADR-003 (chaves `publishable`/`secret`, duas URLs de banco, policies com `app.current_user_id()`, perfil criado por trigger, e não no callback). Não chamar `.enableRLS()` à parte.
+> - A API `/api/v1` segue o ADR-004.
+
 Objetivo: login com Google funcionando localmente, banco com a primeira migration e CI verde. O deploy depende de uma decisão sobre a Vercel (ver Etapa 9).
 
 **Regra de trabalho:** a partir daqui, nada de push direto na `main`. Cada bloco abaixo é um PR pequeno, revisado pela outra pessoa, com as labels `mvp` ou `spike`.

@@ -8,14 +8,16 @@ Media tracker social brasileiro: acompanhe filmes, séries e outros tipos de mí
 
 - [`docs/ARQUITETURA-v1.6-stats-discovery.md`](docs/ARQUITETURA-v1.6-stats-discovery.md): estatísticas, Explorar e referências de produto
 - [`docs/adr/`](docs/adr/): decisões arquiteturais (ADRs curtos)
-- [`docs/fase-0-checklist.md`](docs/fase-0-checklist.md): checklist de bootstrap da Fase 0
+- [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md): regras de negócio e onde cada uma é garantida
+- [`docs/troca-de-ferramentas.md`](docs/troca-de-ferramentas.md): onde cada ferramenta está acoplada e como trocá-la
+- [`docs/fase-0-checklist.md`](docs/fase-0-checklist.md): checklist original da Fase 0 (histórico; ver o aviso no topo)
 - [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md): atribuições de terceiros
 
 ## Stack
 
-TypeScript · Next.js (App Router) · shadcn/ui + Tailwind · Supabase (Postgres, Auth Google, Storage) · Drizzle · Zod · Vercel · TMDB (server-side)
+TypeScript · Next.js (App Router) · shadcn/ui + Tailwind · Supabase (Postgres, Auth Google, Storage) · Drizzle + postgres.js · Zod · Vercel · TMDB (server-side)
 
-Estilo: monólito modular, API-first (`/api/v1`). O domínio (`domain/`) nunca importa `next` nem `react`.
+Estilo: monólito modular com casos de uso em `domain/`; a API `/api/v1` é uma camada fina sobre eles e nasce junto com o app mobile ([ADR-004](docs/adr/ADR-004-casos-de-uso-primeiro.md)). O domínio nunca importa `next` nem `react`. Dados de usuário passam pelo RLS do Postgres ([ADR-003](docs/adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)).
 
 ## Como rodar localmente
 
@@ -28,7 +30,7 @@ Estilo: monólito modular, API-first (`/api/v1`). O domínio (`domain/`) nunca i
 
 ### Variáveis de ambiente
 
-Veja `.env.example`. Nunca commitar secrets. Chaves server-only (TMDB, service role do Supabase) jamais usam o prefixo `NEXT_PUBLIC_`.
+Veja `.env.example`. Nunca commitar secrets. Chaves server-only (TMDB, chave secreta do Supabase) jamais usam o prefixo `NEXT_PUBLIC_`.
 
 ## Performance budgets (MVP)
 
@@ -41,7 +43,7 @@ Veja `.env.example`. Nunca commitar secrets. Chaves server-only (TMDB, service r
 
 ## Fluxo de trabalho
 
-- Nunca fazer push direto na `main`: toda mudança entra por PR com CI verde (lint, typecheck, test, build). No plano Free a proteção de branch não é aplicada pelo GitHub em repo privado, então isto é acordo da dupla até migrar de plano ou abrir o repo
+- Nunca fazer push direto na `main`: toda mudança entra por PR com CI verde (lint, typecheck, test, build). O ruleset da `main` exige PR, 1 aprovação e o check `verify`
 - Um revisor da dupla por PR
 - Branches no formato `tipo/descricao-curta` (`feat/`, `fix/`, `chore/`, `docs/`)
 - [Conventional Commits](https://www.conventionalcommits.org/pt-br/) e PRs pequenos
