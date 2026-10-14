@@ -9,5 +9,5 @@ Regras do TMDB para o uso (resumo; vale a página oficial):
 - Não altere cores, proporção nem o desenho do logo.
 - Não sugira que o TMDB endossa ou certifica o Flomo.
 
-Nome sugerido: `logo-curto-azul.svg` (versão curta, azul). Se vier outra
-versão, mantenha o nome original do arquivo.
+Em uso: `primary-short-blue.svg` (página Sobre) e `alt-short-blue.svg`
+(rodapé). Mantenha o nome original dos arquivos baixados.

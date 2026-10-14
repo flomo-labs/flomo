@@ -4,13 +4,15 @@
 
 Dados de catálogo e imagens de filmes e séries vêm da API do [TMDB](https://www.themoviedb.org/).
 
-> This product uses the TMDB API but is not endorsed or certified by TMDB.
+> This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+
+Texto exigido pelos [Termos da API](https://www.themoviedb.org/api-terms-of-use) (seção 3); o termo entre colchetes ("website") troca conforme o tipo de produto.
 
 Regras que o Flomo segue:
 
-- O logo do TMDB aparece na página Sobre/Créditos, menos destacado que a marca do Flomo. Os arquivos ficam em `public/tmdb/`.
+- O logo do TMDB aparece na página Sobre/Créditos (`primary-short-blue.svg`) e, pequeno, no rodapé (`alt-short-blue.svg`), sempre menos destacado que a marca do Flomo e sem alterar cor ou proporção. Os arquivos ficam em `public/tmdb/`.
 - A chave da API é usada só no servidor.
-- O catálogo não é redistribuído; o cache local guarda só os campos usados, com prazo de expiração.
+- O catálogo não é redistribuído; o cache local guarda só os campos usados, com prazo de expiração (os Termos proíbem manter informação do TMDB em cache por mais de 6 meses).
 - A API é gratuita para uso não comercial. Qualquer receita (anúncios, assinaturas) exige licença comercial do TMDB antes.
 
 ## TVmaze (previsto)

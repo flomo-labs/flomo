@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Prose, ProseSection } from "@/components/prose";
 
@@ -36,9 +37,24 @@ export default function SobrePage() {
           .
         </p>
         <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
-          This product uses the TMDB API but is not endorsed or certified by
-          TMDB.
+          This website uses TMDB and the TMDB APIs but is not endorsed,
+          certified, or otherwise approved by TMDB.
         </p>
+        <a
+          href="https://www.themoviedb.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="TMDB"
+          className="w-fit"
+        >
+          <Image
+            src="/tmdb/primary-short-blue.svg"
+            alt="Logo do TMDB"
+            width={95}
+            height={41}
+            unoptimized
+          />
+        </a>
       </ProseSection>
     </Prose>
   );
