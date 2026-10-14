@@ -111,8 +111,8 @@ export default function PrivacidadePage() {
 
       <ProseSection title="Mudanças nesta política">
         <p>
-          Se algo mudar de forma relevante, atualizaremos a data no topo e
-          avisaremos no app.
+          Se algo mudar de forma relevante, atualizaremos a data no topo desta
+          página.
         </p>
       </ProseSection>
     </Prose>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const LINKS = [
+export const FOOTER_LINKS = [
   { href: "/sobre", label: "Sobre" },
   { href: "/em-breve", label: "Em breve" },
   { href: "/privacidade", label: "Privacidade" },
@@ -13,7 +13,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-3xl flex-col gap-3 px-6 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Informações do site">
           <ul className="flex flex-wrap gap-x-4 gap-y-1">
-            {LINKS.map((link) => (
+            {FOOTER_LINKS.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
