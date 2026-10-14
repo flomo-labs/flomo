@@ -1,54 +1,17 @@
-import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
 import { afterAll, describe, expect, it } from "vitest";
 import { type Tx, withUser } from "./client";
-import * as schema from "./schema";
+import {
+  asUser,
+  closeTestDb,
+  createUser,
+  inRollback,
+} from "./integration-test-utils";
 import { profiles } from "./schema";
 
 // Exercita o SQL das migrations (policies, CHECK, índice e triggers) no banco
-// de desenvolvimento. Roda como `postgres` (admin, ignora o RLS) e troca de
-// papel dentro da transação, que é sempre desfeita no fim.
-const url = process.env.DATABASE_URL;
-if (!url) {
-  throw new Error("DATABASE_URL não definida: confira o .env.local.");
-}
-
-const client = postgres(url, { prepare: false, max: 1 });
-const db = drizzle({ client, schema });
-
-afterAll(async () => {
-  await client.end();
-});
-
-class Rollback extends Error {}
-
-// Roda `fn` numa transação que nunca é confirmada.
-async function inRollback(fn: (tx: Tx) => Promise<void>) {
-  await db
-    .transaction(async (tx) => {
-      await fn(tx);
-      throw new Rollback();
-    })
-    .catch((error: unknown) => {
-      if (!(error instanceof Rollback)) throw error;
-    });
-}
-
-// Cria um usuário em auth.users, como faz o Supabase Auth no cadastro.
-async function createUser(tx: Tx, metadata: Record<string, string> = {}) {
-  const id = randomUUID();
-  await tx.execute(
-    sql`insert into auth.users (id, email, raw_user_meta_data)
-        values (${id}, ${`${id}@teste.flomo.invalid`}, ${JSON.stringify(metadata)}::jsonb)`,
-  );
-  return id;
-}
-
-function asUser<T>(tx: Tx, userId: string, fn: (tx: Tx) => Promise<T>) {
-  return withUser({ sub: userId, role: "authenticated" }, fn, tx);
-}
+// de desenvolvimento.
+afterAll(closeTestDb);
 
 // Código do erro do Postgres (o Drizzle embrulha o erro do driver em `cause`).
 function pgError(code: string) {

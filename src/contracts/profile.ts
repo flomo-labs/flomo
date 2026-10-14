@@ -13,6 +13,12 @@ const HANDLE_FORMAT = /^[a-z0-9]+([._][a-z0-9]+)*$/;
 // qualquer forma que, sem eles, fique igual a um provisório (`u.0a1b...`).
 const PROVISIONAL_PREFIX = "u_";
 const PROVISIONAL_NORMALIZED = /^u[0-9a-f]{12}$/;
+const PROVISIONAL_HANDLE = /^u_[0-9a-f]{12}$/;
+
+// O usuário ainda não escolheu o handle definitivo (primeiro acesso).
+export function isProvisionalHandle(handle: string): boolean {
+  return PROVISIONAL_HANDLE.test(handle);
+}
 
 // Comparados na forma sem separadores (`ad.min` = `admin`). Nomes com menos
 // de 5 caracteres (api, app, www...) já são barrados pelo tamanho.
@@ -79,3 +85,8 @@ export const handleSchema = z
   });
 
 export type Handle = z.infer<typeof handleSchema>;
+
+// Entrada do caso de uso de escolha e troca do handle.
+export const changeHandleInputSchema = z.object({ handle: handleSchema });
+
+export type ChangeHandleInput = z.infer<typeof changeHandleInputSchema>;

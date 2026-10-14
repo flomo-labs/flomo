@@ -24,8 +24,9 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 - **Handle:** 5 a 20 caracteres; letras minúsculas, números, `_` e `.`; começa e termina com letra ou número; sem dois separadores seguidos. Maiúsculas digitadas viram minúsculas. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/contracts/profile.ts`](../src/contracts/profile.ts), `CHECK` em [`drizzle/0001_profiles.sql`](../drizzle/0001_profiles.sql). A regra está nos dois lugares: mudar um exige mudar o outro (no banco, por uma migration nova).
 - **Unicidade do handle:** ignora `.` e `_` (`renato.silva`, `renato_silva` e `renatosilva` são o mesmo para fins de unicidade). O dono pode trocar entre as variações do próprio handle. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), índice único em [`drizzle/0001_profiles.sql`](../drizzle/0001_profiles.sql)
 - **Nomes reservados:** handles como `admin`, `login` e `embreve` (comparados sem `.` e `_`) não podem ser escolhidos, nem handles com o prefixo `u_` ou que, sem os separadores, fiquem iguais a um handle provisório. [`src/contracts/profile.ts`](../src/contracts/profile.ts)
-- **Handle provisório:** todo usuário nasce com `u_` + 12 caracteres e escolhe o definitivo no primeiro acesso. [ADR-003, seção 7](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), trigger em [`drizzle/0002_profiles_triggers.sql`](../drizzle/0002_profiles_triggers.sql)
-- **Troca de handle:** permitida a qualquer momento, se o novo estiver livre. O antigo fica livre na hora; links antigos param de funcionar. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
+- **Login:** só com conta Google, por enquanto. [ADR-003, seção 5](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/infra/auth/supabase/`](../src/infra/auth/supabase/index.ts)
+- **Handle provisório:** todo usuário nasce com `u_` + 12 caracteres e escolhe o definitivo no primeiro acesso (tela `/cadastro`, logo depois do primeiro login). [ADR-003, seção 7](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), trigger em [`drizzle/0002_profiles_triggers.sql`](../drizzle/0002_profiles_triggers.sql)
+- **Troca de handle:** permitida a qualquer momento, se o novo estiver livre. O antigo fica livre na hora; links antigos param de funcionar. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), caso de uso em [`src/domain/profile/change-handle.ts`](../src/domain/profile/change-handle.ts)
 - **Padrões do perfil:** país `BR`, fuso `America/Sao_Paulo`, idioma `pt-BR`, perfil público. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 - **Visibilidade:** perfil privado só é visto pelo dono. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), policies em [`src/infra/db/schema/profiles.ts`](../src/infra/db/schema/profiles.ts)
 - **Idade:** durante o TCC e o beta fechado, uso só por maiores de 18 anos. _(prevista: termos de uso)_
@@ -51,7 +52,8 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 
 ## Privacidade e dados
 
-- **Cookies:** só o de sessão, estritamente necessário; nenhum cookie de rastreamento, publicidade ou analytics. [ADR-003, seção 5](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
+- **Cookies:** só o de sessão (`HttpOnly`, `SameSite=Lax`, `Secure` em produção), estritamente necessário; nenhum cookie de rastreamento, publicidade ou analytics. [ADR-003, seção 5](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/infra/auth/supabase/`](../src/infra/auth/supabase/index.ts)
+- **Sair:** encerra a sessão só no dispositivo atual.
 - **Exclusão de conta:** apaga em cascata os dados do usuário. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 - **Retenção legal:** registros de acesso (Marco Civil, 6 meses) e registros de moderação ficam fora da cascata e são apagados ao fim do prazo. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 

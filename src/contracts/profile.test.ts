@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { handleSchema, normalizeHandle } from "./profile";
+import { handleSchema, isProvisionalHandle, normalizeHandle } from "./profile";
 
 describe("handleSchema", () => {
   it("aceita handles válidos", () => {
@@ -69,5 +69,22 @@ describe("normalizeHandle", () => {
   it("remove . e _", () => {
     expect(normalizeHandle("renato.silva")).toBe("renatosilva");
     expect(normalizeHandle("renato_silva")).toBe("renatosilva");
+  });
+});
+
+describe("isProvisionalHandle", () => {
+  it("reconhece o handle criado pelo trigger de cadastro", () => {
+    expect(isProvisionalHandle("u_0a1b2c3d4e5f")).toBe(true);
+  });
+
+  it("não confunde handles escolhidos com provisórios", () => {
+    for (const handle of [
+      "renato",
+      "u_0a1b2c3d4e5",
+      "u.0a1b2c3d4e5f",
+      "u_0A1B2C3D4E5F",
+    ]) {
+      expect(isProvisionalHandle(handle)).toBe(false);
+    }
   });
 });
