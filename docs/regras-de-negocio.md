@@ -29,7 +29,7 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 - **Troca de handle:** permitida a qualquer momento, se o novo estiver livre. O antigo fica livre na hora; links antigos param de funcionar. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), caso de uso em [`src/domain/profile/change-handle.ts`](../src/domain/profile/change-handle.ts)
 - **Padrões do perfil:** país `BR`, fuso `America/Sao_Paulo`, idioma `pt-BR`, perfil público. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 - **Visibilidade:** perfil privado só é visto pelo dono. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), policies em [`src/infra/db/schema/profiles.ts`](../src/infra/db/schema/profiles.ts)
-- **Idade:** durante o TCC e o beta fechado, uso só por maiores de 18 anos. _(prevista: termos de uso)_
+- **Idade:** durante o TCC e o beta fechado, uso só por maiores de 18 anos. Declarada em [`/termos`](../src/app/(publico)/termos/page.tsx); ainda não há verificação de idade (ECA Digital antes do lançamento público).
 
 ## Avaliações
 
@@ -52,6 +52,7 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 
 ## Privacidade e dados
 
+- **Páginas legais:** `/privacidade` e `/termos` descrevem o que o app faz hoje; mudou o tratamento de dados, atualize as páginas e a data no mesmo PR. [`src/app/(publico)/`](../src/app/(publico))
 - **Cookies:** só o de sessão (`HttpOnly`, `SameSite=Lax`, `Secure` em produção), estritamente necessário; nenhum cookie de rastreamento, publicidade ou analytics. [ADR-003, seção 5](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/infra/auth/supabase/`](../src/infra/auth/supabase/index.ts)
 - **Sair:** encerra a sessão só no dispositivo atual.
 - **Exclusão de conta:** apaga em cascata os dados do usuário. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)

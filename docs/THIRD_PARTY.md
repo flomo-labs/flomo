@@ -8,7 +8,7 @@ Dados de catálogo e imagens de filmes e séries vêm da API do [TMDB](https://w
 
 Regras que o Flomo segue:
 
-- O logo do TMDB aparece na página Sobre/Créditos, menos destacado que a marca do Flomo.
+- O logo do TMDB aparece na página Sobre/Créditos, menos destacado que a marca do Flomo. Os arquivos ficam em `public/tmdb/`.
 - A chave da API é usada só no servidor.
 - O catálogo não é redistribuído; o cache local guarda só os campos usados, com prazo de expiração.
 - A API é gratuita para uso não comercial. Qualquer receita (anúncios, assinaturas) exige licença comercial do TMDB antes.

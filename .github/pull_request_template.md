@@ -21,6 +21,7 @@
 - [ ] Migration incremental (sem editar migration já aplicada) e RLS revisada, se houver mudança de schema
 - [ ] Sem OFFSET profundo nem cálculo pesado no request path
 - [ ] Regra de negócio nova ou alterada avaliada e registrada em `docs/regras-de-negocio.md`, se aplicável
+- [ ] `/em-breve` (`src/content/roadmap.ts`) atualizado, se a mudança entrega ou planeja uma funcionalidade
 - [ ] Docs/ADR atualizados, se aplicável
 
 ## Screenshots (se houver UI)
