@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // Primeiro acesso: troca o handle provisório pelo definitivo.
 export default function CadastroPage({ searchParams }: PageProps<"/cadastro">) {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
+    <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold">Escolha seu nome de usuário</h1>
         <p className="text-sm text-muted-foreground">

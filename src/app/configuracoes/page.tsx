@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Configurações · Flomo" };
 
 export default function ConfiguracoesPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
+    <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
       <h1 className="text-2xl font-bold">Configurações</h1>
       <Suspense>
         <ChangeHandle />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "../_auth/actions";
@@ -15,7 +16,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default function EntrarPage({ searchParams }: PageProps<"/entrar">) {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
+    <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
       <h1 className="text-2xl font-bold">Entrar no Flomo</h1>
       <Suspense>
         <LoginForm searchParams={searchParams} />
@@ -45,6 +46,17 @@ async function LoginForm({
         </p>
       ) : null}
       <Button type="submit">Entrar com Google</Button>
+      <p className="text-xs text-muted-foreground">
+        Ao entrar, você declara ter 18 anos ou mais e concorda com os{" "}
+        <Link href="/termos" className="underline underline-offset-4">
+          Termos de uso
+        </Link>{" "}
+        e com a{" "}
+        <Link href="/privacidade" className="underline underline-offset-4">
+          Política de privacidade
+        </Link>
+        .
+      </p>
     </form>
   );
 }
