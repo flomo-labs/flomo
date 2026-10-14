@@ -35,6 +35,16 @@ Estilo: monólito modular com casos de uso em `domain/`; a API `/api/v1` é uma 
 - Mudou o schema: `pnpm db:generate`, revise o SQL gerado e só então `pnpm db:migrate`.
 - `pnpm test:integration` testa policies e triggers contra o banco do `.env.local`; cada teste é desfeito no fim e não grava nada.
 
+### Login com Google (local)
+
+O login roda no servidor com `@supabase/ssr`: Server Action inicia o OAuth, `/auth/callback` troca o código pela sessão e o `src/proxy.ts` renova o token. O usuário é sempre resolvido com `getClaims()` (cookie na web, `Authorization: Bearer` para o futuro app mobile).
+
+Para funcionar no seu `flomo-dev`:
+
+1. Google Cloud: cliente OAuth do tipo "Aplicativo da Web", com a URI de redirecionamento `https://<ref-do-projeto>.supabase.co/auth/v1/callback`.
+2. Supabase, Authentication > Sign In / Providers > Google: ligar e colar o Client ID e o Client Secret.
+3. Supabase, Authentication > URL Configuration: Site URL `http://localhost:3000` e, em Redirect URLs, `http://localhost:3000/auth/callback`.
+
 ### Variáveis de ambiente
 
 Veja `.env.example`. Nunca commitar secrets. Chaves server-only (TMDB, chave secreta do Supabase) jamais usam o prefixo `NEXT_PUBLIC_`.
