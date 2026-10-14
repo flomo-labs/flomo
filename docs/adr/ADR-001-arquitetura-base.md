@@ -81,6 +81,12 @@ A regra é imposta com `no-restricted-imports` no ESLint e roda no CI. Quebrar a
 - Entrada de um terceiro integrante no time.
 - Migração da organização para GitHub Team (permite recriar a proteção da `main`).
 
+## Atualizações
+
+- **2026-10-13:** o repositório se tornou público e a `main` passou a ser protegida por ruleset (PR, 1 aprovação e check `verify`). A consequência sobre a proteção da `main` no plano Free deixou de valer.
+- **2026-10-13:** a estratégia para o servidor respeitar o RLS, as conexões com o banco e a criação de perfil estão no ADR-003.
+- **2026-10-13:** "API-first" passou a significar casos de uso primeiro, com `/api/v1` como camada fina criada quando o app mobile começar (ADR-004).
+
 ## Referências
 
 - `docs/ARQUITETURA-v1.6-stats-discovery.md`
