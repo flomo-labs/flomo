@@ -46,16 +46,20 @@ async function createUser(tx: Tx, metadata: Record<string, string> = {}) {
   return id;
 }
 
-// withUser abre um savepoint dentro da transação do teste; o `set local role`
-// sobrevive ao savepoint, então o papel é desfeito ao sair.
-async function asUser<T>(tx: Tx, userId: string, fn: (tx: Tx) => Promise<T>) {
-  try {
-    return await withUser({ sub: userId, role: "authenticated" }, fn, tx);
-  } finally {
-    await tx.execute(sql`reset role`);
-    await tx.execute(sql`select set_config('request.jwt.claims', '', true)`);
-  }
+function asUser<T>(tx: Tx, userId: string, fn: (tx: Tx) => Promise<T>) {
+  return withUser({ sub: userId, role: "authenticated" }, fn, tx);
 }
+
+// Código do erro do Postgres (o Drizzle embrulha o erro do driver em `cause`).
+function pgError(code: string) {
+  return expect.objectContaining({
+    cause: expect.objectContaining({ code }),
+  });
+}
+
+const INSUFFICIENT_PRIVILEGE = "42501"; // inclui violação de RLS
+const CHECK_VIOLATION = "23514";
+const UNIQUE_VIOLATION = "23505";
 
 async function asAnon<T>(tx: Tx, fn: (tx: Tx) => Promise<T>) {
   return tx.transaction(async (sp) => {
@@ -169,12 +173,16 @@ describe("policies de profiles", () => {
   it("authenticated não cria nem apaga perfis", () =>
     inRollback(async (tx) => {
       const owner = await createUser(tx);
+      // Sem o perfil, um insert só falha se o RLS barrar (e não pela PK).
+      await tx.delete(profiles).where(eq(profiles.id, owner));
 
       await expect(
         asUser(tx, owner, (utx) =>
           utx.insert(profiles).values({ id: owner, handle: "outro.handle" }),
         ),
-      ).rejects.toThrow();
+      ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+
+      await tx.insert(profiles).values({ id: owner, handle: "dono.handle" });
 
       const deleted = await asUser(tx, owner, (utx) =>
         utx
@@ -212,6 +220,30 @@ describe("policies de profiles", () => {
     }));
 });
 
+describe("withUser", () => {
+  it("devolve o papel do servidor à transação externa ao terminar", () =>
+    inRollback(async (tx) => {
+      const id = await createUser(tx);
+      await asUser(tx, id, async (utx) => {
+        const [inside] = await utx.execute<{ role: string }>(
+          sql`select current_user as role`,
+        );
+        expect(inside.role).toBe("authenticated");
+      });
+      const [after] = await tx.execute<{ role: string; uid: string | null }>(
+        sql`select current_user as role, app.current_user_id() as uid`,
+      );
+      expect(after.role).not.toBe("authenticated");
+      expect(after.uid).toBeNull();
+    }));
+
+  it("recusa claims sem o uuid do usuário", async () => {
+    await expect(
+      withUser({ sub: "usuario-1" }, async () => {}),
+    ).rejects.toThrow(/uuid/);
+  });
+});
+
 describe("regras do handle no banco", () => {
   it("rejeita formato inválido", () =>
     inRollback(async (tx) => {
@@ -227,7 +259,7 @@ describe("regras do handle no banco", () => {
           tx.transaction((sp) =>
             sp.update(profiles).set({ handle }).where(eq(profiles.id, id)),
           ),
-        ).rejects.toThrow();
+        ).rejects.toEqual(pgError(CHECK_VIOLATION));
       }
     }));
 
@@ -245,7 +277,7 @@ describe("regras do handle no banco", () => {
           tx.transaction((sp) =>
             sp.update(profiles).set({ handle }).where(eq(profiles.id, second)),
           ),
-        ).rejects.toThrow();
+        ).rejects.toEqual(pgError(UNIQUE_VIOLATION));
       }
 
       await tx

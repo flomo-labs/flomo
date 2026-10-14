@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { PgTransaction } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
@@ -31,25 +32,39 @@ export function getDb(): Db {
 // Claims do JWT já validado pela borda (auth.getClaims()).
 export type JwtClaims = { sub: string } & Record<string, unknown>;
 
+const UUID_FORMAT =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Executa `fn` numa transação com o papel `authenticated` e as claims do
 // usuário, para o Postgres aplicar as policies. `set local` e
 // `set_config(…, true)` valem só dentro da transação, o que é seguro no
 // pooler em modo transação.
+//
+// Recebendo uma transação já aberta, `fn` roda num savepoint. Liberar o
+// savepoint não desfaz o `set local`, então o papel e as claims são
+// limpos ao final para o resto da transação externa voltar ao papel do
+// servidor.
 export async function withUser<T>(
   claims: JwtClaims,
   fn: (tx: Tx) => Promise<T>,
   db: Db | Tx = getDb(),
 ): Promise<T> {
-  if (!claims.sub) {
+  if (typeof claims.sub !== "string" || !UUID_FORMAT.test(claims.sub)) {
     throw new Error(
-      "withUser exige as claims de um usuário autenticado (sub).",
+      "withUser exige as claims de um usuário autenticado (sub com o uuid do usuário).",
     );
   }
+  const nested = db instanceof PgTransaction;
   return db.transaction(async (tx) => {
     await tx.execute(
       sql`select set_config('request.jwt.claims', ${JSON.stringify(claims)}, true)`,
     );
     await tx.execute(sql`set local role authenticated`);
-    return fn(tx);
+    const result = await fn(tx);
+    if (nested) {
+      await tx.execute(sql`reset role`);
+      await tx.execute(sql`select set_config('request.jwt.claims', '', true)`);
+    }
+    return result;
   });
 }
