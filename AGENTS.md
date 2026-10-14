@@ -11,6 +11,11 @@ Regras para quem for alterar código ou documentos:
 - Se a renomeação tocar algo fora do repositório (variável de ambiente, projeto Vercel/Supabase, redirect do OAuth), registre no PR o que precisa ser atualizado.
 - Para listar o que falta: `git grep -n -i "upnext" -- . ":!pnpm-lock.yaml"`.
 
+## Regras de negócio
+
+- Antes de implementar ou mudar uma regra de negócio, consulte `docs/regras-de-negocio.md`.
+- Regra nova ou alterada é registrada lá no mesmo PR, **depois da avaliação** descrita no topo do arquivo (o repositório é público: estratégia, valores de proteções e dados de pessoas não entram).
+
 ## Camadas e imports (ADR-001)
 
 Regras de dependência entre pastas, impostas pelo ESLint (`eslint.config.mjs`):
