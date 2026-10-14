@@ -6,7 +6,10 @@ export function safeNextPath(value: unknown): string {
   try {
     const url = new URL(value, base);
     if (url.origin !== base) return "/";
-    return `${url.pathname}${url.search}${url.hash}`;
+    // O parser resolve `/..//x` e `/./\x` para `//x`, que o navegador lê
+    // como outro site. Confere o valor que de fato será devolvido.
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    return path.startsWith("//") ? "/" : path;
   } catch {
     return "/";
   }
