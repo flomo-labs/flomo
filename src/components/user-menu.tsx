@@ -31,7 +31,11 @@ export function UserMenu({
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} className="w-auto min-w-44">
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-auto min-w-44"
+      >
         <DropdownMenuGroup>
           <DropdownMenuLabel>{label}</DropdownMenuLabel>
         </DropdownMenuGroup>
@@ -39,7 +43,7 @@ export function UserMenu({
           Configurações
         </DropdownMenuItem>
         <form action={signOut}>
-          <DropdownMenuItem render={<button type="submit" />}>
+          <DropdownMenuItem nativeButton render={<button type="submit" />}>
             Sair
           </DropdownMenuItem>
         </form>
