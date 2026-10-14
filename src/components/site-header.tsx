@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { isProvisionalHandle } from "@/contracts/profile";
-import { signInWithGoogle, signOut } from "@/app/_auth/actions";
+import { signOut } from "@/app/_auth/actions";
 import { getCurrentUser } from "@/app/_auth/session";
 import { getOwnProfile } from "@/app/_profile/queries";
 import { UserMenu } from "./user-menu";
@@ -26,12 +26,9 @@ async function Account() {
   const user = await getCurrentUser();
   if (!user) {
     return (
-      <form action={signInWithGoogle}>
-        <input type="hidden" name="next" value="/" />
-        <Button type="submit" size="sm">
-          Entrar com Google
-        </Button>
-      </form>
+      <Button size="sm" render={<Link href="/entrar" />} nativeButton={false}>
+        Entrar
+      </Button>
     );
   }
 
@@ -42,6 +39,7 @@ async function Account() {
     <UserMenu
       label={handle ? `@${handle}` : "Minha conta"}
       initials={handle ? handle.slice(0, 2).toUpperCase() : "?"}
+      needsHandle={!handle}
       signOut={signOut}
     />
   );
