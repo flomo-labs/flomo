@@ -7,16 +7,15 @@ describe("parseBearerToken", () => {
     expect(parseBearerToken("bearer abc")).toBe("abc");
   });
 
-  it("devolve null para cabeçalho ausente ou de outro esquema", () => {
-    for (const value of [
-      null,
-      "",
-      "Bearer",
-      "Bearer ",
-      "Basic abc",
-      "Bearer a b",
-    ]) {
+  it("devolve null sem cabeçalho ou com outro esquema", () => {
+    for (const value of [null, "", "Basic abc", "Bearerabc"]) {
       expect(parseBearerToken(value)).toBeNull();
+    }
+  });
+
+  it("marca como inválido o Bearer malformado", () => {
+    for (const value of ["Bearer", "Bearer ", "Bearer a b"]) {
+      expect(parseBearerToken(value)).toBe("invalid");
     }
   });
 });

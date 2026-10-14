@@ -44,11 +44,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   // que não pode entrar em nenhum prerender com Cache Components: a sessão
   // só é lida na requisição de verdade.
   await connection();
-  const authorization = (await headers()).get("authorization");
-  if (authorization !== null) {
-    const token = parseBearerToken(authorization);
-    return toCurrentUser(token ? await verifyAccessToken(token) : null);
-  }
+  // Com token Bearer, ele decide sozinho (inválido = sem usuário, sem cair no
+  // cookie). Sem Bearer, vale o cookie de sessão.
+  const token = parseBearerToken((await headers()).get("authorization"));
+  if (token === "invalid") return null;
+  if (token !== null) return toCurrentUser(await verifyAccessToken(token));
   const auth = await getRequestAuth();
   return toCurrentUser(await auth.getClaims());
 });

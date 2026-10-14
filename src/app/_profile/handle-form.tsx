@@ -37,7 +37,7 @@ export function HandleForm({
         <Input
           id="handle"
           name="handle"
-          defaultValue={defaultHandle}
+          defaultValue={state.submitted ?? defaultHandle}
           required
           minLength={HANDLE_MIN_LENGTH}
           maxLength={HANDLE_MAX_LENGTH}

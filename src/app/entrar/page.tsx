@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "../_auth/actions";
 import { safeNextPath } from "../_auth/redirect";
 import { getCurrentUser } from "../_auth/session";
+import { destinationAfterLogin } from "../_profile/queries";
 
 export const metadata: Metadata = { title: "Entrar · Flomo" };
 
@@ -28,8 +29,9 @@ async function LoginForm({
 }: Pick<PageProps<"/entrar">, "searchParams">) {
   const params = await searchParams;
   const next = safeNextPath(params.next);
-  if (await getCurrentUser()) {
-    redirect(next);
+  const user = await getCurrentUser();
+  if (user) {
+    redirect(await destinationAfterLogin(user, next));
   }
   const error =
     typeof params.erro === "string" ? ERROR_MESSAGES[params.erro] : undefined;

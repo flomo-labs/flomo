@@ -13,11 +13,12 @@ function siteUrl() {
 // Inicia o login com Google. A volta é em /auth/callback.
 export async function signInWithGoogle(formData: FormData) {
   const callback = new URL("/auth/callback", siteUrl());
-  callback.searchParams.set("next", safeNextPath(formData.get("next")));
+  const next = safeNextPath(formData.get("next"));
+  callback.searchParams.set("next", next);
 
   const auth = await getRequestAuth();
   const googleUrl = await auth.startGoogleSignIn(callback.toString());
-  redirect(googleUrl ?? "/entrar?erro=google");
+  redirect(googleUrl ?? `/entrar?erro=google&next=${encodeURIComponent(next)}`);
 }
 
 export async function signOut() {

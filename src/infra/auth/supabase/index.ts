@@ -77,17 +77,23 @@ export function createCookieAuth(cookies: AuthCookies) {
 }
 
 // Valida um token `Authorization: Bearer` (futuro app mobile), sem sessão.
+// Um cliente para o processo todo: não guarda sessão, e assim o cache das
+// chaves públicas (JWKS) é reaproveitado entre requisições.
+let tokenClient: ReturnType<typeof createClient> | undefined;
+
 export async function verifyAccessToken(
   token: string,
 ): Promise<JwtClaims | null> {
-  const { url, key } = supabaseConfig();
-  const supabase = createClient(url, key, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
-  const { data } = await supabase.auth.getClaims(token);
+  if (!tokenClient) {
+    const { url, key } = supabaseConfig();
+    tokenClient = createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+  const { data } = await tokenClient.auth.getClaims(token);
   return toClaims(data?.claims);
 }

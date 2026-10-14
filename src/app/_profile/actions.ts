@@ -14,7 +14,15 @@ import { getCurrentUser } from "../_auth/session";
 export type HandleFormState = {
   error?: UseCaseError<ChangeHandleErrorCode | "UNAUTHENTICATED">;
   savedHandle?: string;
+  // O que foi digitado: o React limpa o formulário ao fim da ação, e o campo
+  // volta com este valor.
+  submitted?: string;
 };
+
+function submittedHandle(formData: FormData) {
+  const value = formData.get("handle");
+  return typeof value === "string" ? value : undefined;
+}
 
 // Camada fina (ADR-004): resolve o usuário, chama o caso de uso e traduz o
 // resultado. A regra fica em domain/profile/change-handle.ts.
@@ -44,7 +52,8 @@ export async function chooseHandle(
   formData: FormData,
 ): Promise<HandleFormState> {
   const result = await runChangeHandle(formData);
-  if (!result.ok) return { error: result.error };
+  if (!result.ok)
+    return { error: result.error, submitted: submittedHandle(formData) };
   redirect(safeNextPath(formData.get("next")));
 }
 
@@ -54,6 +63,7 @@ export async function updateHandle(
   formData: FormData,
 ): Promise<HandleFormState> {
   const result = await runChangeHandle(formData);
-  if (!result.ok) return { error: result.error };
-  return { savedHandle: result.value.handle };
+  if (!result.ok)
+    return { error: result.error, submitted: submittedHandle(formData) };
+  return { savedHandle: result.value.handle, submitted: result.value.handle };
 }
