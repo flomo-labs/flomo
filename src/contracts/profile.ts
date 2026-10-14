@@ -8,8 +8,11 @@ export const HANDLE_MAX_LENGTH = 20;
 // Letras minúsculas e números, separados por um único `.` ou `_`.
 const HANDLE_FORMAT = /^[a-z0-9]+([._][a-z0-9]+)*$/;
 
-// Handles provisórios criados pelo trigger de cadastro.
+// Handles provisórios criados pelo trigger de cadastro: `u_` + 12 caracteres
+// hexadecimais. Como a unicidade ignora os separadores, também é barrada
+// qualquer forma que, sem eles, fique igual a um provisório (`u.0a1b...`).
 const PROVISIONAL_PREFIX = "u_";
+const PROVISIONAL_NORMALIZED = /^u[0-9a-f]{12}$/;
 
 // Comparados na forma sem separadores (`ad.min` = `admin`). Nomes com menos
 // de 5 caracteres (api, app, www...) já são barrados pelo tamanho.
@@ -65,9 +68,12 @@ export const handleSchema = z
     HANDLE_FORMAT,
     "Use letras, números, ponto ou sublinhado, começando e terminando com letra ou número, sem dois separadores seguidos.",
   )
-  .refine((handle) => !handle.startsWith(PROVISIONAL_PREFIX), {
-    message: `O nome de usuário não pode começar com "${PROVISIONAL_PREFIX}".`,
-  })
+  .refine(
+    (handle) =>
+      !handle.startsWith(PROVISIONAL_PREFIX) &&
+      !PROVISIONAL_NORMALIZED.test(normalizeHandle(handle)),
+    { message: "Este formato é reservado aos nomes de usuário provisórios." },
+  )
   .refine((handle) => !RESERVED_HANDLES.includes(normalizeHandle(handle)), {
     message: "Este nome de usuário é reservado.",
   });

@@ -46,8 +46,16 @@ describe("handleSchema", () => {
     }
   });
 
-  it("rejeita o prefixo dos handles provisórios", () => {
-    expect(handleSchema.safeParse("u_abc123def456").success).toBe(false);
+  it("rejeita handles que colidem com os provisórios", () => {
+    for (const handle of [
+      "u_abc123def456",
+      "u.abc123def456",
+      "uabc123def456",
+    ]) {
+      expect(handleSchema.safeParse(handle).success).toBe(false);
+    }
+    // Fora o prefixo `u_`, só a forma exata dos provisórios é barrada.
+    expect(handleSchema.parse("u.renato")).toBe("u.renato");
   });
 
   it("rejeita nomes reservados, mesmo com separadores", () => {
