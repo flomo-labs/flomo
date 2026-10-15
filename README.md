@@ -33,7 +33,7 @@ Estilo: monólito modular com casos de uso em `domain/`; a API `/api/v1` é uma 
 
 - Schema em `src/infra/db/schema/`, migrations em `drizzle/`. SQL que o Drizzle não modela (funções, triggers) entra em migration escrita à mão: `pnpm db:generate --custom --name=descricao`.
 - Mudou o schema: `pnpm db:generate`, revise o SQL gerado e só então `pnpm db:migrate`.
-- `pnpm test:integration` testa policies e triggers contra o banco do `.env.local`; cada teste é desfeito no fim e não grava nada.
+- `pnpm test:integration` testa policies e triggers contra o banco indicado em `DATABASE_URL_TEST` no `.env.local` (sempre o `flomo-dev`; recusa rodar em produção); cada teste é desfeito no fim e não grava nada.
 
 ### Login com Google (local)
 
