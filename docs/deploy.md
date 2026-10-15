@@ -85,9 +85,15 @@ Anote em local seguro. Você vai usá-los na parte B.
 
 ### A.4 Aplicar as migrations
 
-As migrations (pasta `drizzle/`) criam a tabela `profiles`, as políticas de acesso (RLS) e os gatilhos. Rode no PowerShell, na pasta do repositório. **Uma linha por vez**, sem colar tudo junto:
+As migrations (pasta `drizzle/`) criam a tabela `profiles`, as políticas de acesso (RLS) e os gatilhos. Rode no PowerShell, na pasta do repositório. **Uma linha por vez**, sem colar várias de uma vez:
 
-1. Guardar a URL do **Session pooler** do `flomo-prod` na variável do terminal:
+1. **Impedir que o PowerShell grave estes comandos no histórico** (vale só para esta janela; a URL tem a senha do banco):
+
+   ```powershell
+   Set-PSReadLineOption -HistorySaveStyle SaveNothing
+   ```
+
+2. Guardar a URL do **Session pooler** do `flomo-prod` na variável do terminal:
 
    ```powershell
    $env:DATABASE_URL_MIGRATIONS = "postgresql://postgres.<ref>:<senha>@<host-do-pooler>:5432/postgres"
@@ -95,28 +101,29 @@ As migrations (pasta `drizzle/`) criam a tabela `profiles`, as políticas de ace
 
    Isso não imprime nada. A variável do terminal vale mais que a do `.env.local`, então o `.env.local` (flomo-dev) não é tocado.
 
-2. **Conferir** que a variável foi definida (não imprime a URL):
+3. **Conferir** que a variável foi definida (não imprime a URL):
 
    ```powershell
    if ($env:DATABASE_URL_MIGRATIONS) { "definida" } else { "VAZIA" }
    ```
 
-   Se aparecer `VAZIA`, **pare**: sem a variável, o `drizzle-kit` cairia no `.env.local` e aplicaria as migrations no `flomo-dev` (inofensivo, mas não é o que você quer).
+   Se aparecer `VAZIA`, **pare**: sem a variável, o `drizzle-kit` usaria o `.env.local` e aplicaria as migrations no `flomo-dev` (inofensivo, mas não é o que você quer).
 
-3. Aplicar:
+4. Aplicar:
 
    ```powershell
    pnpm db:migrate
    ```
 
-   No `flomo-prod`, que está vazio, a saída lista as migrations sendo aplicadas e termina com `migrations applied successfully`. Se aparecer só avisos de "already exists, skipping", o comando provavelmente rodou em outro banco.
+   No `flomo-prod`, que está vazio, o comando aplica as migrations e termina sem erro. Se só aparecerem avisos de "already exists, skipping", ele provavelmente rodou em outro banco. A prova de que deu certo é o passo A.5.
 
-4. Limpar a variável e o histórico de comandos (a URL tem a senha):
+5. Limpar a variável e fechar a janela do terminal:
 
    ```powershell
    Remove-Item Env:DATABASE_URL_MIGRATIONS
-   Remove-Item (Get-PSReadLineOption).HistorySavePath
    ```
+
+   Se você não executou o passo 1 e a URL ficou no histórico, apague o histórico do PowerShell (`Remove-Item (Get-PSReadLineOption).HistorySavePath`; isso apaga **todo** o histórico de comandos) e, se achar necessário, redefina a senha do banco em **Project Settings > Database**.
 
 ### A.5 Conferir
 
@@ -153,7 +160,7 @@ Pontos importantes:
 
 - **A mesma variável, valores diferentes por ambiente.** A Vercel aceita o mesmo nome em Production e em Preview com valores distintos. Se o formulário da primeira tela marcar todos os ambientes, cadastre só as de Production agora e as de Preview depois, em **Settings > Environment Variables** do projeto, desmarcando os outros ambientes.
 - **`NEXT_PUBLIC_*` vai para o navegador:** só valores públicos. A `SUPABASE_SECRET_KEY` e a `DATABASE_URL` **nunca** levam esse prefixo.
-- **Sensitive:** se a opção **Sensitive** aparecer, marque em `SUPABASE_SECRET_KEY`, `DATABASE_URL` e `TMDB_API_KEY`. O app funciona igual; o valor só deixa de ser exibido depois de salvo (guarde o original).
+- **Sensitive:** se a opção **Sensitive** aparecer, marque em `SUPABASE_SECRET_KEY`, `DATABASE_URL` e `TMDB_API_KEY`. O app funciona igual; o valor só deixa de ser exibido depois de salvo (guarde o original). Uma variável Sensitive não pode ser editada nem lida depois: se marcar o ambiente errado, apague e cadastre de novo. Por isso, confira os ambientes **antes** de salvar.
 - **Não cadastre** `DATABASE_URL_MIGRATIONS`, `DATABASE_URL_TEST` nem `FLOMO_PROD_DB_REF`: migrations e testes rodam no seu computador ou no CI, não na Vercel.
 
 ### B.3 Primeiro deploy
@@ -172,6 +179,7 @@ Clique em **Deploy** e espere o build (1 a 3 minutos). Se falhar, abra o deploy,
 
 - A URL abre a página inicial, e `<URL>/privacidade` e `<URL>/termos` também.
 - Em **Settings > Git**, a branch de produção é a `main`.
+- Em **Settings > Deployment Protection**, mantenha a proteção padrão dos previews: eles usam o `flomo-dev` e têm login real, então não devem ficar públicos sem necessidade.
 - A região das funções vem do `vercel.json` (`gru1`). Em **Settings > Functions** ou nos detalhes do deploy pode aparecer a região; no plano Hobby a tela às vezes não mostra o valor.
 
 Anote o **slug do time** (em **Settings > General > Team URL**, `vercel.com/<slug>`): ele entra no padrão das URLs de preview na parte D.
@@ -238,7 +246,7 @@ Em uma aba anônima, em `<URL de produção>`:
 
 Enquanto o app estiver em modo **Testando**, só as contas da lista de testadores conseguem entrar. Para abrir a qualquer conta Google:
 
-1. Google Auth Platform > **Público-alvo > Publicar app** e confirme. O aviso sobre "enviar para verificação" só vale se houver mais de 10 domínios, logotipo ou escopos restritos; com só e-mail e perfil, não se aplica.
+1. Google Auth Platform > **Público-alvo > Publicar app** e confirme. Antes de confirmar, abra o link de privacidade e o de termos cadastrados em **Branding** e confira se abrem em produção. O aviso sobre "enviar para verificação" costuma valer só com mais de 10 domínios, logotipo ou escopos restritos; com os escopos básicos de e-mail e perfil, normalmente não se aplica. Se o Google mostrar "app não verificado" para contas fora da lista de testadores, abra a **Central de verificação** do Google Auth Platform e siga o que ela pedir (pode exigir domínio próprio).
 2. Teste o login com uma conta Google que **não** esteja na lista de testadores.
 
 ---
@@ -255,7 +263,7 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 
 ## Depois do deploy
 
-- Atualizar o `.env.local` (e o do Victor) com `DATABASE_URL_TEST`, apontando para o `flomo-dev`. Sem ele, `pnpm test:integration` recusa rodar. Opcional: `FLOMO_PROD_DB_REF` com o ref do `flomo-prod`, como trava extra.
+- Cada pessoa do time atualiza o próprio `.env.local` com `DATABASE_URL_TEST`, apontando para o `flomo-dev`. Sem ele, `pnpm test:integration` recusa rodar. Opcional: `FLOMO_PROD_DB_REF` com o ref do `flomo-prod`, como trava extra.
 - Tratar os alertas do Dependabot da `main` antes de divulgar a URL.
 - Trocar `contactEmail` em `src/content/legal.ts` quando houver domínio e e-mail do projeto.
 - Mudar para outro host ou serviço: ver `docs/troca-de-ferramentas.md`.
