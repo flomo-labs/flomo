@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { safeNextPath } from "./redirect";
+import { resolveSiteUrl } from "./site-url";
 import { getRequestAuth } from "./session";
 
 function siteUrl() {
-  const url = process.env.NEXT_PUBLIC_SITE_URL;
+  const url = resolveSiteUrl();
   if (!url) throw new Error("NEXT_PUBLIC_SITE_URL não definida.");
   return url;
 }
