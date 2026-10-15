@@ -18,7 +18,15 @@ Funções da Vercel em `gru1` (São Paulo, ver `vercel.json`), a mesma região d
 2. **Project Settings > Data API**: desligar. O app acessa dados só pelo Drizzle (ADR-003/004); com a Data API ligada, um usuário logado altera o próprio perfil direto pela chave publishable, sem passar pelos casos de uso.
 3. **Authentication > Sign In / Providers**: Google ligado (passo 3); telefone, anônimo e e-mail desligados até a Fase 1.7.
 4. **Authentication > URL Configuration**: Site URL = URL de produção; Redirect URLs = `<URL de produção>/auth/callback`.
-5. Aplicar as migrations (no PC, com `.env.local` apontando **temporariamente** `DATABASE_URL_MIGRATIONS` para o pooler em modo sessão do `flomo-prod`, porta 5432): `pnpm db:migrate`. Depois volte o `.env.local` para o `flomo-dev`. Alternativa sem mexer no `.env.local`: `DATABASE_URL_MIGRATIONS='<url>' pnpm db:migrate` (PowerShell: `$env:DATABASE_URL_MIGRATIONS='<url>'; pnpm db:migrate`).
+5. Aplicar as migrations, no PC, sem editar o `.env.local` (a variável do terminal vale mais que a do arquivo) e sem deixar a URL no histórico. No PowerShell, com a URL do pooler em modo **sessão** (porta 5432) do `flomo-prod`:
+
+   ```powershell
+   $env:DATABASE_URL_MIGRATIONS = Read-Host "URL do flomo-prod (sessão, 5432)"
+   pnpm db:migrate
+   Remove-Item Env:DATABASE_URL_MIGRATIONS
+   ```
+
+   O `Read-Host` pede a URL na hora, então ela não fica gravada no histórico; o `Remove-Item` limpa a variável do terminal.
 6. Conferir em **Database > Tables** que `profiles` existe com RLS ativa.
 
 ## 2. Vercel
@@ -29,7 +37,7 @@ Funções da Vercel em `gru1` (São Paulo, ver `vercel.json`), a mesma região d
 
 | Variável | Production | Preview |
 | -------- | ---------- | ------- |
-| `NEXT_PUBLIC_SITE_URL` | URL de produção | (não definir: o app usa o endereço do deploy) |
+| `NEXT_PUBLIC_SITE_URL` | URL de produção | (não definir; marque **só** Production. Em preview o app usa o host da requisição) |
 | `NEXT_PUBLIC_SUPABASE_URL` | `flomo-prod` | `flomo-dev` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `flomo-prod` | `flomo-dev` |
 | `SUPABASE_SECRET_KEY` | `flomo-prod` | `flomo-dev` |
@@ -39,7 +47,7 @@ Funções da Vercel em `gru1` (São Paulo, ver `vercel.json`), a mesma região d
 `DATABASE_URL_MIGRATIONS`, `DATABASE_URL_TEST` e `FLOMO_PROD_DB_REF` **não** vão para a Vercel: migrations e testes rodam no PC/CI.
 
 4. **Settings > Git**: produção = branch `main`. Em **Deployment Protection**, deixe a proteção padrão dos previews.
-5. Em **Authentication > URL Configuration** do `flomo-dev`, acrescente `https://*.vercel.app/auth/callback` às Redirect URLs, para o login funcionar nos previews.
+5. Em **Authentication > URL Configuration** do `flomo-dev`, acrescente às Redirect URLs `https://flomo-*-<escopo-da-vercel>.vercel.app/auth/callback` (o escopo é o slug do time/conta na Vercel, visível na URL de qualquer preview). **Não use `https://*.vercel.app/**`**: qualquer pessoa publica um app em `.vercel.app` e receberia o código do login.
 
 ## 3. Google OAuth em produção
 

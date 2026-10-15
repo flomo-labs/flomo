@@ -1,19 +1,28 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { safeNextPath } from "./redirect";
 import { resolveSiteUrl } from "./site-url";
 import { getRequestAuth } from "./session";
 
-function siteUrl() {
-  const url = resolveSiteUrl();
-  if (!url) throw new Error("NEXT_PUBLIC_SITE_URL não definida.");
+async function siteUrl() {
+  const requestHeaders = await headers();
+  const url = resolveSiteUrl(
+    process.env,
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host"),
+  );
+  if (!url) {
+    throw new Error(
+      "URL do site indefinida: defina NEXT_PUBLIC_SITE_URL em Production e no .env.local.",
+    );
+  }
   return url;
 }
 
 // Inicia o login com Google. A volta é em /auth/callback.
 export async function signInWithGoogle(formData: FormData) {
-  const callback = new URL("/auth/callback", siteUrl());
+  const callback = new URL("/auth/callback", await siteUrl());
   const next = safeNextPath(formData.get("next"));
   callback.searchParams.set("next", next);
 
