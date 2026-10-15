@@ -1,3 +1,7 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+# GHSA-67mh-4wv8-2f99: o loader legado do drizzle-kit traz esbuild 0.18.20.
+# Remover quando o drizzle-kit deixar de depender de @esbuild-kit.
+overrides:
+  "@esbuild-kit/core-utils>esbuild": ^0.25.4
