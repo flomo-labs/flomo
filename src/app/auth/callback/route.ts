@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { safeNextPath } from "../../_auth/redirect";
+import { resolveSiteUrl } from "../../_auth/site-url";
 import { getRequestAuth, toCurrentUser } from "../../_auth/session";
 import { destinationAfterLogin } from "../../_profile/queries";
 
@@ -8,7 +9,7 @@ import { destinationAfterLogin } from "../../_profile/queries";
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const next = safeNextPath(request.nextUrl.searchParams.get("next"));
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+  const site = resolveSiteUrl(process.env, request.nextUrl.host) ?? request.nextUrl.origin;
   const failure = NextResponse.redirect(
     new URL(`/entrar?erro=google&next=${encodeURIComponent(next)}`, site),
   );

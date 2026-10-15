@@ -4,16 +4,16 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type Tx, withUser } from "./client";
 import * as schema from "./schema";
+import { resolveTestDatabaseUrl } from "./test-database-url";
 
 // Apoio aos testes de integração (`pnpm test:integration`) contra o banco de
-// desenvolvimento. Roda como `postgres` (admin, ignora o RLS) e troca de
-// papel dentro da transação, que é sempre desfeita no fim.
-const url = process.env.DATABASE_URL;
-if (!url) {
-  throw new Error("DATABASE_URL não definida: confira o .env.local.");
-}
-
-const client = postgres(url, { prepare: false, max: 1 });
+// desenvolvimento (`DATABASE_URL_TEST`, nunca o `DATABASE_URL` do app). Roda
+// como `postgres` (admin, ignora o RLS) e troca de papel dentro da transação,
+// que é sempre desfeita no fim.
+const client = postgres(resolveTestDatabaseUrl(process.env), {
+  prepare: false,
+  max: 1,
+});
 const db = drizzle({ client, schema });
 
 // Chamar no afterAll de cada arquivo de teste.
