@@ -39,6 +39,8 @@ export function createCatalogDeps(
     search: (...args) => createTmdbProvider(getTmdbClient()).search(...args),
     fetchTitle: (...args) =>
       createTmdbProvider(getTmdbClient()).fetchTitle(...args),
+    fetchShelf: (...args) =>
+      createTmdbProvider(getTmdbClient()).fetchShelf(...args),
     fetchWatchProviders: (...args) =>
       createTmdbProvider(getTmdbClient()).fetchWatchProviders(...args),
   };

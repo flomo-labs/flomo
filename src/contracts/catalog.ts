@@ -40,3 +40,33 @@ export const seasonEpisodesInputSchema = z.object({
   titleId: z.uuid("Título inválido."),
   seasonNumber: z.coerce.number().int().min(0).max(9999),
 });
+
+// Prateleiras da Home pública (Fase 1.2b): em alta, nos cinemas e "em alta no
+// serviço X". Os serviços são uma lista fixa (os principais do Brasil, ids de
+// provedor do TMDB), para a entrada nunca virar parâmetro livre do provedor.
+export const SHELF_PROVIDERS = [
+  { id: "8", name: "Netflix" },
+  { id: "119", name: "Prime Video" },
+  { id: "337", name: "Disney+" },
+  { id: "1899", name: "HBO Max" },
+  { id: "350", name: "Apple TV" },
+  { id: "531", name: "Paramount+" },
+  { id: "307", name: "Globoplay" },
+] as const;
+
+export const SHELF_PROVIDER_IDS = SHELF_PROVIDERS.map((p) => p.id) as [
+  string,
+  ...string[],
+];
+
+export const shelfInputSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("trending") }),
+  z.object({ kind: z.literal("now_playing") }),
+  z.object({
+    kind: z.literal("provider"),
+    mediaType: z.enum(MEDIA_TYPES),
+    providerId: z.enum(SHELF_PROVIDER_IDS),
+  }),
+]);
+export type ShelfInput = z.input<typeof shelfInputSchema>;
+export type ShelfQuery = z.output<typeof shelfInputSchema>;

@@ -1,6 +1,6 @@
-import type { MediaType } from "@/contracts/catalog";
+import type { MediaType, ShelfQuery } from "@/contracts/catalog";
 
-export type { MediaType };
+export type { MediaType, ShelfQuery };
 
 // Idioma em que o catálogo é exibido. Título e idioma originais são
 // guardados à parte (Plano v2, decisão 11).
@@ -127,3 +127,7 @@ export type WatchProviders = {
   rent: WatchProvider[];
   buy: WatchProvider[];
 };
+
+// Prateleira da Home: lista de referências (como os resultados de busca), sem
+// uuid; cada prateleira mostra no máximo isto.
+export const SHELF_SIZE = 10;
