@@ -60,8 +60,8 @@ export interface LibraryRepository {
   findEpisode(episodeId: string): Promise<LibraryEpisode | null>;
   findTitleMediaType(titleId: string): Promise<MediaType | null>;
 
-  // Biblioteca do usuário, dos atualizados há mais tempo para os mais
-  // recentes primeiro. `statuses` nulo = todos. Título no idioma `locale`
+  // Biblioteca do usuário, com a situação mudada mais recentemente primeiro
+  // (`updated_at` de `user_titles`; marcar episódio não o altera). `statuses` nulo = todos. Título no idioma `locale`
   // (cai no título original); `today` (AAAA-MM-DD) define o que já foi lançado.
   listLibrary(
     userId: string,
