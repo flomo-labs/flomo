@@ -38,8 +38,11 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 
 ## Biblioteca
 
-- **Status:** `watchlist`, `watching`, `paused`, `watched`, `dropped`. A interface do MVP mostra Todos, Assistindo, Quero ver e Pausado. _(prevista)_
-- **Estado e histórico separados:** o progresso atual nunca é a fonte da verdade; o histórico de visualizações é. [ADR-001](adr/ADR-001-arquitetura-base.md)
+- **Status:** `watchlist`, `watching`, `paused`, `watched`, `dropped`. A interface do MVP mostra Todos, Assistindo, Quero ver e Pausado. [`src/domain/library/values.ts`](../src/domain/library/values.ts), `CHECK` em [`drizzle/0004_library.sql`](../drizzle/0004_library.sql)
+- **Estado e histórico separados:** o progresso atual nunca é a fonte da verdade; o histórico de visualizações é. Um título por usuário na biblioteca; um episódio visto uma vez no progresso; o histórico aceita vários registros do mesmo item (rever). [ADR-001](adr/ADR-001-arquitetura-base.md), [`src/infra/db/schema/library.ts`](../src/infra/db/schema/library.ts)
+- **Data do "visto" é opcional:** cada registro do histórico tem data e precisão (exata, dia, mês, ano ou sem data) e a origem (marcado na hora, retroativo no app ou import). Sem data se e só se a precisão é "sem data". [`src/infra/db/schema/library.ts`](../src/infra/db/schema/library.ts)
+- **Privacidade:** cada usuário só vê e altera a própria biblioteca, o próprio progresso e o próprio histórico; ainda não há biblioteca visível no perfil. Policies em [`src/infra/db/schema/library.ts`](../src/infra/db/schema/library.ts)
+- **Catálogo protegido:** o banco recusa apagar título ou episódio que esteja na biblioteca ou no histórico de alguém. [`drizzle/0004_library.sql`](../drizzle/0004_library.sql)
 
 ## Moderação e segurança entre usuários _(prevista)_
 

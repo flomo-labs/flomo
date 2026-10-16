@@ -18,6 +18,22 @@ jobs:
     timeout-minutes: 10
     env:
       COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+    # Postgres descartável para os testes de integração (RLS, CHECKs,
+    # triggers). Não é o Supabase: scripts/ci/supabase-stub.sql imita o
+    # mínimo que as migrations e os testes usam.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flomo_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
 
@@ -46,4 +62,14 @@ jobs:
             git status --porcelain drizzle
             exit 1
           fi
+      - name: Testes de integração (Postgres do CI)
+        env:
+          PGPASSWORD: postgres
+          DATABASE_URL_MIGRATIONS: postgres://postgres:postgres@localhost:5432/flomo_ci
+          DATABASE_URL_TEST: postgres://postgres:postgres@localhost:5432/flomo_ci
+        run: |
+          psql -h localhost -U postgres -d flomo_ci -v ON_ERROR_STOP=1 -q -f scripts/ci/supabase-stub.sql
+          pnpm db:migrate
+          pnpm test:integration
+
       - run: pnpm build
