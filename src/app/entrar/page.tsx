@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "../_auth/actions";
 import { safeNextPath } from "../_auth/redirect";
@@ -17,6 +18,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function EntrarPage({ searchParams }: PageProps<"/entrar">) {
   return (
     <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
+      <BackLink />
       <h1 className="text-2xl font-bold">Entrar no Flomo</h1>
       <Suspense>
         <LoginForm searchParams={searchParams} />

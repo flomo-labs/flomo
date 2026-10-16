@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
+import { NavigationTracker } from "@/components/back-link";
 import { SiteFooter } from "@/components/site-footer";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
     >
       <body className="min-h-full flex flex-col">
+        <NavigationTracker />
         {children}
         <SiteFooter />
       </body>

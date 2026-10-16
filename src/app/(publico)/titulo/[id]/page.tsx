@@ -76,7 +76,7 @@ async function TitleContent({
           alt={t("Title.poster", { title: title.title })}
           className="w-32 shrink-0 sm:w-48"
         />
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col items-start gap-3">
           <h1 className="text-3xl font-bold">{title.title}</h1>
           {title.originalTitle !== title.title ? (
             <p className="text-sm text-muted-foreground italic">
@@ -166,6 +166,7 @@ async function Seasons({
                 <Link
                   href={`/titulo/${title.id}?temporada=${season.seasonNumber}`}
                   scroll={false}
+                  replace
                   aria-current={active ? "true" : undefined}
                   className={cn(
                     "inline-flex rounded-lg border px-3 py-1.5 text-sm transition-colors",
