@@ -209,6 +209,24 @@ export function mapSearch(data: unknown): SearchPage {
 // `discover` não, e o tipo vem da própria consulta. Fica de fora o conteúdo
 // adulto (mesmo com `include_adult=false`, o `trending` pode trazê-lo) e o que
 // não tem pôster, que não serve numa vitrine.
+// Novelas: séries com o gênero Soap ou a palavra-chave "telenovela", só dos
+// países em que a classificação tem alta certeza (Brasil, América Latina de
+// língua espanhola, Portugal e Espanha). Fora dessa lista o Soap traz
+// seriados americanos e a palavra-chave mistura animes e desenhos.
+const TMDB_GENRE_SOAP = 10766;
+const TMDB_KEYWORD_TELENOVELA = 199262;
+export const NOVELA_COUNTRIES = [
+  "BR",
+  "MX",
+  "AR",
+  "CO",
+  "CL",
+  "PE",
+  "VE",
+  "PT",
+  "ES",
+] as const;
+
 export function mapShelf(
   data: unknown,
   defaultMediaType: "movie" | "tv" | null,
@@ -489,6 +507,43 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
         },
         mediaType,
       });
+      if (query.mediaType === "novelas") {
+        // Gênero e palavra-chave se somam (E) no `discover`; duas consultas
+        // e a união dão "Soap OU telenovela".
+        const { extra } = discoverParams("tv");
+        const lists = await Promise.all(
+          (
+            [
+              { with_genres: TMDB_GENRE_SOAP },
+              { with_keywords: TMDB_KEYWORD_TELENOVELA },
+            ] as Record<string, number>[]
+          ).map(async (filter) => {
+            const data = await client.get("discover/tv", {
+              ...params,
+              ...extra,
+              with_origin_country: NOVELA_COUNTRIES.join("|"),
+              ...filter,
+            });
+            if (data === null) {
+              throw new CatalogUnavailableError(
+                "Prateleira do TMDB indisponível.",
+              );
+            }
+            return mapShelfRanked(data, "tv", "discover/tv");
+          }),
+        );
+        const seen = new Set<string>();
+        return lists
+          .flat()
+          .sort((a, b) => b.popularity - a.popularity)
+          .filter(({ item }) => {
+            if (seen.has(item.ref.externalId)) return false;
+            seen.add(item.ref.externalId);
+            return true;
+          })
+          .map(({ item }) => item)
+          .slice(0, limit);
+      }
       if (query.mediaType !== "all") {
         const { path, extra, mediaType } = discoverParams(query.mediaType);
         return fetchList(path, extra, mediaType);

@@ -12,7 +12,12 @@ import { isProvisionalHandle } from "@/contracts/profile";
 import type { SearchItem } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
 
-const MEDIA_SEGMENTS = { tudo: "all", filmes: "movie", series: "tv" } as const;
+const MEDIA_SEGMENTS = {
+  tudo: "all",
+  filmes: "movie",
+  series: "tv",
+  novelas: "novelas",
+} as const;
 type MediaSegment = keyof typeof MEDIA_SEGMENTS;
 
 // Serviço aberto quando a URL não escolhe um (a lista é alfabética).
@@ -139,9 +144,19 @@ async function ProviderSection({
   const provider =
     SHELF_PROVIDERS.find((p) => p.id === firstValue(params.servico)) ??
     SHELF_PROVIDERS[0];
+  // O filtro Novelas só aparece se o serviço tiver alguma (a consulta é a
+  // mesma da prateleira, então vem do cache de 6 horas quando há novelas).
+  const novelas = await listShelf({
+    kind: "provider",
+    mediaType: "novelas",
+    providerId: provider.id,
+  });
+  const segments: MediaSegment[] =
+    novelas.ok && novelas.value.length > 0
+      ? ["tudo", "filmes", "series", "novelas"]
+      : ["tudo", "filmes", "series"];
   const requested = firstValue(params.tipo);
-  const segment: MediaSegment =
-    requested === "series" || requested === "filmes" ? requested : "tudo";
+  const segment: MediaSegment = segments.find((s) => s === requested) ?? "tudo";
 
   const href = (providerId: string, target: MediaSegment) =>
     `/?servico=${providerId}&tipo=${target}#em-alta-no-servico`;
@@ -182,7 +197,7 @@ async function ProviderSection({
       </nav>
       <nav aria-label={t("mediaNav")}>
         <ul className="flex gap-2">
-          {(["tudo", "filmes", "series"] as const).map((target) => (
+          {segments.map((target) => (
             <li key={target}>
               <Link
                 href={href(provider.id, target)}
