@@ -54,3 +54,7 @@ export const setWatchDateInputSchema = z.object({
   eventId: z.uuid(),
   when: watchDateInputSchema,
 });
+
+export const titleLibraryStateInputSchema = z.object({
+  titleId: z.uuid(),
+});

@@ -11,8 +11,12 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import type { LibraryRepository } from "@/domain/library/ports";
-import { PROGRESS_PRECISIONS } from "@/domain/library/values";
+import type { LibraryRepository, WatchedItem } from "@/domain/library/ports";
+import {
+  type LibraryStatus,
+  PROGRESS_PRECISIONS,
+  type WatchedAtPrecision,
+} from "@/domain/library/values";
 import type { Tx } from "./client";
 import {
   episodes,
@@ -48,6 +52,42 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
         .where(eq(titles.id, titleId));
       if (!row) return null;
       return row.mediaType === "movie" ? "movie" : "tv";
+    },
+
+    async getTitleState(userId, titleId) {
+      const [row] = await tx
+        .select({ status: userTitles.status })
+        .from(userTitles)
+        .where(
+          and(eq(userTitles.userId, userId), eq(userTitles.titleId, titleId)),
+        );
+      // Do mais recente para o mais antigo: vale o primeiro de cada item.
+      const events = await tx
+        .select({
+          id: watchEvents.id,
+          episodeId: watchEvents.episodeId,
+          watchedAt: watchEvents.watchedAt,
+          precision: watchEvents.watchedAtPrecision,
+        })
+        .from(watchEvents)
+        .where(
+          and(eq(watchEvents.userId, userId), eq(watchEvents.titleId, titleId)),
+        )
+        .orderBy(desc(watchEvents.createdAt), desc(watchEvents.id));
+      const latest = new Map<string | null, WatchedItem>();
+      for (const e of events) {
+        if (latest.has(e.episodeId)) continue;
+        latest.set(e.episodeId, {
+          episodeId: e.episodeId,
+          eventId: e.id,
+          watchedAt: e.watchedAt,
+          precision: e.precision as WatchedAtPrecision,
+        });
+      }
+      return {
+        status: (row?.status as LibraryStatus | undefined) ?? null,
+        watched: [...latest.values()],
+      };
     },
 
     async upsertTitleStatus(userId, titleId, status, replaceable) {

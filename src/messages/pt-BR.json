@@ -41,6 +41,20 @@
     "unavailableHint": "O catálogo está indisponível no momento. Tente de novo em instantes.",
     "retry": "Tentar de novo"
   },
+  "Library": {
+    "markWatched": "Marcar como visto",
+    "watched": "Visto",
+    "unmark": "Desmarcar",
+    "unmarkConfirm": "Isso apaga o registro deste item. Desmarcar?",
+    "changeDate": "Mudar a data",
+    "today": "Foi hoje",
+    "noDate": "Tirar a data",
+    "pickDate": "Outro dia",
+    "saveDate": "Salvar data",
+    "signIn": "Entre para marcar o que você já viu",
+    "unavailable": "Não foi possível carregar a sua biblioteca agora.",
+    "failed": "Não foi possível salvar. Tente de novo."
+  },
   "Status": {
     "planned": "Planejado",
     "in_production": "Em produção",

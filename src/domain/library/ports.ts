@@ -24,9 +24,27 @@ export type NewWatchEvent = {
   source: WatchEventSource;
 };
 
+// Um item visto de um título: episódio (série) ou o próprio filme
+// (`episodeId` nulo), com o registro mais recente do histórico.
+export type WatchedItem = {
+  episodeId: string | null;
+  eventId: string;
+  watchedAt: Date | null;
+  precision: WatchedAtPrecision;
+};
+
+export type TitleLibraryState = {
+  // `null` quando o título não está na biblioteca.
+  status: LibraryStatus | null;
+  watched: WatchedItem[];
+};
+
 export interface LibraryRepository {
   findEpisode(episodeId: string): Promise<LibraryEpisode | null>;
   findTitleMediaType(titleId: string): Promise<MediaType | null>;
+
+  // Estado do usuário num título: status e itens vistos (para as telas).
+  getTitleState(userId: string, titleId: string): Promise<TitleLibraryState>;
 
   // Põe o título na biblioteca com `status`, ou muda o status atual quando
   // ele está em `replaceable`. Trava a linha até o fim da transação, o que
