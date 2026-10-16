@@ -205,17 +205,13 @@ export function mapSearch(data: unknown): SearchPage {
   };
 }
 
-// Prateleira: `trending/all` traz `media_type` em cada item; `now_playing` e
-// `discover` não, e o tipo vem da própria consulta. Fica de fora o conteúdo
-// adulto (mesmo com `include_adult=false`, o `trending` pode trazê-lo) e o que
-// não tem pôster, que não serve numa vitrine.
 // Novelas: séries com o gênero Soap ou a palavra-chave "telenovela", só dos
 // países em que a classificação tem alta certeza (Brasil, América Latina de
 // língua espanhola, Portugal e Espanha). Fora dessa lista o Soap traz
 // seriados americanos e a palavra-chave mistura animes e desenhos.
 const TMDB_GENRE_SOAP = 10766;
 const TMDB_KEYWORD_TELENOVELA = 199262;
-export const NOVELA_COUNTRIES = [
+const NOVELA_COUNTRIES = [
   "BR",
   "MX",
   "AR",
@@ -227,6 +223,10 @@ export const NOVELA_COUNTRIES = [
   "ES",
 ] as const;
 
+// Prateleira: `trending/all` traz `media_type` em cada item; `now_playing` e
+// `discover` não, e o tipo vem da própria consulta. Fica de fora o conteúdo
+// adulto (mesmo com `include_adult=false`, o `trending` pode trazê-lo) e o que
+// não tem pôster, que não serve numa vitrine.
 export function mapShelf(
   data: unknown,
   defaultMediaType: "movie" | "tv" | null,
