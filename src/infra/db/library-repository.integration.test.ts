@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
+import { listFollowing } from "@/domain/library/following";
 import {
   getTitleLibraryState,
   listUnwatchedEpisodes,
@@ -512,6 +513,67 @@ describe("marcar como assistido no banco", () => {
       expect(paused.ok && paused.value.map((i) => i.titleId)).toEqual([
         c.movieId,
       ]);
+    }));
+
+  it("seguintes: série e filme na fila, o que mexeu por último no topo", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      const queue = async () => {
+        const r = await run(tx, user, (deps, u) => listFollowing(deps, u));
+        return r.ok ? r.value.map((i) => i.next?.episodeId ?? i.titleId) : null;
+      };
+
+      // Marcar só o S2E1 (sem anteriores): o seguinte é o S2E2, não o S1E1.
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S2E1 }),
+      );
+      expect(await queue()).toEqual([c.ep.S2E2]);
+
+      // Dentro de uma transação `now()` não muda: as datas vão à mão.
+      // O trigger de `updated_at` também refaria a data: fica desligado.
+      await tx.execute(sql`set local session_replication_role = replica`);
+      const at = (iso: string) => new Date(iso);
+      await tx
+        .update(userTitles)
+        .set({ updatedAt: at("2026-01-01") })
+        .where(eq(userTitles.titleId, c.seriesId));
+      await tx
+        .update(userEpisodeProgress)
+        .set({ createdAt: at("2026-01-02") })
+        .where(eq(userEpisodeProgress.userId, user));
+
+      // Filme adicionado depois sobe ao topo.
+      await run(tx, user, (deps, u) =>
+        setTitleStatus(deps, u, { titleId: c.movieId, status: "watchlist" }),
+      );
+      await tx
+        .update(userTitles)
+        .set({ updatedAt: at("2026-01-03") })
+        .where(eq(userTitles.titleId, c.movieId));
+      expect(await queue()).toEqual([c.movieId, c.ep.S2E2]);
+
+      // Marcar um episódio da série a leva de volta ao topo.
+      await tx
+        .update(userEpisodeProgress)
+        .set({ createdAt: at("2026-01-04") })
+        .where(eq(userEpisodeProgress.userId, user));
+      expect(await queue()).toEqual([c.ep.S2E2, c.movieId]);
+
+      // Tudo lançado visto: série em dia (S2E3 ainda não saiu).
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, {
+          episodeId: c.ep.S2E2,
+          includePrevious: true,
+        }),
+      );
+      expect(await queue()).toEqual([c.movieId]);
+
+      // Filme assistido sai; título oculto não entra.
+      await run(tx, user, (deps, u) =>
+        markMovieWatched(deps, u, { titleId: c.movieId }),
+      );
+      expect(await queue()).toEqual([]);
     }));
 
   it("desmarcar apaga progresso e histórico do episódio", () =>

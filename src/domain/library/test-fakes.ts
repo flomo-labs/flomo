@@ -1,6 +1,7 @@
 import type { MediaType, TitleStatus } from "../catalog/types";
 import type {
   LibraryEpisode,
+  FollowingItem,
   LibraryItem,
   LibraryRepository,
   NewWatchEvent,
@@ -80,6 +81,63 @@ export function createFakeLibrary(catalog: {
         });
       }
       return items;
+    },
+    async listFollowing(userId, _locale, today, limit) {
+      // A ordem real (subir ao adicionar, marcar ou sair episódio novo) é
+      // testada no banco; aqui vale a ordem em que as situações foram dadas.
+      const out: FollowingItem[] = [];
+      for (const [k, status] of [...statuses].reverse()) {
+        const [owner, titleId] = k.split(":");
+        if (owner !== userId || hiddenTitles.has(k)) continue;
+        const mediaType = titles[titleId];
+        if (mediaType === "movie") {
+          if (status === "watchlist") {
+            out.push({
+              titleId,
+              mediaType,
+              title: titleId,
+              posterPath: null,
+              next: null,
+            });
+          }
+          continue;
+        }
+        if (mediaType !== "tv") continue;
+        if (status !== "watching" && status !== "watchlist") continue;
+        const regular = episodes
+          .filter((e) => e.titleId === titleId && e.seasonNumber > 0)
+          .sort(
+            (a, b) =>
+              a.seasonNumber - b.seasonNumber ||
+              a.episodeNumber - b.episodeNumber,
+          );
+        const last = regular
+          .filter((e) => progress.has(key(userId, e.id)))
+          .at(-1);
+        const next = regular.find(
+          (e) =>
+            !progress.has(key(userId, e.id)) &&
+            (e.airDate === null || e.airDate <= today) &&
+            (!last ||
+              e.seasonNumber > last.seasonNumber ||
+              (e.seasonNumber === last.seasonNumber &&
+                e.episodeNumber > last.episodeNumber)),
+        );
+        if (!next) continue;
+        out.push({
+          titleId,
+          mediaType,
+          title: titleId,
+          posterPath: null,
+          next: {
+            episodeId: next.id,
+            seasonNumber: next.seasonNumber,
+            episodeNumber: next.episodeNumber,
+            episodeName: null,
+          },
+        });
+      }
+      return out.slice(0, limit);
     },
     async getTitleState(userId, titleId) {
       const items = new Map<string | null, WatchedItem>();

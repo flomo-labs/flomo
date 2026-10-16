@@ -61,6 +61,10 @@ async function run(
   // O estado do usuário é lido na requisição; isto só refaz as páginas de
   // título para quem estiver com elas abertas.
   revalidatePath("/titulo/[id]", "page");
+  // Telas que mostram o progresso: Seguintes (Home e /seguintes) e biblioteca.
+  revalidatePath("/");
+  revalidatePath("/seguintes");
+  revalidatePath("/biblioteca");
   return { ok: true, value: {} };
 }
 

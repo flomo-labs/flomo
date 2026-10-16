@@ -102,6 +102,29 @@
     "search": "Buscar títulos",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
   },
+  "Following": {
+    "title": "Seguintes",
+    "description": "O que assistir em seguida: o próximo episódio das suas séries e os filmes que você quer ver.",
+    "seeAll": "Ver tudo",
+    "sections": "Seções",
+    "queue": "Para assistir",
+    "soon": "Em breve",
+    "soonHint": "Os lançamentos das suas séries ainda não estão disponíveis.",
+    "filters": "Filtrar por tipo",
+    "kind": {
+      "both": "Ambos",
+      "tv": "Séries",
+      "movie": "Filmes"
+    },
+    "position": "T{season} · E{episode}",
+    "markEpisode": "Marcar {title} T{season} E{episode} como assistido",
+    "markMovie": "Marcar {title} como assistido",
+    "markFailed": "Não foi possível marcar. Tente de novo.",
+    "emptyFilter": "Nada por aqui neste tipo.",
+    "empty": "Sua fila está vazia. Adicione séries e filmes à biblioteca para ver o que vem a seguir.",
+    "search": "Buscar títulos",
+    "unavailable": "Não foi possível carregar os Seguintes agora. Tente de novo em instantes."
+  },
   "Status": {
     "planned": "Planejado",
     "in_production": "Em produção",
