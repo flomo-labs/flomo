@@ -466,6 +466,84 @@ describe("registrar de novo", () => {
   });
 });
 
+describe("série que vira Visto sozinha", () => {
+  function finished(status: "ended" | "canceled" | "returning") {
+    return createFakeLibrary({
+      titles: { [SERIES]: "tv", [MOVIE]: "movie" },
+      // S2E3 ainda não lançado em NOW e a temporada 0 (especial) não contam.
+      episodes: [S0E1, S1E1, S1E2, S1E3, S2E1, S2E2, S2E3],
+      titleStatus: { [SERIES]: status },
+    });
+  }
+  const released = [S1E1, S1E2, S1E3, S2E1, S2E2];
+
+  it("série encerrada com todos os lançados vistos vira Visto", async () => {
+    const lib = finished("ended");
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S2E2.id,
+      includePrevious: true,
+    });
+    expect(lib.status(SERIES)).toBe("watched");
+  });
+
+  it("série cancelada também; em exibição fica em Assistindo", async () => {
+    const canceled = finished("canceled");
+    await markEpisodeWatched(canceled.deps, USER, {
+      episodeId: S2E2.id,
+      includePrevious: true,
+    });
+    expect(canceled.status(SERIES)).toBe("watched");
+
+    const returning = finished("returning");
+    await markEpisodeWatched(returning.deps, USER, {
+      episodeId: S2E2.id,
+      includePrevious: true,
+    });
+    expect(returning.status(SERIES)).toBe("watching");
+  });
+
+  it("falta um episódio lançado: continua Assistindo", async () => {
+    const lib = finished("ended");
+    for (const e of released.slice(0, -1)) {
+      await markEpisodeWatched(lib.deps, USER, { episodeId: e.id });
+    }
+    expect(lib.status(SERIES)).toBe("watching");
+  });
+
+  it("desmarcar um episódio de série Visto volta para Assistindo", async () => {
+    const lib = finished("ended");
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S2E2.id,
+      includePrevious: true,
+    });
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E2.id });
+    expect(lib.status(SERIES)).toBe("watching");
+  });
+
+  it("apagar só um dos registros de um episódio não muda o status", async () => {
+    const lib = finished("ended");
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S2E2.id,
+      includePrevious: true,
+    });
+    await rewatchEpisode(lib.deps, USER, { episodeId: S1E2.id });
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E2.id });
+    expect(lib.status(SERIES)).toBe("watched");
+  });
+
+  it("Pausado ou Abandonado marcando o último episódio vira Visto", async () => {
+    const lib = finished("ended");
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S2E2.id,
+      includePrevious: true,
+    });
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S2E2.id });
+    lib.setStatus(SERIES, "paused");
+    await markEpisodeWatched(lib.deps, USER, { episodeId: S2E2.id });
+    expect(lib.status(SERIES)).toBe("watched");
+  });
+});
+
 describe("todayIn", () => {
   it("usa o fuso do Brasil", () => {
     // 01:00 UTC ainda é o dia anterior em São Paulo.

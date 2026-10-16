@@ -316,6 +316,47 @@ describe("marcar como visto no banco", () => {
       ).toHaveLength(0);
     }));
 
+  it("série encerrada com tudo lançado visto vira Visto; desmarcar devolve a Assistindo", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      await tx
+        .update(titles)
+        .set({ status: "ended" })
+        .where(eq(titles.id, c.seriesId));
+      const status = async () =>
+        (
+          await tx
+            .select({ status: userTitles.status })
+            .from(userTitles)
+            .where(eq(userTitles.userId, user))
+        )[0]?.status;
+
+      // S2E3 ainda não foi lançado: não é preciso vê-lo.
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, {
+          episodeId: c.ep.S2E2,
+          includePrevious: true,
+        }),
+      );
+      expect(await status()).toBe("watched");
+
+      await run(tx, user, (deps, u) =>
+        unmarkEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      expect(await status()).toBe("watching");
+
+      // Em exibição: nunca vira Visto sozinha.
+      await tx
+        .update(titles)
+        .set({ status: "returning" })
+        .where(eq(titles.id, c.seriesId));
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      expect(await status()).toBe("watching");
+    }));
+
   it("desmarcar apaga progresso e histórico do episódio", () =>
     inRollback(async (tx) => {
       const user = await createUser(tx);

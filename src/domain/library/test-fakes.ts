@@ -1,4 +1,4 @@
-import type { MediaType } from "../catalog/types";
+import type { MediaType, TitleStatus } from "../catalog/types";
 import type {
   LibraryEpisode,
   LibraryRepository,
@@ -19,6 +19,8 @@ type StoredEvent = NewWatchEvent & { id: string; userId: string };
 export function createFakeLibrary(catalog: {
   titles?: Record<string, MediaType>;
   episodes?: FakeEpisode[];
+  // Situação de cada série no catálogo (padrão: "unknown").
+  titleStatus?: Record<string, TitleStatus>;
 }) {
   const titles = catalog.titles ?? {};
   const episodes = catalog.episodes ?? [];
@@ -117,6 +119,19 @@ export function createFakeLibrary(catalog: {
           e.userId === userId && e.titleId === titleId && e.episodeId === null,
       );
     },
+    async getSeriesProgress(userId, titleId, today) {
+      const released = episodes.filter(
+        (e) =>
+          e.titleId === titleId &&
+          e.seasonNumber > 0 &&
+          (e.airDate === null || e.airDate <= today),
+      );
+      return {
+        catalogStatus: catalog.titleStatus?.[titleId] ?? "unknown",
+        released: released.length,
+        watched: released.filter((e) => progress.has(key(userId, e.id))).length,
+      };
+    },
     async hasEpisodeProgress(userId, episodeId) {
       return progress.has(key(userId, episodeId));
     },
@@ -136,7 +151,7 @@ export function createFakeLibrary(catalog: {
       );
       if (i < 0) return undefined;
       const [removed] = events.splice(i, 1);
-      return { episodeId: removed.episodeId };
+      return { episodeId: removed.episodeId, titleId: removed.titleId };
     },
     async countEpisodeEvents(userId, episodeId) {
       return events.filter(
