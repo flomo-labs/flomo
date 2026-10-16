@@ -81,6 +81,10 @@ export function WatchControl({
   const [pickedDay, setPickedDay] = useState(today);
   // Diálogo "só este ou também os anteriores" aberto.
   const [askPrevious, setAskPrevious] = useState(false);
+  // Desmarcar e apagar registro apagam dados: pedem confirmação num diálogo.
+  const [confirming, setConfirming] = useState<
+    { kind: "unmark" } | { kind: "delete"; eventId: string } | null
+  >(null);
 
   function run(action: () => Promise<LibraryActionResult>) {
     setError(null);
@@ -123,17 +127,19 @@ export function WatchControl({
         ? recordEpisodeAgain({ episodeId: targetId })
         : recordMovieAgain({ titleId: targetId }),
     );
-  const deleteRecord = (eventId: string) => {
-    if (!window.confirm(labels.deleteRecordConfirm)) return;
-    run(() => removeWatchRecord({ eventId }));
-  };
-  const unmark = () => {
-    if (!window.confirm(labels.unmarkConfirm)) return;
-    run(() =>
-      kind === "episode"
-        ? unmarkEpisode({ episodeId: targetId })
-        : unmarkMovie({ titleId: targetId }),
-    );
+  const confirmAction = () => {
+    const action = confirming;
+    setConfirming(null);
+    if (!action) return;
+    if (action.kind === "delete") {
+      run(() => removeWatchRecord({ eventId: action.eventId }));
+    } else {
+      run(() =>
+        kind === "episode"
+          ? unmarkEpisode({ episodeId: targetId })
+          : unmarkMovie({ titleId: targetId }),
+      );
+    }
   };
   const setDate = (when: WatchDateInput) => {
     if (!watched) return;
@@ -152,7 +158,7 @@ export function WatchControl({
             variant="ghost"
             size="sm"
             disabled={pending}
-            onClick={unmark}
+            onClick={() => setConfirming({ kind: "unmark" })}
           >
             {labels.unmark}
           </Button>
@@ -196,7 +202,9 @@ export function WatchControl({
                   variant="ghost"
                   size="xs"
                   disabled={pending}
-                  onClick={() => deleteRecord(record.eventId)}
+                  onClick={() =>
+                    setConfirming({ kind: "delete", eventId: record.eventId })
+                  }
                 >
                   {labels.deleteRecord}
                 </Button>
@@ -281,6 +289,42 @@ export function WatchControl({
             <DialogClose render={<Button type="button" variant="ghost" />}>
               {labels.cancel}
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={confirming !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirming(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {confirming?.kind === "delete"
+                ? labels.deleteRecord
+                : labels.unmark}
+            </DialogTitle>
+            <DialogDescription>
+              {confirming?.kind === "delete"
+                ? labels.deleteRecordConfirm
+                : labels.unmarkConfirm}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              {labels.cancel}
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending}
+              onClick={confirmAction}
+            >
+              {confirming?.kind === "delete"
+                ? labels.deleteRecord
+                : labels.unmark}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
