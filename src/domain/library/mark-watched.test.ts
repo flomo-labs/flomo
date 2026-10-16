@@ -3,10 +3,10 @@ import {
   markEpisodeWatched,
   markMovieWatched,
   setWatchDate,
-  todayIn,
   unmarkEpisodeWatched,
   unmarkMovieWatched,
 } from "./mark-watched";
+import { todayIn } from "./watch-date";
 import { createFakeLibrary, type FakeEpisode, NOW, USER } from "./test-fakes";
 
 const SERIES = "aaaaaaaa-0000-4000-8000-000000000001";
@@ -293,6 +293,47 @@ describe("setWatchDate", () => {
       precision: "exact",
       source: "live",
     });
+  });
+});
+
+describe("datas perto da virada do dia", () => {
+  it("recusa amanhã à noite e não grava hoje no futuro de manhã", async () => {
+    const night = createFakeLibrary({
+      titles: { [MOVIE]: "movie" },
+    });
+    // 22:00 em São Paulo do dia 16.
+    night.deps.now = () => new Date("2026-10-17T01:00:00Z");
+    expect(
+      await markMovieWatched(night.deps, USER, {
+        titleId: MOVIE,
+        when: { kind: "date", precision: "day", value: "2026-10-17" },
+      }),
+    ).toMatchObject({ ok: false, error: { code: "INVALID_DATE" } });
+
+    const morning = createFakeLibrary({ titles: { [MOVIE]: "movie" } });
+    const eight = new Date("2026-10-16T11:00:00Z"); // 08:00 em São Paulo
+    morning.deps.now = () => eight;
+    await markMovieWatched(morning.deps, USER, {
+      titleId: MOVIE,
+      when: { kind: "date", precision: "day", value: "2026-10-16" },
+    });
+    expect(morning.events[0]).toMatchObject({
+      watchedAt: eight,
+      precision: "day",
+    });
+  });
+
+  it("mensagens de entrada inválida em português", async () => {
+    const lib = setup();
+    expect(
+      await markMovieWatched(lib.deps, USER, { titleId: "x" }),
+    ).toMatchObject({ error: { message: "Dados inválidos." } });
+    expect(
+      await markMovieWatched(lib.deps, USER, {
+        titleId: MOVIE,
+        when: { kind: "date", precision: "day", value: "2023" },
+      }),
+    ).toMatchObject({ error: { message: "Data em formato inválido." } });
   });
 });
 

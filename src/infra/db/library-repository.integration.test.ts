@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   markEpisodeWatched,
@@ -160,6 +160,28 @@ describe("marcar como visto no banco", () => {
           and(eq(userTitles.userId, user), eq(userTitles.titleId, c.movieId)),
         );
       expect(row.status).toBe("watched");
+
+      // Marcar de novo não regrava o título (updated_at fica igual).
+      const old = new Date("2020-01-01T00:00:00Z");
+      // Sem o trigger, para conseguir gravar uma data antiga.
+      await tx.execute(
+        sql`alter table user_titles disable trigger user_titles_set_updated_at`,
+      );
+      await tx
+        .update(userTitles)
+        .set({ updatedAt: old })
+        .where(eq(userTitles.userId, user));
+      await tx.execute(
+        sql`alter table user_titles enable trigger user_titles_set_updated_at`,
+      );
+      await run(tx, user, (deps, u) =>
+        markMovieWatched(deps, u, { titleId: c.movieId }),
+      );
+      const [after] = await tx
+        .select({ updatedAt: userTitles.updatedAt })
+        .from(userTitles)
+        .where(eq(userTitles.userId, user));
+      expect(after.updatedAt).toEqual(old);
     }));
 
   it("desmarcar apaga progresso e histórico do episódio", () =>

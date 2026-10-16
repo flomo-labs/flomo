@@ -1,4 +1,5 @@
 import type { WatchDateInput } from "@/contracts/library";
+import { CATALOG_COUNTRY } from "../catalog/types";
 import type { WatchedAtPrecision, WatchEventSource } from "./values";
 
 // Situações em que algo é marcado como visto.
@@ -8,9 +9,9 @@ export type WatchSituation = "single" | "previous";
 
 // Data padrão de cada situação, quando o usuário não escolhe outra. É o
 // único lugar desta regra: o teste com usuários reais pode mudá-la (ex.:
-// perguntar a data, ou gravar sem data) sem migration. Decisão do Renato
-// (2026-10-16): marcado na hora = agora, com opção fácil de tirar ou trocar
-// a data; anteriores = sem data, para não inflar as estatísticas de hoje.
+// perguntar a data, ou gravar sem data) sem migration. Hoje: marcado na
+// hora = agora, com opção fácil de tirar ou trocar a data; anteriores = sem
+// data, para não inflar as estatísticas de hoje.
 export const DEFAULT_WATCH_DATE: Record<WatchSituation, WatchDateInput> = {
   single: { kind: "now" },
   previous: { kind: "unknown" },
@@ -24,6 +25,17 @@ export type ResolvedWatchDate = {
 
 // Ano mínimo aceito em datas informadas pelo usuário.
 const MIN_YEAR = 1900;
+
+// Dia de hoje (AAAA-MM-DD) no fuso do país do catálogo. Decide o que já foi
+// lançado e o que é data futura. Usuários fora desse fuso podem ver a
+// virada do dia algumas horas antes ou depois (aceitável enquanto o Flomo é
+// só do Brasil).
+const COUNTRY_TIME_ZONE: Record<string, string> = { BR: "America/Sao_Paulo" };
+export function todayIn(country: string, now: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: COUNTRY_TIME_ZONE[country] ?? "UTC",
+  }).format(now);
+}
 
 // Datas aproximadas viram o primeiro dia do período às 12:00 UTC, que cai no
 // mesmo dia em qualquer fuso do Brasil (ver src/infra/db/schema/library.ts).
@@ -51,6 +63,7 @@ function startOfPeriod(
 export function resolveWatchDate(
   input: WatchDateInput,
   now: Date,
+  today: string = todayIn(CATALOG_COUNTRY, now),
 ): ResolvedWatchDate | null {
   switch (input.kind) {
     case "now":
@@ -60,12 +73,12 @@ export function resolveWatchDate(
     case "date": {
       const date = startOfPeriod(input.precision, input.value);
       if (!date || date.getUTCFullYear() < MIN_YEAR) return null;
-      // O período tem de ter começado. Compara com a meia-noite UTC do
-      // primeiro dia: no Brasil isso aceita "amanhã" nas últimas horas da
-      // noite, folga pequena e melhor do que recusar o dia de hoje.
-      if (date.getTime() - 12 * 60 * 60 * 1000 > now.getTime()) return null;
+      // O período tem de ter começado: compara o texto (AAAA, AAAA-MM ou
+      // AAAA-MM-DD) com o começo de hoje no mesmo formato.
+      if (input.value > today.slice(0, input.value.length)) return null;
       return {
-        watchedAt: date,
+        // "Hoje" às 12:00 UTC ainda pode estar no futuro de manhã.
+        watchedAt: date > now ? now : date,
         precision: input.precision,
         source: "backfill",
       };

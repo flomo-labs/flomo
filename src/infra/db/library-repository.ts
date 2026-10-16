@@ -7,6 +7,7 @@ import {
   inArray,
   isNull,
   lt,
+  lte,
   or,
   sql,
 } from "drizzle-orm";
@@ -50,16 +51,16 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
     },
 
     async upsertTitleStatus(userId, titleId, status, replaceable) {
-      // `on conflict do update` trava a linha mesmo quando o `where` não deixa
-      // mudar nada; a linha fica travada até o fim da transação.
+      // Só muda o status quando o atual está em `replaceable`; sem mudança,
+      // não regrava (nem mexe no updated_at). Mesmo assim o Postgres trava a
+      // linha em conflito até o fim da transação.
       await tx
         .insert(userTitles)
         .values({ userId, titleId, status })
         .onConflictDoUpdate({
           target: [userTitles.userId, userTitles.titleId],
-          set: {
-            status: sql`case when ${inArray(userTitles.status, [...replaceable])} then excluded.status else ${userTitles.status} end`,
-          },
+          set: { status: sql`excluded.status` },
+          setWhere: inArray(userTitles.status, [...replaceable]),
         });
     },
 
@@ -89,7 +90,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
             ),
             // Já lançados. Sem data no catálogo conta como lançado: vem antes
             // de um episódio que o usuário acabou de ver.
-            or(isNull(episodes.airDate), sql`${episodes.airDate} <= ${today}`),
+            or(isNull(episodes.airDate), lte(episodes.airDate, today)),
             isNull(userEpisodeProgress.episodeId),
           ),
         )

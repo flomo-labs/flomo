@@ -14,6 +14,7 @@ import {
   DEFAULT_WATCH_DATE,
   type ResolvedWatchDate,
   resolveWatchDate,
+  todayIn,
 } from "./watch-date";
 
 // Marcar e desmarcar como visto (Fase 1.3). Regras em
@@ -48,22 +49,17 @@ const MOVIE_REPLACES: readonly LibraryStatus[] = [
   "dropped",
 ];
 
-// Dia de hoje no Brasil (AAAA-MM-DD), para saber o que já foi lançado.
-const TODAY_TIME_ZONE: Record<string, string> = { BR: "America/Sao_Paulo" };
-export function todayIn(country: string, now: Date): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: TODAY_TIME_ZONE[country] ?? "UTC",
-  }).format(now);
-}
-
 // O progresso guarda só datas com dia conhecido (exata ou do dia); "visto em
 // 2019" fica só no histórico. Mesma regra de `refreshProgressDate`.
 function progressDate(date: ResolvedWatchDate): Date | null {
   return PROGRESS_PRECISIONS.includes(date.precision) ? date.watchedAt : null;
 }
 
-function invalidInput(issues: { message: string }[]) {
-  return fail("INVALID_INPUT" as const, issues[0].message);
+// As mensagens padrão do Zod são em inglês; só as nossas (ex.: formato da
+// data) chegam ao usuário.
+function invalidInput(issues: { code: string; message: string }[]) {
+  const custom = issues.find((i) => i.code === "custom");
+  return fail("INVALID_INPUT" as const, custom?.message ?? "Dados inválidos.");
 }
 
 export type MarkEpisodeResult = {
