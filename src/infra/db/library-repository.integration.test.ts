@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
+import { getTitleLibraryState } from "@/domain/library/get-title-state";
 import {
   markEpisodeWatched,
   markMovieWatched,
@@ -182,6 +183,40 @@ describe("marcar como visto no banco", () => {
         .from(userTitles)
         .where(eq(userTitles.userId, user));
       expect(after.updatedAt).toEqual(old);
+    }));
+
+  it("lê o estado do título: só os próprios registros, o mais recente de cada item", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const other = await createUser(tx);
+      const c = await createCatalog(tx);
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      await run(tx, other, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E2 }),
+      );
+
+      const state = await run(tx, user, (deps, u) =>
+        getTitleLibraryState(deps, u, { titleId: c.seriesId }),
+      );
+      expect(state).toMatchObject({
+        ok: true,
+        value: {
+          status: "watching",
+          watched: [
+            { episodeId: c.ep.S1E1, watchedAt: NOW, precision: "exact" },
+          ],
+        },
+      });
+
+      const empty = await run(tx, user, (deps, u) =>
+        getTitleLibraryState(deps, u, { titleId: c.movieId }),
+      );
+      expect(empty).toEqual({
+        ok: true,
+        value: { status: null, watched: [] },
+      });
     }));
 
   it("desmarcar apaga progresso e histórico do episódio", () =>

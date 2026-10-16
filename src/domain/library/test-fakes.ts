@@ -39,6 +39,24 @@ export function createFakeLibrary(catalog: {
     async findTitleMediaType(titleId) {
       return titles[titleId] ?? null;
     },
+    async getTitleState(userId, titleId) {
+      const latest = new Map<string | null, StoredEvent>();
+      // O histórico fica em ordem de gravação: o último de cada item vale.
+      for (const e of events) {
+        if (e.userId === userId && e.titleId === titleId) {
+          latest.set(e.episodeId, e);
+        }
+      }
+      return {
+        status: statuses.get(key(userId, titleId)) ?? null,
+        watched: [...latest.values()].map((e) => ({
+          episodeId: e.episodeId,
+          eventId: e.id,
+          watchedAt: e.watchedAt,
+          precision: e.precision,
+        })),
+      };
+    },
     async upsertTitleStatus(userId, titleId, status, replaceable) {
       const current = statuses.get(key(userId, titleId));
       if (!current || replaceable.includes(current)) {

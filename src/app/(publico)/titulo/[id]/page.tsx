@@ -7,6 +7,7 @@ import {
   getTitle as getTitleUncached,
   listSeasonEpisodes,
 } from "@/app/_catalog/gateway";
+import { WatchSlot } from "@/app/_library/watch-slot";
 import { Poster } from "@/components/catalog/poster";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,15 @@ async function TitleContent({
             </p>
           ) : null}
           <p className="text-sm text-muted-foreground">{facts.join(" · ")}</p>
+          {title.mediaType === "movie" ? (
+            <Suspense fallback={null}>
+              <WatchSlot
+                kind="movie"
+                titleId={title.id}
+                loginHref={loginHref(`/titulo/${title.id}`)}
+              />
+            </Suspense>
+          ) : null}
           {title.genres.length > 0 ? (
             <ul className="flex flex-wrap gap-2">
               {title.genres.map((genre) => (
@@ -112,6 +122,10 @@ async function TitleContent({
       ) : null}
     </article>
   );
+}
+
+function loginHref(next: string) {
+  return `/entrar?next=${encodeURIComponent(next)}`;
 }
 
 function firstValue(value: string | string[] | undefined): string | undefined {
@@ -210,6 +224,16 @@ async function Episodes({
               .filter(Boolean)
               .join(" · ")}
           </p>
+          <Suspense fallback={null}>
+            <WatchSlot
+              kind="episode"
+              titleId={titleId}
+              episodeId={episode.id}
+              loginHref={loginHref(
+                `/titulo/${titleId}?temporada=${seasonNumber}`,
+              )}
+            />
+          </Suspense>
         </li>
       ))}
     </ol>
