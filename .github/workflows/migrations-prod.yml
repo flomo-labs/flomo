@@ -18,9 +18,9 @@ permissions:
   contents: read
 
 # Nunca duas aplicações ao mesmo tempo, e nenhuma é cancelada no meio. Se
-# chegarem várias enquanto uma espera aprovação, o GitHub guarda só a mais
-# nova e marca as outras como "Cancelled": é normal, a mais nova aplica tudo
-# o que estiver pendente.
+# chegarem várias enquanto uma roda (ou espera aprovação, se a trava estiver
+# ligada), o GitHub guarda só a mais nova e marca as outras como "Cancelled":
+# é normal, a mais nova aplica tudo o que estiver pendente.
 concurrency:
   group: migrations-prod
   cancel-in-progress: false

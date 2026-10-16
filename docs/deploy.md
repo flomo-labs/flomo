@@ -93,24 +93,24 @@ No GitHub, em **flomo-labs/flomo > Settings > Environments > New environment**:
 
 1. Nome: `supabase-prod` (exatamente assim; não use `Production`, que a Vercel já usa para os deploys).
 2. **Required reviewers:** deixe **desmarcado** para a migration rodar sozinha depois do merge. Para exigir um clique de aprovação (recomendado antes de ligar ads e assinaturas), marque e adicione você (e o Victor), com **Prevent self-review** desmarcado.
-3. **Deployment branches and tags:** escolha **Selected branches and tags** e adicione a regra `main`. Assim, só a `main` consegue usar o segredo.
+3. **Deployment branches and tags:** escolha **Selected branches and tags** e adicione a regra `main`. Assim, só a `main` consegue usar o segredo. Com "Required reviewers" desmarcado, essa regra é a única proteção do segredo: mantenha-a sempre.
 4. **Environment secrets > Add environment secret:** nome `DATABASE_URL_MIGRATIONS`, valor a URL do **Session pooler** do `flomo-prod` (A.3, porta 5432, usuário `postgres.<ref>`). Cole direto no campo do GitHub, sem passar por outro lugar.
 5. **Environment variables > Add environment variable:** nome `FLOMO_PROD_DB_REF`, valor o ref do `flomo-prod` (não é segredo). O workflow confere que a URL do segredo é a do Session pooler desse projeto (usuário `postgres.<ref>`, porta 5432) e recusa rodar se não for.
 
 #### A.4.2 A cada migration
 
-1. Faça o merge do PR com a migration. Confira que o CI da `main` ficou verde depois do merge.
+1. Confira que o CI do PR está verde **antes** do merge: sem a trava de aprovação, a migration roda logo depois do merge e não espera o CI da `main`. Faça o merge do PR com a migration.
 2. O workflow **Migrations (produção)** (aba **Actions**) começa sozinho. Se a trava de aprovação estiver ligada (A.4.1), ele aparece como **Waiting**: clique nele, em **Review deployments**, marque `supabase-prod` e **Approve and deploy**.
 3. O job termina verde quando as migrations foram aplicadas; o log do passo **Aplicar migrations no flomo-prod** mostra o que rodou. Se falhar, o `drizzle-kit` desfaz as migrations pendentes, porque rodam numa única transação (exceto comandos que o Postgres não aceita em transação, como `CREATE INDEX CONCURRENTLY`: esses vão numa migration separada). Confira em A.5.
 
-Se aparecer uma execução **Cancelled**, é porque chegou outra mais nova enquanto ela esperava: vale a mais nova, que aplica tudo o que estiver pendente.
+Se aparecer uma execução **Cancelled**, é porque chegou outra mais nova enquanto ela esperava (por outra execução em andamento ou pela aprovação): vale a mais nova, que aplica tudo o que estiver pendente. Nenhuma migration é pulada.
 
-A Vercel publica o código assim que o merge acontece, e a migration roda em paralelo, sem garantia de ordem. Por isso, a migration entra **antes** do código que depende dela:
+A Vercel publica o código assim que o merge acontece, e a migration roda em paralelo, sem garantia de ordem. Por isso, a migration entra **antes** do código que depende dela. Um PR que traga migration e o código que a usa é risco de erro 500 em produção: o código novo pode subir antes de a migration terminar.
 
 - Tabela ou coluna nova que o código já vai usar: um PR só com a migration (e o que não depende dela); espere o job ficar verde (com a trava ligada, aprove antes); só então o merge do PR com o código que lê a tabela ou coluna nova.
 - Remover ou renomear algo que o código em produção ainda usa: o contrário. Primeiro o código deixa de usar, depois a migration remove.
 
-Para aplicar sem merge (ex.: uma migration que entrou antes deste workflow existir): **Actions > Migrations (produção) > Run workflow**, na `main`, e aprove como acima.
+Para aplicar sem merge (ex.: uma migration que entrou antes deste workflow existir): **Actions > Migrations (produção) > Run workflow**, na `main`, e, se a trava de aprovação estiver ligada, aprove como acima.
 
 #### A.4.3 Plano B: pelo seu computador
 
