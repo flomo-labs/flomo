@@ -65,17 +65,21 @@ const SHELF_PROVIDER_NAMES: Record<ShelfProviderId, string> = {
   "307": "Globoplay",
 };
 
+// Em ordem alfabética (é a ordem do seletor na Home).
 export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
   id,
   name: SHELF_PROVIDER_NAMES[id],
-}));
+})).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
+// "all" intercala filmes e séries na mesma prateleira.
+export const SHELF_MEDIA_TYPES = ["all", ...MEDIA_TYPES] as const;
 
 export const shelfInputSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("trending") }),
   z.object({ kind: z.literal("now_playing") }),
   z.object({
     kind: z.literal("provider"),
-    mediaType: z.enum(MEDIA_TYPES),
+    mediaType: z.enum(SHELF_MEDIA_TYPES),
     providerId: z.enum(SHELF_PROVIDER_IDS),
   }),
 ]);

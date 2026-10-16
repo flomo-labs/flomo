@@ -14,6 +14,7 @@ describe("listShelf", () => {
       { kind: "popular" },
       { kind: "provider", mediaType: "tv", providerId: "999" },
       { kind: "provider", mediaType: "person", providerId: "8" },
+      { kind: "provider", mediaType: "", providerId: "8" },
       { kind: "provider", mediaType: "tv", providerId: "8&with_genres=1" },
       null,
     ]) {
@@ -40,6 +41,15 @@ describe("listShelf", () => {
     expect(
       memory.shelves.get("shelf:pt-BR:BR:provider:tv:8")?.expiresAt,
     ).toEqual(new Date(NOW.getTime() + 6 * HOUR_MS));
+  });
+
+  it("aceita todos os tipos (all) e guarda em chave própria", async () => {
+    const { deps, memory } = fakeDeps();
+    const input = { kind: "provider", mediaType: "all", providerId: "8" };
+    expect(await listShelf(deps, input)).toMatchObject({ ok: true });
+    expect([...memory.shelves.keys()]).toEqual([
+      "shelf:pt-BR:BR:provider:all:8",
+    ]);
   });
 
   it("lista vazia não vai para o cache", async () => {

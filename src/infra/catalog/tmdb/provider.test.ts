@@ -461,6 +461,37 @@ describe("fetchShelf", () => {
     });
   });
 
+  it("serviço com filmes e séries (all) intercala as duas listas", async () => {
+    const movie = (id: number) => ({
+      id,
+      title: `F${id}`,
+      original_title: `M${id}`,
+      poster_path: `/m${id}.jpg`,
+    });
+    const show = (id: number) => ({
+      id,
+      name: `S${id}`,
+      original_name: `T${id}`,
+      poster_path: `/t${id}.jpg`,
+    });
+    const get = vi.fn(async (path: string) => ({
+      ...results,
+      results: path === "discover/movie" ? [movie(1), movie(2)] : [show(7)],
+    }));
+    const provider = createTmdbProvider({ get });
+    const items = await provider.fetchShelf(
+      { kind: "provider", mediaType: "all", providerId: "8" },
+      "BR",
+      "pt-BR",
+      3,
+    );
+    expect(items.map((i) => `${i.ref.mediaType}${i.ref.externalId}`)).toEqual([
+      "movie1",
+      "tv7",
+      "movie2",
+    ]);
+  });
+
   it("404 vira indisponível", async () => {
     const provider = createTmdbProvider({ get: vi.fn(async () => null) });
     await expect(

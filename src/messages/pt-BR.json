@@ -67,11 +67,12 @@
     "shelf": {
       "trending": "Em alta esta semana",
       "now_playing": "Nos cinemas",
-      "provider": "Em alta no {provider}"
+      "provider": "Em alta: {provider}"
     },
     "providerNav": "Serviço de streaming",
     "mediaNav": "Filmes ou séries",
     "media": {
+      "tudo": "Tudo",
       "filmes": "Filmes",
       "series": "Séries"
     },

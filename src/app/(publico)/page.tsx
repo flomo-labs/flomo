@@ -12,8 +12,11 @@ import { isProvisionalHandle } from "@/contracts/profile";
 import type { SearchItem } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
 
-const MEDIA_SEGMENTS = { filmes: "movie", series: "tv" } as const;
+const MEDIA_SEGMENTS = { tudo: "all", filmes: "movie", series: "tv" } as const;
 type MediaSegment = keyof typeof MEDIA_SEGMENTS;
+
+// Serviço aberto quando a URL não escolhe um (a lista é alfabética).
+const DEFAULT_PROVIDER_ID = "8"; // Netflix
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -136,9 +139,11 @@ async function ProviderSection({
   const params = await searchParams;
   const provider =
     SHELF_PROVIDERS.find((p) => p.id === firstValue(params.servico)) ??
+    SHELF_PROVIDERS.find((p) => p.id === DEFAULT_PROVIDER_ID) ??
     SHELF_PROVIDERS[0];
+  const requested = firstValue(params.tipo);
   const segment: MediaSegment =
-    firstValue(params.tipo) === "series" ? "series" : "filmes";
+    requested === "series" || requested === "filmes" ? requested : "tudo";
 
   const href = (providerId: string, target: MediaSegment) =>
     `/?servico=${providerId}&tipo=${target}#em-alta-no-servico`;
@@ -176,7 +181,7 @@ async function ProviderSection({
       </nav>
       <nav aria-label={t("mediaNav")}>
         <ul className="flex gap-2">
-          {(["filmes", "series"] as const).map((target) => (
+          {(["tudo", "filmes", "series"] as const).map((target) => (
             <li key={target}>
               <Link
                 href={href(provider.id, target)}

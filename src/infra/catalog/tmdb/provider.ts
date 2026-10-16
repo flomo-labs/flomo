@@ -389,6 +389,15 @@ function seasonNumbersOf(details: unknown): number[] {
   return parse(tvSchema, details, "tv").seasons.map((s) => s.season_number);
 }
 
+function interleave<T>(a: T[], b: T[]): T[] {
+  const out: T[] = [];
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (i < a.length) out.push(a[i]);
+    if (i < b.length) out.push(b[i]);
+  }
+  return out;
+}
+
 export function createTmdbProvider(client: TmdbClient): CatalogProvider {
   async function fetchTv(ref: CatalogRef, locale: string) {
     const details = await client.get(`tv/${ref.externalId}`, {
@@ -444,30 +453,42 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
 
     async fetchShelf(query, country, locale, limit) {
       const params = { language: locale, include_adult: false };
-      let path: string;
-      let extra: Record<string, string | number | boolean> = {};
-      let mediaType: "movie" | "tv" | null = null;
+      const fetchList = async (
+        path: string,
+        extra: Record<string, string | number | boolean>,
+        mediaType: "movie" | "tv" | null,
+      ) => {
+        const data = await client.get(path, { ...params, ...extra });
+        if (data === null) {
+          throw new CatalogUnavailableError("Prateleira do TMDB indisponível.");
+        }
+        return mapShelf(data, mediaType, limit, path);
+      };
+
       if (query.kind === "trending") {
-        path = "trending/all/week";
-      } else if (query.kind === "now_playing") {
-        path = "movie/now_playing";
-        extra = { region: country };
-        mediaType = "movie";
-      } else {
-        path = `discover/${query.mediaType}`;
-        extra = {
-          watch_region: country,
-          with_watch_providers: query.providerId,
-          with_watch_monetization_types: "flatrate",
-          sort_by: "popularity.desc",
-        };
-        mediaType = query.mediaType;
+        return fetchList("trending/all/week", {}, null);
       }
-      const data = await client.get(path, { ...params, ...extra });
-      if (data === null) {
-        throw new CatalogUnavailableError("Prateleira do TMDB indisponível.");
+      if (query.kind === "now_playing") {
+        return fetchList("movie/now_playing", { region: country }, "movie");
       }
-      return mapShelf(data, mediaType, limit, path);
+      const discover = (mediaType: "movie" | "tv") =>
+        fetchList(
+          `discover/${mediaType}`,
+          {
+            watch_region: country,
+            with_watch_providers: query.providerId,
+            with_watch_monetization_types: "flatrate",
+            sort_by: "popularity.desc",
+          },
+          mediaType,
+        );
+      if (query.mediaType !== "all") return discover(query.mediaType);
+      // Popularidade de filme e de série não é comparável no TMDB: intercala.
+      const [movies, shows] = await Promise.all([
+        discover("movie"),
+        discover("tv"),
+      ]);
+      return interleave(movies, shows).slice(0, limit);
     },
 
     async fetchWatchProviders(ref, country) {
