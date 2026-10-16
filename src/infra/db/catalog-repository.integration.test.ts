@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import {
   providerTitle,
   searchPage,
+  shelfItems,
   watchProviders,
 } from "@/domain/catalog/test-fakes";
 import { createCatalogStore } from "./catalog-repository";
@@ -183,6 +184,19 @@ describe("catalog store", () => {
       await store.writeSearch(key, searchPage(), EXPIRES);
       expect(await store.readSearch(key)).toEqual({
         value: searchPage(),
+        expiresAt: EXPIRES,
+      });
+    }));
+
+  it("grava, lê e substitui prateleiras", () =>
+    inRollback(async (tx) => {
+      const store = createCatalogStore(tx, PROVIDER);
+      const key = "shelf:pt-BR:BR:trending";
+      expect(await store.readShelf(key)).toBeNull();
+      await store.writeShelf(key, shelfItems(1), EXPIRES);
+      await store.writeShelf(key, shelfItems(2), EXPIRES);
+      expect(await store.readShelf(key)).toEqual({
+        value: shelfItems(2),
         expiresAt: EXPIRES,
       });
     }));

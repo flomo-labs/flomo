@@ -5,10 +5,9 @@ import { Suspense } from "react";
 import { searchCatalog } from "@/app/_catalog/gateway";
 import { Poster } from "@/components/catalog/poster";
 import { Badge } from "@/components/ui/badge";
+import { SearchForm } from "@/components/catalog/search-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SEARCH_MAX_PAGE, SEARCH_QUERY_MAX_LENGTH } from "@/contracts/catalog";
+import { SEARCH_MAX_PAGE } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
 import { titleRefPath } from "@/lib/title-paths";
 
@@ -51,27 +50,7 @@ async function SearchBody({
 
   return (
     <>
-      <form
-        action="/buscar"
-        method="get"
-        role="search"
-        className="flex flex-col gap-2"
-      >
-        <Label htmlFor="q">{t("label")}</Label>
-        <div className="flex gap-2">
-          <Input
-            id="q"
-            name="q"
-            type="search"
-            defaultValue={query}
-            placeholder={t("placeholder")}
-            maxLength={SEARCH_QUERY_MAX_LENGTH}
-            autoComplete="off"
-            required
-          />
-          <Button type="submit">{t("submit")}</Button>
-        </div>
-      </form>
+      <SearchForm query={query} />
       {query ? (
         <Results query={query} page={page} />
       ) : (

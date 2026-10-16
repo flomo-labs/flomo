@@ -40,3 +40,53 @@ export const seasonEpisodesInputSchema = z.object({
   titleId: z.uuid("Título inválido."),
   seasonNumber: z.coerce.number().int().min(0).max(9999),
 });
+
+// Prateleiras da Home pública (Fase 1.2b): em alta, nos cinemas e "em alta no
+// serviço X". Os serviços são uma lista fixa (os principais do Brasil, ids de
+// provedor do TMDB), para a entrada nunca virar parâmetro livre do provedor.
+export const SHELF_PROVIDER_IDS = [
+  "8",
+  "119",
+  "337",
+  "1899",
+  "350",
+  "531",
+  "307",
+] as const;
+export type ShelfProviderId = (typeof SHELF_PROVIDER_IDS)[number];
+
+// `feminine`: como a marca se refere a si mesma em português ("na Netflix",
+// "no Apple TV"); define o artigo do título da prateleira.
+const SHELF_PROVIDER_INFO: Record<
+  ShelfProviderId,
+  { name: string; feminine: boolean }
+> = {
+  "8": { name: "Netflix", feminine: true },
+  "119": { name: "Prime Video", feminine: false },
+  "337": { name: "Disney+", feminine: false },
+  "1899": { name: "HBO Max", feminine: true },
+  "350": { name: "Apple TV", feminine: false },
+  "531": { name: "Paramount+", feminine: false },
+  "307": { name: "Globoplay", feminine: false },
+};
+
+// Em ordem alfabética (é a ordem do seletor na Home; o primeiro é o padrão).
+export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
+  id,
+  ...SHELF_PROVIDER_INFO[id],
+})).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
+// "all" mistura filmes e séries na mesma prateleira, ordenados por popularidade.
+export const SHELF_MEDIA_TYPES = ["all", ...MEDIA_TYPES] as const;
+
+export const shelfInputSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("trending") }),
+  z.object({ kind: z.literal("now_playing") }),
+  z.object({
+    kind: z.literal("provider"),
+    mediaType: z.enum(SHELF_MEDIA_TYPES),
+    providerId: z.enum(SHELF_PROVIDER_IDS),
+  }),
+]);
+export type ShelfInput = z.input<typeof shelfInputSchema>;
+export type ShelfQuery = z.output<typeof shelfInputSchema>;

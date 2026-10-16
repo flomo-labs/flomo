@@ -4,6 +4,7 @@ import type {
   CatalogRef,
   MediaType,
   ProviderTitle,
+  SearchItem,
   SearchPage,
   TitleStatus,
   WatchProviders,
@@ -132,6 +133,14 @@ export function createCatalogStore(
 
     async writeSearch(key, page, expiresAt) {
       await upsertPayload(db, key, page, expiresAt);
+    },
+
+    async readShelf(key) {
+      return readPayload<SearchItem[]>(key);
+    },
+
+    async writeShelf(key, items, expiresAt) {
+      await upsertPayload(db, key, items, expiresAt);
     },
 
     async readWatchProviders(key) {

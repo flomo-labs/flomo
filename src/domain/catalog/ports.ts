@@ -3,7 +3,9 @@ import type {
   CatalogRef,
   CatalogTitle,
   ProviderTitle,
+  SearchItem,
   SearchPage,
+  ShelfQuery,
   WatchProviders,
 } from "./types";
 
@@ -24,6 +26,13 @@ export interface CatalogProvider {
   search(query: string, page: number, locale: string): Promise<SearchPage>;
   // `null` quando o título não existe no provedor.
   fetchTitle(ref: CatalogRef, locale: string): Promise<ProviderTitle | null>;
+  // Itens de uma prateleira (já sem conteúdo adulto), no máximo `limit`.
+  fetchShelf(
+    query: ShelfQuery,
+    country: string,
+    locale: string,
+    limit: number,
+  ): Promise<SearchItem[]>;
   // `null` quando o título não existe no provedor; sem oferta no país, as
   // listas voltam vazias.
   fetchWatchProviders(
@@ -37,6 +46,13 @@ export type Cached<T> = { value: T; expiresAt: Date };
 export interface CatalogStore {
   readSearch(key: string): Promise<Cached<SearchPage> | null>;
   writeSearch(key: string, page: SearchPage, expiresAt: Date): Promise<void>;
+
+  readShelf(key: string): Promise<Cached<SearchItem[]> | null>;
+  writeShelf(
+    key: string,
+    items: SearchItem[],
+    expiresAt: Date,
+  ): Promise<void>;
 
   readWatchProviders(key: string): Promise<Cached<WatchProviders> | null>;
   writeWatchProviders(

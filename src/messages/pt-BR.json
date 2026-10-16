@@ -60,5 +60,23 @@
     "unavailable": "Não foi possível carregar onde assistir agora.",
     "seeAll": "Ver a lista completa no TMDB",
     "credit": "Dados de onde assistir por"
+  },
+  "Home": {
+    "tagline": "Acompanhe filmes e séries, avalie e compartilhe com amigos.",
+    "chooseHandle": "Escolha seu nome de usuário para concluir o cadastro.",
+    "shelf": {
+      "trending": "Em alta esta semana",
+      "now_playing": "Nos cinemas",
+      "provider": "Em alta {gender, select, feminine {na} other {no}} {provider}"
+    },
+    "providerNav": "Serviço de streaming",
+    "mediaNav": "Filmes ou séries",
+    "media": {
+      "tudo": "Tudo",
+      "filmes": "Filmes",
+      "series": "Séries"
+    },
+    "providerNote": "Popularidade geral do TMDB entre os títulos de assinatura do serviço, não é o ranking dele. Dados de onde assistir por",
+    "shelfUnavailable": "Não foi possível carregar esta lista agora."
   }
 }

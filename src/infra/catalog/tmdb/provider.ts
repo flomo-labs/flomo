@@ -47,7 +47,13 @@ const searchResultSchema = z.object({
   page: z.number(),
   total_pages: z.number(),
   total_results: z.number(),
-  results: z.array(z.looseObject({ media_type: z.string().optional() })),
+  results: z.array(
+    z.looseObject({
+      media_type: z.string().optional(),
+      adult: z.boolean().nullish(),
+      popularity: z.number().nullish(),
+    }),
+  ),
 });
 
 const searchMovieSchema = z.object({
@@ -150,44 +156,90 @@ function parse<T>(schema: z.ZodType<T>, data: unknown, path: string): T {
   return result.data;
 }
 
+// Um item de lista (busca ou prateleira) do TMDB. `null` para pessoas e itens
+// malformados, que são ignorados sem derrubar a lista.
+function mapListItem(
+  result: { media_type?: string },
+  mediaType: string | undefined,
+): SearchItem | null {
+  if (mediaType === "movie") {
+    const movie = searchMovieSchema.safeParse(result);
+    if (!movie.success) return null;
+    return {
+      ref: { mediaType: "movie", externalId: String(movie.data.id) },
+      title: movie.data.title || movie.data.original_title,
+      originalTitle: movie.data.original_title,
+      originalLanguage: movie.data.original_language,
+      releaseDate: movie.data.release_date,
+      overview: movie.data.overview,
+      posterPath: movie.data.poster_path,
+    };
+  }
+  if (mediaType === "tv") {
+    const tv = searchTvSchema.safeParse(result);
+    if (!tv.success) return null;
+    return {
+      ref: { mediaType: "tv", externalId: String(tv.data.id) },
+      title: tv.data.name || tv.data.original_name,
+      originalTitle: tv.data.original_name,
+      originalLanguage: tv.data.original_language,
+      releaseDate: tv.data.first_air_date,
+      overview: tv.data.overview,
+      posterPath: tv.data.poster_path,
+    };
+  }
+  return null;
+}
+
 export function mapSearch(data: unknown): SearchPage {
   const raw = parse(searchResultSchema, data, "search/multi");
-  const items: SearchItem[] = [];
-  // Pessoas também aparecem na busca multi; o catálogo ainda não tem
-  // pessoas. Itens malformados são ignorados, sem derrubar a busca.
-  for (const result of raw.results) {
-    if (result.media_type === "movie") {
-      const movie = searchMovieSchema.safeParse(result);
-      if (!movie.success) continue;
-      items.push({
-        ref: { mediaType: "movie", externalId: String(movie.data.id) },
-        title: movie.data.title || movie.data.original_title,
-        originalTitle: movie.data.original_title,
-        originalLanguage: movie.data.original_language,
-        releaseDate: movie.data.release_date,
-        overview: movie.data.overview,
-        posterPath: movie.data.poster_path,
-      });
-    } else if (result.media_type === "tv") {
-      const tv = searchTvSchema.safeParse(result);
-      if (!tv.success) continue;
-      items.push({
-        ref: { mediaType: "tv", externalId: String(tv.data.id) },
-        title: tv.data.name || tv.data.original_name,
-        originalTitle: tv.data.original_name,
-        originalLanguage: tv.data.original_language,
-        releaseDate: tv.data.first_air_date,
-        overview: tv.data.overview,
-        posterPath: tv.data.poster_path,
-      });
-    }
-  }
+  // Pessoas também aparecem na busca multi; o catálogo ainda não tem pessoas.
+  const items = raw.results
+    .map((result) => mapListItem(result, result.media_type))
+    .filter((item) => item !== null);
   return {
     page: raw.page,
     totalPages: raw.total_pages,
     totalResults: raw.total_results,
     items,
   };
+}
+
+// Prateleira: `trending/all` traz `media_type` em cada item; `now_playing` e
+// `discover` não, e o tipo vem da própria consulta. Fica de fora o conteúdo
+// adulto (mesmo com `include_adult=false`, o `trending` pode trazê-lo) e o que
+// não tem pôster, que não serve numa vitrine.
+export function mapShelf(
+  data: unknown,
+  defaultMediaType: "movie" | "tv" | null,
+  limit: number,
+  path: string,
+): SearchItem[] {
+  return mapShelfRanked(data, defaultMediaType, path)
+    .map(({ item }) => item)
+    .slice(0, limit);
+}
+
+// Igual a `mapShelf`, mas guarda a popularidade do TMDB de cada item para
+// permitir ordenar listas de filmes e séries juntas.
+function mapShelfRanked(
+  data: unknown,
+  defaultMediaType: "movie" | "tv" | null,
+  path: string,
+): { item: SearchItem; popularity: number }[] {
+  const raw = parse(searchResultSchema, data, path);
+  return raw.results
+    .filter((result) => result.adult !== true)
+    .flatMap((result) => {
+      const item = mapListItem(
+        result,
+        result.media_type ?? defaultMediaType ?? undefined,
+      );
+      if (item === null || item.posterPath === null) return [];
+      const popularity =
+        typeof result.popularity === "number" ? result.popularity : 0;
+      return [{ item, popularity }];
+    });
 }
 
 export function mapMovie(data: unknown, locale: string): ProviderTitle {
@@ -405,6 +457,61 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
         language: locale,
       });
       return data === null ? null : mapMovie(data, locale);
+    },
+
+    async fetchShelf(query, country, locale, limit) {
+      const params = { language: locale, include_adult: false };
+      const fetchList = async (
+        path: string,
+        extra: Record<string, string | number | boolean>,
+        mediaType: "movie" | "tv" | null,
+      ) => {
+        const data = await client.get(path, { ...params, ...extra });
+        if (data === null) {
+          throw new CatalogUnavailableError("Prateleira do TMDB indisponível.");
+        }
+        return mapShelf(data, mediaType, limit, path);
+      };
+
+      if (query.kind === "trending") {
+        return fetchList("trending/all/week", {}, null);
+      }
+      if (query.kind === "now_playing") {
+        return fetchList("movie/now_playing", { region: country }, "movie");
+      }
+      const discoverParams = (mediaType: "movie" | "tv") => ({
+        path: `discover/${mediaType}`,
+        extra: {
+          watch_region: country,
+          with_watch_providers: query.providerId,
+          with_watch_monetization_types: "flatrate",
+          sort_by: "popularity.desc",
+        },
+        mediaType,
+      });
+      if (query.mediaType !== "all") {
+        const { path, extra, mediaType } = discoverParams(query.mediaType);
+        return fetchList(path, extra, mediaType);
+      }
+      // Filmes e séries juntos: ordena pela popularidade do TMDB, que vem no
+      // mesmo campo nos dois tipos.
+      const lists = await Promise.all(
+        (["movie", "tv"] as const).map(async (type) => {
+          const { path, extra, mediaType } = discoverParams(type);
+          const data = await client.get(path, { ...params, ...extra });
+          if (data === null) {
+            throw new CatalogUnavailableError(
+              "Prateleira do TMDB indisponível.",
+            );
+          }
+          return mapShelfRanked(data, mediaType, path);
+        }),
+      );
+      return lists
+        .flat()
+        .sort((a, b) => b.popularity - a.popularity)
+        .map(({ item }) => item)
+        .slice(0, limit);
     },
 
     async fetchWatchProviders(ref, country) {

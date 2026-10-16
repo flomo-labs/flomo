@@ -4,6 +4,7 @@ import type {
   CatalogRef,
   CatalogTitle,
   ProviderTitle,
+  SearchItem,
   SearchPage,
   WatchProviders,
 } from "./types";
@@ -71,6 +72,18 @@ export function searchPage(title = "A Guerra dos Tronos"): SearchPage {
   };
 }
 
+export function shelfItems(count = 2): SearchItem[] {
+  return Array.from({ length: count }, (_, i) => ({
+    ref: { mediaType: "tv" as const, externalId: String(100 + i) },
+    title: `Série ${i + 1}`,
+    originalTitle: `Show ${i + 1}`,
+    originalLanguage: "en",
+    releaseDate: "2024-01-01",
+    overview: null,
+    posterPath: `/s${i}.jpg`,
+  }));
+}
+
 export function watchProviders(
   overrides: Partial<WatchProviders> = {},
 ): WatchProviders {
@@ -88,6 +101,7 @@ export function watchProviders(
 // Store em memória que imita o repositório do Postgres.
 export function memoryStore() {
   const searches = new Map<string, { value: SearchPage; expiresAt: Date }>();
+  const shelves = new Map<string, { value: SearchItem[]; expiresAt: Date }>();
   const providers = new Map<
     string,
     { value: WatchProviders; expiresAt: Date }
@@ -105,6 +119,12 @@ export function memoryStore() {
     },
     async writeSearch(key, value, expiresAt) {
       searches.set(key, { value, expiresAt });
+    },
+    async readShelf(key) {
+      return shelves.get(key) ?? null;
+    },
+    async writeShelf(key, value, expiresAt) {
+      shelves.set(key, { value, expiresAt });
     },
     async readWatchProviders(key) {
       return providers.get(key) ?? null;
@@ -170,7 +190,7 @@ export function memoryStore() {
       }));
     },
   };
-  return { store, searches, titles, providers };
+  return { store, searches, titles, providers, shelves };
 }
 
 export function fakeDeps(
@@ -179,6 +199,7 @@ export function fakeDeps(
   const provider: CatalogProvider = {
     search: vi.fn(async () => searchPage()),
     fetchTitle: vi.fn(async () => providerTitle()),
+    fetchShelf: vi.fn(async () => shelfItems()),
     fetchWatchProviders: vi.fn(async () => watchProviders()),
     ...overrides.provider,
   };

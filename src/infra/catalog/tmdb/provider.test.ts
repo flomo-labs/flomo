@@ -5,6 +5,7 @@ import {
   createTmdbProvider,
   mapMovie,
   mapSearch,
+  mapShelf,
   mapWatchProviders,
 } from "./provider";
 
@@ -355,5 +356,151 @@ describe("fetchWatchProviders", () => {
         "BR",
       ),
     ).toBeNull();
+  });
+});
+
+describe("mapShelf", () => {
+  const item = (id: number, extra: Record<string, unknown> = {}) => ({
+    id,
+    title: `Filme ${id}`,
+    original_title: `Movie ${id}`,
+    original_language: "en",
+    release_date: "2024-01-01",
+    overview: "",
+    poster_path: `/p${id}.jpg`,
+    ...extra,
+  });
+  const page = (results: unknown[]) => ({
+    page: 1,
+    total_pages: 1,
+    total_results: results.length,
+    results,
+  });
+
+  it("usa o tipo da consulta quando o item não traz media_type", () => {
+    const items = mapShelf(page([item(1), item(2)]), "movie", 10, "x");
+    expect(items.map((i) => i.ref)).toEqual([
+      { mediaType: "movie", externalId: "1" },
+      { mediaType: "movie", externalId: "2" },
+    ]);
+  });
+
+  it("trending: respeita media_type de cada item e ignora pessoas", () => {
+    const tv = {
+      media_type: "tv",
+      id: 9,
+      name: "Série",
+      original_name: "Show",
+      poster_path: "/s.jpg",
+    };
+    const data = page([
+      { ...item(1), media_type: "movie" },
+      tv,
+      { media_type: "person", id: 5, name: "Alguém", poster_path: "/x.jpg" },
+    ]);
+    expect(mapShelf(data, null, 10, "x").map((i) => i.ref.mediaType)).toEqual([
+      "movie",
+      "tv",
+    ]);
+  });
+
+  it("adult nulo ou ausente não derruba a prateleira", () => {
+    const data = page([item(1, { adult: null }), item(2)]);
+    expect(mapShelf(data, "movie", 10, "x")).toHaveLength(2);
+  });
+
+  it("descarta conteúdo adulto e itens sem pôster, e corta no limite", () => {
+    const data = page([
+      item(1, { adult: true }),
+      item(2, { poster_path: null }),
+      item(3),
+      item(4),
+      item(5),
+    ]);
+    const items = mapShelf(data, "movie", 2, "x");
+    expect(items.map((i) => i.ref.externalId)).toEqual(["3", "4"]);
+  });
+
+  it("resposta fora do formato: indisponível", () => {
+    expect(() => mapShelf({ erro: 1 }, "movie", 10, "x")).toThrow(
+      CatalogUnavailableError,
+    );
+  });
+});
+
+describe("fetchShelf", () => {
+  const results = { page: 1, total_pages: 1, total_results: 0, results: [] };
+
+  it("monta a consulta de cada prateleira", async () => {
+    const get = vi.fn(async () => results);
+    const provider = createTmdbProvider({ get });
+    await provider.fetchShelf({ kind: "trending" }, "BR", "pt-BR", 10);
+    await provider.fetchShelf({ kind: "now_playing" }, "BR", "pt-BR", 10);
+    await provider.fetchShelf(
+      { kind: "provider", mediaType: "tv", providerId: "8" },
+      "BR",
+      "pt-BR",
+      10,
+    );
+    expect(get).toHaveBeenNthCalledWith(1, "trending/all/week", {
+      language: "pt-BR",
+      include_adult: false,
+    });
+    expect(get).toHaveBeenNthCalledWith(2, "movie/now_playing", {
+      language: "pt-BR",
+      include_adult: false,
+      region: "BR",
+    });
+    expect(get).toHaveBeenNthCalledWith(3, "discover/tv", {
+      language: "pt-BR",
+      include_adult: false,
+      watch_region: "BR",
+      with_watch_providers: "8",
+      with_watch_monetization_types: "flatrate",
+      sort_by: "popularity.desc",
+    });
+  });
+
+  it("serviço com filmes e séries (all) ordena pela popularidade do TMDB", async () => {
+    const movie = (id: number, popularity: number) => ({
+      id,
+      title: `F${id}`,
+      original_title: `M${id}`,
+      poster_path: `/m${id}.jpg`,
+      popularity,
+    });
+    const show = (id: number, popularity: number) => ({
+      id,
+      name: `S${id}`,
+      original_name: `T${id}`,
+      poster_path: `/t${id}.jpg`,
+      popularity,
+    });
+    const get = vi.fn(async (path: string) => ({
+      ...results,
+      results:
+        path === "discover/movie"
+          ? [movie(1, 50), movie(2, 10)]
+          : [show(7, 30), show(8, 80)],
+    }));
+    const provider = createTmdbProvider({ get });
+    const items = await provider.fetchShelf(
+      { kind: "provider", mediaType: "all", providerId: "8" },
+      "BR",
+      "pt-BR",
+      3,
+    );
+    expect(items.map((i) => `${i.ref.mediaType}${i.ref.externalId}`)).toEqual([
+      "tv8",
+      "movie1",
+      "tv7",
+    ]);
+  });
+
+  it("404 vira indisponível", async () => {
+    const provider = createTmdbProvider({ get: vi.fn(async () => null) });
+    await expect(
+      provider.fetchShelf({ kind: "trending" }, "BR", "pt-BR", 10),
+    ).rejects.toThrow(CatalogUnavailableError);
   });
 });

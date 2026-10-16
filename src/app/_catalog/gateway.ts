@@ -1,6 +1,11 @@
 import "server-only";
 import { after } from "next/server";
-import type { CatalogRefInput, CatalogSearchInput } from "@/contracts/catalog";
+import type {
+  CatalogRefInput,
+  CatalogSearchInput,
+  ShelfInput,
+} from "@/contracts/catalog";
+import { listShelf as listShelfUseCase } from "@/domain/catalog/list-shelf";
 import { searchCatalog as searchCatalogUseCase } from "@/domain/catalog/search-catalog";
 import {
   getTitle as getTitleUseCase,
@@ -43,4 +48,8 @@ export function listSeasonEpisodes(titleId: string, seasonNumber: number) {
 
 export function getWatchProviders(titleId: string) {
   return getWatchProvidersUseCase(deps(), { titleId });
+}
+
+export function listShelf(input: ShelfInput) {
+  return listShelfUseCase(deps(), input);
 }
