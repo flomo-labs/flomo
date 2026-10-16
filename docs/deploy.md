@@ -10,19 +10,19 @@ Guia para colocar o Flomo no ar do zero, ou para refazer o ambiente se algo for 
 
 O Flomo usa três serviços:
 
-| Serviço | Para quê |
-| ------- | -------- |
-| **Supabase** | Banco Postgres e autenticação (login com Google). |
-| **Vercel** | Hospeda o app Next.js. |
+| Serviço          | Para quê                                            |
+| ---------------- | --------------------------------------------------- |
+| **Supabase**     | Banco Postgres e autenticação (login com Google).   |
+| **Vercel**       | Hospeda o app Next.js.                              |
 | **Google Cloud** | Cliente OAuth: é o que permite "Entrar com Google". |
 
 Há dois ambientes de dados, separados de propósito:
 
-| Ambiente | App | Banco e login |
-| -------- | --- | ------------- |
-| **Local** | `pnpm dev` | `flomo-dev` |
-| **Preview** (um por PR/branch) | Vercel Preview | `flomo-dev` |
-| **Produção** (branch `main`) | Vercel Production | `flomo-prod`, com a **Data API desligada** |
+| Ambiente                       | App               | Banco e login                              |
+| ------------------------------ | ----------------- | ------------------------------------------ |
+| **Local**                      | `pnpm dev`        | `flomo-dev`                                |
+| **Preview** (um por PR/branch) | Vercel Preview    | `flomo-dev`                                |
+| **Produção** (branch `main`)   | Vercel Production | `flomo-prod`, com a **Data API desligada** |
 
 Os previews usam o `flomo-dev` para que testar um PR nunca toque nos dados reais. As funções da Vercel rodam em `gru1` (São Paulo, definido em `vercel.json`), a mesma região do Supabase, para que cada consulta ao banco não atravesse o continente.
 
@@ -74,10 +74,10 @@ Anote em local seguro. Você vai usá-los na parte B.
   - Em **Secret keys**, a chave **secret** (`sb_secret_...`). Se não houver, crie com **New secret key**. Ela ignora as regras de acesso do banco: nunca vai para o navegador nem para o repositório.
 - No botão **Connect** (topo do projeto), seção **Pooler** (ORMs/Connection string). Existem dois modos, e o app usa cada um para uma coisa:
 
-  | Modo | Porta | Usado em |
-  | ---- | ----- | -------- |
-  | **Transaction pooler** | 6543 | `DATABASE_URL`: o app, em produção. |
-  | **Session pooler** | 5432 | `DATABASE_URL_MIGRATIONS`: só para aplicar migrations. |
+  | Modo                   | Porta | Usado em                                               |
+  | ---------------------- | ----- | ------------------------------------------------------ |
+  | **Transaction pooler** | 6543  | `DATABASE_URL`: o app, em produção.                    |
+  | **Session pooler**     | 5432  | `DATABASE_URL_MIGRATIONS`: só para aplicar migrations. |
 
   Nas duas URLs, troque `[YOUR-PASSWORD]` pela senha do passo A.1. Se a senha tiver caracteres especiais (`@`, `#`, `/`, `:`), use a versão **codificada** que o painel mostra.
 
@@ -178,15 +178,15 @@ Para uma migration nova, confira no **SQL Editor**: `select id, created_at from 
 
 Abra **Environment Variables** na mesma tela e cadastre, uma a uma (nome, valor e em **Environments** escolha onde vale):
 
-| Variável | Production | Preview |
-| -------- | ---------- | ------- |
-| `NEXT_PUBLIC_SITE_URL` | URL de produção (passo B.4) | **não definir** |
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL do `flomo-prod` | Project URL do `flomo-dev` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable do `flomo-prod` | publishable do `flomo-dev` |
-| `SUPABASE_SECRET_KEY` | secret do `flomo-prod` | secret do `flomo-dev` |
-| `DATABASE_URL` | Transaction pooler do `flomo-prod` (6543) | Transaction pooler do `flomo-dev` (6543) |
-| `TMDB_API_KEY` | chave do TMDB | a mesma chave |
-| `SENTRY_DSN` (opcional) | DSN do projeto no Sentry (B.2.1) | **não definir** (ou um projeto de teste) |
+| Variável                               | Production                                | Preview                                  |
+| -------------------------------------- | ----------------------------------------- | ---------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                 | URL de produção (passo B.4)               | **não definir**                          |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Project URL do `flomo-prod`               | Project URL do `flomo-dev`               |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable do `flomo-prod`               | publishable do `flomo-dev`               |
+| `SUPABASE_SECRET_KEY`                  | secret do `flomo-prod`                    | secret do `flomo-dev`                    |
+| `DATABASE_URL`                         | Transaction pooler do `flomo-prod` (6543) | Transaction pooler do `flomo-dev` (6543) |
+| `TMDB_API_KEY`                         | chave do TMDB                             | a mesma chave                            |
+| `SENTRY_DSN` (opcional)                | DSN do projeto no Sentry (B.2.1)          | **não definir** (ou um projeto de teste) |
 
 #### B.2.1 Sentry (erros do servidor)
 
@@ -294,16 +294,16 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 
 ## Armadilhas conhecidas
 
-| Sintoma | Causa e solução |
-| ------- | ---------------- |
-| `password authentication failed for user "postgres"` nos logs, `/cadastro` com "A server error occurred" | `DATABASE_URL` com usuário `postgres` (conexão direta) ou senha errada. Use a URL do **Transaction pooler**, com usuário `postgres.<ref>`, e refaça o Redeploy. |
-| `$env:DATABASE_URL_MIGRATIONS` vazio e migrations "aplicadas" que só mostram `already exists, skipping` | No plano B (A.4.3), a variável não foi definida e o `drizzle-kit` usou o `.env.local` (flomo-dev). Defina a variável e confira antes de rodar. |
-| Workflow **Migrations (produção)** falha com "Defina o segredo..." ou "não é a URL do Session pooler" | Falta o segredo ou a variável no ambiente `supabase-prod`, ou a URL é de outro projeto (A.4.1). Confira se `FLOMO_PROD_DB_REF` está em **Environment variables**, e não em secrets. |
-| Workflow parado em **Waiting** | A trava de aprovação do `supabase-prod` está ligada: aprove (A.4.2) ou desligue em A.4.1. |
-| Login em preview termina em `localhost:3000/?code=...` (`ERR_CONNECTION_REFUSED`) | O padrão de preview no `flomo-dev` não casa com a URL de volta: confira o `**` no fim e o slug do time (D.2). |
-| Login volta para `/entrar?erro=google` | Redirect URL ausente no Supabase (D.1 e D.2), ou `NEXT_PUBLIC_SITE_URL` errada. |
-| Mudei `NEXT_PUBLIC_SITE_URL` e nada mudou | Variáveis `NEXT_PUBLIC_*` só valem após um novo build: faça **Redeploy**. |
-| Login funciona em produção e falha em previews | Falta o padrão de previews no `flomo-dev` (D.2), falta o `**` no fim dele, ou o slug do time está errado. |
+| Sintoma                                                                                                  | Causa e solução                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `password authentication failed for user "postgres"` nos logs, `/cadastro` com "A server error occurred" | `DATABASE_URL` com usuário `postgres` (conexão direta) ou senha errada. Use a URL do **Transaction pooler**, com usuário `postgres.<ref>`, e refaça o Redeploy.                     |
+| `$env:DATABASE_URL_MIGRATIONS` vazio e migrations "aplicadas" que só mostram `already exists, skipping`  | No plano B (A.4.3), a variável não foi definida e o `drizzle-kit` usou o `.env.local` (flomo-dev). Defina a variável e confira antes de rodar.                                      |
+| Workflow **Migrations (produção)** falha com "Defina o segredo..." ou "não é a URL do Session pooler"    | Falta o segredo ou a variável no ambiente `supabase-prod`, ou a URL é de outro projeto (A.4.1). Confira se `FLOMO_PROD_DB_REF` está em **Environment variables**, e não em secrets. |
+| Workflow parado em **Waiting**                                                                           | A trava de aprovação do `supabase-prod` está ligada: aprove (A.4.2) ou desligue em A.4.1.                                                                                           |
+| Login em preview termina em `localhost:3000/?code=...` (`ERR_CONNECTION_REFUSED`)                        | O padrão de preview no `flomo-dev` não casa com a URL de volta: confira o `**` no fim e o slug do time (D.2).                                                                       |
+| Login volta para `/entrar?erro=google`                                                                   | Redirect URL ausente no Supabase (D.1 e D.2), ou `NEXT_PUBLIC_SITE_URL` errada.                                                                                                     |
+| Mudei `NEXT_PUBLIC_SITE_URL` e nada mudou                                                                | Variáveis `NEXT_PUBLIC_*` só valem após um novo build: faça **Redeploy**.                                                                                                           |
+| Login funciona em produção e falha em previews                                                           | Falta o padrão de previews no `flomo-dev` (D.2), falta o `**` no fim dele, ou o slug do time está errado.                                                                           |
 
 ## Depois do deploy
 

@@ -9,7 +9,8 @@ import { destinationAfterLogin } from "../../_profile/queries";
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const next = safeNextPath(request.nextUrl.searchParams.get("next"));
-  const site = resolveSiteUrl(process.env, request.nextUrl.host) ?? request.nextUrl.origin;
+  const site =
+    resolveSiteUrl(process.env, request.nextUrl.host) ?? request.nextUrl.origin;
   const failure = NextResponse.redirect(
     new URL(`/entrar?erro=google&next=${encodeURIComponent(next)}`, site),
   );

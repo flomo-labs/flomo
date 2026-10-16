@@ -25,6 +25,7 @@ const FILTER_PARAM: Record<LibraryFilter, string | null> = {
   watching: "assistindo",
   watchlist: "quero-ver",
   paused: "pausado",
+  watched: "assistidos",
   hidden: "ocultos",
 };
 

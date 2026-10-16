@@ -82,6 +82,7 @@ export const LIBRARY_FILTERS = [
   "watching",
   "watchlist",
   "paused",
+  "watched",
   "hidden",
 ] as const;
 export type LibraryFilter = (typeof LIBRARY_FILTERS)[number];

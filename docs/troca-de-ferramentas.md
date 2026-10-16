@@ -17,25 +17,25 @@ Este guia diz, para cada ferramenta do Flomo, onde ela está acoplada, o que faz
 
 ## 2. Mapa de acoplamento
 
-| Ferramenta | Papel | Onde vive | Custo de troca |
-| ---------- | ----- | --------- | -------------- |
-| PostgreSQL | Banco | Schema, migrations, policies | Alto, e não previsto: é a base portável |
-| Supabase Auth | Login (Google, e-mail) | `infra/auth/supabase/`, `app.current_user_id()`, trigger de perfil, FK de `profiles` | Alto |
-| Supabase (hospedagem do Postgres) | Banco gerenciado | `DATABASE_URL` | Baixo a médio |
-| Supabase Storage | Avatares | `infra/storage/supabase/` | Baixo |
-| Drizzle | ORM e migrations | `infra/db/` e `drizzle/` | Médio |
-| postgres.js | Driver | `infra/db/client.ts` | Baixo |
-| Next.js | Web | `app/` | Médio a alto |
-| Vercel | Hospedagem da web | Configuração do projeto, cron (se usado) | Baixo a médio |
-| TMDB | Catálogo | `infra/catalog/tmdb/` | Médio (dados e termos) |
-| TVmaze | Calendário | `infra/catalog/tvmaze/` | Baixo |
-| Resend | E-mail | `infra/email/resend/` | Baixo |
-| `pg_cron` | Jobs | Migrations SQL e rotas de job | Baixo a médio |
-| Sentry / analytics | Erros e métricas | `instrumentation`, `infra/observability/` | Baixo |
-| next-intl | Textos e i18n | `app/` e arquivos de mensagens | Médio |
-| Tailwind, shadcn/ui, Base UI | UI | `components/`, `app/` | Alto (é visual), sem efeito no resto |
-| Zod | Validação | `contracts/` | Médio (está em toda borda) |
-| Vitest | Testes | `*.test.ts`, `vitest.config.mts` | Baixo |
+| Ferramenta                        | Papel                  | Onde vive                                                                            | Custo de troca                          |
+| --------------------------------- | ---------------------- | ------------------------------------------------------------------------------------ | --------------------------------------- |
+| PostgreSQL                        | Banco                  | Schema, migrations, policies                                                         | Alto, e não previsto: é a base portável |
+| Supabase Auth                     | Login (Google, e-mail) | `infra/auth/supabase/`, `app.current_user_id()`, trigger de perfil, FK de `profiles` | Alto                                    |
+| Supabase (hospedagem do Postgres) | Banco gerenciado       | `DATABASE_URL`                                                                       | Baixo a médio                           |
+| Supabase Storage                  | Avatares               | `infra/storage/supabase/`                                                            | Baixo                                   |
+| Drizzle                           | ORM e migrations       | `infra/db/` e `drizzle/`                                                             | Médio                                   |
+| postgres.js                       | Driver                 | `infra/db/client.ts`                                                                 | Baixo                                   |
+| Next.js                           | Web                    | `app/`                                                                               | Médio a alto                            |
+| Vercel                            | Hospedagem da web      | Configuração do projeto, cron (se usado)                                             | Baixo a médio                           |
+| TMDB                              | Catálogo               | `infra/catalog/tmdb/`                                                                | Médio (dados e termos)                  |
+| TVmaze                            | Calendário             | `infra/catalog/tvmaze/`                                                              | Baixo                                   |
+| Resend                            | E-mail                 | `infra/email/resend/`                                                                | Baixo                                   |
+| `pg_cron`                         | Jobs                   | Migrations SQL e rotas de job                                                        | Baixo a médio                           |
+| Sentry / analytics                | Erros e métricas       | `instrumentation`, `infra/observability/`                                            | Baixo                                   |
+| next-intl                         | Textos e i18n          | `app/` e arquivos de mensagens                                                       | Médio                                   |
+| Tailwind, shadcn/ui, Base UI      | UI                     | `components/`, `app/`                                                                | Alto (é visual), sem efeito no resto    |
+| Zod                               | Validação              | `contracts/`                                                                         | Médio (está em toda borda)              |
+| Vitest                            | Testes                 | `*.test.ts`, `vitest.config.mts`                                                     | Baixo                                   |
 
 ## 3. Passo a passo por ferramenta
 

@@ -18,6 +18,7 @@ const SCOPE_BY_FILTER: Record<
   watching: { statuses: ["watching"], hidden: false },
   watchlist: { statuses: ["watchlist"], hidden: false },
   paused: { statuses: ["paused"], hidden: false },
+  watched: { statuses: ["watched"], hidden: false },
   hidden: { statuses: null, hidden: true },
 };
 

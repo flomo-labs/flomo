@@ -2,7 +2,7 @@
 
 > **Histórico.** Este checklist guiou o PR 1 e está desatualizado nos pontos abaixo. Não siga as partes marcadas; vale o que está no `AGENTS.md`, nos ADRs e no README.
 >
-> - Merge: sempre "Create a merge commit", nunca *Squash and merge*.
+> - Merge: sempre "Create a merge commit", nunca _Squash and merge_.
 > - O job do CI se chama `verify` (é o check obrigatório da `main`), não `check`.
 > - O repositório é público e a `main` é protegida por ruleset; a Etapa 9 foi escrita para repositório privado.
 > - PR 2 e PR 3: chaves, conexões, `profiles`, policies e criação de perfil seguem o ADR-003 (chaves `publishable`/`secret`, duas URLs de banco, policies com `app.current_user_id()`, perfil criado por trigger, e não no callback). Não chamar `.enableRLS()` à parte.
@@ -169,7 +169,7 @@ git commit -m "chore: bootstrap Next.js com camadas, lint, testes e CI"
 git push -u origin chore/bootstrap
 ```
 
-Abra o PR no GitHub (o template de PR aparece automaticamente), confira o CI e peça a revisão da outra pessoa antes de mesclar com *Squash and merge*.
+Abra o PR no GitHub (o template de PR aparece automaticamente), confira o CI e peça a revisão da outra pessoa antes de mesclar com _Squash and merge_.
 
 ---
 
@@ -184,7 +184,7 @@ Abra o PR no GitHub (o template de PR aparece automaticamente), confira o CI e p
 
 ### 2.2 `DATABASE_URL`
 
-No painel, abra a tela de conexão do projeto (botão *Connect*, o nome pode variar). Use a **Session pooler** para rodar migrations a partir do seu computador. A conexão direta pode exigir IPv6, que muitas redes domésticas não têm. Em produção na Vercel, a conexão em modo transação é a indicada para ambientes serverless. Confira o texto do próprio painel.
+No painel, abra a tela de conexão do projeto (botão _Connect_, o nome pode variar). Use a **Session pooler** para rodar migrations a partir do seu computador. A conexão direta pode exigir IPv6, que muitas redes domésticas não têm. Em produção na Vercel, a conexão em modo transação é a indicada para ambientes serverless. Confira o texto do próprio painel.
 
 ### 2.3 Drizzle
 
@@ -216,20 +216,33 @@ Em `src/infra/db/schema/profiles.ts`, um ponto de partida. Confira os nomes dos 
 
 ```ts
 import { sql } from "drizzle-orm";
-import { boolean, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgPolicy,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { authenticatedRole, authUsers } from "drizzle-orm/supabase";
 
 export const profiles = pgTable(
   "profiles",
   {
-    id: uuid("id").primaryKey().references(() => authUsers.id, { onDelete: "cascade" }),
+    id: uuid("id")
+      .primaryKey()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
     handle: text("handle").notNull().unique(),
     bio: text("bio"),
     avatarUrl: text("avatar_url"),
     isPrivate: boolean("is_private").notNull().default(false),
     locale: text("locale").notNull().default("pt-BR"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
     pgPolicy("profiles_select_public_or_own", {
@@ -266,14 +279,14 @@ Confira no painel do Supabase (Table Editor) que a tabela existe com RLS ativa. 
 
 - [ ] Em console.cloud.google.com, criar um projeto (ex.: "Flomo").
 - [ ] Configurar a tela de consentimento OAuth (nome do app, e-mail de suporte).
-- [ ] Criar um **OAuth client ID** do tipo *Web application*.
-- [ ] Em *Authorized redirect URIs*, adicionar: `https://<ref-do-projeto>.supabase.co/auth/v1/callback` (o endereço exato aparece na tela do provider Google no Supabase).
+- [ ] Criar um **OAuth client ID** do tipo _Web application_.
+- [ ] Em _Authorized redirect URIs_, adicionar: `https://<ref-do-projeto>.supabase.co/auth/v1/callback` (o endereço exato aparece na tela do provider Google no Supabase).
 - [ ] Guardar Client ID e Client secret.
 
 ### 3.2 Supabase
 
 - [ ] **Authentication → Providers → Google**: ativar e colar Client ID e secret.
-- [ ] **Authentication → URL Configuration**: definir o *Site URL* como `http://localhost:3000` e adicionar `http://localhost:3000/**` nas redirect URLs. A URL de produção entra quando houver deploy.
+- [ ] **Authentication → URL Configuration**: definir o _Site URL_ como `http://localhost:3000` e adicionar `http://localhost:3000/**` nas redirect URLs. A URL de produção entra quando houver deploy.
 
 ### 3.3 No app
 
@@ -301,12 +314,12 @@ Critério: login com Google funciona localmente e a sessão persiste ao recarreg
 
 **Restrição encontrada:** o plano Hobby da Vercel não permite deploy a partir de repositório **privado de organização do GitHub**. Segundo a documentação citada por funcionários da Vercel em fóruns, é preciso o plano Pro, tornar o repo público ou mover o repo para conta pessoal. Verifique a regra atual na documentação da Vercel antes de decidir.
 
-| Opção | Custo | Observações |
-|---|---|---|
-| Vercel Pro | Pago | Resolve de vez, com colaboração em equipe |
-| Repo público | Zero | Código exposto antes de a marca estar resolvida |
-| Repo em conta pessoal | Zero | No Hobby, só o dono do time Vercel dispara deploys, o que atrapalha a dupla |
-| Deploy via GitHub Actions com Vercel CLI | Zero | Contorno usado por outros usuários. Pode mudar, e consome minutos de Actions |
+| Opção                                    | Custo | Observações                                                                  |
+| ---------------------------------------- | ----- | ---------------------------------------------------------------------------- |
+| Vercel Pro                               | Pago  | Resolve de vez, com colaboração em equipe                                    |
+| Repo público                             | Zero  | Código exposto antes de a marca estar resolvida                              |
+| Repo em conta pessoal                    | Zero  | No Hobby, só o dono do time Vercel dispara deploys, o que atrapalha a dupla  |
+| Deploy via GitHub Actions com Vercel CLI | Zero  | Contorno usado por outros usuários. Pode mudar, e consome minutos de Actions |
 
 Nada nas etapas anteriores depende dessa escolha. Decidam antes do PR 4 ou logo depois.
 

@@ -93,15 +93,15 @@ Exceções, por obrigação legal, ficam fora da cascata e com prazo de retenç�
 
 ## Alternativas consideradas
 
-| Alternativa | Motivo de não adotar |
-| ----------- | -------------------- |
-| Autorização só na aplicação | Um filtro esquecido vira vazamento, e as policies viram enfeite que não dá para testar. Fica como plano B |
-| Cliente Supabase (`supabase-js`) para dados de usuário e Drizzle só para catálogo | Duas formas de acessar o banco no mesmo projeto, sem os tipos e as transações do Drizzle justamente nos casos de uso mais delicados |
-| Policies com `auth.uid()` direto | Espalha o acoplamento ao Supabase Auth por todas as policies |
-| Uma única URL de conexão | Em produção, ou as migrations falham (modo transação) ou o app esgota as conexões (modo sessão), e o erro só aparece no deploy |
-| Criar o perfil no callback do OAuth | Se o callback falhar depois de criar o usuário, sobra usuário sem perfil, e cada novo caminho de login (e-mail, mobile) precisa lembrar de chamar |
-| Drizzle 1.0 RC | Release candidate parada há meses; risco de bug de ferramenta perto da banca |
-| Chaves `anon`/`service_role` | Descontinuadas até o fim de 2026, e trocar uma delas exige trocar o segredo JWT e derruba todas as sessões |
+| Alternativa                                                                       | Motivo de não adotar                                                                                                                              |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Autorização só na aplicação                                                       | Um filtro esquecido vira vazamento, e as policies viram enfeite que não dá para testar. Fica como plano B                                         |
+| Cliente Supabase (`supabase-js`) para dados de usuário e Drizzle só para catálogo | Duas formas de acessar o banco no mesmo projeto, sem os tipos e as transações do Drizzle justamente nos casos de uso mais delicados               |
+| Policies com `auth.uid()` direto                                                  | Espalha o acoplamento ao Supabase Auth por todas as policies                                                                                      |
+| Uma única URL de conexão                                                          | Em produção, ou as migrations falham (modo transação) ou o app esgota as conexões (modo sessão), e o erro só aparece no deploy                    |
+| Criar o perfil no callback do OAuth                                               | Se o callback falhar depois de criar o usuário, sobra usuário sem perfil, e cada novo caminho de login (e-mail, mobile) precisa lembrar de chamar |
+| Drizzle 1.0 RC                                                                    | Release candidate parada há meses; risco de bug de ferramenta perto da banca                                                                      |
+| Chaves `anon`/`service_role`                                                      | Descontinuadas até o fim de 2026, e trocar uma delas exige trocar o segredo JWT e derruba todas as sessões                                        |
 
 ## Consequências
 
