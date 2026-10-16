@@ -2,7 +2,7 @@ import type { WatchDateInput } from "@/contracts/library";
 import { CATALOG_COUNTRY } from "../catalog/types";
 import type { WatchedAtPrecision, WatchEventSource } from "./values";
 
-// Situações em que algo é marcado como visto.
+// Situações em que algo é marcado como assistido.
 // - `single`: o usuário marcou um episódio ou filme.
 // - `previous`: episódios anteriores marcados junto ("marcar anteriores").
 export type WatchSituation = "single" | "previous";

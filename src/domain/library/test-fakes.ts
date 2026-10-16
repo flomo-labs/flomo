@@ -26,6 +26,7 @@ export function createFakeLibrary(catalog: {
   const titles = catalog.titles ?? {};
   const episodes = catalog.episodes ?? [];
   const statuses = new Map<string, LibraryStatus>();
+  const hiddenTitles = new Set<string>();
   const progress = new Map<string, Date | null>();
   const events: StoredEvent[] = [];
   let nextId = 1;
@@ -47,11 +48,12 @@ export function createFakeLibrary(catalog: {
     async findTitleMediaType(titleId) {
       return titles[titleId] ?? null;
     },
-    async listLibrary(userId, wanted, _locale, today) {
+    async listLibrary(userId, { statuses: wanted, hidden }, _locale, today) {
       const items: LibraryItem[] = [];
       for (const [k, status] of statuses) {
         const [owner, titleId] = k.split(":");
         if (owner !== userId || (wanted && !wanted.includes(status))) continue;
+        if (hiddenTitles.has(k) !== hidden) continue;
         const mediaType = titles[titleId];
         if (!mediaType) continue;
         const released = episodes.filter(
@@ -100,6 +102,7 @@ export function createFakeLibrary(catalog: {
       }
       return {
         status: statuses.get(key(userId, titleId)) ?? null,
+        hidden: hiddenTitles.has(key(userId, titleId)),
         watched: [...items.values()],
       };
     },
@@ -108,6 +111,19 @@ export function createFakeLibrary(catalog: {
       if (!current || replaceable.includes(current)) {
         statuses.set(key(userId, titleId), status);
       }
+    },
+    async setTitleStatus(userId, titleId, status) {
+      statuses.set(key(userId, titleId), status);
+    },
+    async setTitleHidden(userId, titleId, hidden) {
+      if (!statuses.has(key(userId, titleId))) return false;
+      if (hidden) hiddenTitles.add(key(userId, titleId));
+      else hiddenTitles.delete(key(userId, titleId));
+      return true;
+    },
+    async removeTitle(userId, titleId) {
+      statuses.delete(key(userId, titleId));
+      hiddenTitles.delete(key(userId, titleId));
     },
     async listPreviousUnwatched(userId, episode, today) {
       return episodes

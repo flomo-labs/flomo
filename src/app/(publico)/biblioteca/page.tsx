@@ -25,6 +25,7 @@ const FILTER_PARAM: Record<LibraryFilter, string | null> = {
   watching: "assistindo",
   watchlist: "quero-ver",
   paused: "pausado",
+  hidden: "ocultos",
 };
 
 function filterFromParam(value: string | string[] | undefined): LibraryFilter {
@@ -101,7 +102,11 @@ async function Body({
       ) : items.length === 0 ? (
         <div className="flex flex-col items-start gap-3">
           <p className="text-muted-foreground">
-            {filter === "all" ? t("emptyAll") : t("emptyFilter")}
+            {filter === "all"
+              ? t("emptyAll")
+              : filter === "hidden"
+                ? t("emptyHidden")
+                : t("emptyFilter")}
           </p>
           {filter === "all" ? (
             <Button render={<Link href="/buscar" />} nativeButton={false}>

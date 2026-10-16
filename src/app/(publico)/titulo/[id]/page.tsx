@@ -7,6 +7,7 @@ import {
   getTitle as getTitleUncached,
   listSeasonEpisodes,
 } from "@/app/_catalog/gateway";
+import { StatusSlot } from "@/app/_library/status-slot";
 import { WatchSlot } from "@/app/_library/watch-slot";
 import { Poster } from "@/components/catalog/poster";
 import { WatchProviders } from "@/components/catalog/watch-providers";
@@ -83,6 +84,9 @@ async function TitleContent({
             </p>
           ) : null}
           <p className="text-sm text-muted-foreground">{facts.join(" · ")}</p>
+          <Suspense fallback={null}>
+            <StatusSlot titleId={title.id} />
+          </Suspense>
           {title.mediaType === "movie" ? (
             <Suspense fallback={null}>
               <WatchSlot

@@ -12,6 +12,12 @@ import {
   unmarkMovieWatched,
   type MarkWatchedErrorCode,
 } from "@/domain/library/mark-watched";
+import {
+  removeTitleFromLibrary,
+  setTitleHidden,
+  setTitleStatus,
+  type SetStatusErrorCode,
+} from "@/domain/library/set-status";
 import { fail, type Result } from "@/domain/result";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
@@ -24,7 +30,7 @@ import { getCurrentUser } from "../_auth/session";
 
 export type LibraryActionResult = Result<
   Record<string, never>,
-  MarkWatchedErrorCode | "UNAUTHENTICATED"
+  MarkWatchedErrorCode | SetStatusErrorCode | "UNAUTHENTICATED"
 >;
 
 type UseCase = (
@@ -34,7 +40,7 @@ type UseCase = (
   },
   user: { id: string },
   input: unknown,
-) => Promise<Result<unknown, MarkWatchedErrorCode>>;
+) => Promise<Result<unknown, MarkWatchedErrorCode | SetStatusErrorCode>>;
 
 async function run(
   useCase: UseCase,
@@ -88,4 +94,16 @@ export async function recordMovieAgain(input: unknown) {
 
 export async function removeWatchRecord(input: unknown) {
   return run(deleteWatchRecord, input);
+}
+
+export async function changeTitleStatus(input: unknown) {
+  return run(setTitleStatus, input);
+}
+
+export async function changeTitleHidden(input: unknown) {
+  return run(setTitleHidden, input);
+}
+
+export async function removeFromLibrary(input: unknown) {
+  return run(removeTitleFromLibrary, input);
 }

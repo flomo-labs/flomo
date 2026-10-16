@@ -166,7 +166,7 @@ describe("markEpisodeWatched", () => {
     expect(lib.watched()).not.toContain(S0E1.id);
   });
 
-  it("muda o status de Quero ver, Pausado e Abandonado, mas não de Visto", async () => {
+  it("muda o status de Quero ver, Pausado e Abandonado, mas não de Assistido", async () => {
     for (const [before, after] of [
       ["watchlist", "watching"],
       ["paused", "watching"],
@@ -194,7 +194,7 @@ describe("markEpisodeWatched", () => {
 });
 
 describe("markMovieWatched", () => {
-  it("grava agora, põe o filme em Visto e é idempotente", async () => {
+  it("grava agora, põe o filme em Assistido e é idempotente", async () => {
     const lib = setup();
     lib.setStatus(MOVIE, "watchlist");
     expect(await markMovieWatched(lib.deps, USER, { titleId: MOVIE })).toEqual({
@@ -466,7 +466,7 @@ describe("registrar de novo", () => {
   });
 });
 
-describe("série que vira Visto sozinha", () => {
+describe("série que vira Assistido sozinha", () => {
   function finished(status: "ended" | "canceled" | "returning") {
     return createFakeLibrary({
       titles: { [SERIES]: "tv", [MOVIE]: "movie" },
@@ -477,7 +477,7 @@ describe("série que vira Visto sozinha", () => {
   }
   const released = [S1E1, S1E2, S1E3, S2E1, S2E2];
 
-  it("série encerrada com todos os lançados vistos vira Visto", async () => {
+  it("série encerrada com todos os lançados vistos vira Assistido", async () => {
     const lib = finished("ended");
     await markEpisodeWatched(lib.deps, USER, {
       episodeId: S2E2.id,
@@ -510,7 +510,7 @@ describe("série que vira Visto sozinha", () => {
     expect(lib.status(SERIES)).toBe("watching");
   });
 
-  it("desmarcar um episódio de série Visto volta para Assistindo", async () => {
+  it("desmarcar um episódio de série Assistido volta para Assistindo", async () => {
     const lib = finished("ended");
     await markEpisodeWatched(lib.deps, USER, {
       episodeId: S2E2.id,
@@ -531,7 +531,7 @@ describe("série que vira Visto sozinha", () => {
     expect(lib.status(SERIES)).toBe("watched");
   });
 
-  it("Pausado ou Abandonado marcando o último episódio vira Visto", async () => {
+  it("Pausado ou Abandonado marcando o último episódio vira Assistido", async () => {
     const lib = finished("ended");
     await markEpisodeWatched(lib.deps, USER, {
       episodeId: S2E2.id,

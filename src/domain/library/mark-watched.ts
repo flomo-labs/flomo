@@ -20,7 +20,7 @@ import {
   todayIn,
 } from "./watch-date";
 
-// Marcar e desmarcar como visto (Fase 1.3). Regras em
+// Marcar e desmarcar como assistido (Fase 1.3). Regras em
 // docs/regras-de-negocio.md, seção Biblioteca. Cada caso de uso roda numa
 // transação só (o `withUser` da borda): ou grava tudo, ou nada.
 
@@ -39,13 +39,13 @@ const INVALID_DATE_MESSAGE =
   "Escolha uma data que já passou (a partir de 1900).";
 
 // Marcar um episódio põe a série em "Assistindo", saindo de "Quero ver",
-// "Pausado" ou "Abandonado". Uma série já em "Visto" continua assim.
+// "Pausado" ou "Abandonado". Uma série já em "Assistido" continua assim.
 const EPISODE_REPLACES: readonly LibraryStatus[] = [
   "watchlist",
   "paused",
   "dropped",
 ];
-// Marcar um filme o põe em "Visto", qualquer que seja o status anterior.
+// Marcar um filme o põe em "Assistido", qualquer que seja o status anterior.
 const MOVIE_REPLACES: readonly LibraryStatus[] = [
   "watchlist",
   "watching",
@@ -67,16 +67,16 @@ function invalidInput(issues: { code: string; message: string }[]) {
 }
 
 // Série encerrada ou cancelada com todos os episódios regulares já lançados
-// vistos vira "Visto" sozinha; se deixa de estar completa (episódio
+// vistos vira "Assistido" sozinha; se deixa de estar completa (episódio
 // desmarcado, ou episódio novo no catálogo) volta a "Assistindo". Série em
-// exibição nunca vira "Visto" sozinha.
+// exibição nunca vira "Assistido" sozinha.
 const FINISHED_CATALOG_STATUSES: readonly TitleStatus[] = ["ended", "canceled"];
 
 async function syncSeriesStatus(
   deps: LibraryDeps,
   userId: string,
   titleId: string,
-  // Ao marcar, uma série já em "Visto" continua assim; só desmarcar a rebaixa.
+  // Ao marcar, uma série já em "Assistido" continua assim; só desmarcar a rebaixa.
   downgrade: boolean,
 ): Promise<void> {
   const progress = await deps.library.getSeriesProgress(
@@ -178,6 +178,8 @@ export async function markEpisodeWatched(
 
   if (marked || previousMarked > 0) {
     await syncSeriesStatus(deps, user.id, episode.titleId, false);
+    // Atividade nova traz o título de volta à lista.
+    await deps.library.setTitleHidden(user.id, episode.titleId, false);
   }
   return ok({ marked: Boolean(marked), previousMarked });
 }
@@ -220,12 +222,14 @@ export async function markMovieWatched(
       source: date.source,
     },
   ]);
+  // Atividade nova traz o título de volta à lista.
+  await deps.library.setTitleHidden(user.id, titleId, false);
   return ok({ marked: true });
 }
 
 // Apaga um registro do histórico. Se era o último do episódio, o episódio
 // deixa de estar visto; se sobra algum, continua visto, com a data do
-// registro mais recente que ficou. O status do título só muda se a série estava em "Visto"
+// registro mais recente que ficou. O status do título só muda se a série estava em "Assistido"
 // e deixa de estar completa (volta a "Assistindo").
 async function removeRecord(
   deps: LibraryDeps,
@@ -342,7 +346,10 @@ export async function rewatchEpisode(
   const episode = await deps.library.findEpisode(episodeId);
   if (!episode) return fail("EPISODE_NOT_FOUND", "Episódio não encontrado.");
   if (!(await deps.library.hasEpisodeProgress(user.id, episodeId))) {
-    return fail("NOT_WATCHED", "Marque o episódio como visto antes de rever.");
+    return fail(
+      "NOT_WATCHED",
+      "Marque o episódio como assistido antes de rever.",
+    );
   }
   await deps.library.insertEvents(user.id, [
     {
@@ -375,7 +382,7 @@ export async function rewatchMovie(
     return fail("NOT_A_MOVIE", "Séries são revistas por episódio.");
   }
   if (!(await deps.library.hasMovieEvent(user.id, titleId))) {
-    return fail("NOT_WATCHED", "Marque o filme como visto antes de rever.");
+    return fail("NOT_WATCHED", "Marque o filme como assistido antes de rever.");
   }
   await deps.library.insertEvents(user.id, [
     {

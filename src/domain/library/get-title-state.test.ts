@@ -25,7 +25,10 @@ describe("getTitleLibraryState", () => {
     const lib = setup();
     expect(
       await getTitleLibraryState(lib.deps, USER, { titleId: SERIES }),
-    ).toEqual({ ok: true, value: { status: null, watched: [] } });
+    ).toEqual({
+      ok: true,
+      value: { status: null, hidden: false, watched: [] },
+    });
   });
 
   it("devolve o status e os itens vistos, com a data", async () => {
