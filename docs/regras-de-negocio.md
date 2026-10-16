@@ -29,7 +29,7 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 - **Troca de handle:** permitida a qualquer momento, se o novo estiver livre. O antigo fica livre na hora; links antigos param de funcionar. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), caso de uso em [`src/domain/profile/change-handle.ts`](../src/domain/profile/change-handle.ts)
 - **Padrões do perfil:** país `BR`, fuso `America/Sao_Paulo`, idioma `pt-BR`, perfil público. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 - **Visibilidade:** perfil privado só é visto pelo dono. [ADR-003, seção 6](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), policies em [`src/infra/db/schema/profiles.ts`](../src/infra/db/schema/profiles.ts)
-- **Idade:** durante o TCC e o beta fechado, uso só por maiores de 18 anos. Declarada em [`/termos`](<../src/app/(publico)/termos/page.tsx>) e no aviso da tela [`/entrar`](../src/app/entrar/page.tsx) (sem registro do aceite); ainda não há verificação de idade (ECA Digital antes do lançamento público).
+- **Idade:** durante o TCC e o beta fechado, uso só por maiores de 18 anos. Declarada em [`/termos`](../src/app/(publico)/termos/page.tsx) e no aviso da tela [`/entrar`](../src/app/entrar/page.tsx) (sem registro do aceite); ainda não há verificação de idade (ECA Digital antes do lançamento público).
 
 ## Avaliações
 
@@ -42,11 +42,11 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 - **Estado e histórico separados:** o progresso atual nunca é a fonte da verdade; o histórico de visualizações é. Um título por usuário na biblioteca; um episódio visto uma vez no progresso; o histórico aceita vários registros do mesmo item (rever). [ADR-001](adr/ADR-001-arquitetura-base.md), [`src/infra/db/schema/library.ts`](../src/infra/db/schema/library.ts)
 - **Data do "visto" é opcional:** cada registro do histórico tem data e precisão (exata, dia, mês, ano ou sem data) e a origem (marcado na hora, retroativo no app ou import). Sem data se e só se a precisão é "sem data". [`src/infra/db/schema/library.ts`](../src/infra/db/schema/library.ts)
 - **Marcar como visto:** por padrão, a data é a da marcação; o usuário pode tirar a data ou informar outra (dia, mês ou ano, nunca no futuro nem antes de 1900) e trocar depois. Só "agora" conta como marcado na hora; o resto é registro retroativo. O padrão de cada situação fica num lugar só e será avaliado com usuários reais. [`src/domain/library/watch-date.ts`](../src/domain/library/watch-date.ts)
-- **Marcar de novo** um episódio ou filme já visto não grava nada. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
+- **Marcar de novo** (o botão de marcar) um episódio ou filme já visto não grava nada; para registrar outra vez há "ver de novo", abaixo. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
 - **Registrar de novo (rever):** um episódio ou filme já visto aceita mais um registro no histórico, por padrão com a data de agora (mesma escolha de data de marcar); o progresso não se repete e o status do título não muda. Item não visto não pode ser revisto. Rever a série inteira, em rodadas, é da Fase 2. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
 - **Marcar anteriores:** marca, sem data, os episódios anteriores ainda não vistos das temporadas regulares (especiais ficam de fora) que já foram lançados ou estão sem data no catálogo. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
 - **Status automático:** marcar um episódio põe a série em Assistindo (saindo de Quero ver, Pausado ou Abandonado; Visto continua Visto); marcar um filme o põe em Visto. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
-- **Desmarcar** é tratado como engano: tira só o registro mais recente do episódio ou filme (na tela, pede confirmação). O item deixa de estar visto quando não sobra nenhum registro; senão continua visto, com a data do registro mais recente que ficou. O status do título não muda. O usuário vê todos os registros de um item e apaga os que quiser, um a um. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
+- **Desmarcar** é tratado como engano: tira só o registro mais recente do episódio ou filme (na tela, pede confirmação). O item deixa de estar visto quando não sobra nenhum registro; senão continua visto, com a data mais recente entre os registros que ficaram. O status do título não muda. O usuário vê todos os registros de um item e apaga os que quiser, um a um. [`src/domain/library/mark-watched.ts`](../src/domain/library/mark-watched.ts)
 - **Feed e estatísticas:** registro retroativo (sem data, com data informada ou importado) não gera atividade para os amigos; estatísticas por período só usam registros com data. _(prevista: feed na Fase 2.2, estatísticas na 2.5)_
 - **Privacidade:** cada usuário só vê e altera a própria biblioteca, o próprio progresso e o próprio histórico; ainda não há biblioteca visível no perfil. Policies em [`src/infra/db/schema/library.ts`](../src/infra/db/schema/library.ts)
 - **Catálogo protegido:** o banco recusa apagar título ou episódio que esteja na biblioteca ou no histórico de alguém. [`drizzle/0004_library.sql`](../drizzle/0004_library.sql)
@@ -62,7 +62,7 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 
 ## Privacidade e dados
 
-- **Páginas legais:** `/privacidade` e `/termos` descrevem o que o app faz hoje; mudou o tratamento de dados, atualize as páginas e a data no mesmo PR. [`src/app/(publico)/`](<../src/app/(publico)>)
+- **Páginas legais:** `/privacidade` e `/termos` descrevem o que o app faz hoje; mudou o tratamento de dados, atualize as páginas e a data no mesmo PR. [`src/app/(publico)/`](../src/app/(publico))
 - **Cookies:** só o de sessão (`HttpOnly`, `SameSite=Lax`, `Secure` em produção), estritamente necessário; nenhum cookie de rastreamento, publicidade ou analytics. [ADR-003, seção 5](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/infra/auth/supabase/`](../src/infra/auth/supabase/index.ts)
 - **Sair:** encerra a sessão só no dispositivo atual.
 - **Exclusão de conta:** apaga em cascata os dados do usuário. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
