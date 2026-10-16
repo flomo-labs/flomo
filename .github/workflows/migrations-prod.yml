@@ -2,8 +2,9 @@ name: Migrations (produção)
 
 # Aplica as migrations da pasta drizzle/ no Supabase de produção (flomo-prod)
 # depois de cada merge na main que mexe nela. O job usa o ambiente
-# `supabase-prod`, que exige aprovação manual: o GitHub espera alguém clicar
-# em "Approve" antes de ler o segredo e rodar. Passo a passo em
+# `supabase-prod`. Hoje sem aprovação manual; se "Required reviewers" for
+# religado no ambiente, o GitHub espera alguém clicar em "Approve" antes de
+# ler o segredo e rodar. Passo a passo em
 # docs/deploy.md, seção A.4.
 
 on:
@@ -17,9 +18,9 @@ permissions:
   contents: read
 
 # Nunca duas aplicações ao mesmo tempo, e nenhuma é cancelada no meio. Se
-# chegarem várias enquanto uma espera aprovação, o GitHub guarda só a mais
-# nova e marca as outras como "Cancelled": é normal, a mais nova aplica tudo
-# o que estiver pendente.
+# chegarem várias enquanto uma roda (ou espera aprovação, se a trava estiver
+# ligada), o GitHub guarda só a mais nova e marca as outras como "Cancelled":
+# é normal, a mais nova aplica tudo o que estiver pendente.
 concurrency:
   group: migrations-prod
   cancel-in-progress: false
