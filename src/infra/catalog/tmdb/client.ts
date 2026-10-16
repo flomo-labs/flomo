@@ -15,6 +15,9 @@ export type TmdbClientOptions = {
   maxConcurrent?: number;
   maxRetries?: number;
   timeoutMs?: number;
+  // Soma máxima das esperas por 429 num pedido: passou disso, desiste em vez
+  // de prender a página.
+  totalBudgetMs?: number;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
 };
@@ -28,6 +31,11 @@ export type TmdbClient = {
 };
 
 const MAX_RETRY_WAIT_MS = 10_000;
+
+type Attempt =
+  | { kind: "ok"; data: unknown }
+  | { kind: "not_found" }
+  | { kind: "retry"; retryAfter: string | null };
 
 // O token de leitura é um JWT; a chave v3 é um hexadecimal de 32 caracteres.
 export function isReadAccessToken(credential: string): boolean {
@@ -63,6 +71,7 @@ export function createTmdbClient(options: TmdbClientOptions): TmdbClient {
     maxConcurrent = 8,
     maxRetries = 3,
     timeoutMs = 8000,
+    totalBudgetMs = 15_000,
     fetch: doFetch = fetch,
     sleep = defaultSleep,
   } = options;
@@ -86,45 +95,62 @@ export function createTmdbClient(options: TmdbClientOptions): TmdbClient {
 
       // As mensagens de erro citam só o caminho, nunca a URL (que pode ter a
       // chave v3).
-      for (let attempt = 0; ; attempt++) {
-        let response: Response;
-        try {
-          response = await limiter.run(() =>
-            doFetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) }),
-          );
-        } catch {
-          throw new CatalogUnavailableError(
-            `TMDB inacessível ou sem resposta em ${path}.`,
-          );
-        }
+      const unavailable = (reason: string) =>
+        new CatalogUnavailableError(`${reason} (${path}).`);
 
-        if (response.status === 429 && attempt < maxRetries) {
-          await response.body?.cancel();
-          // Espera fora do limitador, para não segurar a vaga.
-          await sleep(
-            retryDelayMs(response.headers.get("retry-after"), attempt),
-          );
-          continue;
+      // Uma tentativa inteira (inclusive a leitura do corpo) ocupa uma vaga
+      // do limitador.
+      const attemptOnce = () =>
+        limiter.run(async (): Promise<Attempt> => {
+          let response: Response;
+          try {
+            response = await doFetch(url, {
+              headers,
+              signal: AbortSignal.timeout(timeoutMs),
+            });
+          } catch {
+            throw unavailable("TMDB inacessível ou sem resposta");
+          }
+          if (response.status === 429) {
+            await response.body?.cancel();
+            return {
+              kind: "retry",
+              retryAfter: response.headers.get("retry-after"),
+            };
+          }
+          if (response.status === 404) {
+            await response.body?.cancel();
+            return { kind: "not_found" };
+          }
+          if (!response.ok) {
+            await response.body?.cancel();
+            throw response.status === 401
+              ? unavailable(
+                  "O TMDB recusou a credencial (confira TMDB_READ_ACCESS_TOKEN ou TMDB_API_KEY)",
+                )
+              : unavailable(`TMDB respondeu ${response.status}`);
+          }
+          try {
+            return { kind: "ok", data: await response.json() };
+          } catch {
+            throw unavailable("Resposta inválida do TMDB");
+          }
+        });
+
+      let waited = 0;
+      for (let attempt = 0; ; attempt++) {
+        const result = await attemptOnce();
+        if (result.kind === "ok") return result.data;
+        if (result.kind === "not_found") return null;
+
+        // 429: espera fora do limitador, para não segurar a vaga, e desiste
+        // se a espera estourar o prazo total do pedido.
+        const delay = retryDelayMs(result.retryAfter, attempt);
+        if (attempt >= maxRetries || waited + delay > totalBudgetMs) {
+          throw unavailable("TMDB continua limitando as chamadas (429)");
         }
-        if (response.status === 404) {
-          await response.body?.cancel();
-          return null;
-        }
-        if (!response.ok) {
-          await response.body?.cancel();
-          throw new CatalogUnavailableError(
-            response.status === 401
-              ? "O TMDB recusou a chave (confira TMDB_API_KEY)."
-              : `TMDB respondeu ${response.status} em ${path}.`,
-          );
-        }
-        try {
-          return await response.json();
-        } catch {
-          throw new CatalogUnavailableError(
-            `Resposta inválida do TMDB em ${path}.`,
-          );
-        }
+        waited += delay;
+        await sleep(delay);
       }
     },
   };

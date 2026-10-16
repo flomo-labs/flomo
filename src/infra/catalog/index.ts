@@ -1,4 +1,4 @@
-import type { CatalogDeps } from "@/domain/catalog/ports";
+import type { CatalogDeps, CatalogProvider } from "@/domain/catalog/ports";
 import { getDb } from "../db/client";
 import { createCatalogStore } from "../db/catalog-repository";
 import { createTmdbClient, type TmdbClient } from "./tmdb/client";
@@ -22,8 +22,15 @@ function getTmdbClient(): TmdbClient {
 export function createCatalogDeps(
   background: CatalogDeps["background"],
 ): CatalogDeps {
+  // O cliente só é criado quando o TMDB é chamado: sem credencial, o que já
+  // está no banco continua sendo servido.
+  const provider: CatalogProvider = {
+    search: (...args) => createTmdbProvider(getTmdbClient()).search(...args),
+    fetchTitle: (...args) =>
+      createTmdbProvider(getTmdbClient()).fetchTitle(...args),
+  };
   return {
-    provider: createTmdbProvider(getTmdbClient()),
+    provider,
     store: createCatalogStore(getDb(), TMDB_PROVIDER),
     now: () => new Date(),
     background,

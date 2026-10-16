@@ -163,6 +163,27 @@ describe("getTitle", () => {
   });
 });
 
+describe("título que sumiu do provedor", () => {
+  it("mantém o gravado e adia a próxima tentativa em 1 dia", async () => {
+    const { deps, provider, memory, runBackground, tasks } = fakeDeps();
+    const created = await getTitleByRef(deps, REF);
+    if (!created.ok) throw new Error("esperava sucesso");
+    const id = created.value.id;
+    memory.titles.get(id)!.expiresAt = new Date(NOW.getTime() - 1);
+    vi.mocked(provider.fetchTitle).mockResolvedValueOnce(null);
+
+    await getTitle(deps, { titleId: id });
+    await runBackground();
+
+    expect(memory.titles.get(id)?.expiresAt).toEqual(
+      new Date(NOW.getTime() + DAY_MS),
+    );
+    const again = await getTitle(deps, { titleId: id });
+    expect(again).toMatchObject({ ok: true, value: { id } });
+    expect(tasks).toHaveLength(0);
+  });
+});
+
 describe("listSeasonEpisodes", () => {
   it("devolve os episódios da temporada, ou TITLE_NOT_FOUND", async () => {
     const { deps } = fakeDeps();

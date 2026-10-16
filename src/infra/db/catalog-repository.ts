@@ -131,18 +131,8 @@ export function createCatalogStore(
 
     async findTitleByRef(ref) {
       const [row] = await db
-        .select({
-          id: externalIds.entityId,
-          expiresAt: providerPayloads.expiresAt,
-        })
+        .select({ id: externalIds.entityId })
         .from(externalIds)
-        .leftJoin(
-          providerPayloads,
-          and(
-            eq(providerPayloads.provider, provider),
-            eq(providerPayloads.resource, titleResource(ref)),
-          ),
-        )
         .where(
           and(
             eq(externalIds.provider, provider),
@@ -150,9 +140,19 @@ export function createCatalogStore(
             eq(externalIds.externalId, ref.externalId),
           ),
         );
-      return row
-        ? { value: { id: row.id }, expiresAt: row.expiresAt ?? ALREADY_EXPIRED }
-        : null;
+      return row ?? null;
+    },
+
+    async postponeTitle(ref, expiresAt) {
+      await db
+        .update(providerPayloads)
+        .set({ expiresAt })
+        .where(
+          and(
+            eq(providerPayloads.provider, provider),
+            eq(providerPayloads.resource, titleResource(ref)),
+          ),
+        );
     },
 
     async readTitle(id, locale) {

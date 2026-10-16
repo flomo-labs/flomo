@@ -31,7 +31,7 @@ export interface CatalogStore {
   readSearch(key: string): Promise<Cached<SearchPage> | null>;
   writeSearch(key: string, page: SearchPage, expiresAt: Date): Promise<void>;
 
-  findTitleByRef(ref: CatalogRef): Promise<Cached<{ id: string }> | null>;
+  findTitleByRef(ref: CatalogRef): Promise<{ id: string } | null>;
   readTitle(
     id: string,
     locale: string,
@@ -40,6 +40,9 @@ export interface CatalogStore {
   // o uuid dele. Temporadas e episódios que sumiram do provedor ficam, porque
   // o progresso dos usuários aponta para eles.
   writeTitle(title: ProviderTitle, expiresAt: Date): Promise<string>;
+  // Adia a próxima atualização de um título já gravado (ex.: o provedor
+  // deixou de conhecê-lo). Sem efeito se o título não está no banco.
+  postponeTitle(ref: CatalogRef, expiresAt: Date): Promise<void>;
 
   // `null` quando o título não tem essa temporada.
   readEpisodes(

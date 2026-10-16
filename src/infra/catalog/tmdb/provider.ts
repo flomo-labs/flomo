@@ -5,6 +5,7 @@ import {
 } from "@/domain/catalog/ports";
 import type {
   CatalogRef,
+  ProviderEpisode,
   ProviderSeason,
   ProviderTitle,
   SearchItem,
@@ -100,23 +101,22 @@ const tvSchema = z.object({
     .default([]),
 });
 
+const episodeSchema = z.object({
+  episode_number: z.number().int().nonnegative(),
+  name: optionalText,
+  overview: optionalText,
+  air_date: optionalDate,
+  runtime: optionalMinutes,
+});
+
 const seasonSchema = z.object({
   season_number: z.number().int().nonnegative(),
   name: optionalText,
   overview: optionalText,
   air_date: optionalDate,
   poster_path: optionalText,
-  episodes: z
-    .array(
-      z.object({
-        episode_number: z.number().int().nonnegative(),
-        name: optionalText,
-        overview: optionalText,
-        air_date: optionalDate,
-        runtime: optionalMinutes,
-      }),
-    )
-    .default([]),
+  // Validados um a um em `mapSeason`.
+  episodes: z.array(z.unknown()).default([]),
 });
 
 // Status do TMDB -> status do Flomo.
@@ -212,21 +212,35 @@ export function mapMovie(data: unknown, locale: string): ProviderTitle {
   };
 }
 
-function mapSeason(data: unknown): ProviderSeason {
-  const season = parse(seasonSchema, data, "tv/season");
+// Dado malformado numa temporada ou num episódio descarta só aquele item,
+// sem derrubar a série inteira (como na busca). Número de episódio repetido
+// fica com a última ocorrência.
+function mapSeason(data: unknown): ProviderSeason | null {
+  const parsed = seasonSchema.safeParse(data);
+  if (!parsed.success) return null;
+  const season = parsed.data;
+  const byNumber = new Map<number, ProviderEpisode>();
+  for (const raw of season.episodes) {
+    const episode = episodeSchema.safeParse(raw);
+    if (!episode.success) continue;
+    const e = episode.data;
+    byNumber.set(e.episode_number, {
+      episodeNumber: e.episode_number,
+      name: e.name,
+      overview: e.overview,
+      airDate: e.air_date,
+      runtime: e.runtime,
+    });
+  }
   return {
     seasonNumber: season.season_number,
     name: season.name,
     overview: season.overview,
     airDate: season.air_date,
     posterPath: season.poster_path,
-    episodes: season.episodes.map((e) => ({
-      episodeNumber: e.episode_number,
-      name: e.name,
-      overview: e.overview,
-      airDate: e.air_date,
-      runtime: e.runtime,
-    })),
+    episodes: [...byNumber.values()].sort(
+      (a, b) => a.episodeNumber - b.episodeNumber,
+    ),
   };
 }
 
@@ -241,8 +255,8 @@ export function mapTv(
   const runtimes = tv.episode_run_time.filter((m) => m > 0);
   const seasons = tv.seasons
     .map((s) => appended[`season/${s.season_number}`])
-    .filter((season) => season != null)
-    .map(mapSeason);
+    .map(mapSeason)
+    .filter((season) => season !== null);
   return {
     ref: { mediaType: "tv", externalId: String(tv.id) },
     originalTitle: tv.original_name,

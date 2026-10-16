@@ -4,7 +4,12 @@ import {
   titleIdSchema,
 } from "@/contracts/catalog";
 import { fail, ok, type Result } from "../result";
-import { expiresAt, isExpired, titleTtlMs } from "./freshness";
+import {
+  expiresAt,
+  isExpired,
+  MISSING_TITLE_RETRY_MS,
+  titleTtlMs,
+} from "./freshness";
 import { CatalogUnavailableError, type CatalogDeps } from "./ports";
 import { CATALOG_UNAVAILABLE_MESSAGE } from "./search-catalog";
 import { singleFlight } from "./single-flight";
@@ -27,7 +32,13 @@ const NOT_FOUND_MESSAGE = "Título não encontrado.";
 function refreshTitle(deps: CatalogDeps, ref: CatalogRef) {
   return singleFlight(`title:${ref.mediaType}:${ref.externalId}`, async () => {
     const title = await deps.provider.fetchTitle(ref, CATALOG_LOCALE);
-    if (!title) return null;
+    if (!title) {
+      await deps.store.postponeTitle(
+        ref,
+        expiresAt(deps.now(), MISSING_TITLE_RETRY_MS),
+      );
+      return null;
+    }
     return deps.store.writeTitle(
       title,
       expiresAt(deps.now(), titleTtlMs(title)),
@@ -73,7 +84,7 @@ export async function getTitleByRef(
   }
   const ref = parsed.data;
 
-  let id = (await deps.store.findTitleByRef(ref))?.value.id ?? null;
+  let id = (await deps.store.findTitleByRef(ref))?.id ?? null;
   if (!id) {
     try {
       id = await refreshTitle(deps, ref);

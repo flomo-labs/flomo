@@ -77,6 +77,43 @@ describe("createTmdbClient", () => {
     expect(fetch).toHaveBeenCalledTimes(4);
   });
 
+  it("desiste quando as esperas somadas passam do prazo total", async () => {
+    const { client, fetch, sleep } = setup([
+      json(429, {}, { "retry-after": "10" }),
+      json(429, {}, { "retry-after": "10" }),
+    ]);
+    await expect(client.get("movie/603")).rejects.toBeInstanceOf(
+      CatalogUnavailableError,
+    );
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(sleep.mock.calls).toEqual([[10_000]]);
+  });
+
+  it("lê o corpo dentro da vaga do limitador", async () => {
+    let active = 0;
+    let peak = 0;
+    const fetch = vi.fn(async () => {
+      active++;
+      peak = Math.max(peak, active);
+      return {
+        status: 200,
+        ok: true,
+        json: async () => {
+          await new Promise((r) => setTimeout(r, 5));
+          active--;
+          return {};
+        },
+      } as unknown as Response;
+    });
+    const client = createTmdbClient({
+      credential: V4_TOKEN,
+      fetch,
+      maxConcurrent: 2,
+    });
+    await Promise.all([1, 2, 3, 4, 5].map((n) => client.get(`movie/${n}`)));
+    expect(peak).toBe(2);
+  });
+
   it("erros não expõem a chave", async () => {
     for (const response of [json(401), json(500)]) {
       const { client } = setup([response], V3_KEY);

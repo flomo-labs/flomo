@@ -90,7 +90,12 @@ export function memoryStore() {
     async findTitleByRef(ref) {
       const id = ids.get(refKey(ref));
       if (!id) return null;
-      return { value: { id }, expiresAt: titles.get(id)!.expiresAt };
+      return { id };
+    },
+    async postponeTitle(ref, expiresAt) {
+      const id = ids.get(refKey(ref));
+      const saved = id ? titles.get(id) : undefined;
+      if (saved) saved.expiresAt = expiresAt;
     },
     async readTitle(id) {
       const saved = titles.get(id);

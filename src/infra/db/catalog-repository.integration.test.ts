@@ -25,7 +25,7 @@ describe("catalog store", () => {
 
       expect(
         await store.findTitleByRef({ mediaType: "tv", externalId: "1399" }),
-      ).toEqual({ value: { id }, expiresAt: EXPIRES });
+      ).toEqual({ id });
 
       const read = await store.readTitle(id, "pt-BR");
       expect(read).toEqual({
@@ -145,6 +145,17 @@ describe("catalog store", () => {
       expect(genreIds.filter((r) => r.entityType === "genre")).toHaveLength(1);
       // Filme e série com o mesmo número no TMDB são títulos diferentes.
       expect(genreIds.filter((r) => r.entityType !== "genre")).toHaveLength(2);
+    }));
+
+  it("adia a próxima atualização de um título gravado", () =>
+    inRollback(async (tx) => {
+      const store = createCatalogStore(tx, PROVIDER);
+      const id = await store.writeTitle(providerTitle(), EXPIRES);
+      const later = new Date("2032-01-01T00:00:00Z");
+      await store.postponeTitle({ mediaType: "tv", externalId: "1399" }, later);
+      expect((await store.readTitle(id, "pt-BR"))?.expiresAt).toEqual(later);
+      // Sem efeito para título que não está no banco.
+      await store.postponeTitle({ mediaType: "movie", externalId: "1" }, later);
     }));
 
   it("o payload guarda o título sem os episódios", () =>

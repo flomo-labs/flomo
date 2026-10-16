@@ -217,6 +217,30 @@ describe("createTmdbProvider", () => {
     });
   });
 
+  it("série: descarta temporada ou episódio malformado e número repetido", async () => {
+    const get = vi.fn<TmdbClient["get"]>(async (_path, params = {}) => {
+      if (!params.append_to_response) return tvDetails([1, 2]);
+      const good = season(1);
+      good.episodes.push(
+        { ...good.episodes[0], name: "Repetido" },
+        { ...good.episodes[0], episode_number: null as unknown as number },
+      );
+      return {
+        ...tvDetails([1, 2]),
+        "season/1": good,
+        "season/2": { season_number: "dois" },
+      };
+    });
+    const title = await createTmdbProvider({ get }).fetchTitle(
+      { mediaType: "tv", externalId: "1399" },
+      "pt-BR",
+    );
+    expect(title?.seasons).toHaveLength(1);
+    expect(title?.seasons[0].episodes).toEqual([
+      expect.objectContaining({ episodeNumber: 1, name: "Repetido" }),
+    ]);
+  });
+
   it("série inexistente: null, sem buscar temporadas", async () => {
     const get = vi.fn(async () => null);
     const provider = createTmdbProvider({ get });
