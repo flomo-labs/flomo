@@ -43,7 +43,10 @@
   },
   "Library": {
     "markWatched": "Marcar como assistido",
-    "markWithPrevious": "Marcar este e os anteriores",
+    "markOnlyThis": "Marcar só este",
+    "markWithPrevious": "{count, plural, one {Marcar este e o anterior} other {Marcar este e os # anteriores}}",
+    "previousTitle": "Episódios anteriores",
+    "previousDescription": "{count, plural, one {Você tem 1 episódio não visto antes deste.} other {Você tem # episódios não vistos antes deste.}}",
     "watchAgain": "Ver de novo",
     "watched": "Assistido",
     "unmark": "Desmarcar",

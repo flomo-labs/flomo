@@ -1,6 +1,9 @@
 import "server-only";
 import { cache } from "react";
-import { getTitleLibraryState } from "@/domain/library/get-title-state";
+import {
+  getTitleLibraryState,
+  listUnwatchedEpisodes,
+} from "@/domain/library/get-title-state";
 import type { TitleLibraryState } from "@/domain/library/ports";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
@@ -31,6 +34,30 @@ export const getLibraryState = cache(
     } catch (error) {
       console.error("Falha ao ler a biblioteca:", error);
       return { kind: "unavailable" };
+    }
+  },
+);
+
+// Episódios lançados ainda não vistos do título, lido uma vez por requisição.
+// `null` se não der para ler: a tela então marca direto, sem perguntar.
+export const getUnwatchedEpisodes = cache(
+  async (
+    titleId: string,
+  ): Promise<{ seasonNumber: number; episodeNumber: number }[] | null> => {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    try {
+      const result = await withUser(user.claims, (tx) =>
+        listUnwatchedEpisodes(
+          { library: createLibraryRepository(tx), now: () => new Date() },
+          { id: user.id },
+          { titleId },
+        ),
+      );
+      return result.ok ? result.value : null;
+    } catch (error) {
+      console.error("Falha ao ler os episódios não vistos:", error);
+      return null;
     }
   },
 );

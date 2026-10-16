@@ -4,6 +4,15 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import type { WatchDateInput } from "@/contracts/library";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   changeWatchDate,
   markEpisode,
   markMovie,
@@ -17,7 +26,13 @@ import {
 
 export type WatchControlLabels = {
   markWatched: string;
-  markWithPrevious: string;
+  markOnlyThis: string;
+  // "Marcar este e os {count} anteriores", já com o número.
+  markWithPrevious: (count: number) => string;
+  previousTitle: string;
+  // "Você tem {count} episódios não vistos antes deste.", já com o número.
+  previousDescription: (count: number) => string;
+  cancel: string;
   watchAgain: string;
   history: string;
   deleteRecord: string;
@@ -44,6 +59,8 @@ type Props = {
     // Todos os registros, do mais recente ao mais antigo.
     records: { eventId: string; dateLabel: string }[];
   };
+  // Episódios anteriores ainda não vistos; com algum, marcar pergunta antes.
+  previousUnwatched?: number;
   // AAAA-MM-DD de hoje, limite do seletor de data.
   today: string;
   labels: WatchControlLabels;
@@ -55,12 +72,15 @@ export function WatchControl({
   kind,
   targetId,
   watched,
+  previousUnwatched = 0,
   today,
   labels,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [pickedDay, setPickedDay] = useState(today);
+  // Quantos anteriores não vistos; diferente de null = diálogo aberto.
+  const [previousCount, setPreviousCount] = useState<number | null>(null);
 
   function run(action: () => Promise<LibraryActionResult>) {
     setError(null);
@@ -74,14 +94,29 @@ export function WatchControl({
     });
   }
 
-  const mark = () =>
+  const markThis = () =>
     run(() =>
       kind === "episode"
         ? markEpisode({ episodeId: targetId })
         : markMovie({ titleId: targetId }),
     );
-  const markWithPrevious = () =>
+  // Episódio com anteriores não vistos: pergunta antes de marcar.
+  const mark = () => {
+    if (kind === "episode" && previousUnwatched > 0) {
+      setError(null);
+      setPreviousCount(previousUnwatched);
+    } else {
+      markThis();
+    }
+  };
+  const markWithPrevious = () => {
+    setPreviousCount(null);
     run(() => markEpisode({ episodeId: targetId, includePrevious: true }));
+  };
+  const markOnlyThis = () => {
+    setPreviousCount(null);
+    markThis();
+  };
   const watchAgain = () =>
     run(() =>
       kind === "episode"
@@ -142,17 +177,6 @@ export function WatchControl({
           >
             {labels.markWatched}
           </Button>
-          {kind === "episode" ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={pending}
-              onClick={markWithPrevious}
-            >
-              {labels.markWithPrevious}
-            </Button>
-          ) : null}
         </div>
       )}
       {watched && watched.records.length > 1 ? (
@@ -229,6 +253,39 @@ export function WatchControl({
           </div>
         </details>
       ) : null}
+      <Dialog
+        open={previousCount !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviousCount(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{labels.previousTitle}</DialogTitle>
+            <DialogDescription>
+              {labels.previousDescription(previousCount ?? 0)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button type="button" disabled={pending} onClick={markWithPrevious}>
+              {labels.markWithPrevious(previousCount ?? 0)}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={markOnlyThis}
+            >
+              {labels.markOnlyThis}
+            </Button>
+          </div>
+          <DialogFooter>
+            <DialogClose render={<Button type="button" variant="ghost" />}>
+              {labels.cancel}
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}

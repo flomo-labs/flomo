@@ -95,6 +95,15 @@ export interface LibraryRepository {
     today: string,
   ): Promise<string[]>;
 
+  // Posição dos episódios regulares já lançados (ou sem data) que o usuário
+  // ainda não viu; a tela conta os anteriores a cada episódio sem consultar
+  // o banco de novo.
+  listUnwatchedReleased(
+    userId: string,
+    titleId: string,
+    today: string,
+  ): Promise<{ seasonNumber: number; episodeNumber: number }[]>;
+
   // Grava o progresso dos episódios que ainda não estavam vistos e devolve
   // os ids dos que foram gravados agora (a PK decide em caso de corrida).
   insertProgress(

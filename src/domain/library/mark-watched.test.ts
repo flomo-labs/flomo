@@ -227,7 +227,7 @@ describe("markMovieWatched", () => {
 });
 
 describe("desmarcar", () => {
-  it("episódio com um só registro: deixa de estar visto, sem mudar o status", async () => {
+  it("episódio com um só registro: deixa de estar visto", async () => {
     const lib = setup();
     await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
     expect(
@@ -235,11 +235,23 @@ describe("desmarcar", () => {
     ).toEqual({ ok: true, value: { removed: true } });
     expect(lib.watched()).toEqual([]);
     expect(lib.events).toHaveLength(0);
-    expect(lib.status(SERIES)).toBe("watching");
+    expect(lib.status(SERIES)).toBe("watchlist");
 
     expect(
       await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id }),
     ).toEqual({ ok: true, value: { removed: false } });
+  });
+
+  it("série sem nenhum episódio visto volta a Quero ver; Pausado fica", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    expect(lib.status(SERIES)).toBe("watchlist");
+
+    await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    lib.setStatus(SERIES, "paused");
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    expect(lib.status(SERIES)).toBe("paused");
   });
 
   it("filme com um só registro: apaga o registro", async () => {
@@ -249,6 +261,7 @@ describe("desmarcar", () => {
       await unmarkMovieWatched(lib.deps, USER, { titleId: MOVIE }),
     ).toEqual({ ok: true, value: { removed: true } });
     expect(lib.events).toHaveLength(0);
+    expect(lib.status(MOVIE)).toBe("watchlist");
   });
 });
 
@@ -277,6 +290,7 @@ describe("desmarcar com vários registros e apagar registro escolhido", () => {
     await rewatchMovie(lib.deps, USER, { titleId: MOVIE });
     await unmarkMovieWatched(lib.deps, USER, { titleId: MOVIE });
     expect(lib.events).toHaveLength(1);
+    expect(lib.status(MOVIE)).toBe("watched");
   });
 
   it("apagar um registro do meio mantém os outros e o progresso", async () => {

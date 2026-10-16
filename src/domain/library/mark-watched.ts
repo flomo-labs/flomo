@@ -92,6 +92,13 @@ async function syncSeriesStatus(
     await deps.library.upsertTitleStatus(userId, titleId, "watched", [
       "watching",
     ]);
+  } else if (downgrade && progress.watched === 0) {
+    // Sem nenhum episódio visto, a série volta a "Quero ver". Pausado e
+    // Abandonado são escolhas do usuário e ficam como estão.
+    await deps.library.upsertTitleStatus(userId, titleId, "watchlist", [
+      "watching",
+      "watched",
+    ]);
   } else if (downgrade) {
     await deps.library.upsertTitleStatus(userId, titleId, "watching", [
       "watched",
@@ -229,8 +236,9 @@ export async function markMovieWatched(
 
 // Apaga um registro do histórico. Se era o último do episódio, o episódio
 // deixa de estar visto; se sobra algum, continua visto, com a data do
-// registro mais recente que ficou. O status do título só muda se a série estava em "Assistido"
-// e deixa de estar completa (volta a "Assistindo").
+// registro mais recente que ficou. O status do título só muda se estava em
+// "Assistido" e deixa de valer: a série incompleta volta a "Assistindo" e o
+// filme sem registros volta a "Quero ver".
 async function removeRecord(
   deps: LibraryDeps,
   user: AuthenticatedUser,
@@ -249,6 +257,14 @@ async function removeRecord(
     } else {
       await deps.library.refreshProgressDate(user.id, deleted.episodeId);
     }
+  } else if (!(await deps.library.hasMovieEvent(user.id, deleted.titleId))) {
+    // Filme sem nenhum registro deixa de ser Assistido e volta a Quero ver.
+    await deps.library.upsertTitleStatus(
+      user.id,
+      deleted.titleId,
+      "watchlist",
+      ["watched"],
+    );
   }
   return true;
 }

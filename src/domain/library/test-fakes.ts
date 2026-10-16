@@ -144,6 +144,20 @@ export function createFakeLibrary(catalog: {
         )
         .map((e) => e.id);
     },
+    async listUnwatchedReleased(userId, titleId, today) {
+      return episodes
+        .filter(
+          (e) =>
+            e.titleId === titleId &&
+            e.seasonNumber > 0 &&
+            (e.airDate === null || e.airDate <= today) &&
+            !progress.has(key(userId, e.id)),
+        )
+        .map((e) => ({
+          seasonNumber: e.seasonNumber,
+          episodeNumber: e.episodeNumber,
+        }));
+    },
     async insertProgress(userId, _titleId, rows) {
       const inserted: string[] = [];
       for (const r of rows) {

@@ -1,6 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
-import { getTitleLibraryState } from "@/domain/library/get-title-state";
+import {
+  getTitleLibraryState,
+  listUnwatchedEpisodes,
+} from "@/domain/library/get-title-state";
 import { listLibrary } from "@/domain/library/list-library";
 import {
   deleteWatchRecord,
@@ -101,6 +104,12 @@ describe("marcar como assistido no banco", () => {
         .insert(userTitles)
         .values({ userId: user, titleId: c.seriesId, status: "paused" });
 
+      // Sem especiais e sem o episódio ainda não lançado (S2E3).
+      const pending = await run(tx, user, (deps, u) =>
+        listUnwatchedEpisodes(deps, u, { titleId: c.seriesId }),
+      );
+      expect(pending.ok && pending.value).toHaveLength(4);
+
       const result = await run(tx, user, (deps, u) =>
         markEpisodeWatched(deps, u, {
           episodeId: c.ep.S2E2,
@@ -111,6 +120,11 @@ describe("marcar como assistido no banco", () => {
         ok: true,
         value: { marked: true, previousMarked: 3 },
       });
+      expect(
+        await run(tx, user, (deps, u) =>
+          listUnwatchedEpisodes(deps, u, { titleId: c.seriesId }),
+        ),
+      ).toEqual({ ok: true, value: [] });
 
       const [status] = await tx
         .select({ status: userTitles.status })

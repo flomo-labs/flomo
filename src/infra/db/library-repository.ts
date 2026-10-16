@@ -261,6 +261,31 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
         );
     },
 
+    async listUnwatchedReleased(userId, titleId, today) {
+      return tx
+        .select({
+          seasonNumber: seasons.seasonNumber,
+          episodeNumber: episodes.episodeNumber,
+        })
+        .from(episodes)
+        .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+        .leftJoin(
+          userEpisodeProgress,
+          and(
+            eq(userEpisodeProgress.episodeId, episodes.id),
+            eq(userEpisodeProgress.userId, userId),
+          ),
+        )
+        .where(
+          and(
+            eq(seasons.titleId, titleId),
+            gt(seasons.seasonNumber, 0),
+            or(isNull(episodes.airDate), lte(episodes.airDate, today)),
+            isNull(userEpisodeProgress.episodeId),
+          ),
+        );
+    },
+
     async listPreviousUnwatched(userId, episode, today) {
       const rows = await tx
         .select({ id: episodes.id })

@@ -233,6 +233,10 @@ async function Episodes({
               kind="episode"
               titleId={titleId}
               episodeId={episode.id}
+              position={{
+                seasonNumber,
+                episodeNumber: episode.episodeNumber,
+              }}
               loginHref={loginHref(
                 `/titulo/${titleId}?temporada=${seasonNumber}`,
               )}
