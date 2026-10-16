@@ -71,6 +71,23 @@ describe("getWatchProviders", () => {
     ).toHaveLength(1);
   });
 
+  it("cache vencido e título sumido do provedor: adia a próxima tentativa", async () => {
+    const { deps, memory, runBackground } = fakeDeps({
+      provider: { fetchWatchProviders: vi.fn(async () => null) },
+    });
+    const titleId = await savedTitle(deps);
+    memory.providers.set("providers:BR:tv/1399", {
+      value: watchProviders(),
+      expiresAt: new Date(NOW.getTime() - 1),
+    });
+    await getWatchProviders(deps, { titleId });
+    await runBackground();
+    expect(memory.providers.get("providers:BR:tv/1399")).toEqual({
+      value: watchProviders(),
+      expiresAt: new Date(NOW.getTime() + DAY_MS),
+    });
+  });
+
   it("provedor fora do ar e sem cache: CATALOG_UNAVAILABLE", async () => {
     const { deps } = fakeDeps({
       provider: {

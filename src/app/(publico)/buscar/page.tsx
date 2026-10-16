@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SEARCH_QUERY_MAX_LENGTH } from "@/contracts/catalog";
+import { SEARCH_MAX_PAGE, SEARCH_QUERY_MAX_LENGTH } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
 import { titleRefPath } from "@/lib/title-paths";
 
@@ -45,7 +45,9 @@ async function SearchBody({
   const t = await getTranslations("Search");
   const params = await searchParams;
   const query = firstValue(params.q).trim();
-  const page = Number(firstValue(params.pagina)) || 1;
+  // Página fora do intervalo vira a mais próxima (o TMDB só vai até a 500).
+  const requested = Math.trunc(Number(firstValue(params.pagina))) || 1;
+  const page = Math.min(Math.max(requested, 1), SEARCH_MAX_PAGE);
 
   return (
     <>
@@ -159,7 +161,8 @@ async function Pagination({
   totalPages: number;
 }) {
   const t = await getTranslations("Search");
-  if (totalPages <= 1) return null;
+  const lastPage = Math.min(totalPages, SEARCH_MAX_PAGE);
+  if (lastPage <= 1) return null;
   const href = (target: number) =>
     `/buscar?${new URLSearchParams({ q: query, pagina: String(target) })}`;
   return (
@@ -179,9 +182,9 @@ async function Pagination({
         <span />
       )}
       <span className="text-sm text-muted-foreground">
-        {t("page", { page, total: totalPages })}
+        {t("page", { page, total: lastPage })}
       </span>
-      {page < totalPages ? (
+      {page < lastPage ? (
         <Button
           variant="outline"
           render={<Link href={href(page + 1)} />}

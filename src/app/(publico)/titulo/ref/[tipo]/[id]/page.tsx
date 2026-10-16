@@ -44,7 +44,11 @@ async function Resolve({
       <p className="text-muted-foreground">{t("unavailableHint")}</p>
       <div className="flex gap-2">
         <Button
-          render={<Link href={`/titulo/ref/${tipo}/${id}`} />}
+          render={
+            <Link
+              href={`/titulo/ref/${encodeURIComponent(tipo)}/${encodeURIComponent(id)}`}
+            />
+          }
           nativeButton={false}
         >
           {t("retry")}

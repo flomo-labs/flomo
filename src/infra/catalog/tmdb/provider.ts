@@ -285,6 +285,10 @@ const watchProviderSchema = z.object({
   display_priority: z.number().nullish(),
 });
 
+function asArray(raw: unknown): unknown[] {
+  return Array.isArray(raw) ? raw : [];
+}
+
 // Cada lista é validada item a item: um provedor malformado some, sem derrubar
 // os demais.
 function mapProviderList(raw: unknown): WatchProvider[] {
@@ -336,7 +340,11 @@ export function mapWatchProviders(
     country,
     link: tmdbLink(offer.link),
     flatrate: mapProviderList(offer.flatrate),
-    free: [...mapProviderList(offer.free), ...mapProviderList(offer.ads)],
+    // O TMDB pode listar o mesmo serviço em `free` e em `ads`.
+    free: mapProviderList([
+      ...asArray(offer.free),
+      ...asArray(offer.ads),
+    ]).filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i),
     rent: mapProviderList(offer.rent),
     buy: mapProviderList(offer.buy),
   };

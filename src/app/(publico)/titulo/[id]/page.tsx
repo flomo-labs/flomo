@@ -2,13 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
-import { getTitle, listSeasonEpisodes } from "@/app/_catalog/gateway";
+import { cache, Suspense } from "react";
+import {
+  getTitle as getTitleUncached,
+  listSeasonEpisodes,
+} from "@/app/_catalog/gateway";
 import { Poster } from "@/components/catalog/poster";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { Badge } from "@/components/ui/badge";
 import type { CatalogTitle } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
+
+// Metadados e página leem o mesmo título: uma consulta por requisição.
+const getTitle = cache(getTitleUncached);
 
 export async function generateMetadata({
   params,

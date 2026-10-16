@@ -307,6 +307,12 @@ describe("mapWatchProviders", () => {
     });
   });
 
+  it("serviço repetido em free e ads aparece uma vez", () => {
+    const item = { logo_path: "/c.jpg", provider_id: 3, provider_name: "C" };
+    const data = { results: { BR: { free: [item], ads: [item] } } };
+    expect(mapWatchProviders(data, "BR").free).toHaveLength(1);
+  });
+
   it("país sem oferta: listas vazias e sem link", () => {
     expect(mapWatchProviders({ id: 1, results: {} }, "BR")).toEqual({
       country: "BR",

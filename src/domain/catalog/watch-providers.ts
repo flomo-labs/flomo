@@ -31,13 +31,24 @@ export async function getWatchProviders(
   const { ref } = saved.value;
   const key = cacheKey(ref);
 
-  const fetchAndStore = () =>
+  // `kept`: dado vencido já gravado. Se o provedor deixou de conhecer o
+  // título, adia a próxima tentativa em vez de buscar a cada visita.
+  const fetchAndStore = (kept?: WatchProviders) =>
     singleFlight(key, async () => {
       const result = await deps.provider.fetchWatchProviders(
         ref,
         CATALOG_COUNTRY,
       );
-      if (!result) return null;
+      if (!result) {
+        if (kept) {
+          await deps.store.writeWatchProviders(
+            key,
+            kept,
+            expiresAt(deps.now(), WATCH_PROVIDERS_TTL_MS),
+          );
+        }
+        return null;
+      }
       await deps.store.writeWatchProviders(
         key,
         result,
@@ -49,7 +60,7 @@ export async function getWatchProviders(
   const cached = await deps.store.readWatchProviders(key);
   if (cached) {
     if (isExpired(cached.expiresAt, deps.now())) {
-      deps.background(fetchAndStore);
+      deps.background(() => fetchAndStore(cached.value));
     }
     return ok(cached.value);
   }

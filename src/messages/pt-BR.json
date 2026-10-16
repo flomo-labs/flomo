@@ -32,7 +32,6 @@
     "season": "Temporada {number}",
     "specials": "Especiais",
     "episodeCount": "{count, plural, =0 {Sem episódios} one {1 episódio} other {# episódios}}",
-    "episodeNumber": "Episódio {number}",
     "noEpisodes": "Esta temporada ainda não tem episódios cadastrados.",
     "unnamedEpisode": "Episódio {number}",
     "notFound": "Título não encontrado",
