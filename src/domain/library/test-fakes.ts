@@ -1,6 +1,7 @@
 import type { MediaType, TitleStatus } from "../catalog/types";
 import type {
   LibraryEpisode,
+  LibraryItem,
   LibraryRepository,
   NewWatchEvent,
   WatchedItem,
@@ -45,6 +46,38 @@ export function createFakeLibrary(catalog: {
     },
     async findTitleMediaType(titleId) {
       return titles[titleId] ?? null;
+    },
+    async listLibrary(userId, wanted, _locale, today) {
+      const items: LibraryItem[] = [];
+      for (const [k, status] of statuses) {
+        const [owner, titleId] = k.split(":");
+        if (owner !== userId || (wanted && !wanted.includes(status))) continue;
+        const mediaType = titles[titleId];
+        if (!mediaType) continue;
+        const released = episodes.filter(
+          (e) =>
+            e.titleId === titleId &&
+            e.seasonNumber > 0 &&
+            (e.airDate === null || e.airDate <= today),
+        );
+        items.push({
+          titleId,
+          mediaType,
+          status,
+          title: titleId,
+          posterPath: null,
+          progress:
+            mediaType === "tv"
+              ? {
+                  released: released.length,
+                  watched: released.filter((e) =>
+                    progress.has(key(userId, e.id)),
+                  ).length,
+                }
+              : null,
+        });
+      }
+      return items;
     },
     async getTitleState(userId, titleId) {
       const items = new Map<string | null, WatchedItem>();

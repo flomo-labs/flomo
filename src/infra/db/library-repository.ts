@@ -13,7 +13,11 @@ import {
   sql,
 } from "drizzle-orm";
 import type { TitleStatus } from "@/domain/catalog/types";
-import type { LibraryRepository, WatchedItem } from "@/domain/library/ports";
+import type {
+  LibraryItem,
+  LibraryRepository,
+  WatchedItem,
+} from "@/domain/library/ports";
 import {
   type LibraryStatus,
   PROGRESS_PRECISIONS,
@@ -24,10 +28,55 @@ import {
   episodes,
   seasons,
   titles,
+  titleTranslations,
   userEpisodeProgress,
   userTitles,
   watchEvents,
 } from "./schema";
+
+// Episódios regulares já lançados de cada série e quantos o usuário viu (a
+// mesma conta de `getSeriesProgress`, em lote para a lista).
+async function seriesProgressByTitle(
+  tx: Tx,
+  userId: string,
+  titleIds: string[],
+  today: string,
+) {
+  const result = new Map<string, { watched: number; released: number }>();
+  if (titleIds.length === 0) return result;
+  const released = and(
+    inArray(seasons.titleId, titleIds),
+    gt(seasons.seasonNumber, 0),
+    or(isNull(episodes.airDate), lte(episodes.airDate, today)),
+  );
+  const totals = await tx
+    .select({ titleId: seasons.titleId, n: count() })
+    .from(episodes)
+    .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+    .where(released)
+    .groupBy(seasons.titleId);
+  const seen = await tx
+    .select({ titleId: seasons.titleId, n: count() })
+    .from(episodes)
+    .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+    .innerJoin(
+      userEpisodeProgress,
+      and(
+        eq(userEpisodeProgress.episodeId, episodes.id),
+        eq(userEpisodeProgress.userId, userId),
+      ),
+    )
+    .where(released)
+    .groupBy(seasons.titleId);
+  for (const t of totals) {
+    result.set(t.titleId, { released: t.n, watched: 0 });
+  }
+  for (const s of seen) {
+    const entry = result.get(s.titleId);
+    if (entry) entry.watched = s.n;
+  }
+  return result;
+}
 
 // Recebe a transação do `withUser`, nunca o cliente direto (ADR-003): o RLS
 // limita tudo às linhas do próprio usuário.
@@ -54,6 +103,60 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
         .where(eq(titles.id, titleId));
       if (!row) return null;
       return row.mediaType === "movie" ? "movie" : "tv";
+    },
+
+    async listLibrary(userId, statuses, locale, today) {
+      if (statuses?.length === 0) return [];
+      const rows = await tx
+        .select({
+          titleId: userTitles.titleId,
+          status: userTitles.status,
+          mediaType: titles.mediaType,
+          originalTitle: titles.originalTitle,
+          title: titleTranslations.title,
+          posterPath: titleTranslations.posterPath,
+        })
+        .from(userTitles)
+        .innerJoin(titles, eq(titles.id, userTitles.titleId))
+        .leftJoin(
+          titleTranslations,
+          and(
+            eq(titleTranslations.titleId, titles.id),
+            eq(titleTranslations.locale, locale),
+          ),
+        )
+        .where(
+          and(
+            eq(userTitles.userId, userId),
+            statuses ? inArray(userTitles.status, [...statuses]) : undefined,
+          ),
+        )
+        .orderBy(desc(userTitles.updatedAt), desc(userTitles.titleId));
+
+      const seriesIds = rows
+        .filter((r) => r.mediaType === "tv")
+        .map((r) => r.titleId);
+      const progress = await seriesProgressByTitle(
+        tx,
+        userId,
+        seriesIds,
+        today,
+      );
+
+      return rows.map((r): LibraryItem => {
+        const mediaType = r.mediaType === "movie" ? "movie" : "tv";
+        return {
+          titleId: r.titleId,
+          mediaType,
+          status: r.status as LibraryStatus,
+          title: r.title ?? r.originalTitle,
+          posterPath: r.posterPath,
+          progress:
+            mediaType === "tv"
+              ? (progress.get(r.titleId) ?? { watched: 0, released: 0 })
+              : null,
+        };
+      });
     },
 
     async getTitleState(userId, titleId) {

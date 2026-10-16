@@ -45,9 +45,30 @@ export type TitleLibraryState = {
   watched: WatchedItem[];
 };
 
+// Linha da biblioteca para a tela. `progress` só existe em série: episódios
+// regulares já lançados e quantos o usuário viu.
+export type LibraryItem = {
+  titleId: string;
+  mediaType: MediaType;
+  status: LibraryStatus;
+  title: string;
+  posterPath: string | null;
+  progress: { watched: number; released: number } | null;
+};
+
 export interface LibraryRepository {
   findEpisode(episodeId: string): Promise<LibraryEpisode | null>;
   findTitleMediaType(titleId: string): Promise<MediaType | null>;
+
+  // Biblioteca do usuário, com a situação mudada mais recentemente primeiro
+  // (`updated_at` de `user_titles`; marcar episódio não o altera). `statuses` nulo = todos. Título no idioma `locale`
+  // (cai no título original); `today` (AAAA-MM-DD) define o que já foi lançado.
+  listLibrary(
+    userId: string,
+    statuses: readonly LibraryStatus[] | null,
+    locale: string,
+    today: string,
+  ): Promise<LibraryItem[]>;
 
   // Estado do usuário num título: status e itens vistos (para as telas).
   getTitleState(userId: string, titleId: string): Promise<TitleLibraryState>;

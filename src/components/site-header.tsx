@@ -21,12 +21,28 @@ export function SiteHeader() {
           >
             Buscar
           </Link>
+          <Suspense>
+            <LibraryLink />
+          </Suspense>
         </div>
         <Suspense fallback={<div className="size-8" />}>
           <Account />
         </Suspense>
       </div>
     </header>
+  );
+}
+
+// A biblioteca só existe para quem está logado.
+async function LibraryLink() {
+  if (!(await getCurrentUser())) return null;
+  return (
+    <Link
+      href="/biblioteca"
+      className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+    >
+      Biblioteca
+    </Link>
   );
 }
 
