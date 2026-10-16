@@ -1,0 +1,61 @@
+name: Migrations (produção)
+
+# Aplica as migrations da pasta drizzle/ no Supabase de produção (flomo-prod)
+# depois de cada merge na main que mexe nela. O job usa o ambiente
+# `supabase-prod`, que exige aprovação manual: o GitHub espera alguém clicar
+# em "Approve" antes de ler o segredo e rodar. Passo a passo em
+# docs/deploy.md, seção A.4.
+
+on:
+  push:
+    branches: [main]
+    paths: ["drizzle/**"]
+  # Para aplicar à mão (ex.: migration mesclada antes deste workflow existir).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nunca duas aplicações ao mesmo tempo, e nenhuma é cancelada no meio.
+concurrency:
+  group: migrations-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: supabase-prod
+    env:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - run: corepack enable
+
+      - run: pnpm install --frozen-lockfile
+
+      # Segredo e variável do ambiente `supabase-prod`. O ref do projeto
+      # confere que a URL é mesmo a do flomo-prod (proteção contra colar a
+      # URL errada no segredo).
+      - name: Aplicar migrations no flomo-prod
+        env:
+          DATABASE_URL_MIGRATIONS: ${{ secrets.DATABASE_URL_MIGRATIONS }}
+          FLOMO_PROD_DB_REF: ${{ vars.FLOMO_PROD_DB_REF }}
+        run: |
+          if [ -z "$DATABASE_URL_MIGRATIONS" ] || [ -z "$FLOMO_PROD_DB_REF" ]; then
+            echo "::error::Defina o segredo DATABASE_URL_MIGRATIONS e a variável FLOMO_PROD_DB_REF no ambiente supabase-prod."
+            exit 1
+          fi
+          case "$DATABASE_URL_MIGRATIONS" in
+            *"$FLOMO_PROD_DB_REF"*) ;;
+            *)
+              echo "::error::DATABASE_URL_MIGRATIONS não aponta para o projeto FLOMO_PROD_DB_REF."
+              exit 1
+              ;;
+          esac
+          pnpm db:migrate
