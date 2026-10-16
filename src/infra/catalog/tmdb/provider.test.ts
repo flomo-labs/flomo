@@ -461,6 +461,66 @@ describe("fetchShelf", () => {
     });
   });
 
+  it("novelas no serviço: une Soap e telenovela só nos países seguros, sem repetidos", async () => {
+    const tv = (id: number, popularity: number) => ({
+      id,
+      name: `N${id}`,
+      original_name: `N${id}`,
+      poster_path: `/n${id}.jpg`,
+      popularity,
+    });
+    const get = vi.fn(
+      async (_path: string, params?: Record<string, unknown>) => ({
+        ...results,
+        results:
+          params?.with_genres !== undefined
+            ? [tv(1, 5), tv(2, 50)]
+            : [tv(3, 20), tv(2, 50)],
+      }),
+    );
+    const provider = createTmdbProvider({ get });
+    const items = await provider.fetchShelf(
+      { kind: "provider", mediaType: "novelas", providerId: "8" },
+      "BR",
+      "pt-BR",
+      10,
+    );
+    expect(items.map((i) => i.ref.externalId)).toEqual(["2", "3", "1"]);
+    const countries = "BR|MX|AR|CO|CL|PE|VE|PT|ES";
+    expect(get).toHaveBeenCalledWith("discover/tv", {
+      language: "pt-BR",
+      include_adult: false,
+      watch_region: "BR",
+      with_watch_providers: "8",
+      with_watch_monetization_types: "flatrate",
+      with_origin_country: countries,
+      sort_by: "popularity.desc",
+      with_genres: 10766,
+    });
+    expect(get).toHaveBeenCalledWith("discover/tv", {
+      language: "pt-BR",
+      include_adult: false,
+      watch_region: "BR",
+      with_watch_providers: "8",
+      with_watch_monetization_types: "flatrate",
+      with_origin_country: countries,
+      sort_by: "popularity.desc",
+      with_keywords: 199262,
+    });
+  });
+
+  it("novelas: falha se o TMDB não responde", async () => {
+    const provider = createTmdbProvider({ get: vi.fn(async () => null) });
+    await expect(
+      provider.fetchShelf(
+        { kind: "provider", mediaType: "novelas", providerId: "8" },
+        "BR",
+        "pt-BR",
+        10,
+      ),
+    ).rejects.toThrow(CatalogUnavailableError);
+  });
+
   it("serviço com filmes e séries (all) ordena pela popularidade do TMDB", async () => {
     const movie = (id: number, popularity: number) => ({
       id,
