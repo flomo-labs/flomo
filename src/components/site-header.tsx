@@ -11,9 +11,17 @@ export function SiteHeader() {
   return (
     <header className="border-b border-border py-3">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-6">
-        <Link href="/" className="text-lg font-bold">
-          Flomo
-        </Link>
+        <div className="flex items-center gap-5">
+          <Link href="/" className="text-lg font-bold">
+            Flomo
+          </Link>
+          <Link
+            href="/buscar"
+            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Buscar
+          </Link>
+        </div>
         <Suspense fallback={<div className="size-8" />}>
           <Account />
         </Suspense>
