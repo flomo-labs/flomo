@@ -60,5 +60,10 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 
 ## Catálogo
 
-- Dados de filmes e séries vêm do TMDB, chamado só pelo servidor, com atribuição obrigatória. [`docs/THIRD_PARTY.md`](THIRD_PARTY.md)
-- Títulos exibidos em pt-BR, com título e idioma originais guardados. _(prevista)_
+- Dados de filmes e séries vêm do TMDB, chamado só pelo servidor, com atribuição obrigatória. [`docs/THIRD_PARTY.md`](THIRD_PARTY.md), [`src/infra/catalog/tmdb/`](../src/infra/catalog/tmdb/client.ts)
+- **Idioma:** títulos, sinopses e pôsteres em pt-BR; título e idioma originais guardados à parte. Sem tradução, mostra o título original. [`src/domain/catalog/types.ts`](../src/domain/catalog/types.ts), [`src/infra/db/schema/catalog.ts`](../src/infra/db/schema/catalog.ts)
+- **Identificação:** todo título tem um id próprio do Flomo; o id do TMDB fica só em `external_ids` (filme e série do TMDB com o mesmo número são títulos diferentes). [`src/infra/db/schema/catalog.ts`](../src/infra/db/schema/catalog.ts)
+- **Busca:** filmes e séries, sem conteúdo adulto; pessoas ainda não aparecem. Maiúsculas e espaços extras não mudam a busca. [`src/domain/catalog/search-catalog.ts`](../src/domain/catalog/search-catalog.ts), [`src/infra/catalog/tmdb/provider.ts`](../src/infra/catalog/tmdb/provider.ts)
+- **Cache:** o catálogo é guardado no banco com prazo de validade (busca: 1 dia; série em exibição: 1 dia; série encerrada ou filme lançado: 30 dias; filme ainda não lançado: 2 dias). Vencido o prazo, o dado guardado é mostrado e atualizado em segundo plano. Os Termos do TMDB limitam o cache a 6 meses. [`src/domain/catalog/freshness.ts`](../src/domain/catalog/freshness.ts)
+- **Episódios:** temporadas e episódios que somem do TMDB continuam no Flomo, porque o progresso dos usuários aponta para eles. [`src/infra/db/catalog-repository.ts`](../src/infra/db/catalog-repository.ts)
+- **Acesso:** o catálogo só é gravado pelo servidor; usuários logados podem lê-lo no banco (RLS), e o cache bruto do provedor não é visível a ninguém além do servidor. [`src/infra/db/schema/catalog.ts`](../src/infra/db/schema/catalog.ts)
