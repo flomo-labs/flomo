@@ -10,4 +10,11 @@ describe("SHELF_PROVIDERS", () => {
     expect(new Set(SHELF_PROVIDERS.map((p) => p.id)).size).toBe(names.length);
     expect(names[0]).toBe("Apple TV");
   });
+
+  it("usa o artigo de cada marca (na Netflix, no Apple TV)", () => {
+    const feminine = SHELF_PROVIDERS.filter((p) => p.feminine).map(
+      (p) => p.name,
+    );
+    expect(feminine).toEqual(["HBO Max", "Netflix"]);
+  });
 });

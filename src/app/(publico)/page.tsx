@@ -16,7 +16,6 @@ const MEDIA_SEGMENTS = { tudo: "all", filmes: "movie", series: "tv" } as const;
 type MediaSegment = keyof typeof MEDIA_SEGMENTS;
 
 // Serviço aberto quando a URL não escolhe um (a lista é alfabética).
-const DEFAULT_PROVIDER_ID = "8"; // Netflix
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -129,7 +128,7 @@ async function ShelfItems({
 }
 
 // "Em alta no serviço X": serviço e tipo vêm da URL (?servico=8&tipo=series),
-// sem JavaScript. Ids de serviço fora da lista caem no primeiro.
+// sem JavaScript. Id ausente ou fora da lista cai no primeiro serviço.
 async function ProviderSection({
   searchParams,
 }: {
@@ -139,7 +138,6 @@ async function ProviderSection({
   const params = await searchParams;
   const provider =
     SHELF_PROVIDERS.find((p) => p.id === firstValue(params.servico)) ??
-    SHELF_PROVIDERS.find((p) => p.id === DEFAULT_PROVIDER_ID) ??
     SHELF_PROVIDERS[0];
   const requested = firstValue(params.tipo);
   const segment: MediaSegment =
@@ -161,7 +159,10 @@ async function ProviderSection({
       aria-labelledby="em-alta-no-servico"
     >
       <h2 id="em-alta-no-servico" className="text-xl font-semibold">
-        {t("shelf.provider", { provider: provider.name })}
+        {t("shelf.provider", {
+          provider: provider.name,
+          gender: provider.feminine ? "feminine" : "masculine",
+        })}
       </h2>
       <nav aria-label={t("providerNav")}>
         <ul className="flex flex-wrap gap-2">

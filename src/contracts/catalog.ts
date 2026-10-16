@@ -55,23 +55,28 @@ export const SHELF_PROVIDER_IDS = [
 ] as const;
 export type ShelfProviderId = (typeof SHELF_PROVIDER_IDS)[number];
 
-const SHELF_PROVIDER_NAMES: Record<ShelfProviderId, string> = {
-  "8": "Netflix",
-  "119": "Prime Video",
-  "337": "Disney+",
-  "1899": "HBO Max",
-  "350": "Apple TV",
-  "531": "Paramount+",
-  "307": "Globoplay",
+// `feminine`: como a marca se refere a si mesma em português ("na Netflix",
+// "no Apple TV"); define o artigo do título da prateleira.
+const SHELF_PROVIDER_INFO: Record<
+  ShelfProviderId,
+  { name: string; feminine: boolean }
+> = {
+  "8": { name: "Netflix", feminine: true },
+  "119": { name: "Prime Video", feminine: false },
+  "337": { name: "Disney+", feminine: false },
+  "1899": { name: "HBO Max", feminine: true },
+  "350": { name: "Apple TV", feminine: false },
+  "531": { name: "Paramount+", feminine: false },
+  "307": { name: "Globoplay", feminine: false },
 };
 
-// Em ordem alfabética (é a ordem do seletor na Home).
+// Em ordem alfabética (é a ordem do seletor na Home; o primeiro é o padrão).
 export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
   id,
-  name: SHELF_PROVIDER_NAMES[id],
+  ...SHELF_PROVIDER_INFO[id],
 })).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
-// "all" intercala filmes e séries na mesma prateleira.
+// "all" mistura filmes e séries na mesma prateleira, ordenados por popularidade.
 export const SHELF_MEDIA_TYPES = ["all", ...MEDIA_TYPES] as const;
 
 export const shelfInputSchema = z.discriminatedUnion("kind", [
