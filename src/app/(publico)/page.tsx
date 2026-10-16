@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/app/_auth/session";
@@ -107,6 +108,10 @@ async function ShelfItems({
   input: ShelfInput;
   ranked?: boolean;
 }) {
+  // Lê o catálogo a cada requisição (o cache é o do banco): sem isto o Next
+  // tentaria montar a prateleira no build, sem banco, e a gravaria no HTML
+  // estático.
+  await connection();
   const t = await getTranslations("Home");
   let items: SearchItem[] = [];
   try {
