@@ -51,6 +51,7 @@ const searchResultSchema = z.object({
     z.looseObject({
       media_type: z.string().optional(),
       adult: z.boolean().nullish(),
+      popularity: z.number().nullish(),
     }),
   ),
 });
@@ -214,15 +215,31 @@ export function mapShelf(
   limit: number,
   path: string,
 ): SearchItem[] {
+  return mapShelfRanked(data, defaultMediaType, path)
+    .map(({ item }) => item)
+    .slice(0, limit);
+}
+
+// Igual a `mapShelf`, mas guarda a popularidade do TMDB de cada item para
+// permitir ordenar listas de filmes e séries juntas.
+function mapShelfRanked(
+  data: unknown,
+  defaultMediaType: "movie" | "tv" | null,
+  path: string,
+): { item: SearchItem; popularity: number }[] {
   const raw = parse(searchResultSchema, data, path);
   return raw.results
     .filter((result) => result.adult !== true)
-    .map((result) =>
-      mapListItem(result, result.media_type ?? defaultMediaType ?? undefined),
-    )
-    .filter((item) => item !== null)
-    .filter((item) => item.posterPath !== null)
-    .slice(0, limit);
+    .flatMap((result) => {
+      const item = mapListItem(
+        result,
+        result.media_type ?? defaultMediaType ?? undefined,
+      );
+      if (item === null || item.posterPath === null) return [];
+      const popularity =
+        typeof result.popularity === "number" ? result.popularity : 0;
+      return [{ item, popularity }];
+    });
 }
 
 export function mapMovie(data: unknown, locale: string): ProviderTitle {
@@ -389,15 +406,6 @@ function seasonNumbersOf(details: unknown): number[] {
   return parse(tvSchema, details, "tv").seasons.map((s) => s.season_number);
 }
 
-function interleave<T>(a: T[], b: T[]): T[] {
-  const out: T[] = [];
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    if (i < a.length) out.push(a[i]);
-    if (i < b.length) out.push(b[i]);
-  }
-  return out;
-}
-
 export function createTmdbProvider(client: TmdbClient): CatalogProvider {
   async function fetchTv(ref: CatalogRef, locale: string) {
     const details = await client.get(`tv/${ref.externalId}`, {
@@ -471,24 +479,39 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
       if (query.kind === "now_playing") {
         return fetchList("movie/now_playing", { region: country }, "movie");
       }
-      const discover = (mediaType: "movie" | "tv") =>
-        fetchList(
-          `discover/${mediaType}`,
-          {
-            watch_region: country,
-            with_watch_providers: query.providerId,
-            with_watch_monetization_types: "flatrate",
-            sort_by: "popularity.desc",
-          },
-          mediaType,
-        );
-      if (query.mediaType !== "all") return discover(query.mediaType);
-      // Popularidade de filme e de série não é comparável no TMDB: intercala.
-      const [movies, shows] = await Promise.all([
-        discover("movie"),
-        discover("tv"),
-      ]);
-      return interleave(movies, shows).slice(0, limit);
+      const discoverParams = (mediaType: "movie" | "tv") => ({
+        path: `discover/${mediaType}`,
+        extra: {
+          watch_region: country,
+          with_watch_providers: query.providerId,
+          with_watch_monetization_types: "flatrate",
+          sort_by: "popularity.desc",
+        },
+        mediaType,
+      });
+      if (query.mediaType !== "all") {
+        const { path, extra, mediaType } = discoverParams(query.mediaType);
+        return fetchList(path, extra, mediaType);
+      }
+      // Filmes e séries juntos: ordena pela popularidade do TMDB, que vem no
+      // mesmo campo nos dois tipos.
+      const lists = await Promise.all(
+        (["movie", "tv"] as const).map(async (type) => {
+          const { path, extra, mediaType } = discoverParams(type);
+          const data = await client.get(path, { ...params, ...extra });
+          if (data === null) {
+            throw new CatalogUnavailableError(
+              "Prateleira do TMDB indisponível.",
+            );
+          }
+          return mapShelfRanked(data, mediaType, path);
+        }),
+      );
+      return lists
+        .flat()
+        .sort((a, b) => b.popularity - a.popularity)
+        .map(({ item }) => item)
+        .slice(0, limit);
     },
 
     async fetchWatchProviders(ref, country) {
