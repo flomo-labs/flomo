@@ -48,11 +48,7 @@ export interface CatalogStore {
   writeSearch(key: string, page: SearchPage, expiresAt: Date): Promise<void>;
 
   readShelf(key: string): Promise<Cached<SearchItem[]> | null>;
-  writeShelf(
-    key: string,
-    items: SearchItem[],
-    expiresAt: Date,
-  ): Promise<void>;
+  writeShelf(key: string, items: SearchItem[], expiresAt: Date): Promise<void>;
 
   readWatchProviders(key: string): Promise<Cached<WatchProviders> | null>;
   writeWatchProviders(

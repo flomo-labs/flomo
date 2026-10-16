@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTitleLibraryState } from "./get-title-state";
+import { getTitleLibraryState, listUnwatchedEpisodes } from "./get-title-state";
 import { markEpisodeWatched, markMovieWatched } from "./mark-watched";
 import { createFakeLibrary, type FakeEpisode, NOW, USER } from "./test-fakes";
 
@@ -25,7 +25,10 @@ describe("getTitleLibraryState", () => {
     const lib = setup();
     expect(
       await getTitleLibraryState(lib.deps, USER, { titleId: SERIES }),
-    ).toEqual({ ok: true, value: { status: null, watched: [] } });
+    ).toEqual({
+      ok: true,
+      value: { status: null, hidden: false, watched: [] },
+    });
   });
 
   it("devolve o status e os itens vistos, com a data", async () => {
@@ -59,6 +62,38 @@ describe("getTitleLibraryState", () => {
     const lib = setup();
     expect(
       await getTitleLibraryState(lib.deps, USER, { titleId: "x" }),
+    ).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } });
+  });
+});
+
+describe("listUnwatchedEpisodes", () => {
+  it("lista só os regulares lançados que faltam ver", async () => {
+    const E2: FakeEpisode = {
+      ...E1,
+      id: E1.id.replace(/1$/, "2"),
+      episodeNumber: 2,
+    };
+    const FUTURE: FakeEpisode = {
+      ...E1,
+      id: E1.id.replace(/1$/, "3"),
+      episodeNumber: 3,
+      airDate: "2099-01-01",
+    };
+    const SPECIAL: FakeEpisode = {
+      ...E1,
+      id: E1.id.replace(/1$/, "4"),
+      seasonNumber: 0,
+    };
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv" },
+      episodes: [E1, E2, FUTURE, SPECIAL],
+    });
+    await markEpisodeWatched(lib.deps, USER, { episodeId: E1.id });
+    expect(
+      await listUnwatchedEpisodes(lib.deps, USER, { titleId: SERIES }),
+    ).toEqual({ ok: true, value: [{ seasonNumber: 1, episodeNumber: 2 }] });
+    expect(
+      await listUnwatchedEpisodes(lib.deps, USER, { titleId: "x" }),
     ).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } });
   });
 });

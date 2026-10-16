@@ -74,6 +74,9 @@ describe("listLibrary", () => {
     expect(await ids("watching")).toEqual([SERIES]);
     expect(await ids("paused")).toEqual([OTHER]);
     expect(await ids("watchlist")).toEqual([]);
+    expect(await ids("watched")).toEqual([]);
+    lib.setStatus(OTHER, "watched");
+    expect(await ids("watched")).toEqual([OTHER]);
   });
 
   it("recusa filtro desconhecido", async () => {

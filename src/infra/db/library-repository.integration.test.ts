@@ -1,6 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
-import { getTitleLibraryState } from "@/domain/library/get-title-state";
+import {
+  getTitleLibraryState,
+  listUnwatchedEpisodes,
+} from "@/domain/library/get-title-state";
 import { listLibrary } from "@/domain/library/list-library";
 import {
   deleteWatchRecord,
@@ -11,6 +14,11 @@ import {
   setWatchDate,
   unmarkEpisodeWatched,
 } from "@/domain/library/mark-watched";
+import {
+  removeTitleFromLibrary,
+  setTitleHidden,
+  setTitleStatus,
+} from "@/domain/library/set-status";
 import type { Tx } from "./client";
 import {
   asUser,
@@ -87,7 +95,7 @@ function run<T>(
   );
 }
 
-describe("marcar como visto no banco", () => {
+describe("marcar como assistido no banco", () => {
   it("marca o episódio, os anteriores sem data e põe a série em Assistindo", () =>
     inRollback(async (tx) => {
       const user = await createUser(tx);
@@ -95,6 +103,12 @@ describe("marcar como visto no banco", () => {
       await tx
         .insert(userTitles)
         .values({ userId: user, titleId: c.seriesId, status: "paused" });
+
+      // Sem especiais e sem o episódio ainda não lançado (S2E3).
+      const pending = await run(tx, user, (deps, u) =>
+        listUnwatchedEpisodes(deps, u, { titleId: c.seriesId }),
+      );
+      expect(pending.ok && pending.value).toHaveLength(4);
 
       const result = await run(tx, user, (deps, u) =>
         markEpisodeWatched(deps, u, {
@@ -106,6 +120,11 @@ describe("marcar como visto no banco", () => {
         ok: true,
         value: { marked: true, previousMarked: 3 },
       });
+      expect(
+        await run(tx, user, (deps, u) =>
+          listUnwatchedEpisodes(deps, u, { titleId: c.seriesId }),
+        ),
+      ).toEqual({ ok: true, value: [] });
 
       const [status] = await tx
         .select({ status: userTitles.status })
@@ -147,7 +166,7 @@ describe("marcar como visto no banco", () => {
       });
     }));
 
-  it("filme: grava uma vez e põe em Visto", () =>
+  it("filme: grava uma vez e põe em Assistido", () =>
     inRollback(async (tx) => {
       const user = await createUser(tx);
       const c = await createCatalog(tx);
@@ -220,7 +239,7 @@ describe("marcar como visto no banco", () => {
       );
       expect(empty).toEqual({
         ok: true,
-        value: { status: null, watched: [] },
+        value: { status: null, hidden: false, watched: [] },
       });
     }));
 
@@ -318,7 +337,7 @@ describe("marcar como visto no banco", () => {
       ).toHaveLength(0);
     }));
 
-  it("série encerrada com tudo lançado visto vira Visto; desmarcar devolve a Assistindo", () =>
+  it("série encerrada com tudo lançado visto vira Assistido; desmarcar devolve a Assistindo", () =>
     inRollback(async (tx) => {
       const user = await createUser(tx);
       const c = await createCatalog(tx);
@@ -348,7 +367,7 @@ describe("marcar como visto no banco", () => {
       );
       expect(await status()).toBe("watching");
 
-      // Em exibição: nunca vira Visto sozinha.
+      // Em exibição: nunca vira Assistido sozinha.
       await tx
         .update(titles)
         .set({ status: "returning" })
@@ -357,6 +376,91 @@ describe("marcar como visto no banco", () => {
         markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
       );
       expect(await status()).toBe("watching");
+    }));
+
+  it("adiciona à biblioteca, muda a situação e remove sem perder o histórico", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      const status = async () =>
+        (
+          await tx
+            .select({ status: userTitles.status })
+            .from(userTitles)
+            .where(eq(userTitles.userId, user))
+        )[0]?.status;
+
+      const added = await run(tx, user, (deps, u) =>
+        setTitleStatus(deps, u, { titleId: c.seriesId, status: "watchlist" }),
+      );
+      expect(added.ok).toBe(true);
+      expect(await status()).toBe("watchlist");
+
+      await run(tx, user, (deps, u) =>
+        setTitleStatus(deps, u, { titleId: c.seriesId, status: "paused" }),
+      );
+      expect(await status()).toBe("paused");
+
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      await run(tx, user, (deps, u) =>
+        removeTitleFromLibrary(deps, u, { titleId: c.seriesId }),
+      );
+      expect(await status()).toBeUndefined();
+      expect(
+        await tx
+          .select()
+          .from(userEpisodeProgress)
+          .where(eq(userEpisodeProgress.userId, user)),
+      ).toHaveLength(1);
+
+      // Ocultar não muda a situação; só tira o título da lista.
+      await run(tx, user, (deps, u) =>
+        setTitleStatus(deps, u, { titleId: c.seriesId, status: "paused" }),
+      );
+      const hide = await run(tx, user, (deps, u) =>
+        setTitleHidden(deps, u, { titleId: c.seriesId, hidden: true }),
+      );
+      expect(hide.ok).toBe(true);
+      expect(await status()).toBe("paused");
+      const visible = await run(tx, user, (deps, u) =>
+        listLibrary(deps, u, {}),
+      );
+      expect(visible.ok && visible.value).toHaveLength(0);
+      const hidden = await run(tx, user, (deps, u) =>
+        listLibrary(deps, u, { filter: "hidden" }),
+      );
+      expect(hidden.ok && hidden.value.map((i) => i.titleId)).toEqual([
+        c.seriesId,
+      ]);
+      const state = await run(tx, user, (deps, u) =>
+        getTitleLibraryState(deps, u, { titleId: c.seriesId }),
+      );
+      expect(state.ok && state.value.hidden).toBe(true);
+      // Marcar um episódio traz o título de volta à lista.
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E2 }),
+      );
+      const back = await run(tx, user, (deps, u) => listLibrary(deps, u, {}));
+      expect(back.ok && back.value).toHaveLength(1);
+
+      // Marcar de novo traz o título de volta, com o que já estava marcado.
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E2 }),
+      );
+      expect(await status()).toBe("watching");
+
+      const missing = await run(tx, user, (deps, u) =>
+        setTitleStatus(deps, u, {
+          titleId: "00000000-0000-4000-8000-000000000000",
+          status: "watchlist",
+        }),
+      );
+      expect(missing).toMatchObject({
+        ok: false,
+        error: { code: "TITLE_NOT_FOUND" },
+      });
     }));
 
   it("lista a biblioteca com filtro e progresso da série", () =>

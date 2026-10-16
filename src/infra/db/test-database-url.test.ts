@@ -17,10 +17,16 @@ describe("resolveTestDatabaseUrl", () => {
 
   it("recusa ambiente de produção", () => {
     expect(() =>
-      resolveTestDatabaseUrl({ DATABASE_URL_TEST: dev, VERCEL_ENV: "production" }),
+      resolveTestDatabaseUrl({
+        DATABASE_URL_TEST: dev,
+        VERCEL_ENV: "production",
+      }),
     ).toThrow(/produção/);
     expect(() =>
-      resolveTestDatabaseUrl({ DATABASE_URL_TEST: dev, NODE_ENV: "production" }),
+      resolveTestDatabaseUrl({
+        DATABASE_URL_TEST: dev,
+        NODE_ENV: "production",
+      }),
     ).toThrow(/produção/);
   });
 
@@ -41,9 +47,12 @@ describe("resolveTestDatabaseUrl", () => {
     expect(() =>
       resolveTestDatabaseUrl({
         ...env,
-        DATABASE_URL_TEST: "postgres://postgres:s@db.prodref.supabase.co:5432/postgres",
+        DATABASE_URL_TEST:
+          "postgres://postgres:s@db.prodref.supabase.co:5432/postgres",
       }),
     ).toThrow(/produção/);
-    expect(resolveTestDatabaseUrl({ ...env, DATABASE_URL_TEST: dev })).toBe(dev);
+    expect(resolveTestDatabaseUrl({ ...env, DATABASE_URL_TEST: dev })).toBe(
+      dev,
+    );
   });
 });

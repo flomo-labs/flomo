@@ -9,6 +9,7 @@ import {
   isNull,
   lt,
   lte,
+  ne,
   or,
   sql,
 } from "drizzle-orm";
@@ -105,7 +106,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       return row.mediaType === "movie" ? "movie" : "tv";
     },
 
-    async listLibrary(userId, statuses, locale, today) {
+    async listLibrary(userId, { statuses, hidden }, locale, today) {
       if (statuses?.length === 0) return [];
       const rows = await tx
         .select({
@@ -128,6 +129,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
         .where(
           and(
             eq(userTitles.userId, userId),
+            eq(userTitles.hidden, hidden),
             statuses ? inArray(userTitles.status, [...statuses]) : undefined,
           ),
         )
@@ -161,7 +163,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
 
     async getTitleState(userId, titleId) {
       const [row] = await tx
-        .select({ status: userTitles.status })
+        .select({ status: userTitles.status, hidden: userTitles.hidden })
         .from(userTitles)
         .where(
           and(eq(userTitles.userId, userId), eq(userTitles.titleId, titleId)),
@@ -197,6 +199,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       }
       return {
         status: (row?.status as LibraryStatus | undefined) ?? null,
+        hidden: row?.hidden ?? false,
         watched: [...items.values()],
       };
     },
@@ -213,6 +216,74 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
           set: { status: sql`excluded.status` },
           setWhere: inArray(userTitles.status, [...replaceable]),
         });
+    },
+
+    async setTitleStatus(userId, titleId, status) {
+      await tx
+        .insert(userTitles)
+        .values({ userId, titleId, status })
+        .onConflictDoUpdate({
+          target: [userTitles.userId, userTitles.titleId],
+          set: { status },
+          // Sem mudança, não regrava (nem mexe no updated_at).
+          setWhere: sql`${userTitles.status} <> ${status}`,
+        });
+    },
+
+    async setTitleHidden(userId, titleId, hidden) {
+      const rows = await tx
+        .update(userTitles)
+        .set({ hidden })
+        // Só grava se mudou (nem mexe no updated_at).
+        .where(
+          and(
+            eq(userTitles.userId, userId),
+            eq(userTitles.titleId, titleId),
+            ne(userTitles.hidden, hidden),
+          ),
+        )
+        .returning({ titleId: userTitles.titleId });
+      if (rows.length > 0) return true;
+      const [exists] = await tx
+        .select({ titleId: userTitles.titleId })
+        .from(userTitles)
+        .where(
+          and(eq(userTitles.userId, userId), eq(userTitles.titleId, titleId)),
+        );
+      return Boolean(exists);
+    },
+
+    async removeTitle(userId, titleId) {
+      await tx
+        .delete(userTitles)
+        .where(
+          and(eq(userTitles.userId, userId), eq(userTitles.titleId, titleId)),
+        );
+    },
+
+    async listUnwatchedReleased(userId, titleId, today) {
+      return tx
+        .select({
+          seasonNumber: seasons.seasonNumber,
+          episodeNumber: episodes.episodeNumber,
+        })
+        .from(episodes)
+        .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+        .leftJoin(
+          userEpisodeProgress,
+          and(
+            eq(userEpisodeProgress.episodeId, episodes.id),
+            eq(userEpisodeProgress.userId, userId),
+          ),
+        )
+        .where(
+          and(
+            eq(seasons.titleId, titleId),
+            gt(seasons.seasonNumber, 0),
+            or(isNull(episodes.airDate), lte(episodes.airDate, today)),
+            isNull(userEpisodeProgress.episodeId),
+          ),
+        );
     },
 
     async listPreviousUnwatched(userId, episode, today) {

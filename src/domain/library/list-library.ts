@@ -10,14 +10,16 @@ import type { LibraryDeps } from "./mark-watched";
 import type { LibraryStatus } from "./values";
 import { todayIn } from "./watch-date";
 
-const STATUSES_BY_FILTER: Record<
+const SCOPE_BY_FILTER: Record<
   LibraryFilter,
-  readonly LibraryStatus[] | null
+  { statuses: readonly LibraryStatus[] | null; hidden: boolean }
 > = {
-  all: null,
-  watching: ["watching"],
-  watchlist: ["watchlist"],
-  paused: ["paused"],
+  all: { statuses: null, hidden: false },
+  watching: { statuses: ["watching"], hidden: false },
+  watchlist: { statuses: ["watchlist"], hidden: false },
+  paused: { statuses: ["paused"], hidden: false },
+  watched: { statuses: ["watched"], hidden: false },
+  hidden: { statuses: null, hidden: true },
 };
 
 // Biblioteca do usuário para a tela (Fase 1.4): títulos com status e, nas
@@ -32,7 +34,7 @@ export async function listLibrary(
   return ok(
     await deps.library.listLibrary(
       user.id,
-      STATUSES_BY_FILTER[parsed.data.filter],
+      SCOPE_BY_FILTER[parsed.data.filter],
       CATALOG_LOCALE,
       todayIn(CATALOG_COUNTRY, deps.now()),
     ),

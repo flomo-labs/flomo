@@ -59,10 +59,10 @@ Legenda: **Já** = previsto no plano/arquitetura anterior (às vezes só como �
 
 ## 2. Referências de produto (inspiração, não clone)
 
-| App                                    | O que usar como inspiração                                                                                                       | O que **não** copiar                                                 |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [Bingers](https://bingers.app/)        | Watchlist rápida + comunidade/reações; fundador do TV Time                                                                       | Branding, assets, copy                                               |
-| [Suite TV](https://www.suitetv.app/pt) | Up Next vs Em breve; “sem ver há um tempo”; rating **por episódio**; emoção; personagem favorito; rewatch; import TV Time; stats | Layout 1:1, dumps de catálogo da landing                             |
+| App                                    | O que usar como inspiração                                                                                                       | O que **não** copiar                                                  |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Bingers](https://bingers.app/)        | Watchlist rápida + comunidade/reações; fundador do TV Time                                                                       | Branding, assets, copy                                                |
+| [Suite TV](https://www.suitetv.app/pt) | Up Next vs Em breve; “sem ver há um tempo”; rating **por episódio**; emoção; personagem favorito; rewatch; import TV Time; stats | Layout 1:1, dumps de catálogo da landing                              |
 | [Up Next TV](https://upnexttv.app/)    | “Tonight / next episode”; calendário simples; privacidade                                                                        | Nome (conflito com o nome anterior, UpNext); iCloud-only; “sem conta” |
 
 **Conflito de marca (reforço):** [upnexttv.app](https://upnexttv.app/) é um tracker iOS independente. Manter white-label; validar domínio/nome BR.

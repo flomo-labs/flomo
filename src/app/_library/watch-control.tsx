@@ -4,6 +4,15 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import type { WatchDateInput } from "@/contracts/library";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   changeWatchDate,
   markEpisode,
   markMovie,
@@ -17,7 +26,13 @@ import {
 
 export type WatchControlLabels = {
   markWatched: string;
+  markOnlyThis: string;
+  // "Marcar este e os N anteriores", já com o número de anteriores.
   markWithPrevious: string;
+  previousTitle: string;
+  // "Você tem N episódios não vistos antes deste.", já com o número.
+  previousDescription: string;
+  cancel: string;
   watchAgain: string;
   history: string;
   deleteRecord: string;
@@ -44,6 +59,8 @@ type Props = {
     // Todos os registros, do mais recente ao mais antigo.
     records: { eventId: string; dateLabel: string }[];
   };
+  // Episódios anteriores ainda não vistos; com algum, marcar pergunta antes.
+  previousUnwatched?: number;
   // AAAA-MM-DD de hoje, limite do seletor de data.
   today: string;
   labels: WatchControlLabels;
@@ -55,12 +72,19 @@ export function WatchControl({
   kind,
   targetId,
   watched,
+  previousUnwatched = 0,
   today,
   labels,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [pickedDay, setPickedDay] = useState(today);
+  // Diálogo "só este ou também os anteriores" aberto.
+  const [askPrevious, setAskPrevious] = useState(false);
+  // Desmarcar e apagar registro apagam dados: pedem confirmação num diálogo.
+  const [confirming, setConfirming] = useState<
+    { kind: "unmark" } | { kind: "delete"; eventId: string } | null
+  >(null);
 
   function run(action: () => Promise<LibraryActionResult>) {
     setError(null);
@@ -74,31 +98,48 @@ export function WatchControl({
     });
   }
 
-  const mark = () =>
+  const markThis = () =>
     run(() =>
       kind === "episode"
         ? markEpisode({ episodeId: targetId })
         : markMovie({ titleId: targetId }),
     );
-  const markWithPrevious = () =>
+  // Episódio com anteriores não vistos: pergunta antes de marcar.
+  const mark = () => {
+    if (kind === "episode" && previousUnwatched > 0) {
+      setError(null);
+      setAskPrevious(true);
+    } else {
+      markThis();
+    }
+  };
+  const markWithPrevious = () => {
+    setAskPrevious(false);
     run(() => markEpisode({ episodeId: targetId, includePrevious: true }));
+  };
+  const markOnlyThis = () => {
+    setAskPrevious(false);
+    markThis();
+  };
   const watchAgain = () =>
     run(() =>
       kind === "episode"
         ? recordEpisodeAgain({ episodeId: targetId })
         : recordMovieAgain({ titleId: targetId }),
     );
-  const deleteRecord = (eventId: string) => {
-    if (!window.confirm(labels.deleteRecordConfirm)) return;
-    run(() => removeWatchRecord({ eventId }));
-  };
-  const unmark = () => {
-    if (!window.confirm(labels.unmarkConfirm)) return;
-    run(() =>
-      kind === "episode"
-        ? unmarkEpisode({ episodeId: targetId })
-        : unmarkMovie({ titleId: targetId }),
-    );
+  const confirmAction = () => {
+    const action = confirming;
+    setConfirming(null);
+    if (!action) return;
+    if (action.kind === "delete") {
+      run(() => removeWatchRecord({ eventId: action.eventId }));
+    } else {
+      run(() =>
+        kind === "episode"
+          ? unmarkEpisode({ episodeId: targetId })
+          : unmarkMovie({ titleId: targetId }),
+      );
+    }
   };
   const setDate = (when: WatchDateInput) => {
     if (!watched) return;
@@ -117,7 +158,7 @@ export function WatchControl({
             variant="ghost"
             size="sm"
             disabled={pending}
-            onClick={unmark}
+            onClick={() => setConfirming({ kind: "unmark" })}
           >
             {labels.unmark}
           </Button>
@@ -142,17 +183,6 @@ export function WatchControl({
           >
             {labels.markWatched}
           </Button>
-          {kind === "episode" ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={pending}
-              onClick={markWithPrevious}
-            >
-              {labels.markWithPrevious}
-            </Button>
-          ) : null}
         </div>
       )}
       {watched && watched.records.length > 1 ? (
@@ -172,7 +202,9 @@ export function WatchControl({
                   variant="ghost"
                   size="xs"
                   disabled={pending}
-                  onClick={() => deleteRecord(record.eventId)}
+                  onClick={() =>
+                    setConfirming({ kind: "delete", eventId: record.eventId })
+                  }
                 >
                   {labels.deleteRecord}
                 </Button>
@@ -229,6 +261,73 @@ export function WatchControl({
           </div>
         </details>
       ) : null}
+      <Dialog
+        open={askPrevious}
+        onOpenChange={(open) => {
+          if (!open) setAskPrevious(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{labels.previousTitle}</DialogTitle>
+            <DialogDescription>{labels.previousDescription}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button type="button" disabled={pending} onClick={markWithPrevious}>
+              {labels.markWithPrevious}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={markOnlyThis}
+            >
+              {labels.markOnlyThis}
+            </Button>
+          </div>
+          <DialogFooter>
+            <DialogClose render={<Button type="button" variant="ghost" />}>
+              {labels.cancel}
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={confirming !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirming(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {confirming?.kind === "delete"
+                ? labels.deleteRecord
+                : labels.unmark}
+            </DialogTitle>
+            <DialogDescription>
+              {confirming?.kind === "delete"
+                ? labels.deleteRecordConfirm
+                : labels.unmarkConfirm}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              {labels.cancel}
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending}
+              onClick={confirmAction}
+            >
+              {confirming?.kind === "delete"
+                ? labels.deleteRecord
+                : labels.unmark}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}

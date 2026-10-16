@@ -42,10 +42,13 @@
     "retry": "Tentar de novo"
   },
   "Library": {
-    "markWatched": "Marcar como visto",
-    "markWithPrevious": "Marcar este e os anteriores",
+    "markWatched": "Marcar como assistido",
+    "markOnlyThis": "Marcar só este",
+    "markWithPrevious": "{count, plural, one {Marcar este e o anterior} other {Marcar este e os # anteriores}}",
+    "previousTitle": "Episódios anteriores",
+    "previousDescription": "{count, plural, one {Você tem 1 episódio não visto antes deste.} other {Você tem # episódios não vistos antes deste.}}",
     "watchAgain": "Ver de novo",
-    "watched": "Visto",
+    "watched": "Assistido",
     "unmark": "Desmarcar",
     "unmarkConfirm": "Isso apaga o último registro deste item. Desmarcar?",
     "history": "Registros",
@@ -58,6 +61,17 @@
     "saveDate": "Salvar data",
     "signIn": "Entre para marcar o que você já viu",
     "unavailable": "Não foi possível carregar a sua biblioteca agora.",
+    "addToLibrary": "Adicionar à biblioteca",
+    "inLibrary": "Na biblioteca",
+    "libraryDialogTitle": "Na sua biblioteca",
+    "currentStatus": "Situação atual",
+    "hide": "Ocultar da lista",
+    "unhide": "Mostrar na lista",
+    "watchLater": "Assistir mais tarde",
+    "stopWatching": "Parar de assistir",
+    "removeFromLibrary": "Remover da biblioteca",
+    "removeFromLibraryHint": "O que você marcou como assistido continua guardado.",
+    "cancel": "Cancelar",
     "failed": "Não foi possível salvar. Tente de novo."
   },
   "LibraryPage": {
@@ -68,13 +82,15 @@
       "all": "Todos",
       "watching": "Assistindo",
       "watchlist": "Quero ver",
-      "paused": "Pausado"
+      "paused": "Pausado",
+      "watched": "Assistidos",
+      "hidden": "Ocultos"
     },
     "status": {
       "watchlist": "Quero ver",
       "watching": "Assistindo",
       "paused": "Pausado",
-      "watched": "Visto",
+      "watched": "Assistido",
       "dropped": "Abandonado"
     },
     "progress": "{watched} de {released} episódios",
@@ -82,6 +98,7 @@
     "noEpisodes": "Sem episódios lançados",
     "emptyAll": "Sua biblioteca está vazia. Busque um título e marque o que você já viu.",
     "emptyFilter": "Nenhum título nesta situação.",
+    "emptyHidden": "Você não ocultou nenhum título.",
     "search": "Buscar títulos",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
   },

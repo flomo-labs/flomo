@@ -76,15 +76,41 @@ export const deleteWatchRecordInputSchema = z.object({
 });
 
 // Filtros da tela da biblioteca (Fase 1.4). "all" mostra tudo, inclusive
-// Visto e Abandonado.
+// Assistido e Abandonado, menos os ocultos; "hidden" mostra só os ocultos.
 export const LIBRARY_FILTERS = [
   "all",
   "watching",
   "watchlist",
   "paused",
+  "watched",
+  "hidden",
 ] as const;
 export type LibraryFilter = (typeof LIBRARY_FILTERS)[number];
 
 export const listLibraryInputSchema = z.object({
   filter: z.enum(LIBRARY_FILTERS).default("all"),
+});
+
+// Colocar o título na biblioteca (ou mudar a situação) sem marcar nada.
+// "Assistido" fica de fora: vem de marcar o que foi visto, para a situação
+// não contradizer o histórico.
+export const MANUAL_LIBRARY_STATUSES = [
+  "watchlist",
+  "watching",
+  "paused",
+  "dropped",
+] as const;
+
+export const setTitleStatusInputSchema = z.object({
+  titleId: z.uuid(),
+  status: z.enum(MANUAL_LIBRARY_STATUSES),
+});
+
+export const setTitleHiddenInputSchema = z.object({
+  titleId: z.uuid(),
+  hidden: z.boolean(),
+});
+
+export const removeTitleInputSchema = z.object({
+  titleId: z.uuid(),
 });

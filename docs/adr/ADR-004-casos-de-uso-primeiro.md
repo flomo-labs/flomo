@@ -24,10 +24,10 @@ O anti-padrão deixa de ser "lógica só em Server Actions sem espelho HTTP" e p
 
 ## Alternativas consideradas
 
-| Alternativa | Motivo de não adotar |
-| ----------- | -------------------- |
-| `/api/v1` completo desde o spike | Retrabalho (rota, cliente e página por operação) antes de existir consumidor, num prazo curto |
-| Só Server Actions, sem camada de casos de uso | Prende a lógica ao Next.js e obriga a reescrever tudo para o mobile |
+| Alternativa                                   | Motivo de não adotar                                                                          |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `/api/v1` completo desde o spike              | Retrabalho (rota, cliente e página por operação) antes de existir consumidor, num prazo curto |
+| Só Server Actions, sem camada de casos de uso | Prende a lógica ao Next.js e obriga a reescrever tudo para o mobile                           |
 
 ## Consequências
 
