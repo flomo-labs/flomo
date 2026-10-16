@@ -5,12 +5,13 @@ import { Suspense } from "react";
 import { Poster } from "@/components/catalog/poster";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LIBRARY_FILTERS, type LibraryFilter } from "@/contracts/library";
 import { listLibrary } from "@/domain/library/list-library";
 import type { LibraryItem } from "@/domain/library/ports";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
-import { cn } from "@/lib/utils";
 import { requireUser } from "@/app/_auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -79,20 +80,20 @@ async function Body({
 
   return (
     <>
-      <nav aria-label={t("filters")} className="flex flex-wrap gap-2">
-        {LIBRARY_FILTERS.map((f) => (
-          <Button
-            key={f}
-            size="sm"
-            variant={f === filter ? "default" : "outline"}
-            aria-current={f === filter ? "page" : undefined}
-            render={<Link href={filterHref(f)} />}
-            nativeButton={false}
-          >
-            {t(`filter.${f}`)}
-          </Button>
-        ))}
-      </nav>
+      <Tabs value={filter}>
+        <TabsList aria-label={t("filters")}>
+          {LIBRARY_FILTERS.map((f) => (
+            <TabsTrigger
+              key={f}
+              value={f}
+              render={<Link href={filterHref(f)} />}
+              nativeButton={false}
+            >
+              {t(`filter.${f}`)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
       {items === null ? (
         <p role="alert" className="text-destructive">
           {t("unavailable")}
@@ -124,10 +125,6 @@ async function Body({
 async function Row({ item }: { item: LibraryItem }) {
   const t = await getTranslations();
   const { progress } = item;
-  const percent =
-    progress && progress.released > 0
-      ? Math.min(100, Math.round((progress.watched / progress.released) * 100))
-      : 0;
   return (
     <Link
       href={`/titulo/${item.titleId}`}
@@ -158,21 +155,13 @@ async function Row({ item }: { item: LibraryItem }) {
                 : t("LibraryPage.noEpisodes")}
             </p>
             {progress.released > 0 ? (
-              <div
-                role="progressbar"
+              <Progress
+                value={progress.watched}
+                max={progress.released}
                 aria-label={t("LibraryPage.progressLabel", {
                   title: item.title,
                 })}
-                aria-valuemin={0}
-                aria-valuemax={progress.released}
-                aria-valuenow={progress.watched}
-                className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-              >
-                <div
-                  className={cn("h-full rounded-full bg-primary")}
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
+              />
             ) : null}
           </div>
         ) : null}
