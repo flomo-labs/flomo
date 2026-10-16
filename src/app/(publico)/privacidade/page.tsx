@@ -76,7 +76,12 @@ export default function PrivacidadePage() {
           <li>
             Supabase, para o banco de dados e a autenticação (região do Brasil);
           </li>
-          <li>uma plataforma de hospedagem, para servir o site.</li>
+          <li>uma plataforma de hospedagem, para servir o site;</li>
+          <li>
+            Sentry (servidores na União Europeia), para registrar erros do
+            servidor (mensagem do erro e o endereço da página; sem endereço IP
+            nem cookies).
+          </li>
         </ul>
         <p>
           Os dados de filmes e séries vêm do TMDB, que é consultado pelo nosso
