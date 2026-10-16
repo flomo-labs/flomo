@@ -60,6 +60,31 @@
     "unavailable": "Não foi possível carregar a sua biblioteca agora.",
     "failed": "Não foi possível salvar. Tente de novo."
   },
+  "LibraryPage": {
+    "title": "Biblioteca",
+    "description": "Tudo o que você acompanha no Flomo.",
+    "filters": "Filtrar por situação",
+    "filter": {
+      "all": "Todos",
+      "watching": "Assistindo",
+      "watchlist": "Quero ver",
+      "paused": "Pausado"
+    },
+    "status": {
+      "watchlist": "Quero ver",
+      "watching": "Assistindo",
+      "paused": "Pausado",
+      "watched": "Visto",
+      "dropped": "Abandonado"
+    },
+    "progress": "{watched} de {released} episódios",
+    "progressLabel": "Progresso de {title}",
+    "noEpisodes": "Sem episódios lançados",
+    "emptyAll": "Sua biblioteca está vazia. Busque um título e marque o que você já viu.",
+    "emptyFilter": "Nenhum título nesta situação.",
+    "search": "Buscar títulos",
+    "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
+  },
   "Status": {
     "planned": "Planejado",
     "in_production": "Em produção",

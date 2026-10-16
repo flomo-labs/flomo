@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { getTitleLibraryState } from "@/domain/library/get-title-state";
+import { listLibrary } from "@/domain/library/list-library";
 import {
   deleteWatchRecord,
   markEpisodeWatched,
@@ -22,6 +23,7 @@ import {
   episodes,
   seasons,
   titles,
+  titleTranslations,
   userEpisodeProgress,
   userTitles,
   watchEvents,
@@ -355,6 +357,57 @@ describe("marcar como visto no banco", () => {
         markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
       );
       expect(await status()).toBe("watching");
+    }));
+
+  it("lista a biblioteca com filtro e progresso da série", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const other = await createUser(tx);
+      const c = await createCatalog(tx);
+      await tx.insert(titleTranslations).values({
+        titleId: c.seriesId,
+        locale: "pt-BR",
+        title: "Série em português",
+        posterPath: "/poster.jpg",
+      });
+      await tx
+        .insert(userTitles)
+        .values({ userId: user, titleId: c.movieId, status: "paused" });
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, {
+          episodeId: c.ep.S1E2,
+          includePrevious: true,
+        }),
+      );
+      // A biblioteca de outro usuário não aparece.
+      await tx
+        .insert(userTitles)
+        .values({ userId: other, titleId: c.movieId, status: "watching" });
+
+      const all = await run(tx, user, (deps, u) => listLibrary(deps, u, {}));
+      expect(all).toMatchObject({ ok: true });
+      const items = all.ok ? all.value : [];
+      expect(items.map((i) => i.titleId).sort()).toEqual(
+        [c.seriesId, c.movieId].sort(),
+      );
+      // Especial e episódio futuro não entram nos 4 episódios lançados.
+      expect(items.find((i) => i.titleId === c.seriesId)).toMatchObject({
+        title: "Série em português",
+        posterPath: "/poster.jpg",
+        status: "watching",
+        progress: { watched: 2, released: 4 },
+      });
+      expect(items.find((i) => i.titleId === c.movieId)).toMatchObject({
+        title: "Filme",
+        progress: null,
+      });
+
+      const paused = await run(tx, user, (deps, u) =>
+        listLibrary(deps, u, { filter: "paused" }),
+      );
+      expect(paused.ok && paused.value.map((i) => i.titleId)).toEqual([
+        c.movieId,
+      ]);
     }));
 
   it("desmarcar apaga progresso e histórico do episódio", () =>

@@ -74,3 +74,17 @@ export const rewatchMovieInputSchema = z.object({
 export const deleteWatchRecordInputSchema = z.object({
   eventId: z.uuid(),
 });
+
+// Filtros da tela da biblioteca (Fase 1.4). "all" mostra tudo, inclusive
+// Visto e Abandonado.
+export const LIBRARY_FILTERS = [
+  "all",
+  "watching",
+  "watchlist",
+  "paused",
+] as const;
+export type LibraryFilter = (typeof LIBRARY_FILTERS)[number];
+
+export const listLibraryInputSchema = z.object({
+  filter: z.enum(LIBRARY_FILTERS).default("all"),
+});
