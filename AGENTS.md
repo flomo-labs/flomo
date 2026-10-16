@@ -44,6 +44,15 @@ Regras de dependência entre pastas, impostas pelo ESLint (`eslint.config.mjs`):
 Para `domain/`, a regra é uma lista de proibidos: bibliotecas puras podem ser
 importadas, mas nunca as listadas acima.
 
+## Componentização da interface
+
+Ao criar ou alterar uma tela, antes de codar, veja se algum elemento (lista, card, botão padrão, diálogo, bloco) já existe em outra tela ou vai existir em mais de uma. Se sim, vira componente; se é de uso único, deixe na própria tela. Não crie abstração "por precaução".
+
+- Reutilize primeiro o que existe: shadcn em `src/components/ui/` ou do projeto em `src/components/`. Crie novo só quando não houver.
+- Um componente por arquivo, nome claro, agrupado por domínio quando houver (ex.: `catalog/`). Sem marcação duplicada entre telas.
+- Exemplo: a lista de Seguintes é um componente usado na Home e em `/seguintes`.
+- No PR, uma linha: o que foi componentizado ou reaproveitado e o que ficou de fora.
+
 ## Git e Pull Requests
 
 - Nunca dar push direto na `main`. Toda mudança entra por PR com o CI verde.
