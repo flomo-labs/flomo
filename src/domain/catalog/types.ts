@@ -5,6 +5,8 @@ export type { MediaType };
 // Idioma em que o catálogo é exibido. Título e idioma originais são
 // guardados à parte (Plano v2, decisão 11).
 export const CATALOG_LOCALE = "pt-BR";
+// País de onde o Flomo mostra "onde assistir" (Brasil primeiro, Plano v2).
+export const CATALOG_COUNTRY = "BR";
 
 // Situação do título, independente do provedor (o adaptador traduz).
 export const TITLE_STATUSES = [
@@ -107,4 +109,21 @@ export type CatalogEpisode = {
   overview: string | null;
   airDate: string | null;
   runtime: number | null;
+};
+
+// Onde assistir num país (JustWatch, via TMDB). `link` é a página do título
+// no TMDB com a lista completa; a atribuição ao JustWatch é obrigatória.
+export type WatchProvider = {
+  id: string;
+  name: string;
+  logoPath: string | null;
+};
+
+export type WatchProviders = {
+  country: string;
+  link: string | null;
+  flatrate: WatchProvider[]; // assinatura
+  free: WatchProvider[]; // grátis, com ou sem anúncios
+  rent: WatchProvider[];
+  buy: WatchProvider[];
 };

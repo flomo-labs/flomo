@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { CatalogUnavailableError } from "@/domain/catalog/ports";
 import type { TmdbClient } from "./client";
-import { createTmdbProvider, mapMovie, mapSearch } from "./provider";
+import {
+  createTmdbProvider,
+  mapMovie,
+  mapSearch,
+  mapWatchProviders,
+} from "./provider";
 
 // Respostas no formato da API v3 do TMDB, reduzidas e com valores fictícios.
 
@@ -248,5 +253,101 @@ describe("createTmdbProvider", () => {
       provider.fetchTitle({ mediaType: "tv", externalId: "1" }, "pt-BR"),
     ).resolves.toBeNull();
     expect(get).toHaveBeenCalledOnce();
+  });
+});
+
+describe("mapWatchProviders", () => {
+  const RESPONSE = {
+    id: 603,
+    results: {
+      BR: {
+        link: "https://www.themoviedb.org/movie/603-the-matrix/watch?locale=BR",
+        flatrate: [
+          {
+            logo_path: "/b.jpg",
+            provider_id: 2,
+            provider_name: "B",
+            display_priority: 5,
+          },
+          {
+            logo_path: "/a.jpg",
+            provider_id: 1,
+            provider_name: "A",
+            display_priority: 1,
+          },
+          { provider_id: "quebrado" },
+        ],
+        ads: [
+          {
+            logo_path: null,
+            provider_id: 3,
+            provider_name: "C",
+            display_priority: 2,
+          },
+        ],
+        rent: [{ logo_path: "/d.jpg", provider_id: 4, provider_name: "D" }],
+      },
+      US: {
+        flatrate: [{ provider_id: 9, provider_name: "Z", logo_path: "/z.jpg" }],
+      },
+    },
+  };
+
+  it("usa só o país pedido, ordena por prioridade e ignora itens malformados", () => {
+    expect(mapWatchProviders(RESPONSE, "BR")).toEqual({
+      country: "BR",
+      link: "https://www.themoviedb.org/movie/603-the-matrix/watch?locale=BR",
+      flatrate: [
+        { id: "1", name: "A", logoPath: "/a.jpg" },
+        { id: "2", name: "B", logoPath: "/b.jpg" },
+      ],
+      free: [{ id: "3", name: "C", logoPath: null }],
+      rent: [{ id: "4", name: "D", logoPath: "/d.jpg" }],
+      buy: [],
+    });
+  });
+
+  it("país sem oferta: listas vazias e sem link", () => {
+    expect(mapWatchProviders({ id: 1, results: {} }, "BR")).toEqual({
+      country: "BR",
+      link: null,
+      flatrate: [],
+      free: [],
+      rent: [],
+      buy: [],
+    });
+  });
+
+  it("descarta link que não seja do TMDB", () => {
+    const data = { results: { BR: { link: "https://evil.example/x" } } };
+    expect(mapWatchProviders(data, "BR").link).toBeNull();
+    const js = { results: { BR: { link: "javascript:alert(1)" } } };
+    expect(mapWatchProviders(js, "BR").link).toBeNull();
+  });
+
+  it("resposta fora do formato: indisponível", () => {
+    expect(() => mapWatchProviders("x", "BR")).toThrow(CatalogUnavailableError);
+  });
+});
+
+describe("fetchWatchProviders", () => {
+  it("chama o endpoint do tipo certo; 404 vira null", async () => {
+    const get = vi.fn(async (path: string) =>
+      path.startsWith("tv/") ? { id: 1, results: {} } : null,
+    );
+    const provider = createTmdbProvider({ get });
+    expect(
+      await provider.fetchWatchProviders(
+        { mediaType: "tv", externalId: "1" },
+        "BR",
+      ),
+    ).toMatchObject({ country: "BR" });
+    expect(get).toHaveBeenCalledWith("tv/1/watch/providers");
+    expect(
+      await provider.fetchWatchProviders(
+        { mediaType: "movie", externalId: "2" },
+        "BR",
+      ),
+    ).toBeNull();
   });
 });

@@ -5,6 +5,7 @@ import type {
   CatalogTitle,
   ProviderTitle,
   SearchPage,
+  WatchProviders,
 } from "./types";
 
 // Dublês dos testes de domínio do catálogo (sem banco nem rede).
@@ -70,9 +71,27 @@ export function searchPage(title = "A Guerra dos Tronos"): SearchPage {
   };
 }
 
+export function watchProviders(
+  overrides: Partial<WatchProviders> = {},
+): WatchProviders {
+  return {
+    country: "BR",
+    link: "https://www.themoviedb.org/tv/1399/watch?locale=BR",
+    flatrate: [{ id: "1899", name: "Max", logoPath: "/max.jpg" }],
+    free: [],
+    rent: [],
+    buy: [],
+    ...overrides,
+  };
+}
+
 // Store em memória que imita o repositório do Postgres.
 export function memoryStore() {
   const searches = new Map<string, { value: SearchPage; expiresAt: Date }>();
+  const providers = new Map<
+    string,
+    { value: WatchProviders; expiresAt: Date }
+  >();
   const titles = new Map<
     string,
     { title: ProviderTitle; ref: CatalogRef; expiresAt: Date }
@@ -86,6 +105,12 @@ export function memoryStore() {
     },
     async writeSearch(key, value, expiresAt) {
       searches.set(key, { value, expiresAt });
+    },
+    async readWatchProviders(key) {
+      return providers.get(key) ?? null;
+    },
+    async writeWatchProviders(key, value, expiresAt) {
+      providers.set(key, { value, expiresAt });
     },
     async findTitleByRef(ref) {
       const id = ids.get(refKey(ref));
@@ -145,7 +170,7 @@ export function memoryStore() {
       }));
     },
   };
-  return { store, searches, titles };
+  return { store, searches, titles, providers };
 }
 
 export function fakeDeps(
@@ -154,6 +179,7 @@ export function fakeDeps(
   const provider: CatalogProvider = {
     search: vi.fn(async () => searchPage()),
     fetchTitle: vi.fn(async () => providerTitle()),
+    fetchWatchProviders: vi.fn(async () => watchProviders()),
     ...overrides.provider,
   };
   const memory = memoryStore();
