@@ -21,6 +21,10 @@ import {
   type LibraryActionResult,
 } from "./actions";
 
+// Largura única para "Adicionar à biblioteca" e "Na biblioteca": o botão não
+// muda de tamanho ao trocar de estado nem conforme o título da página.
+const STATUS_BUTTON_WIDTH = "w-44";
+
 export type StatusControlLabels = {
   add: string;
   inLibrary: string;
@@ -76,6 +80,7 @@ export function StatusControl({
         <Button
           type="button"
           size="sm"
+          className={STATUS_BUTTON_WIDTH}
           disabled={pending}
           onClick={() =>
             run(() => changeTitleStatus({ titleId, status: "watchlist" }))
@@ -104,7 +109,14 @@ export function StatusControl({
       }}
     >
       <DialogTrigger
-        render={<Button type="button" variant="secondary" size="sm" />}
+        render={
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className={STATUS_BUTTON_WIDTH}
+          />
+        }
       >
         <CheckIcon data-icon="inline-start" />
         {labels.inLibrary}

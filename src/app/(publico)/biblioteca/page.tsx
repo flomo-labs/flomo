@@ -88,7 +88,7 @@ async function Body({
             <TabsTrigger
               key={f}
               value={f}
-              render={<Link href={filterHref(f)} />}
+              render={<Link href={filterHref(f)} replace />}
               nativeButton={false}
             >
               {t(`filter.${f}`)}
