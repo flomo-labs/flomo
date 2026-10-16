@@ -95,8 +95,8 @@ export const userEpisodeProgress = pgTable(
     titleId: uuid("title_id")
       .notNull()
       .references(() => titles.id, { onDelete: "restrict" }),
-    // Data do registro mais recente com data exata; nulo se não houver. O
-    // detalhe (precisão, datas aproximadas) fica só no histórico.
+    // Data mais recente do histórico com dia conhecido (precisão `exact` ou
+    // `day`); nulo se não houver. Datas por mês ou ano ficam só no histórico.
     watchedAt: timestamp("watched_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
