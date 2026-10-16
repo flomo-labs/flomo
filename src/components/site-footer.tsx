@@ -27,6 +27,15 @@ export function SiteFooter() {
         </nav>
         <p>© Flomo</p>
       </div>
+      {/* Aviso exigido pelos Termos do TMDB (seção 3): em destaque na
+          aplicação inteira, não só em /sobre. */}
+      <p className="mx-auto mt-3 max-w-3xl px-6 text-xs">
+        This website uses TMDB and the TMDB APIs but is not endorsed, certified,
+        or otherwise approved by TMDB.{" "}
+        <Link href="/sobre" className="underline underline-offset-4">
+          Sobre
+        </Link>
+      </p>
     </footer>
   );
 }
