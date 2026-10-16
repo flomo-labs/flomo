@@ -43,6 +43,13 @@
       "when": 1792132870489,
       "tag": "0005_library_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792173132629,
+      "tag": "0006_user_titles_hidden",
+      "breakpoints": true
     }
   ]
 }

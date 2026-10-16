@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   pgPolicy,
@@ -57,6 +58,9 @@ export const userTitles = pgTable(
       .notNull()
       .references(() => titles.id, { onDelete: "restrict" }),
     status: text("status").notNull(),
+    // Escondido da lista da biblioteca, sem perder a situação nem o que foi
+    // marcado. Só a tela da biblioteca lê.
+    hidden: boolean("hidden").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
