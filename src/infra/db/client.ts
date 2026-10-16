@@ -47,15 +47,17 @@ const UUID_FORMAT =
 export async function withUser<T>(
   claims: JwtClaims,
   fn: (tx: Tx) => Promise<T>,
-  db: Db | Tx = getDb(),
+  db?: Db | Tx,
 ): Promise<T> {
   if (typeof claims.sub !== "string" || !UUID_FORMAT.test(claims.sub)) {
     throw new Error(
       "withUser exige as claims de um usuário autenticado (sub com o uuid do usuário).",
     );
   }
-  const nested = db instanceof PgTransaction;
-  return db.transaction(async (tx) => {
+  // Só abre a conexão depois de validar as claims.
+  const conn = db ?? getDb();
+  const nested = conn instanceof PgTransaction;
+  return conn.transaction(async (tx) => {
     await tx.execute(
       sql`select set_config('request.jwt.claims', ${JSON.stringify(claims)}, true)`,
     );
