@@ -2,8 +2,9 @@ name: Migrations (produção)
 
 # Aplica as migrations da pasta drizzle/ no Supabase de produção (flomo-prod)
 # depois de cada merge na main que mexe nela. O job usa o ambiente
-# `supabase-prod`, que exige aprovação manual: o GitHub espera alguém clicar
-# em "Approve" antes de ler o segredo e rodar. Passo a passo em
+# `supabase-prod`. Hoje sem aprovação manual; se "Required reviewers" for
+# religado no ambiente, o GitHub espera alguém clicar em "Approve" antes de
+# ler o segredo e rodar. Passo a passo em
 # docs/deploy.md, seção A.4.
 
 on:
