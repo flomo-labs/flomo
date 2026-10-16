@@ -7,6 +7,7 @@ import {
   getTitleByRef as getTitleByRefUseCase,
   listSeasonEpisodes as listSeasonEpisodesUseCase,
 } from "@/domain/catalog/titles";
+import { getWatchProviders as getWatchProvidersUseCase } from "@/domain/catalog/watch-providers";
 import { createCatalogDeps } from "@/infra/catalog";
 
 // Borda do Catalog Gateway para a web (Server Components e Server Actions).
@@ -38,4 +39,8 @@ export function getTitleByRef(ref: CatalogRefInput) {
 
 export function listSeasonEpisodes(titleId: string, seasonNumber: number) {
   return listSeasonEpisodesUseCase(deps(), { titleId, seasonNumber });
+}
+
+export function getWatchProviders(titleId: string) {
+  return getWatchProvidersUseCase(deps(), { titleId });
 }

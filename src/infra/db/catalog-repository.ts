@@ -6,6 +6,7 @@ import type {
   ProviderTitle,
   SearchPage,
   TitleStatus,
+  WatchProviders,
 } from "@/domain/catalog/types";
 import type { Db, Tx } from "./client";
 import {
@@ -69,6 +70,24 @@ export function createCatalogStore(
       });
   }
 
+  async function readPayload<T>(
+    resource: string,
+  ): Promise<{ value: T; expiresAt: Date } | null> {
+    const [row] = await db
+      .select({
+        payload: providerPayloads.payload,
+        expiresAt: providerPayloads.expiresAt,
+      })
+      .from(providerPayloads)
+      .where(
+        and(
+          eq(providerPayloads.provider, provider),
+          eq(providerPayloads.resource, resource),
+        ),
+      );
+    return row ? { value: row.payload as T, expiresAt: row.expiresAt } : null;
+  }
+
   async function upsertGenre(
     tx: Tx,
     genre: ProviderTitle["genres"][number],
@@ -108,25 +127,19 @@ export function createCatalogStore(
 
   return {
     async readSearch(key) {
-      const [row] = await db
-        .select({
-          payload: providerPayloads.payload,
-          expiresAt: providerPayloads.expiresAt,
-        })
-        .from(providerPayloads)
-        .where(
-          and(
-            eq(providerPayloads.provider, provider),
-            eq(providerPayloads.resource, key),
-          ),
-        );
-      return row
-        ? { value: row.payload as SearchPage, expiresAt: row.expiresAt }
-        : null;
+      return readPayload<SearchPage>(key);
     },
 
     async writeSearch(key, page, expiresAt) {
       await upsertPayload(db, key, page, expiresAt);
+    },
+
+    async readWatchProviders(key) {
+      return readPayload<WatchProviders>(key);
+    },
+
+    async writeWatchProviders(key, providers, expiresAt) {
+      await upsertPayload(db, key, providers, expiresAt);
     },
 
     async findTitleByRef(ref) {

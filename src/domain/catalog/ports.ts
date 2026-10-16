@@ -4,6 +4,7 @@ import type {
   CatalogTitle,
   ProviderTitle,
   SearchPage,
+  WatchProviders,
 } from "./types";
 
 // Portas do Catalog Gateway (ADR-001): o provedor de catálogo (hoje o TMDB,
@@ -23,6 +24,12 @@ export interface CatalogProvider {
   search(query: string, page: number, locale: string): Promise<SearchPage>;
   // `null` quando o título não existe no provedor.
   fetchTitle(ref: CatalogRef, locale: string): Promise<ProviderTitle | null>;
+  // `null` quando o título não existe no provedor; sem oferta no país, as
+  // listas voltam vazias.
+  fetchWatchProviders(
+    ref: CatalogRef,
+    country: string,
+  ): Promise<WatchProviders | null>;
 }
 
 export type Cached<T> = { value: T; expiresAt: Date };
@@ -30,6 +37,13 @@ export type Cached<T> = { value: T; expiresAt: Date };
 export interface CatalogStore {
   readSearch(key: string): Promise<Cached<SearchPage> | null>;
   writeSearch(key: string, page: SearchPage, expiresAt: Date): Promise<void>;
+
+  readWatchProviders(key: string): Promise<Cached<WatchProviders> | null>;
+  writeWatchProviders(
+    key: string,
+    providers: WatchProviders,
+    expiresAt: Date,
+  ): Promise<void>;
 
   findTitleByRef(ref: CatalogRef): Promise<{ id: string } | null>;
   readTitle(

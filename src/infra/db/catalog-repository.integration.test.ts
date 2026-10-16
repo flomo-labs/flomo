@@ -1,6 +1,10 @@
 import { eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
-import { providerTitle, searchPage } from "@/domain/catalog/test-fakes";
+import {
+  providerTitle,
+  searchPage,
+  watchProviders,
+} from "@/domain/catalog/test-fakes";
 import { createCatalogStore } from "./catalog-repository";
 import {
   asUser,
@@ -179,6 +183,23 @@ describe("catalog store", () => {
       await store.writeSearch(key, searchPage(), EXPIRES);
       expect(await store.readSearch(key)).toEqual({
         value: searchPage(),
+        expiresAt: EXPIRES,
+      });
+    }));
+
+  it("grava, lê e substitui onde assistir", () =>
+    inRollback(async (tx) => {
+      const store = createCatalogStore(tx, PROVIDER);
+      const key = "providers:BR:tv/1399";
+      expect(await store.readWatchProviders(key)).toBeNull();
+      await store.writeWatchProviders(
+        key,
+        watchProviders({ flatrate: [] }),
+        EXPIRES,
+      );
+      await store.writeWatchProviders(key, watchProviders(), EXPIRES);
+      expect(await store.readWatchProviders(key)).toEqual({
+        value: watchProviders(),
         expiresAt: EXPIRES,
       });
     }));

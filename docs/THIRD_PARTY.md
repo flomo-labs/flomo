@@ -22,3 +22,7 @@ Quando o calendário de episódios usar o [TVmaze](https://www.tvmaze.com/), os 
 ## Código de terceiros
 
 Nenhum trecho de código de terceiros copiado até agora. Se algum for copiado (por exemplo, do MediaTracker, licença MIT), registrar aqui o projeto, a licença e os arquivos afetados.
+
+## JustWatch (onde assistir)
+
+Os dados de "onde assistir" vêm do endpoint de watch providers do TMDB, que os recebe do [JustWatch](https://www.justwatch.com/). A atribuição é obrigatória: toda tela com essa lista mostra "Dados de onde assistir por JustWatch" (com link) e o link para a página do título no TMDB. O cache segue o mesmo limite do restante do catálogo (1 dia).

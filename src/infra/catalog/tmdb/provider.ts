@@ -11,6 +11,8 @@ import type {
   SearchItem,
   SearchPage,
   TitleStatus,
+  WatchProvider,
+  WatchProviders,
 } from "@/domain/catalog/types";
 import type { TmdbClient } from "./client";
 
@@ -276,6 +278,78 @@ export function mapTv(
   };
 }
 
+const watchProviderSchema = z.object({
+  provider_id: z.number().int().positive(),
+  provider_name: z.string().min(1),
+  logo_path: optionalText,
+  display_priority: z.number().nullish(),
+});
+
+function asArray(raw: unknown): unknown[] {
+  return Array.isArray(raw) ? raw : [];
+}
+
+// Cada lista é validada item a item: um provedor malformado some, sem derrubar
+// os demais.
+function mapProviderList(raw: unknown): WatchProvider[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .flatMap((item) => {
+      const parsed = watchProviderSchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    })
+    .sort(
+      (a, b) =>
+        (a.display_priority ?? Infinity) - (b.display_priority ?? Infinity),
+    )
+    .map((p) => ({
+      id: String(p.provider_id),
+      name: p.provider_name,
+      logoPath: p.logo_path,
+    }));
+}
+
+const watchProvidersSchema = z.object({
+  results: z.record(z.string(), z.unknown()).default({}),
+});
+
+// Só aceita o link da página do TMDB (vai para um <a href>).
+function tmdbLink(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" && url.hostname === "www.themoviedb.org"
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function mapWatchProviders(
+  data: unknown,
+  country: string,
+): WatchProviders {
+  const { results } = parse(watchProvidersSchema, data, "watch/providers");
+  const entry = results[country];
+  const offer =
+    entry && typeof entry === "object"
+      ? (entry as Record<string, unknown>)
+      : {};
+  return {
+    country,
+    link: tmdbLink(offer.link),
+    flatrate: mapProviderList(offer.flatrate),
+    // O TMDB pode listar o mesmo serviço em `free` e em `ads`.
+    free: mapProviderList([
+      ...asArray(offer.free),
+      ...asArray(offer.ads),
+    ]).filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i),
+    rent: mapProviderList(offer.rent),
+    buy: mapProviderList(offer.buy),
+  };
+}
+
 function seasonNumbersOf(details: unknown): number[] {
   return parse(tvSchema, details, "tv").seasons.map((s) => s.season_number);
 }
@@ -331,6 +405,13 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
         language: locale,
       });
       return data === null ? null : mapMovie(data, locale);
+    },
+
+    async fetchWatchProviders(ref, country) {
+      const data = await client.get(
+        `${ref.mediaType}/${ref.externalId}/watch/providers`,
+      );
+      return data === null ? null : mapWatchProviders(data, country);
     },
   };
 }
