@@ -225,7 +225,8 @@ export async function markMovieWatched(
 
 // Apaga um registro do histórico. Se era o último do episódio, o episódio
 // deixa de estar visto; se sobra algum, continua visto, com a data do
-// registro mais recente que ficou. O status do título não muda sozinho.
+// registro mais recente que ficou. O status do título só muda se a série estava em "Visto"
+// e deixa de estar completa (volta a "Assistindo").
 async function removeRecord(
   deps: LibraryDeps,
   user: AuthenticatedUser,
