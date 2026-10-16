@@ -1,5 +1,10 @@
 import type { MediaType } from "../catalog/types";
-import type { LibraryEpisode, LibraryRepository, NewWatchEvent } from "./ports";
+import type {
+  LibraryEpisode,
+  LibraryRepository,
+  NewWatchEvent,
+  WatchedItem,
+} from "./ports";
 import { type LibraryStatus, PROGRESS_PRECISIONS } from "./values";
 
 // Biblioteca em memória para os testes de domínio (sem banco). Imita o que o
@@ -40,21 +45,27 @@ export function createFakeLibrary(catalog: {
       return titles[titleId] ?? null;
     },
     async getTitleState(userId, titleId) {
-      const latest = new Map<string | null, StoredEvent>();
-      // O histórico fica em ordem de gravação: o último de cada item vale.
-      for (const e of events) {
-        if (e.userId === userId && e.titleId === titleId) {
-          latest.set(e.episodeId, e);
-        }
-      }
-      return {
-        status: statuses.get(key(userId, titleId)) ?? null,
-        watched: [...latest.values()].map((e) => ({
-          episodeId: e.episodeId,
+      const items = new Map<string | null, WatchedItem>();
+      // O histórico fica em ordem de gravação: do mais recente ao mais antigo.
+      for (const e of [...events].reverse()) {
+        if (e.userId !== userId || e.titleId !== titleId) continue;
+        const record = {
           eventId: e.id,
           watchedAt: e.watchedAt,
           precision: e.precision,
-        })),
+        };
+        const item = items.get(e.episodeId);
+        if (item) item.records.push(record);
+        else
+          items.set(e.episodeId, {
+            ...record,
+            episodeId: e.episodeId,
+            records: [record],
+          });
+      }
+      return {
+        status: statuses.get(key(userId, titleId)) ?? null,
+        watched: [...items.values()],
       };
     },
     async upsertTitleStatus(userId, titleId, status, replaceable) {
@@ -93,7 +104,11 @@ export function createFakeLibrary(catalog: {
     },
     async insertEvents(userId, newEvents) {
       for (const e of newEvents) {
-        events.push({ ...e, userId, id: `event-${nextId++}` });
+        events.push({
+          ...e,
+          userId,
+          id: `00000000-0000-4000-8000-${String(nextId++).padStart(12, "0")}`,
+        });
       }
     },
     async hasMovieEvent(userId, titleId) {
@@ -102,19 +117,34 @@ export function createFakeLibrary(catalog: {
           e.userId === userId && e.titleId === titleId && e.episodeId === null,
       );
     },
-    async deleteEpisodeWatch(userId, episodeId) {
-      const had = progress.delete(key(userId, episodeId)) ? 1 : 0;
-      const before = events.length;
-      removeEvents((e) => e.userId === userId && e.episodeId === episodeId);
-      return had + before - events.length;
+    async hasEpisodeProgress(userId, episodeId) {
+      return progress.has(key(userId, episodeId));
     },
-    async deleteMovieWatch(userId, titleId) {
-      const before = events.length;
-      removeEvents(
+    async findLatestEventId(userId, target) {
+      const match = events.filter(
         (e) =>
-          e.userId === userId && e.titleId === titleId && e.episodeId === null,
+          e.userId === userId &&
+          ("episodeId" in target
+            ? e.episodeId === target.episodeId
+            : e.titleId === target.titleId && e.episodeId === null),
       );
-      return before - events.length;
+      return match.at(-1)?.id;
+    },
+    async deleteEvent(userId, eventId) {
+      const i = events.findIndex(
+        (e) => e.userId === userId && e.id === eventId,
+      );
+      if (i < 0) return undefined;
+      const [removed] = events.splice(i, 1);
+      return { episodeId: removed.episodeId };
+    },
+    async countEpisodeEvents(userId, episodeId) {
+      return events.filter(
+        (e) => e.userId === userId && e.episodeId === episodeId,
+      ).length;
+    },
+    async deleteEpisodeProgress(userId, episodeId) {
+      progress.delete(key(userId, episodeId));
     },
     async updateEventDate(userId, eventId, watchedAt, precision, source) {
       const e = events.find((x) => x.userId === userId && x.id === eventId);
@@ -141,12 +171,6 @@ export function createFakeLibrary(catalog: {
       );
     },
   };
-
-  function removeEvents(match: (e: StoredEvent) => boolean) {
-    for (let i = events.length - 1; i >= 0; i--) {
-      if (match(events[i])) events.splice(i, 1);
-    }
-  }
 
   return {
     deps: { library: repo, now: () => NOW },

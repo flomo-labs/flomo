@@ -26,11 +26,17 @@ export type NewWatchEvent = {
 
 // Um item visto de um título: episódio (série) ou o próprio filme
 // (`episodeId` nulo), com o registro mais recente do histórico.
-export type WatchedItem = {
-  episodeId: string | null;
+export type WatchRecord = {
   eventId: string;
   watchedAt: Date | null;
   precision: WatchedAtPrecision;
+};
+
+// `eventId`, `watchedAt` e `precision` são os do registro mais recente;
+// `records` traz todos, do mais recente para o mais antigo.
+export type WatchedItem = WatchRecord & {
+  episodeId: string | null;
+  records: WatchRecord[];
 };
 
 export type TitleLibraryState = {
@@ -76,11 +82,23 @@ export interface LibraryRepository {
   insertEvents(userId: string, events: NewWatchEvent[]): Promise<void>;
 
   hasMovieEvent(userId: string, titleId: string): Promise<boolean>;
+  hasEpisodeProgress(userId: string, episodeId: string): Promise<boolean>;
 
-  // Desmarcar: apaga o progresso e todo o histórico do item. Devolvem quantas
-  // linhas de histórico ou progresso existiam.
-  deleteEpisodeWatch(userId: string, episodeId: string): Promise<number>;
-  deleteMovieWatch(userId: string, titleId: string): Promise<number>;
+  // Desmarcar e apagar registros: o item continua visto enquanto sobrar
+  // algum registro no histórico.
+  // Registro mais recente de um episódio ou de um filme (`titleId`).
+  findLatestEventId(
+    userId: string,
+    target: { episodeId: string } | { titleId: string },
+  ): Promise<string | undefined>;
+  // Apaga um registro e devolve o episódio dele (`null` para filme), ou
+  // `undefined` se não existe.
+  deleteEvent(
+    userId: string,
+    eventId: string,
+  ): Promise<{ episodeId: string | null } | undefined>;
+  countEpisodeEvents(userId: string, episodeId: string): Promise<number>;
+  deleteEpisodeProgress(userId: string, episodeId: string): Promise<void>;
 
   // Troca a data de um registro do histórico e devolve o episódio dele
   // (`null` para filme), ou `undefined` se o registro não existe.

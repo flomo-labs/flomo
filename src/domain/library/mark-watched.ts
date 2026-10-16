@@ -1,6 +1,9 @@
 import {
+  deleteWatchRecordInputSchema,
   markEpisodeWatchedInputSchema,
   markMovieWatchedInputSchema,
+  rewatchEpisodeInputSchema,
+  rewatchMovieInputSchema,
   setWatchDateInputSchema,
   unmarkEpisodeWatchedInputSchema,
   unmarkMovieWatchedInputSchema,
@@ -29,7 +32,8 @@ export type MarkWatchedErrorCode =
   | "EPISODE_NOT_FOUND"
   | "TITLE_NOT_FOUND"
   | "NOT_A_MOVIE"
-  | "EVENT_NOT_FOUND";
+  | "EVENT_NOT_FOUND"
+  | "NOT_WATCHED";
 
 const INVALID_DATE_MESSAGE =
   "Escolha uma data que já passou (a partir de 1900).";
@@ -183,8 +187,32 @@ export async function markMovieWatched(
   return ok({ marked: true });
 }
 
-// Desmarcar é tratado como engano: apaga o progresso e todo o histórico do
-// item. O status do título na biblioteca não muda sozinho.
+// Apaga um registro do histórico. Se era o último do episódio, o episódio
+// deixa de estar visto; se sobra algum, continua visto, com a data do
+// registro mais recente que ficou. O status do título não muda sozinho.
+async function removeRecord(
+  deps: LibraryDeps,
+  user: AuthenticatedUser,
+  eventId: string,
+): Promise<boolean> {
+  const deleted = await deps.library.deleteEvent(user.id, eventId);
+  if (!deleted) return false;
+  if (deleted.episodeId) {
+    const left = await deps.library.countEpisodeEvents(
+      user.id,
+      deleted.episodeId,
+    );
+    if (left === 0) {
+      await deps.library.deleteEpisodeProgress(user.id, deleted.episodeId);
+    } else {
+      await deps.library.refreshProgressDate(user.id, deleted.episodeId);
+    }
+  }
+  return true;
+}
+
+// Desmarcar tira só o registro mais recente do episódio ou filme; o item
+// deixa de estar visto quando não sobra nenhum.
 export async function unmarkEpisodeWatched(
   deps: LibraryDeps,
   user: AuthenticatedUser,
@@ -192,11 +220,12 @@ export async function unmarkEpisodeWatched(
 ): Promise<Result<{ removed: boolean }, MarkWatchedErrorCode>> {
   const parsed = unmarkEpisodeWatchedInputSchema.safeParse(input);
   if (!parsed.success) return invalidInput(parsed.error.issues);
-  const removed = await deps.library.deleteEpisodeWatch(
-    user.id,
-    parsed.data.episodeId,
-  );
-  return ok({ removed: removed > 0 });
+  const eventId = await deps.library.findLatestEventId(user.id, {
+    episodeId: parsed.data.episodeId,
+  });
+  return ok({
+    removed: eventId ? await removeRecord(deps, user, eventId) : false,
+  });
 }
 
 export async function unmarkMovieWatched(
@@ -206,11 +235,26 @@ export async function unmarkMovieWatched(
 ): Promise<Result<{ removed: boolean }, MarkWatchedErrorCode>> {
   const parsed = unmarkMovieWatchedInputSchema.safeParse(input);
   if (!parsed.success) return invalidInput(parsed.error.issues);
-  const removed = await deps.library.deleteMovieWatch(
-    user.id,
-    parsed.data.titleId,
-  );
-  return ok({ removed: removed > 0 });
+  const eventId = await deps.library.findLatestEventId(user.id, {
+    titleId: parsed.data.titleId,
+  });
+  return ok({
+    removed: eventId ? await removeRecord(deps, user, eventId) : false,
+  });
+}
+
+// Apagar um registro escolhido na lista de registros do item.
+export async function deleteWatchRecord(
+  deps: LibraryDeps,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ removed: true }, MarkWatchedErrorCode>> {
+  const parsed = deleteWatchRecordInputSchema.safeParse(input);
+  if (!parsed.success) return invalidInput(parsed.error.issues);
+  if (!(await removeRecord(deps, user, parsed.data.eventId))) {
+    return fail("EVENT_NOT_FOUND", "Registro não encontrado.");
+  }
+  return ok({ removed: true as const });
 }
 
 // Trocar a data de um registro: tirar a data, dizer "foi hoje" ou informar
@@ -239,4 +283,70 @@ export async function setWatchDate(
     await deps.library.refreshProgressDate(user.id, updated.episodeId);
   }
   return ok({ eventId });
+}
+
+// Registrar de novo (rever): mais um registro no histórico de um episódio ou
+// filme já visto, por padrão agora. Não repete o progresso (a PK decide) nem
+// muda o status do título. Só o item já visto pode ser revisto; rever a série
+// inteira, em rodadas, é da Fase 2.
+export async function rewatchEpisode(
+  deps: LibraryDeps,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ recorded: true }, MarkWatchedErrorCode>> {
+  const parsed = rewatchEpisodeInputSchema.safeParse(input);
+  if (!parsed.success) return invalidInput(parsed.error.issues);
+  const { episodeId, when } = parsed.data;
+
+  const date = resolveWatchDate(when ?? DEFAULT_WATCH_DATE.single, deps.now());
+  if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
+
+  const episode = await deps.library.findEpisode(episodeId);
+  if (!episode) return fail("EPISODE_NOT_FOUND", "Episódio não encontrado.");
+  if (!(await deps.library.hasEpisodeProgress(user.id, episodeId))) {
+    return fail("NOT_WATCHED", "Marque o episódio como visto antes de rever.");
+  }
+  await deps.library.insertEvents(user.id, [
+    {
+      titleId: episode.titleId,
+      episodeId,
+      watchedAt: date.watchedAt,
+      precision: date.precision,
+      source: date.source,
+    },
+  ]);
+  await deps.library.refreshProgressDate(user.id, episodeId);
+  return ok({ recorded: true as const });
+}
+
+export async function rewatchMovie(
+  deps: LibraryDeps,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ recorded: true }, MarkWatchedErrorCode>> {
+  const parsed = rewatchMovieInputSchema.safeParse(input);
+  if (!parsed.success) return invalidInput(parsed.error.issues);
+  const { titleId, when } = parsed.data;
+
+  const date = resolveWatchDate(when ?? DEFAULT_WATCH_DATE.single, deps.now());
+  if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
+
+  const mediaType = await deps.library.findTitleMediaType(titleId);
+  if (!mediaType) return fail("TITLE_NOT_FOUND", "Título não encontrado.");
+  if (mediaType !== "movie") {
+    return fail("NOT_A_MOVIE", "Séries são revistas por episódio.");
+  }
+  if (!(await deps.library.hasMovieEvent(user.id, titleId))) {
+    return fail("NOT_WATCHED", "Marque o filme como visto antes de rever.");
+  }
+  await deps.library.insertEvents(user.id, [
+    {
+      titleId,
+      episodeId: null,
+      watchedAt: date.watchedAt,
+      precision: date.precision,
+      source: date.source,
+    },
+  ]);
+  return ok({ recorded: true as const });
 }
