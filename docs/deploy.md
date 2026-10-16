@@ -85,7 +85,32 @@ Anote em local seguro. Você vai usá-los na parte B.
 
 ### A.4 Aplicar as migrations
 
-As migrations (pasta `drizzle/`) criam a tabela `profiles`, as políticas de acesso (RLS) e os gatilhos. Rode no PowerShell, na pasta do repositório. **Uma linha por vez**, sem colar várias de uma vez:
+As migrations (pasta `drizzle/`) criam as tabelas, as políticas de acesso (RLS) e os gatilhos. No `flomo-prod`, quem aplica é o GitHub Actions (`.github/workflows/migrations-prod.yml`): a cada merge na `main` que muda a pasta `drizzle/`, o workflow **Migrations (produção)** espera a aprovação de alguém do time e então roda `pnpm db:migrate`. A URL do banco fica só como segredo no GitHub: não passa pelo seu computador nem aparece nos logs.
+
+#### A.4.1 Configurar uma vez
+
+No GitHub, em **flomo-labs/flomo > Settings > Environments > New environment**:
+
+1. Nome: `supabase-prod` (exatamente assim; não use `Production`, que a Vercel já usa para os deploys).
+2. **Required reviewers:** marque e adicione você (e o Victor, se quiser que ele também possa aprovar). Deixe **Prevent self-review** desmarcado: quem faz o merge costuma ser quem aprova.
+3. **Deployment branches and tags:** escolha **Selected branches and tags** e adicione a regra `main`. Assim, só a `main` consegue usar o segredo.
+4. **Environment secrets > Add environment secret:** nome `DATABASE_URL_MIGRATIONS`, valor a URL do **Session pooler** do `flomo-prod` (A.3, porta 5432, usuário `postgres.<ref>`). Cole direto no campo do GitHub, sem passar por outro lugar.
+5. **Environment variables > Add environment variable:** nome `FLOMO_PROD_DB_REF`, valor o ref do `flomo-prod` (não é segredo). O workflow confere que a URL do segredo contém esse ref e recusa rodar se não contiver.
+
+#### A.4.2 A cada migration
+
+1. Faça o merge do PR com a migration.
+2. Em **Actions > Migrations (produção)**, a execução aparece como **Waiting**. Clique nela, em **Review deployments**, marque `supabase-prod` e **Approve and deploy**.
+3. O job termina verde quando as migrations foram aplicadas. Se falhar, nada fica pela metade: as migrations pendentes rodam numa única transação. Confira em A.5.
+
+A Vercel publica o código assim que o merge acontece, e a migration só roda depois da aprovação. Por isso, aprove logo, e as migrations devem só **acrescentar** (tabela ou coluna nova). Remover ou renomear algo que o código em produção ainda usa exige duas etapas: primeiro o código deixa de usar, depois a migration remove.
+
+Para aplicar sem merge (ex.: uma migration que entrou antes deste workflow existir): **Actions > Migrations (produção) > Run workflow**, na `main`, e aprove como acima.
+
+#### A.4.3 Plano B: pelo seu computador
+
+
+Só se o GitHub Actions estiver indisponível. Rode no PowerShell, na pasta do repositório. **Uma linha por vez**, sem colar várias de uma vez:
 
 1. **Impedir que o PowerShell grave estes comandos no histórico** (vale só para esta janela; a URL tem a senha do banco):
 
@@ -115,7 +140,7 @@ As migrations (pasta `drizzle/`) criam a tabela `profiles`, as políticas de ace
    pnpm db:migrate
    ```
 
-   No `flomo-prod`, que está vazio, o comando aplica as migrations e termina sem erro. Se só aparecerem avisos de "already exists, skipping", ele provavelmente rodou em outro banco. A prova de que deu certo é o passo A.5.
+   O comando aplica só as migrations que ainda não estão no banco. Se só aparecerem avisos de "already exists, skipping", ele provavelmente rodou em outro banco. A prova de que deu certo é o passo A.5.
 
 5. Limpar a variável e fechar a janela do terminal:
 
@@ -256,7 +281,9 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 | Sintoma | Causa e solução |
 | ------- | ---------------- |
 | `password authentication failed for user "postgres"` nos logs, `/cadastro` com "A server error occurred" | `DATABASE_URL` com usuário `postgres` (conexão direta) ou senha errada. Use a URL do **Transaction pooler**, com usuário `postgres.<ref>`, e refaça o Redeploy. |
-| `$env:DATABASE_URL_MIGRATIONS` vazio e migrations "aplicadas" que só mostram `already exists, skipping` | A variável não foi definida e o `drizzle-kit` usou o `.env.local` (flomo-dev). Defina a variável e confira antes de rodar. |
+| `$env:DATABASE_URL_MIGRATIONS` vazio e migrations "aplicadas" que só mostram `already exists, skipping` | No plano B (A.4.3), a variável não foi definida e o `drizzle-kit` usou o `.env.local` (flomo-dev). Defina a variável e confira antes de rodar. |
+| Workflow **Migrations (produção)** falha com "Defina o segredo..." ou "não aponta para o projeto" | Falta o segredo ou a variável no ambiente `supabase-prod`, ou a URL é de outro projeto (A.4.1). |
+| Workflow parado em **Waiting** | Está esperando a aprovação (A.4.2). |
 | Login volta para `/entrar?erro=google` | Redirect URL ausente no Supabase (D.1 e D.2), ou `NEXT_PUBLIC_SITE_URL` errada. |
 | Mudei `NEXT_PUBLIC_SITE_URL` e nada mudou | Variáveis `NEXT_PUBLIC_*` só valem após um novo build: faça **Redeploy**. |
 | Login funciona em produção e falha em previews | Falta o padrão de previews no `flomo-dev` (D.2) ou o slug do time está errado. |
