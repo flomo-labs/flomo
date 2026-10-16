@@ -9,13 +9,22 @@
       "Bash(git --no-pager *)",
       "Bash(git status *)",
       "Bash(gh pr view *)",
+      "Bash(pnpm test:integration *)",
+      "Bash(git fetch *)",
+      "Bash(git config user.name \"Renato Montini\")",
+      "Bash(git config user.email renatohmc@gmail.com)",
+      "Bash(service postgresql start)",
+      "Bash(pg_isready *)",
+      "Bash(psql -h localhost *)",
       "PowerShell(pnpm lint *)",
       "PowerShell(pnpm typecheck *)",
       "PowerShell(pnpm test *)",
       "PowerShell(pnpm build *)",
       "PowerShell(git --no-pager *)",
       "PowerShell(git status *)",
-      "PowerShell(gh pr view *)"
+      "PowerShell(gh pr view *)",
+      "PowerShell(pnpm test:integration *)",
+      "PowerShell(git fetch *)"
     ],
     "ask": [
       "Bash(pnpm db:migrate *)",
