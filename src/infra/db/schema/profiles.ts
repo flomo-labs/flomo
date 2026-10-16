@@ -10,9 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { authenticatedRole, authUsers } from "drizzle-orm/supabase";
-
-// Sempre como subquery, para o Postgres avaliar uma vez por query (ADR-003).
-const currentUserId = sql`(select app.current_user_id())`;
+import { currentUserId } from "./rls";
 
 // Perfil público do usuário. Nasce pelo trigger em auth.users e morre em
 // cascata quando a conta é apagada (ADR-003, seções 6, 7 e 9).

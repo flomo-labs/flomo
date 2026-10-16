@@ -186,13 +186,49 @@ describe("policies da biblioteca", () => {
 
       const seen = await tx.transaction(async (sp) => {
         await sp.execute(sql`set local role anon`);
-        return countRows(sp, owner);
+        const rows = await countRows(sp, owner);
+        // Liberar o savepoint não desfaz o `set local`.
+        await sp.execute(sql`reset role`);
+        return rows;
       });
       expect(seen).toEqual([0, 0, 0]);
     }));
 });
 
 describe("regras do banco da biblioteca", () => {
+  it("title_id sempre vem do episódio, qualquer que seja o valor enviado", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      const c = await createCatalog(tx);
+
+      // Como o usuário, mandando o filme como título de um episódio da série.
+      const [progress, event] = await asUser(tx, owner, async (utx) => [
+        ...(await utx
+          .insert(userEpisodeProgress)
+          .values({ userId: owner, episodeId: c.episodeId, titleId: c.movieId })
+          .returning({ titleId: userEpisodeProgress.titleId })),
+        ...(await utx
+          .insert(watchEvents)
+          .values({
+            userId: owner,
+            titleId: c.movieId,
+            episodeId: c.episodeId,
+            watchedAtPrecision: "unknown",
+            source: "backfill",
+          })
+          .returning({ titleId: watchEvents.titleId })),
+      ]);
+      expect(progress.titleId).toBe(c.seriesId);
+      expect(event.titleId).toBe(c.seriesId);
+
+      const [moved] = await tx
+        .update(watchEvents)
+        .set({ titleId: c.movieId })
+        .where(eq(watchEvents.userId, owner))
+        .returning({ titleId: watchEvents.titleId });
+      expect(moved.titleId).toBe(c.seriesId);
+    }));
+
   it("watch_events: sem data se e só se a precisão é unknown", () =>
     inRollback(async (tx) => {
       const owner = await createUser(tx);
@@ -221,7 +257,7 @@ describe("regras do banco da biblioteca", () => {
         { ...base, watchedAt: null, watchedAtPrecision: "unknown" },
         {
           ...base,
-          watchedAt: new Date("2023-01-01"),
+          watchedAt: new Date("2023-01-01T12:00:00Z"),
           watchedAtPrecision: "year",
         },
       ]);

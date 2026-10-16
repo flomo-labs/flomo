@@ -1,6 +1,6 @@
 {
-  "id": "e4213663-f917-49b9-becd-c70a87ebec4c",
-  "prevId": "f5ec46d6-1a8e-44de-a339-d0a85c46c84d",
+  "id": "ed0bec36-dcba-4bbb-97cc-acab9cc68175",
+  "prevId": "01ca4608-755a-4637-9eb9-e8ab72e2a9a5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -932,36 +932,6 @@
           "with": {},
           "method": "btree",
           "concurrently": false
-        },
-        "user_episode_progress_episode_id_idx": {
-          "name": "user_episode_progress_episode_id_idx",
-          "columns": [
-            {
-              "expression": "episode_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "user_episode_progress_title_id_idx": {
-          "name": "user_episode_progress_title_id_idx",
-          "columns": [
-            {
-              "expression": "title_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
         }
       },
       "foreignKeys": {
@@ -1087,22 +1057,7 @@
               "expression": "updated_at",
               "isExpression": false,
               "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "user_titles_title_id_idx": {
-          "name": "user_titles_title_id_idx",
-          "columns": [
-            {
-              "expression": "title_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
+              "nulls": "first"
             }
           ],
           "isUnique": false,
@@ -1250,7 +1205,7 @@
               "expression": "id",
               "isExpression": false,
               "asc": false,
-              "nulls": "last"
+              "nulls": "first"
             }
           ],
           "isUnique": false,
@@ -1290,36 +1245,6 @@
             },
             {
               "expression": "title_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "watch_events_title_id_idx": {
-          "name": "watch_events_title_id_idx",
-          "columns": [
-            {
-              "expression": "title_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "watch_events_episode_id_idx": {
-          "name": "watch_events_episode_id_idx",
-          "columns": [
-            {
-              "expression": "episode_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

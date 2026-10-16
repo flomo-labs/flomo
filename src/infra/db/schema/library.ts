@@ -18,6 +18,7 @@ import {
 } from "@/domain/library/values";
 import { episodes, titles } from "./catalog";
 import { profiles } from "./profiles";
+import { currentUserId } from "./rls";
 
 // Biblioteca (Fase 1.3, Plano v2 seção 7.1): estado atual separado do
 // histórico. `user_titles` e `user_episode_progress` dizem como as coisas
@@ -26,13 +27,12 @@ import { profiles } from "./profiles";
 // Dados do usuário morrem em cascata com o perfil (ADR-003, seção 9). O
 // catálogo nunca é apagado (episódios que somem do provedor ficam); as
 // referências a ele usam `restrict` para o banco recusar, em vez de levar
-// junto o histórico de alguém.
+// junto o histórico de alguém. Por isso essas FKs não têm índice próprio:
+// só serviriam a um delete no catálogo que não acontece, e custariam em toda
+// gravação.
 //
 // RLS: cada usuário só lê e escreve as próprias linhas. Ninguém vê a
 // biblioteca de outro por enquanto (perfil público com biblioteca: Fase 2.1).
-
-// Sempre como subquery, para o Postgres avaliar uma vez por query (ADR-003).
-const currentUserId = sql`(select app.current_user_id())`;
 
 function ownRowsOnly(table: string, userId: unknown) {
   return pgPolicy(`${table}_all_own`, {
@@ -71,16 +71,18 @@ export const userTitles = pgTable(
     index("user_titles_user_status_updated_idx").on(
       t.userId,
       t.status,
-      t.updatedAt.desc(),
+      // `nullsFirst` = o `order by ... desc` comum; o padrão do Drizzle
+      // (`nulls last`) impediria o índice de entregar a ordem pronta.
+      t.updatedAt.desc().nullsFirst(),
     ),
-    index("user_titles_title_id_idx").on(t.titleId),
     ownRowsOnly("user_titles", t.userId),
   ],
 );
 
 // A linha existir = episódio visto. `title_id` repete o título do episódio
-// (preenchido pelo repositório, nunca pelo usuário) para o progresso por
-// série e o próximo episódio não juntarem três tabelas.
+// para o progresso por série e o próximo episódio não juntarem três tabelas;
+// um trigger (migration 0005) o preenche a partir do episódio, então ele
+// nunca contradiz o catálogo.
 export const userEpisodeProgress = pgTable(
   "user_episode_progress",
   {
@@ -93,7 +95,8 @@ export const userEpisodeProgress = pgTable(
     titleId: uuid("title_id")
       .notNull()
       .references(() => titles.id, { onDelete: "restrict" }),
-    // Nulo quando visto sem data.
+    // Data do registro mais recente com data exata; nulo se não houver. O
+    // detalhe (precisão, datas aproximadas) fica só no histórico.
     watchedAt: timestamp("watched_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -102,8 +105,6 @@ export const userEpisodeProgress = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.episodeId] }),
     index("user_episode_progress_user_title_idx").on(t.userId, t.titleId),
-    index("user_episode_progress_episode_id_idx").on(t.episodeId),
-    index("user_episode_progress_title_id_idx").on(t.titleId),
     ownRowsOnly("user_episode_progress", t.userId),
   ],
 );
@@ -111,7 +112,8 @@ export const userEpisodeProgress = pgTable(
 // Histórico de visualizações. `episode_id` nulo = filme. Vários registros do
 // mesmo item são permitidos (rever); a idempotência de "marcar visto" fica no
 // estado atual. Que série exige episódio e filme não tem é garantido no caso
-// de uso (o CHECK não enxerga `titles`).
+// de uso (o CHECK não enxerga `titles`); com episódio, o trigger da 0005
+// acerta `title_id`.
 export const watchEvents = pgTable(
   "watch_events",
   {
@@ -125,13 +127,17 @@ export const watchEvents = pgTable(
     episodeId: uuid("episode_id").references(() => episodes.id, {
       onDelete: "restrict",
     }),
+    // Datas aproximadas (`day`, `month`, `year`) são gravadas como o primeiro
+    // dia do período às 12:00 UTC: o meio-dia cai no mesmo dia em qualquer
+    // fuso do Brasil, então mostrar no fuso do usuário não muda o dia, o mês
+    // nem o ano.
     watchedAt: timestamp("watched_at", { withTimezone: true }),
     watchedAtPrecision: text("watched_at_precision").notNull(),
     source: text("source").notNull(),
     // Check-in (Plano v2, decisão 21): nota do episódio ou filme, 1 a 10
     // (7 = 3,5★). Emoção e personagem favorito entram com as tabelas deles.
     ratingHalfStars: smallint("rating_half_stars"),
-    // Quando o registro foi feito; ordena o que está sem data.
+    // Quando o registro foi feito; é a ordem da lista do que está sem data.
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -155,12 +161,10 @@ export const watchEvents = pgTable(
     index("watch_events_user_watched_at_idx").on(
       t.userId,
       t.watchedAt.desc().nullsLast(),
-      t.id.desc(),
+      t.id.desc().nullsFirst(),
     ),
     index("watch_events_user_episode_idx").on(t.userId, t.episodeId),
     index("watch_events_user_title_idx").on(t.userId, t.titleId),
-    index("watch_events_title_id_idx").on(t.titleId),
-    index("watch_events_episode_id_idx").on(t.episodeId),
     ownRowsOnly("watch_events", t.userId),
   ],
 );

@@ -45,15 +45,10 @@ ALTER TABLE "watch_events" ADD CONSTRAINT "watch_events_user_id_profiles_id_fk" 
 ALTER TABLE "watch_events" ADD CONSTRAINT "watch_events_title_id_titles_id_fk" FOREIGN KEY ("title_id") REFERENCES "public"."titles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "watch_events" ADD CONSTRAINT "watch_events_episode_id_episodes_id_fk" FOREIGN KEY ("episode_id") REFERENCES "public"."episodes"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "user_episode_progress_user_title_idx" ON "user_episode_progress" USING btree ("user_id","title_id");--> statement-breakpoint
-CREATE INDEX "user_episode_progress_episode_id_idx" ON "user_episode_progress" USING btree ("episode_id");--> statement-breakpoint
-CREATE INDEX "user_episode_progress_title_id_idx" ON "user_episode_progress" USING btree ("title_id");--> statement-breakpoint
-CREATE INDEX "user_titles_user_status_updated_idx" ON "user_titles" USING btree ("user_id","status","updated_at" DESC NULLS LAST);--> statement-breakpoint
-CREATE INDEX "user_titles_title_id_idx" ON "user_titles" USING btree ("title_id");--> statement-breakpoint
-CREATE INDEX "watch_events_user_watched_at_idx" ON "watch_events" USING btree ("user_id","watched_at" DESC NULLS LAST,"id" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "user_titles_user_status_updated_idx" ON "user_titles" USING btree ("user_id","status","updated_at" DESC NULLS FIRST);--> statement-breakpoint
+CREATE INDEX "watch_events_user_watched_at_idx" ON "watch_events" USING btree ("user_id","watched_at" DESC NULLS LAST,"id" DESC NULLS FIRST);--> statement-breakpoint
 CREATE INDEX "watch_events_user_episode_idx" ON "watch_events" USING btree ("user_id","episode_id");--> statement-breakpoint
 CREATE INDEX "watch_events_user_title_idx" ON "watch_events" USING btree ("user_id","title_id");--> statement-breakpoint
-CREATE INDEX "watch_events_title_id_idx" ON "watch_events" USING btree ("title_id");--> statement-breakpoint
-CREATE INDEX "watch_events_episode_id_idx" ON "watch_events" USING btree ("episode_id");--> statement-breakpoint
 CREATE POLICY "user_episode_progress_all_own" ON "user_episode_progress" AS PERMISSIVE FOR ALL TO "authenticated" USING ("user_episode_progress"."user_id" = (select app.current_user_id())) WITH CHECK ("user_episode_progress"."user_id" = (select app.current_user_id()));--> statement-breakpoint
 CREATE POLICY "user_titles_all_own" ON "user_titles" AS PERMISSIVE FOR ALL TO "authenticated" USING ("user_titles"."user_id" = (select app.current_user_id())) WITH CHECK ("user_titles"."user_id" = (select app.current_user_id()));--> statement-breakpoint
 CREATE POLICY "watch_events_all_own" ON "watch_events" AS PERMISSIVE FOR ALL TO "authenticated" USING ("watch_events"."user_id" = (select app.current_user_id())) WITH CHECK ("watch_events"."user_id" = (select app.current_user_id()));
