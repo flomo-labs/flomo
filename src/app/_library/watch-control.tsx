@@ -52,8 +52,12 @@ export function WatchControl({
   function run(action: () => Promise<LibraryActionResult>) {
     setError(null);
     startTransition(async () => {
-      const result = await action();
-      if (!result.ok) setError(result.error.message || labels.failed);
+      try {
+        const result = await action();
+        if (!result.ok) setError(result.error.message || labels.failed);
+      } catch {
+        setError(labels.failed);
+      }
     });
   }
 
