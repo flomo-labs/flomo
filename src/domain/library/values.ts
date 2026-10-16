@@ -21,6 +21,12 @@ export const WATCHED_AT_PRECISIONS = [
 ] as const;
 export type WatchedAtPrecision = (typeof WATCHED_AT_PRECISIONS)[number];
 
+// Precisões que dizem o dia: as únicas que o progresso atual guarda.
+export const PROGRESS_PRECISIONS: readonly WatchedAtPrecision[] = [
+  "exact",
+  "day",
+];
+
 // Origem do registro: `live` (marcado na hora), `backfill` (retroativo no
 // app) e imports, que já entram na lista para a Fase 4 não precisar de
 // migration.
