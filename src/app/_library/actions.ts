@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  deleteWatchRecord,
   markEpisodeWatched,
   markMovieWatched,
+  rewatchEpisode,
+  rewatchMovie,
   setWatchDate,
   unmarkEpisodeWatched,
   unmarkMovieWatched,
@@ -73,4 +76,16 @@ export async function unmarkMovie(input: unknown) {
 
 export async function changeWatchDate(input: unknown) {
   return run(setWatchDate, input);
+}
+
+export async function recordEpisodeAgain(input: unknown) {
+  return run(rewatchEpisode, input);
+}
+
+export async function recordMovieAgain(input: unknown) {
+  return run(rewatchMovie, input);
+}
+
+export async function removeWatchRecord(input: unknown) {
+  return run(deleteWatchRecord, input);
 }

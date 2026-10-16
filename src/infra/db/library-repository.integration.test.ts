@@ -2,8 +2,11 @@ import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { getTitleLibraryState } from "@/domain/library/get-title-state";
 import {
+  deleteWatchRecord,
   markEpisodeWatched,
   markMovieWatched,
+  rewatchEpisode,
+  rewatchMovie,
   setWatchDate,
   unmarkEpisodeWatched,
 } from "@/domain/library/mark-watched";
@@ -217,6 +220,100 @@ describe("marcar como visto no banco", () => {
         ok: true,
         value: { status: null, watched: [] },
       });
+    }));
+
+  it("registrar de novo: só item já visto, com um registro a mais e um só progresso", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+
+      expect(
+        await run(tx, user, (deps, u) =>
+          rewatchEpisode(deps, u, { episodeId: c.ep.S1E1 }),
+        ),
+      ).toMatchObject({ ok: false, error: { code: "NOT_WATCHED" } });
+      expect(
+        await run(tx, user, (deps, u) =>
+          rewatchMovie(deps, u, { titleId: c.movieId }),
+        ),
+      ).toMatchObject({ ok: false, error: { code: "NOT_WATCHED" } });
+
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      expect(
+        await run(tx, user, (deps, u) =>
+          rewatchEpisode(deps, u, { episodeId: c.ep.S1E1 }),
+        ),
+      ).toEqual({ ok: true, value: { recorded: true } });
+
+      await run(tx, user, (deps, u) =>
+        markMovieWatched(deps, u, { titleId: c.movieId }),
+      );
+      await run(tx, user, (deps, u) =>
+        rewatchMovie(deps, u, { titleId: c.movieId }),
+      );
+
+      const events = await tx
+        .select({ episodeId: watchEvents.episodeId })
+        .from(watchEvents)
+        .where(eq(watchEvents.userId, user));
+      expect(events.filter((e) => e.episodeId === c.ep.S1E1)).toHaveLength(2);
+      expect(events.filter((e) => e.episodeId === null)).toHaveLength(2);
+      const progress = await tx
+        .select()
+        .from(userEpisodeProgress)
+        .where(eq(userEpisodeProgress.userId, user));
+      expect(progress).toHaveLength(1);
+    }));
+
+  it("desmarcar tira só o último registro; apagar registro escolhido respeita o dono", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const other = await createUser(tx);
+      const c = await createCatalog(tx);
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, {
+          episodeId: c.ep.S1E1,
+          when: { kind: "date", precision: "day", value: "2026-10-01" },
+        }),
+      );
+      await run(tx, user, (deps, u) =>
+        rewatchEpisode(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+
+      await run(tx, user, (deps, u) =>
+        unmarkEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      const left = await tx
+        .select()
+        .from(watchEvents)
+        .where(eq(watchEvents.userId, user));
+      // Ficou o mais antigo (do dia 1º), e o episódio segue visto.
+      expect(left).toHaveLength(1);
+      expect(left[0].watchedAtPrecision).toBe("day");
+      const [progress] = await tx
+        .select()
+        .from(userEpisodeProgress)
+        .where(eq(userEpisodeProgress.userId, user));
+      expect(progress.watchedAt).toEqual(new Date("2026-10-01T12:00:00Z"));
+
+      // Outro usuário não apaga o registro dele.
+      expect(
+        await run(tx, other, (deps, u) =>
+          deleteWatchRecord(deps, u, { eventId: left[0].id }),
+        ),
+      ).toMatchObject({ ok: false, error: { code: "EVENT_NOT_FOUND" } });
+      // O dono apaga o último: o episódio deixa de estar visto.
+      await run(tx, user, (deps, u) =>
+        deleteWatchRecord(deps, u, { eventId: left[0].id }),
+      );
+      expect(
+        await tx
+          .select()
+          .from(userEpisodeProgress)
+          .where(eq(userEpisodeProgress.userId, user)),
+      ).toHaveLength(0);
     }));
 
   it("desmarcar apaga progresso e histórico do episódio", () =>

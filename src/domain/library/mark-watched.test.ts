@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   markEpisodeWatched,
   markMovieWatched,
+  rewatchEpisode,
+  deleteWatchRecord,
+  rewatchMovie,
   setWatchDate,
   unmarkEpisodeWatched,
   unmarkMovieWatched,
@@ -9,6 +12,7 @@ import {
 import { todayIn } from "./watch-date";
 import { createFakeLibrary, type FakeEpisode, NOW, USER } from "./test-fakes";
 
+const OTHER_USER = { id: "22222222-2222-4222-8222-222222222222" };
 const SERIES = "aaaaaaaa-0000-4000-8000-000000000001";
 const MOVIE = "aaaaaaaa-0000-4000-8000-000000000002";
 
@@ -223,7 +227,7 @@ describe("markMovieWatched", () => {
 });
 
 describe("desmarcar", () => {
-  it("episódio: apaga progresso e histórico, sem mudar o status", async () => {
+  it("episódio com um só registro: deixa de estar visto, sem mudar o status", async () => {
     const lib = setup();
     await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
     expect(
@@ -238,13 +242,71 @@ describe("desmarcar", () => {
     ).toEqual({ ok: true, value: { removed: false } });
   });
 
-  it("filme: apaga o histórico", async () => {
+  it("filme com um só registro: apaga o registro", async () => {
     const lib = setup();
     await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
     expect(
       await unmarkMovieWatched(lib.deps, USER, { titleId: MOVIE }),
     ).toEqual({ ok: true, value: { removed: true } });
     expect(lib.events).toHaveLength(0);
+  });
+});
+
+describe("desmarcar com vários registros e apagar registro escolhido", () => {
+  it("desmarcar tira só o último; o episódio continua visto com a data do anterior", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S1E1.id,
+      when: { kind: "date", precision: "day", value: "2026-10-01" },
+    });
+    await rewatchEpisode(lib.deps, USER, { episodeId: S1E1.id });
+    expect(lib.progress(S1E1.id)).toEqual(NOW);
+
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    expect(lib.events).toHaveLength(1);
+    expect(lib.watched()).toEqual([S1E1.id]);
+    expect(lib.progress(S1E1.id)).toEqual(new Date("2026-10-01T12:00:00Z"));
+
+    await unmarkEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    expect(lib.watched()).toEqual([]);
+  });
+
+  it("filme: desmarcar tira só o último registro", async () => {
+    const lib = setup();
+    await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
+    await rewatchMovie(lib.deps, USER, { titleId: MOVIE });
+    await unmarkMovieWatched(lib.deps, USER, { titleId: MOVIE });
+    expect(lib.events).toHaveLength(1);
+  });
+
+  it("apagar um registro do meio mantém os outros e o progresso", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    await rewatchEpisode(lib.deps, USER, { episodeId: S1E1.id });
+    await rewatchEpisode(lib.deps, USER, { episodeId: S1E1.id });
+    const middle = lib.events[1].id;
+
+    expect(
+      await deleteWatchRecord(lib.deps, USER, { eventId: middle }),
+    ).toEqual({ ok: true, value: { removed: true } });
+    expect(lib.events.map((e) => e.id)).not.toContain(middle);
+    expect(lib.events).toHaveLength(2);
+    expect(lib.watched()).toEqual([S1E1.id]);
+  });
+
+  it("apagar o único registro tira o episódio de visto; id desconhecido ou de outro usuário falha", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    const [only] = lib.events;
+    expect(
+      await deleteWatchRecord(lib.deps, OTHER_USER, { eventId: only.id }),
+    ).toMatchObject({ ok: false, error: { code: "EVENT_NOT_FOUND" } });
+    expect(
+      await deleteWatchRecord(lib.deps, USER, { eventId: only.id }),
+    ).toMatchObject({
+      ok: true,
+    });
+    expect(lib.watched()).toEqual([]);
   });
 });
 
@@ -334,6 +396,73 @@ describe("datas perto da virada do dia", () => {
         when: { kind: "date", precision: "day", value: "2023" },
       }),
     ).toMatchObject({ error: { message: "Data em formato inválido." } });
+  });
+});
+
+describe("registrar de novo", () => {
+  it("episódio visto: grava mais um registro agora, sem repetir o progresso nem mexer no status", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S1E1.id,
+      when: { kind: "unknown" },
+    });
+    lib.setStatus(SERIES, "paused");
+
+    const result = await rewatchEpisode(lib.deps, USER, {
+      episodeId: S1E1.id,
+    });
+    expect(result).toEqual({ ok: true, value: { recorded: true } });
+    expect(lib.events).toHaveLength(2);
+    expect(lib.events[1]).toMatchObject({
+      episodeId: S1E1.id,
+      watchedAt: NOW,
+      precision: "exact",
+      source: "live",
+    });
+    expect(lib.watched()).toEqual([S1E1.id]);
+    expect(lib.progress(S1E1.id)).toEqual(NOW);
+    expect(lib.status(SERIES)).toBe("paused");
+  });
+
+  it("episódio não visto: recusa", async () => {
+    const lib = setup();
+    expect(
+      await rewatchEpisode(lib.deps, USER, { episodeId: S1E1.id }),
+    ).toMatchObject({ ok: false, error: { code: "NOT_WATCHED" } });
+    expect(lib.events).toHaveLength(0);
+  });
+
+  it("episódio inexistente e data futura", async () => {
+    const lib = setup();
+    expect(
+      await rewatchEpisode(lib.deps, USER, {
+        episodeId: "bbbbbbbb-0000-4000-8000-ffffffffffff",
+      }),
+    ).toMatchObject({ error: { code: "EPISODE_NOT_FOUND" } });
+    await markEpisodeWatched(lib.deps, USER, { episodeId: S1E1.id });
+    expect(
+      await rewatchEpisode(lib.deps, USER, {
+        episodeId: S1E1.id,
+        when: { kind: "date", precision: "year", value: "2999" },
+      }),
+    ).toMatchObject({ error: { code: "INVALID_DATE" } });
+  });
+
+  it("filme visto: grava mais um registro; não visto ou série: recusa", async () => {
+    const lib = setup();
+    expect(
+      await rewatchMovie(lib.deps, USER, { titleId: MOVIE }),
+    ).toMatchObject({ error: { code: "NOT_WATCHED" } });
+    await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
+    expect(await rewatchMovie(lib.deps, USER, { titleId: MOVIE })).toEqual({
+      ok: true,
+      value: { recorded: true },
+    });
+    expect(lib.events).toHaveLength(2);
+    expect(lib.status(MOVIE)).toBe("watched");
+    expect(
+      await rewatchMovie(lib.deps, USER, { titleId: SERIES }),
+    ).toMatchObject({ error: { code: "NOT_A_MOVIE" } });
   });
 });
 

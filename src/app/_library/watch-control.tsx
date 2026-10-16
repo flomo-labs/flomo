@@ -7,6 +7,9 @@ import {
   changeWatchDate,
   markEpisode,
   markMovie,
+  recordEpisodeAgain,
+  recordMovieAgain,
+  removeWatchRecord,
   unmarkEpisode,
   unmarkMovie,
   type LibraryActionResult,
@@ -14,6 +17,11 @@ import {
 
 export type WatchControlLabels = {
   markWatched: string;
+  markWithPrevious: string;
+  watchAgain: string;
+  history: string;
+  deleteRecord: string;
+  deleteRecordConfirm: string;
   watched: string;
   unmark: string;
   unmarkConfirm: string;
@@ -30,7 +38,12 @@ type Props = {
   // Id do episódio ou do filme.
   targetId: string;
   // Ausente = ainda não visto. `dateLabel` já vem formatado.
-  watched?: { eventId: string; dateLabel: string };
+  watched?: {
+    eventId: string;
+    dateLabel: string;
+    // Todos os registros, do mais recente ao mais antigo.
+    records: { eventId: string; dateLabel: string }[];
+  };
   // AAAA-MM-DD de hoje, limite do seletor de data.
   today: string;
   labels: WatchControlLabels;
@@ -67,6 +80,18 @@ export function WatchControl({
         ? markEpisode({ episodeId: targetId })
         : markMovie({ titleId: targetId }),
     );
+  const markWithPrevious = () =>
+    run(() => markEpisode({ episodeId: targetId, includePrevious: true }));
+  const watchAgain = () =>
+    run(() =>
+      kind === "episode"
+        ? recordEpisodeAgain({ episodeId: targetId })
+        : recordMovieAgain({ titleId: targetId }),
+    );
+  const deleteRecord = (eventId: string) => {
+    if (!window.confirm(labels.deleteRecordConfirm)) return;
+    run(() => removeWatchRecord({ eventId }));
+  };
   const unmark = () => {
     if (!window.confirm(labels.unmarkConfirm)) return;
     run(() =>
@@ -96,19 +121,66 @@ export function WatchControl({
           >
             {labels.unmark}
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={pending}
+            onClick={watchAgain}
+          >
+            {labels.watchAgain}
+          </Button>
         </div>
       ) : (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={mark}
-          className="self-start"
-        >
-          {labels.markWatched}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={mark}
+          >
+            {labels.markWatched}
+          </Button>
+          {kind === "episode" ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={pending}
+              onClick={markWithPrevious}
+            >
+              {labels.markWithPrevious}
+            </Button>
+          ) : null}
+        </div>
       )}
+      {watched && watched.records.length > 1 ? (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-muted-foreground">
+            {labels.history} ({watched.records.length})
+          </summary>
+          <ul className="mt-2 flex flex-col gap-1">
+            {watched.records.map((record) => (
+              <li
+                key={record.eventId}
+                className="flex items-center justify-between gap-2"
+              >
+                <span>{record.dateLabel}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  disabled={pending}
+                  onClick={() => deleteRecord(record.eventId)}
+                >
+                  {labels.deleteRecord}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       {watched ? (
         <details className="text-sm">
           <summary className="cursor-pointer text-muted-foreground">

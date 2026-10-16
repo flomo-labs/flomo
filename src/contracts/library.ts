@@ -58,3 +58,19 @@ export const setWatchDateInputSchema = z.object({
 export const titleLibraryStateInputSchema = z.object({
   titleId: z.uuid(),
 });
+
+// Registrar de novo (rever): o item já tem de estar visto.
+export const rewatchEpisodeInputSchema = z.object({
+  episodeId: z.uuid(),
+  when: watchDateInputSchema.optional(),
+});
+
+export const rewatchMovieInputSchema = z.object({
+  titleId: z.uuid(),
+  when: watchDateInputSchema.optional(),
+});
+
+// Apagar um registro específico do histórico (escolhido na lista).
+export const deleteWatchRecordInputSchema = z.object({
+  eventId: z.uuid(),
+});

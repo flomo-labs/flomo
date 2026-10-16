@@ -1,6 +1,7 @@
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   gt,
@@ -61,7 +62,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
         .where(
           and(eq(userTitles.userId, userId), eq(userTitles.titleId, titleId)),
         );
-      // Do mais recente para o mais antigo: vale o primeiro de cada item.
+      // Do mais recente para o mais antigo: o primeiro de cada item é o atual.
       const events = await tx
         .select({
           id: watchEvents.id,
@@ -74,19 +75,25 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
           and(eq(watchEvents.userId, userId), eq(watchEvents.titleId, titleId)),
         )
         .orderBy(desc(watchEvents.createdAt), desc(watchEvents.id));
-      const latest = new Map<string | null, WatchedItem>();
+      const items = new Map<string | null, WatchedItem>();
       for (const e of events) {
-        if (latest.has(e.episodeId)) continue;
-        latest.set(e.episodeId, {
-          episodeId: e.episodeId,
+        const record = {
           eventId: e.id,
           watchedAt: e.watchedAt,
           precision: e.precision as WatchedAtPrecision,
-        });
+        };
+        const item = items.get(e.episodeId);
+        if (item) item.records.push(record);
+        else
+          items.set(e.episodeId, {
+            ...record,
+            episodeId: e.episodeId,
+            records: [record],
+          });
       }
       return {
         status: (row?.status as LibraryStatus | undefined) ?? null,
-        watched: [...latest.values()],
+        watched: [...items.values()],
       };
     },
 
@@ -159,6 +166,9 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
           watchedAt: e.watchedAt,
           watchedAtPrecision: e.precision,
           source: e.source,
+          // `now()` é o início da transação; o relógio real mantém a ordem
+          // dos registros gravados na mesma.
+          createdAt: sql`clock_timestamp()`,
         })),
       );
     },
@@ -178,40 +188,70 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       return rows.length > 0;
     },
 
-    async deleteEpisodeWatch(userId, episodeId) {
-      const progress = await tx
-        .delete(userEpisodeProgress)
+    async hasEpisodeProgress(userId, episodeId) {
+      const rows = await tx
+        .select({ id: userEpisodeProgress.episodeId })
+        .from(userEpisodeProgress)
         .where(
           and(
             eq(userEpisodeProgress.userId, userId),
             eq(userEpisodeProgress.episodeId, episodeId),
           ),
         )
-        .returning({ id: userEpisodeProgress.episodeId });
-      const events = await tx
+        .limit(1);
+      return rows.length > 0;
+    },
+
+    async findLatestEventId(userId, target) {
+      const [row] = await tx
+        .select({ id: watchEvents.id })
+        .from(watchEvents)
+        .where(
+          and(
+            eq(watchEvents.userId, userId),
+            "episodeId" in target
+              ? eq(watchEvents.episodeId, target.episodeId)
+              : and(
+                  eq(watchEvents.titleId, target.titleId),
+                  isNull(watchEvents.episodeId),
+                ),
+          ),
+        )
+        .orderBy(desc(watchEvents.createdAt), desc(watchEvents.id))
+        .limit(1);
+      return row?.id;
+    },
+
+    async deleteEvent(userId, eventId) {
+      const [row] = await tx
         .delete(watchEvents)
+        .where(and(eq(watchEvents.userId, userId), eq(watchEvents.id, eventId)))
+        .returning({ episodeId: watchEvents.episodeId });
+      return row;
+    },
+
+    async countEpisodeEvents(userId, episodeId) {
+      const [row] = await tx
+        .select({ n: count() })
+        .from(watchEvents)
         .where(
           and(
             eq(watchEvents.userId, userId),
             eq(watchEvents.episodeId, episodeId),
           ),
-        )
-        .returning({ id: watchEvents.id });
-      return progress.length + events.length;
+        );
+      return row?.n ?? 0;
     },
 
-    async deleteMovieWatch(userId, titleId) {
-      const events = await tx
-        .delete(watchEvents)
+    async deleteEpisodeProgress(userId, episodeId) {
+      await tx
+        .delete(userEpisodeProgress)
         .where(
           and(
-            eq(watchEvents.userId, userId),
-            eq(watchEvents.titleId, titleId),
-            isNull(watchEvents.episodeId),
+            eq(userEpisodeProgress.userId, userId),
+            eq(userEpisodeProgress.episodeId, episodeId),
           ),
-        )
-        .returning({ id: watchEvents.id });
-      return events.length;
+        );
     },
 
     async updateEventDate(userId, eventId, watchedAt, precision, source) {

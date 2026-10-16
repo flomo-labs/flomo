@@ -45,12 +45,21 @@ export async function WatchSlot({
           ? {
               eventId: item.eventId,
               dateLabel: watchDateLabel(item.watchedAt, item.precision),
+              records: item.records.map((r) => ({
+                eventId: r.eventId,
+                dateLabel: watchDateLabel(r.watchedAt, r.precision),
+              })),
             }
           : undefined
       }
       today={todayIn(CATALOG_COUNTRY, new Date())}
       labels={{
         markWatched: t("markWatched"),
+        markWithPrevious: t("markWithPrevious"),
+        watchAgain: t("watchAgain"),
+        history: t("history"),
+        deleteRecord: t("deleteRecord"),
+        deleteRecordConfirm: t("deleteRecordConfirm"),
         watched: t("watched"),
         unmark: t("unmark"),
         unmarkConfirm: t("unmarkConfirm"),
