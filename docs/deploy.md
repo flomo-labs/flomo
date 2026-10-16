@@ -259,7 +259,7 @@ Em **Authentication > URL Configuration > Redirect URLs**, **acrescente**, sem a
 https://flomo-*-<slug-do-time>.vercel.app/auth/callback**
 ```
 
-O `**` no fim é necessário: o app volta para `/auth/callback?next=...`, e o Supabase compara o padrão com a URL inteira, parâmetros incluídos. Sem ele, o login em preview cai no Site URL (`localhost:3000/?code=...`).
+O `**` no fim é necessário nesta entrada com curinga: o app volta para `/auth/callback?next=...`, e o padrão precisa cobrir também os parâmetros. Sem ele, o login em preview cai no Site URL (`localhost:3000/?code=...`). Ele só é seguro porque o host continua preso a `flomo-*-<slug-do-time>`; o `**` vale apenas para o que vem depois do host. Quem já cadastrou a versão antiga (sem `**`) deve **substituí-la** por esta.
 
 > **Nunca** use `https://*.vercel.app/**`. Qualquer pessoa publica um app em `vercel.app`, e um padrão tão aberto permitiria que um site de terceiros recebesse o código do login. O padrão acima restringe ao seu time.
 
@@ -295,7 +295,7 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 | Login em preview termina em `localhost:3000/?code=...` (`ERR_CONNECTION_REFUSED`) | O padrão de preview no `flomo-dev` não casa com a URL de volta: confira o `**` no fim e o slug do time (D.2). |
 | Login volta para `/entrar?erro=google` | Redirect URL ausente no Supabase (D.1 e D.2), ou `NEXT_PUBLIC_SITE_URL` errada. |
 | Mudei `NEXT_PUBLIC_SITE_URL` e nada mudou | Variáveis `NEXT_PUBLIC_*` só valem após um novo build: faça **Redeploy**. |
-| Login funciona em produção e falha em previews | Falta o padrão de previews no `flomo-dev` (D.2) ou o slug do time está errado. |
+| Login funciona em produção e falha em previews | Falta o padrão de previews no `flomo-dev` (D.2), falta o `**` no fim dele, ou o slug do time está errado. |
 
 ## Depois do deploy
 
