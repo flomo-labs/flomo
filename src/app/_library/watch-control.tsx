@@ -27,11 +27,11 @@ import {
 export type WatchControlLabels = {
   markWatched: string;
   markOnlyThis: string;
-  // "Marcar este e os {count} anteriores", já com o número.
-  markWithPrevious: (count: number) => string;
+  // "Marcar este e os N anteriores", já com o número de anteriores.
+  markWithPrevious: string;
   previousTitle: string;
-  // "Você tem {count} episódios não vistos antes deste.", já com o número.
-  previousDescription: (count: number) => string;
+  // "Você tem N episódios não vistos antes deste.", já com o número.
+  previousDescription: string;
   cancel: string;
   watchAgain: string;
   history: string;
@@ -79,8 +79,8 @@ export function WatchControl({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [pickedDay, setPickedDay] = useState(today);
-  // Quantos anteriores não vistos; diferente de null = diálogo aberto.
-  const [previousCount, setPreviousCount] = useState<number | null>(null);
+  // Diálogo "só este ou também os anteriores" aberto.
+  const [askPrevious, setAskPrevious] = useState(false);
 
   function run(action: () => Promise<LibraryActionResult>) {
     setError(null);
@@ -104,17 +104,17 @@ export function WatchControl({
   const mark = () => {
     if (kind === "episode" && previousUnwatched > 0) {
       setError(null);
-      setPreviousCount(previousUnwatched);
+      setAskPrevious(true);
     } else {
       markThis();
     }
   };
   const markWithPrevious = () => {
-    setPreviousCount(null);
+    setAskPrevious(false);
     run(() => markEpisode({ episodeId: targetId, includePrevious: true }));
   };
   const markOnlyThis = () => {
-    setPreviousCount(null);
+    setAskPrevious(false);
     markThis();
   };
   const watchAgain = () =>
@@ -254,21 +254,19 @@ export function WatchControl({
         </details>
       ) : null}
       <Dialog
-        open={previousCount !== null}
+        open={askPrevious}
         onOpenChange={(open) => {
-          if (!open) setPreviousCount(null);
+          if (!open) setAskPrevious(false);
         }}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{labels.previousTitle}</DialogTitle>
-            <DialogDescription>
-              {labels.previousDescription(previousCount ?? 0)}
-            </DialogDescription>
+            <DialogDescription>{labels.previousDescription}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
             <Button type="button" disabled={pending} onClick={markWithPrevious}>
-              {labels.markWithPrevious(previousCount ?? 0)}
+              {labels.markWithPrevious}
             </Button>
             <Button
               type="button"

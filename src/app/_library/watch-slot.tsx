@@ -72,9 +72,13 @@ export async function WatchSlot({
       labels={{
         markWatched: t("markWatched"),
         markOnlyThis: t("markOnlyThis"),
-        markWithPrevious: (count) => t("markWithPrevious", { count }),
+        markWithPrevious: t("markWithPrevious", {
+          count: previousUnwatched,
+        }),
         previousTitle: t("previousTitle"),
-        previousDescription: (count) => t("previousDescription", { count }),
+        previousDescription: t("previousDescription", {
+          count: previousUnwatched,
+        }),
         cancel: t("cancel"),
         watchAgain: t("watchAgain"),
         history: t("history"),
