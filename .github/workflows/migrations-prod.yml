@@ -16,7 +16,10 @@ on:
 permissions:
   contents: read
 
-# Nunca duas aplicações ao mesmo tempo, e nenhuma é cancelada no meio.
+# Nunca duas aplicações ao mesmo tempo, e nenhuma é cancelada no meio. Se
+# chegarem várias enquanto uma espera aprovação, o GitHub guarda só a mais
+# nova e marca as outras como "Cancelled": é normal, a mais nova aplica tudo
+# o que estiver pendente.
 concurrency:
   group: migrations-prod
   cancel-in-progress: false
@@ -39,9 +42,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Segredo e variável do ambiente `supabase-prod`. O ref do projeto
-      # confere que a URL é mesmo a do flomo-prod (proteção contra colar a
-      # URL errada no segredo).
+      # Segredo e variável do ambiente `supabase-prod`. Confere que a URL é a
+      # do Session pooler do flomo-prod (usuário postgres.<ref>, porta 5432),
+      # contra colar a URL errada no segredo.
       - name: Aplicar migrations no flomo-prod
         env:
           DATABASE_URL_MIGRATIONS: ${{ secrets.DATABASE_URL_MIGRATIONS }}
@@ -52,9 +55,9 @@ jobs:
             exit 1
           fi
           case "$DATABASE_URL_MIGRATIONS" in
-            *"$FLOMO_PROD_DB_REF"*) ;;
+            postgres://postgres."$FLOMO_PROD_DB_REF":*@*:5432/* | postgresql://postgres."$FLOMO_PROD_DB_REF":*@*:5432/*) ;;
             *)
-              echo "::error::DATABASE_URL_MIGRATIONS não aponta para o projeto FLOMO_PROD_DB_REF."
+              echo "::error::DATABASE_URL_MIGRATIONS não é a URL do Session pooler (usuário postgres.<ref>, porta 5432) do projeto FLOMO_PROD_DB_REF."
               exit 1
               ;;
           esac

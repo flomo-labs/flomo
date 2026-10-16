@@ -85,7 +85,7 @@ Anote em local seguro. Você vai usá-los na parte B.
 
 ### A.4 Aplicar as migrations
 
-As migrations (pasta `drizzle/`) criam as tabelas, as políticas de acesso (RLS) e os gatilhos. No `flomo-prod`, quem aplica é o GitHub Actions (`.github/workflows/migrations-prod.yml`): a cada merge na `main` que muda a pasta `drizzle/`, o workflow **Migrations (produção)** espera a aprovação de alguém do time e então roda `pnpm db:migrate`. A URL do banco fica só como segredo no GitHub: não passa pelo seu computador nem aparece nos logs.
+As migrations (pasta `drizzle/`) criam as tabelas, as políticas de acesso (RLS) e os gatilhos. No `flomo-prod`, quem aplica é o GitHub Actions (`.github/workflows/migrations-prod.yml`): a cada merge na `main` que muda a pasta `drizzle/`, o workflow **Migrations (produção)** espera a aprovação de alguém do time e então roda `pnpm db:migrate`. A URL do banco fica só como segredo no GitHub e não passa pelo seu computador. O GitHub esconde o valor do segredo nos logs, mas não pedaços dele que apareçam numa mensagem de erro: se um job falhar, leia o log antes de compartilhá-lo.
 
 #### A.4.1 Configurar uma vez
 
@@ -95,20 +95,24 @@ No GitHub, em **flomo-labs/flomo > Settings > Environments > New environment**:
 2. **Required reviewers:** marque e adicione você (e o Victor, se quiser que ele também possa aprovar). Deixe **Prevent self-review** desmarcado: quem faz o merge costuma ser quem aprova.
 3. **Deployment branches and tags:** escolha **Selected branches and tags** e adicione a regra `main`. Assim, só a `main` consegue usar o segredo.
 4. **Environment secrets > Add environment secret:** nome `DATABASE_URL_MIGRATIONS`, valor a URL do **Session pooler** do `flomo-prod` (A.3, porta 5432, usuário `postgres.<ref>`). Cole direto no campo do GitHub, sem passar por outro lugar.
-5. **Environment variables > Add environment variable:** nome `FLOMO_PROD_DB_REF`, valor o ref do `flomo-prod` (não é segredo). O workflow confere que a URL do segredo contém esse ref e recusa rodar se não contiver.
+5. **Environment variables > Add environment variable:** nome `FLOMO_PROD_DB_REF`, valor o ref do `flomo-prod` (não é segredo). O workflow confere que a URL do segredo é a do Session pooler desse projeto (usuário `postgres.<ref>`, porta 5432) e recusa rodar se não for.
 
 #### A.4.2 A cada migration
 
-1. Faça o merge do PR com a migration.
+1. Faça o merge do PR com a migration. Confira que o CI da `main` ficou verde depois do merge.
 2. Em **Actions > Migrations (produção)**, a execução aparece como **Waiting**. Clique nela, em **Review deployments**, marque `supabase-prod` e **Approve and deploy**.
-3. O job termina verde quando as migrations foram aplicadas. Se falhar, nada fica pela metade: as migrations pendentes rodam numa única transação. Confira em A.5.
+3. O job termina verde quando as migrations foram aplicadas; o log do passo **Aplicar migrations no flomo-prod** mostra o que rodou. Se falhar, o `drizzle-kit` desfaz as migrations pendentes, porque rodam numa única transação (exceto comandos que o Postgres não aceita em transação, como `CREATE INDEX CONCURRENTLY`: esses vão numa migration separada). Confira em A.5.
 
-A Vercel publica o código assim que o merge acontece, e a migration só roda depois da aprovação. Por isso, aprove logo, e as migrations devem só **acrescentar** (tabela ou coluna nova). Remover ou renomear algo que o código em produção ainda usa exige duas etapas: primeiro o código deixa de usar, depois a migration remove.
+Se aparecer uma execução **Cancelled**, é porque chegou outra mais nova enquanto ela esperava: aprove a mais nova, que aplica tudo o que estiver pendente.
+
+A Vercel publica o código assim que o merge acontece, e a migration só roda depois da aprovação. Por isso, a migration entra **antes** do código que depende dela:
+
+- Tabela ou coluna nova que o código já vai usar: um PR só com a migration (e o que não depende dela); aprove e espere o job ficar verde; só então o merge do PR com o código que lê a tabela ou coluna nova.
+- Remover ou renomear algo que o código em produção ainda usa: o contrário. Primeiro o código deixa de usar, depois a migration remove.
 
 Para aplicar sem merge (ex.: uma migration que entrou antes deste workflow existir): **Actions > Migrations (produção) > Run workflow**, na `main`, e aprove como acima.
 
 #### A.4.3 Plano B: pelo seu computador
-
 
 Só se o GitHub Actions estiver indisponível. Rode no PowerShell, na pasta do repositório. **Uma linha por vez**, sem colar várias de uma vez:
 
@@ -153,6 +157,8 @@ Só se o GitHub Actions estiver indisponível. Rode no PowerShell, na pasta do r
 ### A.5 Conferir
 
 No Supabase, em **Table Editor**, a tabela `profiles` deve existir com o selo de **RLS** ativo. E a Data API continua desligada (A.2).
+
+Para uma migration nova, confira no **SQL Editor**: `select id, created_at from drizzle.__drizzle_migrations order by id;` lista uma linha por migration aplicada (a quantidade deve bater com a de arquivos `.sql` em `drizzle/`), e as tabelas novas aparecem no **Table Editor** com o selo de **RLS**.
 
 ---
 
@@ -282,7 +288,7 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 | ------- | ---------------- |
 | `password authentication failed for user "postgres"` nos logs, `/cadastro` com "A server error occurred" | `DATABASE_URL` com usuário `postgres` (conexão direta) ou senha errada. Use a URL do **Transaction pooler**, com usuário `postgres.<ref>`, e refaça o Redeploy. |
 | `$env:DATABASE_URL_MIGRATIONS` vazio e migrations "aplicadas" que só mostram `already exists, skipping` | No plano B (A.4.3), a variável não foi definida e o `drizzle-kit` usou o `.env.local` (flomo-dev). Defina a variável e confira antes de rodar. |
-| Workflow **Migrations (produção)** falha com "Defina o segredo..." ou "não aponta para o projeto" | Falta o segredo ou a variável no ambiente `supabase-prod`, ou a URL é de outro projeto (A.4.1). |
+| Workflow **Migrations (produção)** falha com "Defina o segredo..." ou "não é a URL do Session pooler" | Falta o segredo ou a variável no ambiente `supabase-prod`, ou a URL é de outro projeto (A.4.1). Confira se `FLOMO_PROD_DB_REF` está em **Environment variables**, e não em secrets. |
 | Workflow parado em **Waiting** | Está esperando a aprovação (A.4.2). |
 | Login volta para `/entrar?erro=google` | Redirect URL ausente no Supabase (D.1 e D.2), ou `NEXT_PUBLIC_SITE_URL` errada. |
 | Mudei `NEXT_PUBLIC_SITE_URL` e nada mudou | Variáveis `NEXT_PUBLIC_*` só valem após um novo build: faça **Redeploy**. |
