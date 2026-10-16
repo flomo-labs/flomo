@@ -10,12 +10,13 @@
       "Bash(git status *)",
       "Bash(gh pr view *)",
       "Bash(pnpm test:integration *)",
-      "Bash(git fetch *)",
+      "Bash(git fetch origin)",
+      "Bash(git fetch origin main)",
       "Bash(git config user.name \"Renato Montini\")",
       "Bash(git config user.email renatohmc@gmail.com)",
       "Bash(service postgresql start)",
       "Bash(pg_isready *)",
-      "Bash(psql -h localhost *)",
+      "Bash(psql -h localhost -U postgres -d flomo_ci -v ON_ERROR_STOP=1 -q -f scripts/ci/supabase-stub.sql)",
       "PowerShell(pnpm lint *)",
       "PowerShell(pnpm typecheck *)",
       "PowerShell(pnpm test *)",
@@ -24,7 +25,8 @@
       "PowerShell(git status *)",
       "PowerShell(gh pr view *)",
       "PowerShell(pnpm test:integration *)",
-      "PowerShell(git fetch *)"
+      "PowerShell(git fetch origin)",
+      "PowerShell(git fetch origin main)"
     ],
     "ask": [
       "Bash(pnpm db:migrate *)",
