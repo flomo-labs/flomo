@@ -404,6 +404,11 @@ describe("mapShelf", () => {
     ]);
   });
 
+  it("adult nulo ou ausente não derruba a prateleira", () => {
+    const data = page([item(1, { adult: null }), item(2)]);
+    expect(mapShelf(data, "movie", 10, "x")).toHaveLength(2);
+  });
+
   it("descarta conteúdo adulto e itens sem pôster, e corta no limite", () => {
     const data = page([
       item(1, { adult: true }),

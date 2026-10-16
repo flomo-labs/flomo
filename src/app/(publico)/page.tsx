@@ -8,6 +8,7 @@ import { SearchForm } from "@/components/catalog/search-form";
 import { Shelf, ShelfSkeleton } from "@/components/catalog/shelf";
 import { SHELF_PROVIDERS, type ShelfInput } from "@/contracts/catalog";
 import { isProvisionalHandle } from "@/contracts/profile";
+import type { SearchItem } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
 
 const MEDIA_SEGMENTS = { filmes: "movie", series: "tv" } as const;
@@ -50,7 +51,15 @@ async function Hero() {
 async function HandleReminder() {
   const user = await getCurrentUser();
   if (!user) return null;
-  const profile = await getOwnProfile(user).catch(() => null);
+  // Se o perfil não puder ser lido, melhor não mostrar o convite do que
+  // mostrá-lo a quem já escolheu o nome.
+  let profile;
+  try {
+    profile = await getOwnProfile(user);
+  } catch (error) {
+    console.error("Falha ao ler o perfil na Home:", error);
+    return null;
+  }
   if (profile && !isProvisionalHandle(profile.handle)) return null;
   const t = await getTranslations("Home");
   return (
@@ -89,7 +98,8 @@ async function ShelfHeading({ id }: { id: string }) {
   );
 }
 
-// Prateleira que falha some da Home (a página segue útil); o erro fica no log.
+// Prateleira que falha mostra um aviso no lugar da lista (a Home segue de pé);
+// o erro fica no log.
 async function ShelfItems({
   input,
   ranked = false,
@@ -97,12 +107,17 @@ async function ShelfItems({
   input: ShelfInput;
   ranked?: boolean;
 }) {
-  const result = await listShelf(input);
-  if (!result.ok || result.value.length === 0) {
-    const t = await getTranslations("Home");
-    return <p className="text-muted-foreground">{t("shelfUnavailable")}</p>;
+  const t = await getTranslations("Home");
+  let items: SearchItem[] = [];
+  try {
+    const result = await listShelf(input);
+    if (result.ok) items = result.value;
+    else console.error("Prateleira indisponível:", result.error);
+  } catch (error) {
+    console.error("Falha ao carregar a prateleira:", error);
   }
-  return <Shelf items={result.value} ranked={ranked} />;
+  if (items.length > 0) return <Shelf items={items} ranked={ranked} />;
+  return <p className="text-muted-foreground">{t("shelfUnavailable")}</p>;
 }
 
 // "Em alta no serviço X": serviço e tipo vêm da URL (?servico=8&tipo=series),

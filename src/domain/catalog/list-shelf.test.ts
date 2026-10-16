@@ -42,6 +42,16 @@ describe("listShelf", () => {
     ).toEqual(new Date(NOW.getTime() + 6 * HOUR_MS));
   });
 
+  it("lista vazia não vai para o cache", async () => {
+    const { deps, provider, memory } = fakeDeps({
+      provider: { fetchShelf: vi.fn(async () => []) },
+    });
+    expect(await listShelf(deps, TRENDING)).toEqual({ ok: true, value: [] });
+    expect(memory.shelves.size).toBe(0);
+    await listShelf(deps, TRENDING);
+    expect(provider.fetchShelf).toHaveBeenCalledTimes(2);
+  });
+
   it("chaves de cache separam as prateleiras", async () => {
     const { deps, memory } = fakeDeps();
     await listShelf(deps, TRENDING);

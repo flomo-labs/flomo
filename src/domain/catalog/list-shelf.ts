@@ -42,11 +42,15 @@ export async function listShelf(
         CATALOG_LOCALE,
         SHELF_SIZE,
       );
-      await deps.store.writeShelf(
-        key,
-        items,
-        expiresAt(deps.now(), SHELF_TTL_MS),
-      );
+      // Lista vazia (tudo filtrado, ou o TMDB sem resultado) não vai para o
+      // cache: seria servida vazia pelas próximas 6 horas.
+      if (items.length > 0) {
+        await deps.store.writeShelf(
+          key,
+          items,
+          expiresAt(deps.now(), SHELF_TTL_MS),
+        );
+      }
       return items;
     });
 

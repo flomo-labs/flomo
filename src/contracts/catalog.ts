@@ -44,20 +44,31 @@ export const seasonEpisodesInputSchema = z.object({
 // Prateleiras da Home pública (Fase 1.2b): em alta, nos cinemas e "em alta no
 // serviço X". Os serviços são uma lista fixa (os principais do Brasil, ids de
 // provedor do TMDB), para a entrada nunca virar parâmetro livre do provedor.
-export const SHELF_PROVIDERS = [
-  { id: "8", name: "Netflix" },
-  { id: "119", name: "Prime Video" },
-  { id: "337", name: "Disney+" },
-  { id: "1899", name: "HBO Max" },
-  { id: "350", name: "Apple TV" },
-  { id: "531", name: "Paramount+" },
-  { id: "307", name: "Globoplay" },
+export const SHELF_PROVIDER_IDS = [
+  "8",
+  "119",
+  "337",
+  "1899",
+  "350",
+  "531",
+  "307",
 ] as const;
+export type ShelfProviderId = (typeof SHELF_PROVIDER_IDS)[number];
 
-export const SHELF_PROVIDER_IDS = SHELF_PROVIDERS.map((p) => p.id) as [
-  string,
-  ...string[],
-];
+const SHELF_PROVIDER_NAMES: Record<ShelfProviderId, string> = {
+  "8": "Netflix",
+  "119": "Prime Video",
+  "337": "Disney+",
+  "1899": "HBO Max",
+  "350": "Apple TV",
+  "531": "Paramount+",
+  "307": "Globoplay",
+};
+
+export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
+  id,
+  name: SHELF_PROVIDER_NAMES[id],
+}));
 
 export const shelfInputSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("trending") }),

@@ -50,7 +50,7 @@ const searchResultSchema = z.object({
   results: z.array(
     z.looseObject({
       media_type: z.string().optional(),
-      adult: z.boolean().optional(),
+      adult: z.boolean().nullish(),
     }),
   ),
 });
