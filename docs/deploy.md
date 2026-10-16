@@ -186,6 +186,14 @@ Abra **Environment Variables** na mesma tela e cadastre, uma a uma (nome, valor 
 | `SUPABASE_SECRET_KEY` | secret do `flomo-prod` | secret do `flomo-dev` |
 | `DATABASE_URL` | Transaction pooler do `flomo-prod` (6543) | Transaction pooler do `flomo-dev` (6543) |
 | `TMDB_API_KEY` | chave do TMDB | a mesma chave |
+| `SENTRY_DSN` (opcional) | DSN do projeto no Sentry (B.2.1) | **não definir** (ou um projeto de teste) |
+
+#### B.2.1 Sentry (erros do servidor)
+
+1. Crie conta em sentry.io (plano gratuito) e um projeto da plataforma **Next.js** chamado `flomo`. Escolha a região da UE ou dos EUA e anote qual, pois a política de privacidade cita o serviço.
+2. Em **Settings > Projects > flomo > Client Keys (DSN)**, copie o DSN.
+3. Na Vercel, cadastre `SENTRY_DSN` **só em Production**, e faça **Redeploy** (o servidor lê a variável ao subir).
+4. Sem `SENTRY_DSN` o Sentry fica desligado (local, testes, previews). Só erros do servidor são enviados, sem IP, cookies nem cabeçalhos.
 
 Pontos importantes:
 
