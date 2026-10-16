@@ -12,6 +12,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
+import type { TitleStatus } from "@/domain/catalog/types";
 import type { LibraryRepository, WatchedItem } from "@/domain/library/ports";
 import {
   type LibraryStatus,
@@ -188,6 +189,40 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       return rows.length > 0;
     },
 
+    async getSeriesProgress(userId, titleId, today) {
+      const [title] = await tx
+        .select({ status: titles.status })
+        .from(titles)
+        .where(eq(titles.id, titleId));
+      const released = and(
+        eq(seasons.titleId, titleId),
+        gt(seasons.seasonNumber, 0),
+        or(isNull(episodes.airDate), lte(episodes.airDate, today)),
+      );
+      const [total] = await tx
+        .select({ n: count() })
+        .from(episodes)
+        .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+        .where(released);
+      const [seen] = await tx
+        .select({ n: count() })
+        .from(episodes)
+        .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+        .innerJoin(
+          userEpisodeProgress,
+          and(
+            eq(userEpisodeProgress.episodeId, episodes.id),
+            eq(userEpisodeProgress.userId, userId),
+          ),
+        )
+        .where(released);
+      return {
+        catalogStatus: (title?.status ?? "unknown") as TitleStatus,
+        released: total?.n ?? 0,
+        watched: seen?.n ?? 0,
+      };
+    },
+
     async hasEpisodeProgress(userId, episodeId) {
       const rows = await tx
         .select({ id: userEpisodeProgress.episodeId })
@@ -226,7 +261,10 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       const [row] = await tx
         .delete(watchEvents)
         .where(and(eq(watchEvents.userId, userId), eq(watchEvents.id, eventId)))
-        .returning({ episodeId: watchEvents.episodeId });
+        .returning({
+          episodeId: watchEvents.episodeId,
+          titleId: watchEvents.titleId,
+        });
       return row;
     },
 

@@ -8,7 +8,7 @@ import {
   unmarkEpisodeWatchedInputSchema,
   unmarkMovieWatchedInputSchema,
 } from "@/contracts/library";
-import { CATALOG_COUNTRY } from "../catalog/types";
+import { CATALOG_COUNTRY, type TitleStatus } from "../catalog/types";
 import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
 import type { LibraryRepository } from "./ports";
@@ -64,6 +64,39 @@ function progressDate(date: ResolvedWatchDate): Date | null {
 function invalidInput(issues: { code: string; message: string }[]) {
   const custom = issues.find((i) => i.code === "custom");
   return fail("INVALID_INPUT" as const, custom?.message ?? "Dados inválidos.");
+}
+
+// Série encerrada ou cancelada com todos os episódios regulares já lançados
+// vistos vira "Visto" sozinha; se deixa de estar completa (episódio
+// desmarcado, ou episódio novo no catálogo) volta a "Assistindo". Série em
+// exibição nunca vira "Visto" sozinha.
+const FINISHED_CATALOG_STATUSES: readonly TitleStatus[] = ["ended", "canceled"];
+
+async function syncSeriesStatus(
+  deps: LibraryDeps,
+  userId: string,
+  titleId: string,
+  // Ao marcar, uma série já em "Visto" continua assim; só desmarcar a rebaixa.
+  downgrade: boolean,
+): Promise<void> {
+  const progress = await deps.library.getSeriesProgress(
+    userId,
+    titleId,
+    todayIn(CATALOG_COUNTRY, deps.now()),
+  );
+  const complete =
+    FINISHED_CATALOG_STATUSES.includes(progress.catalogStatus) &&
+    progress.released > 0 &&
+    progress.watched >= progress.released;
+  if (complete) {
+    await deps.library.upsertTitleStatus(userId, titleId, "watched", [
+      "watching",
+    ]);
+  } else if (downgrade) {
+    await deps.library.upsertTitleStatus(userId, titleId, "watching", [
+      "watched",
+    ]);
+  }
 }
 
 export type MarkEpisodeResult = {
@@ -143,6 +176,9 @@ export async function markEpisodeWatched(
     previousMarked = inserted.length;
   }
 
+  if (marked || previousMarked > 0) {
+    await syncSeriesStatus(deps, user.id, episode.titleId, false);
+  }
   return ok({ marked: Boolean(marked), previousMarked });
 }
 
@@ -189,7 +225,8 @@ export async function markMovieWatched(
 
 // Apaga um registro do histórico. Se era o último do episódio, o episódio
 // deixa de estar visto; se sobra algum, continua visto, com a data do
-// registro mais recente que ficou. O status do título não muda sozinho.
+// registro mais recente que ficou. O status do título só muda se a série estava em "Visto"
+// e deixa de estar completa (volta a "Assistindo").
 async function removeRecord(
   deps: LibraryDeps,
   user: AuthenticatedUser,
@@ -204,6 +241,7 @@ async function removeRecord(
     );
     if (left === 0) {
       await deps.library.deleteEpisodeProgress(user.id, deleted.episodeId);
+      await syncSeriesStatus(deps, user.id, deleted.titleId, true);
     } else {
       await deps.library.refreshProgressDate(user.id, deleted.episodeId);
     }

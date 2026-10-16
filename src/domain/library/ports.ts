@@ -1,4 +1,4 @@
-import type { MediaType } from "../catalog/types";
+import type { MediaType, TitleStatus } from "../catalog/types";
 import type {
   LibraryStatus,
   WatchedAtPrecision,
@@ -82,6 +82,15 @@ export interface LibraryRepository {
   insertEvents(userId: string, events: NewWatchEvent[]): Promise<void>;
 
   hasMovieEvent(userId: string, titleId: string): Promise<boolean>;
+
+  // Quanto da série o usuário viu: situação da série no catálogo, episódios
+  // regulares (sem especiais) já lançados até `today` (AAAA-MM-DD) ou sem
+  // data, e quantos deles o usuário viu.
+  getSeriesProgress(
+    userId: string,
+    titleId: string,
+    today: string,
+  ): Promise<{ catalogStatus: TitleStatus; released: number; watched: number }>;
   hasEpisodeProgress(userId: string, episodeId: string): Promise<boolean>;
 
   // Desmarcar e apagar registros: o item continua visto enquanto sobrar
@@ -96,7 +105,7 @@ export interface LibraryRepository {
   deleteEvent(
     userId: string,
     eventId: string,
-  ): Promise<{ episodeId: string | null } | undefined>;
+  ): Promise<{ episodeId: string | null; titleId: string } | undefined>;
   countEpisodeEvents(userId: string, episodeId: string): Promise<number>;
   deleteEpisodeProgress(userId: string, episodeId: string): Promise<void>;
 
