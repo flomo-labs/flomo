@@ -50,6 +50,13 @@
       "when": 1792173132629,
       "tag": "0006_user_titles_hidden",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792212366354,
+      "tag": "0007_user_settings",
+      "breakpoints": true
     }
   ]
 }

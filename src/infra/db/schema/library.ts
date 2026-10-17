@@ -3,7 +3,6 @@ import {
   boolean,
   check,
   index,
-  pgPolicy,
   pgTable,
   primaryKey,
   smallint,
@@ -11,7 +10,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { authenticatedRole } from "drizzle-orm/supabase";
 import {
   LIBRARY_STATUSES,
   WATCH_EVENT_SOURCES,
@@ -19,7 +17,7 @@ import {
 } from "@/domain/library/values";
 import { episodes, titles } from "./catalog";
 import { profiles } from "./profiles";
-import { currentUserId } from "./rls";
+import { ownRowsOnly } from "./rls";
 
 // Biblioteca (Fase 1.3, Plano v2 seção 7.1): estado atual separado do
 // histórico. `user_titles` e `user_episode_progress` dizem como as coisas
@@ -34,15 +32,6 @@ import { currentUserId } from "./rls";
 //
 // RLS: cada usuário só lê e escreve as próprias linhas. Ninguém vê a
 // biblioteca de outro por enquanto (perfil público com biblioteca: Fase 2.1).
-
-function ownRowsOnly(table: string, userId: unknown) {
-  return pgPolicy(`${table}_all_own`, {
-    for: "all",
-    to: authenticatedRole,
-    using: sql`${userId} = ${currentUserId}`,
-    withCheck: sql`${userId} = ${currentUserId}`,
-  });
-}
 
 function inList(column: unknown, values: readonly string[]) {
   return sql`${column} in (${sql.raw(values.map((v) => `'${v}'`).join(", "))})`;
