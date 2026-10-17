@@ -15,6 +15,7 @@ import {
 } from "drizzle-orm";
 import type { TitleStatus } from "@/domain/catalog/types";
 import type {
+  FollowingItem,
   LibraryItem,
   LibraryRepository,
   WatchedItem,
@@ -159,6 +160,98 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
               : null,
         };
       });
+    },
+
+    async listFollowing(userId, locale, today, limit) {
+      const rows = (await tx.execute(sql`
+        select * from (
+          select * from (
+            select distinct on (ut.title_id)
+              ut.title_id as "titleId",
+              'tv' as "mediaType",
+              coalesce(tt.title, t.original_title) as "title",
+              tt.poster_path as "posterPath",
+              e.id as "episodeId",
+              s.season_number as "seasonNumber",
+              e.episode_number as "episodeNumber",
+              e.name as "episodeName",
+              greatest(
+                ut.updated_at,
+                coalesce(
+                  (select max(p.created_at) from user_episode_progress p
+                    where p.user_id = ut.user_id and p.title_id = ut.title_id),
+                  '-infinity'::timestamptz),
+                e.air_date::timestamptz) as "sortKey"
+            from user_titles ut
+            join titles t on t.id = ut.title_id
+            left join title_translations tt
+              on tt.title_id = t.id and tt.locale = ${locale}
+            join seasons s on s.title_id = t.id and s.season_number > 0
+            join episodes e on e.season_id = s.id
+            left join user_episode_progress up
+              on up.episode_id = e.id and up.user_id = ut.user_id
+            where ut.user_id = ${userId}
+              and ut.status in ('watching', 'watchlist')
+              and not ut.hidden
+              and t.media_type = 'tv'
+              and up.episode_id is null
+              and (e.air_date is null or e.air_date <= ${today}::date)
+              and (s.season_number, e.episode_number) > coalesce(
+                (select (s2.season_number, e2.episode_number)
+                   from user_episode_progress p2
+                   join episodes e2 on e2.id = p2.episode_id
+                   join seasons s2 on s2.id = e2.season_id
+                  where p2.user_id = ut.user_id
+                    and p2.title_id = ut.title_id
+                    and s2.season_number > 0
+                  order by s2.season_number desc, e2.episode_number desc
+                  limit 1),
+                (0, 0))
+            order by ut.title_id, s.season_number, e.episode_number
+          ) series
+          union all
+          select
+            ut.title_id, 'movie', coalesce(tt.title, t.original_title),
+            tt.poster_path, null::uuid, null::int, null::int, null::text,
+            ut.updated_at
+          from user_titles ut
+          join titles t on t.id = ut.title_id
+          left join title_translations tt
+            on tt.title_id = t.id and tt.locale = ${locale}
+          where ut.user_id = ${userId}
+            and ut.status = 'watchlist'
+            and not ut.hidden
+            and t.media_type = 'movie'
+        ) queue
+        order by "sortKey" desc, "titleId"
+        limit ${limit}
+      `)) as unknown as {
+        titleId: string;
+        mediaType: "tv" | "movie";
+        title: string;
+        posterPath: string | null;
+        episodeId: string | null;
+        seasonNumber: number | null;
+        episodeNumber: number | null;
+        episodeName: string | null;
+      }[];
+      return rows.map(
+        (r): FollowingItem => ({
+          titleId: r.titleId,
+          mediaType: r.mediaType,
+          title: r.title,
+          posterPath: r.posterPath,
+          next:
+            r.episodeId && r.seasonNumber !== null && r.episodeNumber !== null
+              ? {
+                  episodeId: r.episodeId,
+                  seasonNumber: r.seasonNumber,
+                  episodeNumber: r.episodeNumber,
+                  episodeName: r.episodeName,
+                }
+              : null,
+        }),
+      );
     },
 
     async getTitleState(userId, titleId) {

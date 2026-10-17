@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/app/_auth/session";
 import { listShelf } from "@/app/_catalog/gateway";
+import { FollowingShortcut } from "@/app/_library/following";
 import { getOwnProfile } from "@/app/_profile/queries";
 import { SearchForm } from "@/components/catalog/search-form";
 import { Shelf, ShelfSkeleton } from "@/components/catalog/shelf";
@@ -32,6 +33,9 @@ export default function Home({ searchParams }: PageProps<"/">) {
       <Hero />
       <Suspense>
         <HandleReminder />
+      </Suspense>
+      <Suspense>
+        <FollowingShortcut />
       </Suspense>
       <ShelfSection kind="trending" ranked />
       <ShelfSection kind="now_playing" />

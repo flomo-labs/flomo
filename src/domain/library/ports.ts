@@ -47,6 +47,22 @@ export type TitleLibraryState = {
   watched: WatchedItem[];
 };
 
+// Item da fila "Seguintes": filme em Quero ver (inteiro) ou série com o
+// próximo episódio a assistir.
+export type FollowingItem = {
+  titleId: string;
+  mediaType: MediaType;
+  title: string;
+  posterPath: string | null;
+  // Nulo em filme.
+  next: {
+    episodeId: string;
+    seasonNumber: number;
+    episodeNumber: number;
+    episodeName: string | null;
+  } | null;
+};
+
 // Linha da biblioteca para a tela. `progress` só existe em série: episódios
 // regulares já lançados e quantos o usuário viu.
 export type LibraryItem = {
@@ -72,6 +88,19 @@ export interface LibraryRepository {
     locale: string,
     today: string,
   ): Promise<LibraryItem[]>;
+
+  // Fila "Seguintes": filmes em Quero ver e, para cada série em Assistindo ou
+  // Quero ver, o primeiro episódio regular já lançado (ou sem data) depois do
+  // mais avançado que o usuário viu (nada visto = o primeiro). Série em dia,
+  // Pausada, Abandonada, Assistida ou oculta fica de fora. Do que subiu por
+  // último para o mais antigo: o maior entre a última mudança de situação, a
+  // última marcação da série e a data de exibição do episódio.
+  listFollowing(
+    userId: string,
+    locale: string,
+    today: string,
+    limit: number,
+  ): Promise<FollowingItem[]>;
 
   // Estado do usuário num título: status e itens vistos (para as telas).
   getTitleState(userId: string, titleId: string): Promise<TitleLibraryState>;

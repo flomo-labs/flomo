@@ -1,0 +1,80 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+import { requireUser } from "@/app/_auth/session";
+import { followingLabels, loadFollowing } from "@/app/_library/following";
+import { FollowingList } from "@/app/_library/following-list";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Following");
+  return { title: `${t("title")} · Flomo`, description: t("description") };
+}
+
+export default function SeguintesPage() {
+  return (
+    <>
+      <Heading />
+      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+        <Body />
+      </Suspense>
+    </>
+  );
+}
+
+async function Heading() {
+  const t = await getTranslations("Following");
+  return (
+    <div className="flex flex-col gap-1">
+      <h1 className="text-3xl font-bold">{t("title")}</h1>
+      <p className="text-muted-foreground">{t("description")}</p>
+    </div>
+  );
+}
+
+async function Body() {
+  const t = await getTranslations("Following");
+  await requireUser("/seguintes");
+  const rows = await loadFollowing();
+
+  return (
+    <>
+      <Tabs value="queue">
+        <TabsList aria-label={t("sections")}>
+          <TabsTrigger value="queue">{t("queue")}</TabsTrigger>
+          {/* Um elemento desabilitado não recebe o mouse: o tooltip fica no
+              invólucro. Calendário de lançamentos: Fase 2.3. */}
+          <Tooltip>
+            <TooltipTrigger render={<span tabIndex={0} />}>
+              <TabsTrigger value="soon" disabled>
+                {t("soon")}
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{t("soonHint")}</TooltipContent>
+          </Tooltip>
+        </TabsList>
+      </Tabs>
+      {rows === null ? (
+        <p role="alert" className="text-destructive">
+          {t("unavailable")}
+        </p>
+      ) : rows.length === 0 ? (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-muted-foreground">{t("empty")}</p>
+          <Button render={<Link href="/buscar" />} nativeButton={false}>
+            {t("search")}
+          </Button>
+        </div>
+      ) : (
+        <FollowingList rows={rows} labels={await followingLabels()} />
+      )}
+    </>
+  );
+}
