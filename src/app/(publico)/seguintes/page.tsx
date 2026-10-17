@@ -50,9 +50,10 @@ async function Body() {
         <TabsList aria-label={t("sections")}>
           <TabsTrigger value="queue">{t("queue")}</TabsTrigger>
           {/* Um elemento desabilitado não recebe o mouse: o tooltip fica no
-              invólucro. Calendário de lançamentos: Fase 2.3. */}
+              invólucro. Sem atraso, para a dica não passar despercebida.
+              Calendário de lançamentos: Fase 2.3. */}
           <Tooltip>
-            <TooltipTrigger render={<span tabIndex={0} />}>
+            <TooltipTrigger delay={0} render={<span tabIndex={0} />}>
               <TabsTrigger value="soon" disabled>
                 {t("soon")}
               </TabsTrigger>
