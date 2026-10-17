@@ -3,31 +3,17 @@ import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/app/_auth/session";
-import { listShelf } from "@/app/_catalog/gateway";
+import { buildProviderBundle } from "@/app/_catalog/provider-shelf";
+import { ShelfItems } from "@/app/_catalog/shelf-items";
 import { FollowingShortcut } from "@/app/_library/following";
 import { getOwnProfile } from "@/app/_profile/queries";
 import { SearchForm } from "@/components/catalog/search-form";
-import { Shelf, ShelfSkeleton } from "@/components/catalog/shelf";
-import { SHELF_PROVIDERS, type ShelfInput } from "@/contracts/catalog";
+import { ProviderShelf } from "@/components/catalog/provider-shelf";
+import { ShelfSkeleton } from "@/components/catalog/shelf";
+import { SHELF_PROVIDERS } from "@/contracts/catalog";
 import { isProvisionalHandle } from "@/contracts/profile";
-import type { SearchItem } from "@/domain/catalog/types";
-import { cn } from "@/lib/utils";
 
-const MEDIA_SEGMENTS = {
-  tudo: "all",
-  filmes: "movie",
-  series: "tv",
-  novelas: "novelas",
-} as const;
-type MediaSegment = keyof typeof MEDIA_SEGMENTS;
-
-// Serviço aberto quando a URL não escolhe um (a lista é alfabética).
-
-function firstValue(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-export default function Home({ searchParams }: PageProps<"/">) {
+export default function Home() {
   return (
     <>
       <Hero />
@@ -40,7 +26,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
       <ShelfSection kind="trending" ranked />
       <ShelfSection kind="now_playing" />
       <Suspense fallback={<ShelfSkeleton />}>
-        <ProviderSection searchParams={searchParams} />
+        <ProviderSection />
       </Suspense>
     </>
   );
@@ -110,131 +96,41 @@ async function ShelfHeading({ id }: { id: string }) {
   );
 }
 
-// Prateleira que falha mostra um aviso no lugar da lista (a Home segue de pé);
-// o erro fica no log.
-async function ShelfItems({
-  input,
-  ranked = false,
-}: {
-  input: ShelfInput;
-  ranked?: boolean;
-}) {
-  // Lê o catálogo a cada requisição (o cache é o do banco): sem isto o Next
-  // tentaria montar a prateleira no build, sem banco, e a gravaria no HTML
-  // estático.
+// "Em alta no serviço X": serviço e tipo mudam na própria tela, sem URL nem
+// memória (ao abrir de novo, volta ao primeiro serviço e a "Tudo").
+async function ProviderSection() {
+  // Lê o catálogo a cada requisição: sem isto o Next tentaria montar a
+  // prateleira no build, sem banco, e a gravaria no HTML estático.
   await connection();
   const t = await getTranslations("Home");
-  let items: SearchItem[] = [];
-  try {
-    const result = await listShelf(input);
-    if (result.ok) items = result.value;
-    else console.error("Prateleira indisponível:", result.error);
-  } catch (error) {
-    console.error("Falha ao carregar a prateleira:", error);
-  }
-  if (items.length > 0) return <Shelf items={items} ranked={ranked} />;
-  return <p className="text-muted-foreground">{t("shelfUnavailable")}</p>;
-}
-
-// "Em alta no serviço X": serviço e tipo vêm da URL (?servico=8&tipo=series),
-// sem JavaScript. Id ausente ou fora da lista cai no primeiro serviço.
-async function ProviderSection({
-  searchParams,
-}: {
-  searchParams: PageProps<"/">["searchParams"];
-}) {
-  const t = await getTranslations("Home");
-  const params = await searchParams;
-  const provider =
-    SHELF_PROVIDERS.find((p) => p.id === firstValue(params.servico)) ??
-    SHELF_PROVIDERS[0];
-  // O filtro Novelas só aparece se o serviço tiver alguma (a consulta é a
-  // mesma da prateleira, então vem do cache de 6 horas quando há novelas).
-  const novelas = await listShelf({
-    kind: "provider",
-    mediaType: "novelas",
-    providerId: provider.id,
-  });
-  const segments: MediaSegment[] =
-    novelas.ok && novelas.value.length > 0
-      ? ["tudo", "filmes", "series", "novelas"]
-      : ["tudo", "filmes", "series"];
-  const requested = firstValue(params.tipo);
-  const segment: MediaSegment = segments.find((s) => s === requested) ?? "tudo";
-
-  const href = (providerId: string, target: MediaSegment) =>
-    `/?servico=${providerId}&tipo=${target}#em-alta-no-servico`;
-  const pill = (active: boolean) =>
-    cn(
-      "inline-flex rounded-lg border px-3 py-1.5 text-sm transition-colors",
-      active
-        ? "border-primary bg-primary text-primary-foreground"
-        : "border-border hover:bg-muted",
-    );
-
+  const initial = await buildProviderBundle();
   return (
-    <section
-      className="flex flex-col gap-3"
-      aria-labelledby="em-alta-no-servico"
-    >
-      <h2 id="em-alta-no-servico" className="text-xl font-semibold">
-        {t("shelf.provider", {
-          provider: provider.name,
-          gender: provider.feminine ? "feminine" : "masculine",
-        })}
-      </h2>
-      <nav aria-label={t("providerNav")}>
-        <ul className="flex flex-wrap gap-2">
-          {SHELF_PROVIDERS.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={href(p.id, segment)}
-                scroll={false}
-                aria-current={p.id === provider.id ? "true" : undefined}
-                className={pill(p.id === provider.id)}
-              >
-                {p.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <nav aria-label={t("mediaNav")}>
-        <ul className="flex gap-2">
-          {segments.map((target) => (
-            <li key={target}>
-              <Link
-                href={href(provider.id, target)}
-                scroll={false}
-                aria-current={target === segment ? "true" : undefined}
-                className={pill(target === segment)}
-              >
-                {t(`media.${target}`)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <Suspense fallback={<ShelfSkeleton />}>
-        <ShelfItems
-          input={{
-            kind: "provider",
-            mediaType: MEDIA_SEGMENTS[segment],
-            providerId: provider.id,
-          }}
-        />
-      </Suspense>
-      <p className="text-xs text-muted-foreground">
-        {t("providerNote")}{" "}
-        <a
-          href="https://www.justwatch.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-4"
-        >
-          JustWatch
-        </a>
-      </p>
-    </section>
+    <ProviderShelf
+      providers={SHELF_PROVIDERS.map(({ id, name }) => ({ id, name }))}
+      labels={{
+        providerNav: t("providerNav"),
+        mediaNav: t("mediaNav"),
+        media: {
+          tudo: t("media.tudo"),
+          filmes: t("media.filmes"),
+          series: t("media.series"),
+          novelas: t("media.novelas"),
+        },
+      }}
+      initial={initial}
+      footer={
+        <p className="text-xs text-muted-foreground">
+          {t("providerNote")}{" "}
+          <a
+            href="https://www.justwatch.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4"
+          >
+            JustWatch
+          </a>
+        </p>
+      }
+    />
   );
 }

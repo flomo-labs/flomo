@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useState } from "react";
 import { Poster } from "@/components/catalog/poster";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuickMark, type QuickMarkTarget } from "./quick-mark";
@@ -30,35 +30,12 @@ export type FollowingLabels = {
   markFailed: string;
 };
 
-const STORAGE_KEY = "flomo:seguintes-tipo";
-
 function isKind(value: unknown): value is FollowingKind {
   return FOLLOWING_KINDS.includes(value as FollowingKind);
 }
 
-const CHANGE_EVENT = "flomo:seguintes-tipo-change";
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(CHANGE_EVENT, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(CHANGE_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-
-function readKind(): FollowingKind {
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (isKind(saved)) return saved;
-  } catch {
-    // Sem armazenamento (janela privada): fica em "Ambos".
-  }
-  return "both";
-}
-
-// Lista "Seguintes" com o menu Ambos / Séries / Filmes. A escolha fica no
-// navegador e fora da URL (tela privada). Usada na Home e em /seguintes.
+// Lista "Seguintes" com o menu Ambos / Séries / Filmes. A escolha vive
+// só na tela (fora da URL, sem memória: reabrir volta para "Ambos"). Usada na Home e em /seguintes.
 export function FollowingList({
   rows,
   labels,
@@ -69,20 +46,10 @@ export function FollowingList({
   // Limite depois de filtrar (a Home mostra só os primeiros).
   max?: number;
 }) {
-  const kind = useSyncExternalStore(
-    subscribe,
-    readKind,
-    () => "both" as FollowingKind,
-  );
+  const [kind, setKind] = useState<FollowingKind>("both");
 
   function choose(value: unknown) {
-    if (!isKind(value)) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, value);
-    } catch {
-      // A escolha só não será lembrada.
-    }
-    window.dispatchEvent(new Event(CHANGE_EVENT));
+    if (isKind(value)) setKind(value);
   }
 
   const shown = rows
