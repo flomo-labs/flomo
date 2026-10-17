@@ -1,3 +1,5 @@
+import type { StartScreen } from "@/contracts/profile";
+
 // Porta de acesso aos perfis, implementada em infra/ (ADR-001). A
 // implementação roda dentro do `withUser`, então o RLS também se aplica.
 export interface ProfileRepository {
@@ -13,4 +15,11 @@ export interface ProfileRepository {
     userId: string,
     handle: string,
   ): Promise<"updated" | "taken" | "not_found">;
+}
+
+// Preferências do usuário (tabela `user_settings`); só o dono as lê e altera.
+export interface SettingsRepository {
+  // Sem linha gravada, vale a Home.
+  getStartScreen(userId: string): Promise<StartScreen>;
+  setStartScreen(userId: string, startScreen: StartScreen): Promise<void>;
 }

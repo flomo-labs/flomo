@@ -90,3 +90,11 @@ export type Handle = z.infer<typeof handleSchema>;
 export const changeHandleInputSchema = z.object({ handle: handleSchema });
 
 export type ChangeHandleInput = z.infer<typeof changeHandleInputSchema>;
+
+// Tela em que o usuário quer começar ao entrar: a Home ou a fila Seguintes.
+export const START_SCREENS = ["home", "following"] as const;
+export type StartScreen = (typeof START_SCREENS)[number];
+
+export const setStartScreenInputSchema = z.object({
+  startScreen: z.enum(START_SCREENS),
+});

@@ -1,13 +1,16 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import type { UseCaseError } from "@/domain/result";
+import type { StartScreen } from "@/contracts/profile";
+import { fail, type Result, type UseCaseError } from "@/domain/result";
 import {
   changeHandle,
   type ChangeHandleErrorCode,
 } from "@/domain/profile/change-handle";
 import { withUser } from "@/infra/db/client";
+import { setStartScreen } from "@/domain/profile/start-screen";
 import { createProfileRepository } from "@/infra/db/profile-repository";
+import { createSettingsRepository } from "@/infra/db/settings-repository";
 import { safeNextPath } from "../_auth/redirect";
 import { getCurrentUser } from "../_auth/session";
 
@@ -66,4 +69,25 @@ export async function updateHandle(
   if (!result.ok)
     return { error: result.error, submitted: submittedHandle(formData) };
   return { savedHandle: result.value.handle, submitted: result.value.handle };
+}
+
+export type StartScreenResult = Result<
+  { startScreen: StartScreen },
+  "INVALID_INPUT" | "UNAUTHENTICATED"
+>;
+
+// Escolha da tela inicial, nas configurações.
+export async function changeStartScreen(
+  input: unknown,
+): Promise<StartScreenResult> {
+  const user = await getCurrentUser();
+  if (!user)
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  return withUser(user.claims, (tx) =>
+    setStartScreen(
+      { settings: createSettingsRepository(tx) },
+      { id: user.id },
+      input,
+    ),
+  );
 }

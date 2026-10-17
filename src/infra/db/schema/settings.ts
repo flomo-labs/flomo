@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { check, pgTable, text, uuid } from "drizzle-orm/pg-core";
-import { START_SCREENS } from "@/domain/profile/values";
+import { START_SCREENS } from "@/contracts/profile";
 import { profiles } from "./profiles";
 import { ownRowsOnly } from "./rls";
 
