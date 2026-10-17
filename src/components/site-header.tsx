@@ -15,11 +15,8 @@ export function SiteHeader() {
           <Link href="/" className="text-lg font-bold">
             Flomo
           </Link>
-          <Link href="/buscar" className={NAV_LINK_CLASS}>
-            Buscar
-          </Link>
-          <Suspense>
-            <PrivateLinks />
+          <Suspense fallback={<SearchLink />}>
+            <NavLinks />
           </Suspense>
         </div>
         <Suspense fallback={<div className="size-8" />}>
@@ -33,21 +30,37 @@ export function SiteHeader() {
 const NAV_LINK_CLASS =
   "text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
 
-// Início, Seguintes e Biblioteca só existem para quem está logado.
-async function PrivateLinks() {
-  if (!(await getCurrentUser())) return null;
+function SearchLink() {
+  return (
+    <Link href="/buscar" className={NAV_LINK_CLASS}>
+      Buscar
+    </Link>
+  );
+}
+
+// Início, Seguintes e Biblioteca só existem para quem está logado; Buscar é
+// para todos e fica entre eles (Início, Buscar, Seguintes, Biblioteca).
+async function NavLinks() {
+  const signedIn = Boolean(await getCurrentUser());
   return (
     <>
-      {/* Rota que redireciona (e grava cookie): navegação completa, sem Link. */}
-      <a href="/inicio" className={NAV_LINK_CLASS}>
-        Início
-      </a>
-      <Link href="/seguintes" className={NAV_LINK_CLASS}>
-        Seguintes
-      </Link>
-      <Link href="/biblioteca" className={NAV_LINK_CLASS}>
-        Biblioteca
-      </Link>
+      {signedIn && (
+        // Rota que redireciona (e grava cookie): navegação completa, sem Link.
+        <a href="/inicio" className={NAV_LINK_CLASS}>
+          Início
+        </a>
+      )}
+      <SearchLink />
+      {signedIn && (
+        <>
+          <Link href="/seguintes" className={NAV_LINK_CLASS}>
+            Seguintes
+          </Link>
+          <Link href="/biblioteca" className={NAV_LINK_CLASS}>
+            Biblioteca
+          </Link>
+        </>
+      )}
     </>
   );
 }
