@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/app/_auth/session";
@@ -98,6 +99,9 @@ async function ShelfHeading({ id }: { id: string }) {
 // "Em alta no serviço X": serviço e tipo mudam na própria tela, sem URL nem
 // memória (ao abrir de novo, volta ao primeiro serviço e a "Tudo").
 async function ProviderSection() {
+  // Lê o catálogo a cada requisição: sem isto o Next tentaria montar a
+  // prateleira no build, sem banco, e a gravaria no HTML estático.
+  await connection();
   const t = await getTranslations("Home");
   const initial = await buildProviderShelf();
   return (
