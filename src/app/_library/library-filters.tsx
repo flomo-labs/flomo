@@ -1,37 +1,24 @@
 "use client";
 
-import { type ReactNode, useRef, useState, useTransition } from "react";
+import { type ReactNode, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LIBRARY_FILTERS, type LibraryFilter } from "@/contracts/library";
-import { loadLibraryList } from "./library-actions";
 
-// Abas da Biblioteca. A aba vive só nesta tela: não vai para a URL nem é
-// lembrada (ao reabrir, volta para "Todos").
+// Abas da Biblioteca. As listas de todas as abas chegam de uma vez, então
+// trocar de aba é instantâneo. A aba vive só nesta tela: não vai para a URL
+// nem é lembrada (ao reabrir, volta para "Todos").
 export function LibraryFilters({
-  initial,
+  lists,
   labels,
 }: {
-  initial: ReactNode;
+  lists: Record<LibraryFilter, ReactNode>;
   labels: { filters: string; filter: Record<LibraryFilter, string> };
 }) {
   const [filter, setFilter] = useState<LibraryFilter>("all");
-  const [content, setContent] = useState(initial);
-  const [pending, startTransition] = useTransition();
-  const latest = useRef(0);
 
   function choose(value: unknown) {
     const next = LIBRARY_FILTERS.find((f) => f === value);
-    if (!next) return;
-    const request = ++latest.current;
-    setFilter(next);
-    startTransition(async () => {
-      try {
-        const list = await loadLibraryList(next);
-        if (request === latest.current) setContent(list);
-      } catch (error) {
-        console.error("Falha ao trocar a aba da biblioteca:", error);
-      }
-    });
+    if (next) setFilter(next);
   }
 
   return (
@@ -45,9 +32,7 @@ export function LibraryFilters({
           ))}
         </TabsList>
       </Tabs>
-      <div aria-busy={pending} className={pending ? "opacity-60" : undefined}>
-        {content}
-      </div>
+      {lists[filter]}
     </>
   );
 }

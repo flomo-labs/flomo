@@ -1,13 +1,12 @@
 "use server";
 
-import type { ProviderShelfData } from "@/components/catalog/provider-shelf";
-import { buildProviderShelf } from "./provider-shelf";
+import type { ProviderBundle } from "@/components/catalog/provider-shelf";
+import { buildProviderBundle } from "./provider-shelf";
 
-// Troca de serviço ou tipo na Home: devolve a prateleira já montada, sem
-// mexer na URL nem guardar a escolha.
-export async function loadProviderShelf(
+// Listas de um serviço, carregadas em segundo plano pela Home depois de abrir
+// (nada vai para a URL nem é guardado).
+export async function loadProviderBundle(
   providerId: string,
-  segment: string,
-): Promise<ProviderShelfData> {
-  return buildProviderShelf(String(providerId), String(segment));
+): Promise<ProviderBundle> {
+  return buildProviderBundle(String(providerId));
 }

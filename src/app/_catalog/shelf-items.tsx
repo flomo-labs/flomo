@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Shelf } from "@/components/catalog/shelf";
 import type { ShelfInput } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
-import { listShelf } from "./gateway";
+import { listShelfCached } from "./cached-shelf";
 
 // Prateleira que falha mostra um aviso no lugar da lista (a Home segue de pé);
 // o erro fica no log.
@@ -21,9 +21,7 @@ export async function ShelfItems({
   const t = await getTranslations("Home");
   let items: SearchItem[] = [];
   try {
-    const result = await listShelf(input);
-    if (result.ok) items = result.value;
-    else console.error("Prateleira indisponível:", result.error);
+    items = (await listShelfCached(input)).value;
   } catch (error) {
     console.error("Falha ao carregar a prateleira:", error);
   }

@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/app/_auth/session";
-import { buildProviderShelf } from "@/app/_catalog/provider-shelf";
+import { buildProviderBundle } from "@/app/_catalog/provider-shelf";
 import { ShelfItems } from "@/app/_catalog/shelf-items";
 import { FollowingShortcut } from "@/app/_library/following";
 import { getOwnProfile } from "@/app/_profile/queries";
@@ -103,7 +103,7 @@ async function ProviderSection() {
   // prateleira no build, sem banco, e a gravaria no HTML estático.
   await connection();
   const t = await getTranslations("Home");
-  const initial = await buildProviderShelf();
+  const initial = await buildProviderBundle();
   return (
     <ProviderShelf
       providers={SHELF_PROVIDERS.map(({ id, name }) => ({ id, name }))}
