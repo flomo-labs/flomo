@@ -33,11 +33,15 @@ export function SiteHeader() {
 const NAV_LINK_CLASS =
   "text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
 
-// Seguintes e Biblioteca só existem para quem está logado.
+// Início, Seguintes e Biblioteca só existem para quem está logado.
 async function PrivateLinks() {
   if (!(await getCurrentUser())) return null;
   return (
     <>
+      {/* Rota que redireciona (e grava cookie): navegação completa, sem Link. */}
+      <a href="/inicio" className={NAV_LINK_CLASS}>
+        Início
+      </a>
       <Link href="/seguintes" className={NAV_LINK_CLASS}>
         Seguintes
       </Link>

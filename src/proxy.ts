@@ -1,5 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createCookieAuth } from "@/infra/auth/supabase";
+import {
+  shouldRedirectToStart,
+  START_COOKIE,
+  START_ROUTE,
+} from "./app/_profile/start-screen-path";
 
 // Renova o token de sessão antes da renderização e grava os cookies novos na
 // resposta (Server Components não conseguem gravar cookies). Não decide
@@ -27,7 +32,27 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  await auth.getClaims();
+  const claims = await auth.getClaims();
+
+  // Primeira entrada da sessão: quem está logado cai na tela que escolheu.
+  if (
+    shouldRedirectToStart({
+      method: request.method,
+      pathname: request.nextUrl.pathname,
+      fetchMode: request.headers.get("sec-fetch-mode"),
+      fetchDest: request.headers.get("sec-fetch-dest"),
+      hasCookie: request.cookies.has(START_COOKIE),
+      signedIn: claims !== null,
+    })
+  ) {
+    const redirect = NextResponse.redirect(new URL(START_ROUTE, request.url));
+    // Mantém os cookies de sessão renovados acima.
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    redirect.headers.set("cache-control", "private, no-store");
+    return redirect;
+  }
 
   return response;
 }
