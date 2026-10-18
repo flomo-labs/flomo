@@ -42,7 +42,7 @@ export default function TermosPage() {
 
       <ProseSection title="O que você publica">
         <p>
-          Notas, reviews e outros conteúdos continuam sendo seus. Ao
+          Notas, comentários e outros conteúdos continuam sendo seus. Ao
           publicá-los, você nos autoriza a exibi-los no Flomo, conforme a
           visibilidade que escolher. Publique apenas o que você tem direito de
           publicar.
