@@ -92,5 +92,10 @@ export async function getTitleRatingSummary(
 ): Promise<Result<TitleRatingSummary, "INVALID_INPUT">> {
   const parsed = titleRatingsInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Título inválido.");
-  return ok(summarizeRatings(await deps.ratings.summarizeTitle(parsed.data.titleId)));
+  const titleId = parsed.data.titleId;
+  const [groups, episodes] = await Promise.all([
+    deps.ratings.summarizeTitle(titleId),
+    deps.ratings.summarizeEpisodes(titleId),
+  ]);
+  return ok(summarizeRatings(groups, episodes));
 }

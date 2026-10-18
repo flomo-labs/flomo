@@ -1,6 +1,12 @@
 import type { MediaType } from "../catalog/types";
 import { createFakeLibrary, type FakeEpisode } from "../library/test-fakes";
-import type { RatingDeps, RatingGroup, RatingRepository, UserRating } from "./ports";
+import type {
+  EpisodeRatingGroup,
+  RatingDeps,
+  RatingGroup,
+  RatingRepository,
+  UserRating,
+} from "./ports";
 
 // Notas em memória para os testes de domínio (sem banco), sobre a biblioteca
 // em memória. Imita o que o banco garante: uma nota por filme e por episódio.
@@ -51,6 +57,17 @@ export function createFakeRatings(catalog: {
       }
       return [...groups].map(([seasonNumber, values]) => ({
         seasonNumber,
+        average: values.reduce((a, b) => a + b, 0) / values.length,
+        count: values.length,
+      }));
+    },
+    async summarizeEpisodes(titleId): Promise<EpisodeRatingGroup[]> {
+      const groups = new Map<string, number[]>();
+      for (const r of rows.filter((x) => x.titleId === titleId && x.episodeId)) {
+        groups.set(r.episodeId!, [...(groups.get(r.episodeId!) ?? []), r.halfStars]);
+      }
+      return [...groups].map(([episodeId, values]) => ({
+        episodeId,
         average: values.reduce((a, b) => a + b, 0) / values.length,
         count: values.length,
       }));
