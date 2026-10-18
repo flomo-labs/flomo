@@ -1,6 +1,8 @@
 # Supabase local, usado só pelo E2E (e2e/README.md). Não é o flomo-dev nem a
 # produção: sobe com `supabase start`, só com Postgres e Auth, e o schema vem
 # das migrations do Drizzle (pnpm db:migrate), não de supabase/migrations.
+# NUNCA rode `supabase link` nem `supabase config push` com este arquivo: ele
+# liga cadastro por senha sem confirmação e aponta o site para localhost.
 project_id = "flomo-e2e"
 
 [api]

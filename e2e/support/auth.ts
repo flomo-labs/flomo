@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { BrowserContext } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
+import { assertLocalEnv } from "./local-only";
 
 // O app só oferece login com Google, que não dá para automatizar. O E2E cria
 // um usuário por e-mail e senha direto no Supabase local (cadastro sem
@@ -8,6 +9,7 @@ import { createServerClient } from "@supabase/ssr";
 // app gravaria, no formato do @supabase/ssr. Daí em diante tudo passa pelo
 // app, como num login de verdade.
 export async function signUpAndSignIn(context: BrowserContext) {
+  assertLocalEnv(["NEXT_PUBLIC_SUPABASE_URL"]);
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) {

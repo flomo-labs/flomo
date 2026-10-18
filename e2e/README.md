@@ -31,9 +31,14 @@ Precisa de Docker e da CLI do Supabase (`pnpm dlx supabase@2.121.0`).
 4. `pnpm db:migrate`
 5. `pnpm build` (o build guarda as variáveis `NEXT_PUBLIC_*`; não reaproveite
    um build feito com o `.env.local`)
-6. `pnpm exec playwright install chromium` (só na primeira vez)
+6. `pnpm exec playwright install chromium` (só na primeira vez; se já houver
+   um Chromium instalado em outro lugar, aponte para ele com
+   `E2E_CHROMIUM_PATH`)
 7. `pnpm test:e2e`
 8. `pnpm dlx supabase@2.121.0 stop` ao terminar.
+
+O teste se recusa a rodar se `NEXT_PUBLIC_SUPABASE_URL` ou `DATABASE_URL` não
+apontarem para `localhost`, para não gravar nada no flomo-dev por engano.
 
 Cada execução cria um usuário novo; o banco local pode ser zerado com
 `supabase db reset`, seguido de `pnpm db:migrate`.

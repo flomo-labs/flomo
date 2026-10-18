@@ -5,7 +5,11 @@ import {
 } from "@/domain/catalog/ports";
 import { getDb } from "../db/client";
 import { createCatalogStore } from "../db/catalog-repository";
-import { createTmdbClient, type TmdbClient } from "./tmdb/client";
+import {
+  createTmdbClient,
+  localTmdbBaseUrl,
+  type TmdbClient,
+} from "./tmdb/client";
 import { createTmdbProvider, TMDB_PROVIDER } from "./tmdb/provider";
 
 // Um cliente por instância do servidor: o limite de concorrência só vale se
@@ -26,8 +30,7 @@ function getTmdbClient(): TmdbClient {
   }
   globalForTmdb.flomoTmdb ??= createTmdbClient({
     credential,
-    // Vazia em produção; o E2E aponta para o TMDB falso.
-    baseUrl: process.env.TMDB_BASE_URL || undefined,
+    baseUrl: localTmdbBaseUrl(process.env.TMDB_BASE_URL),
   });
   return globalForTmdb.flomoTmdb;
 }
