@@ -99,6 +99,13 @@
       "when": 1792290229648,
       "tag": "0013_ratings_medias",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792301436992,
+      "tag": "0014_ratings_medias_por_episodio",
+      "breakpoints": true
     }
   ]
 }

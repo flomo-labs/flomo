@@ -249,6 +249,35 @@ describe("notas de episódio no banco", () => {
       ).toEqual([[1, 8, 3]]);
     }));
 
+  it("a média por episódio soma todos os usuários, sem expor notas", () =>
+    inRollback(async (tx) => {
+      const [a, b, viewer] = [
+        await createUser(tx),
+        await createUser(tx),
+        await createUser(tx),
+      ];
+      const { seriesId, first, second } = await createSeries(tx);
+      await tx.insert(ratings).values([
+        { userId: a, titleId: seriesId, episodeId: first, halfStars: 7 },
+        { userId: b, titleId: seriesId, episodeId: first, halfStars: 8 },
+        { userId: a, titleId: seriesId, episodeId: second, halfStars: 9 },
+      ]);
+
+      const summary = await asUser(tx, viewer, async (utx) => {
+        expect(await utx.select().from(ratings)).toEqual([]);
+        return utx.execute<{
+          episode_id: string;
+          average: string;
+          ratings_count: number;
+        }>(sql`select * from app.title_episode_rating_summary(${seriesId})`);
+      });
+      expect(
+        Object.fromEntries(
+          summary.map((r) => [r.episode_id, [Number(r.average), r.ratings_count]]),
+        ),
+      ).toEqual({ [first]: [7.5, 2], [second]: [9, 1] });
+    }));
+
   it("não deixa apagar episódio com nota de alguém", () =>
     inRollback(async (tx) => {
       const owner = await createUser(tx);
