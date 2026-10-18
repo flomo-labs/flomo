@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgPolicy,
   pgTable,
   primaryKey,
@@ -52,6 +53,10 @@ export const titles = pgTable(
     runtime: integer("runtime"),
     status: text("status").notNull().default("unknown"),
     backdropPath: text("backdrop_path"),
+    // Nota do público no TMDB (0 a 10) e quantos votos a formam. Fica à
+    // parte da nota do Flomo e é atualizada junto do resto do título.
+    tmdbVoteAverage: numeric("tmdb_vote_average", { precision: 3, scale: 1 }),
+    tmdbVoteCount: integer("tmdb_vote_count"),
     ...timestamps,
   },
   (t) => [
@@ -61,6 +66,14 @@ export const titles = pgTable(
       sql`${t.status} in ('planned', 'in_production', 'released', 'returning', 'ended', 'canceled', 'unknown')`,
     ),
     check("titles_runtime", sql`${t.runtime} is null or ${t.runtime} >= 0`),
+    check(
+      "titles_tmdb_vote_average",
+      sql`${t.tmdbVoteAverage} is null or ${t.tmdbVoteAverage} between 0 and 10`,
+    ),
+    check(
+      "titles_tmdb_vote_count",
+      sql`${t.tmdbVoteCount} is null or ${t.tmdbVoteCount} >= 0`,
+    ),
     readableByAuthenticated("titles"),
   ],
 );
