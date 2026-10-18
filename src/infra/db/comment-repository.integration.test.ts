@@ -6,7 +6,7 @@ import {
   listMyComments,
   updateComment,
 } from "@/domain/comment/comments";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Tx } from "./client";
 import { createCommentRepository } from "./comment-repository";
 import {
@@ -155,7 +155,11 @@ describe("comentários no banco", () => {
       expect(list.ok && list.value[0]).toMatchObject({
         moderationStatus: "hidden",
       });
-      const row = await tx.select().from(comments);
-      expect(row[0].updatedAt).toEqual(created.value.updatedAt);
+      // Filtrado pelo id: o banco de desenvolvimento tem comentários de verdade.
+      const [row] = await tx
+        .select()
+        .from(comments)
+        .where(eq(comments.id, created.value.id));
+      expect(row.updatedAt).toEqual(created.value.updatedAt);
     }));
 });
