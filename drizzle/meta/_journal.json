@@ -120,6 +120,13 @@
       "when": 1792353351496,
       "tag": "0016_perfil_bio_e_estatisticas",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792358416500,
+      "tag": "0017_perfil_privado_resumo",
+      "breakpoints": true
     }
   ]
 }
