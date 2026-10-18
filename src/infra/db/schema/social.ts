@@ -75,13 +75,14 @@ export const reviews = pgTable(
       .references(() => titles.id, { onDelete: "restrict" }),
     body: text("body").notNull(),
     containsSpoilers: boolean("contains_spoilers").notNull().default(false),
-    // O autor não muda: o trigger da 0009 força `published` no insert e
-    // recusa a troca no update.
+    // Só o servidor muda: o trigger (migrations 0009 e 0010) força
+    // `published` no insert e recusa a troca no update.
     moderationStatus: text("moderation_status").notNull().default("published"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
-    // Mantido pelo trigger app.set_updated_at.
+    // Última edição do autor (texto ou spoiler), pelo trigger
+    // app.set_updated_at; a moderação não conta.
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
