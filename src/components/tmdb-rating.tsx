@@ -16,11 +16,11 @@ export async function TmdbRating({
     maximumFractionDigits: 1,
   });
   return (
-    <p
-      className="text-sm text-muted-foreground"
-      aria-label={t("tmdbAria", { average, count: rating.count })}
-    >
-      {t("tmdb", { average, count: rating.count })}
+    <p className="text-sm text-muted-foreground">
+      <span aria-hidden="true">{t("tmdb", { average, count: rating.count })}</span>
+      <span className="sr-only">
+        {t("tmdbAria", { average, count: rating.count })}
+      </span>
     </p>
   );
 }
