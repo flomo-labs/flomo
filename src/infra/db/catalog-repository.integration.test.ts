@@ -265,3 +265,32 @@ describe("RLS do catálogo", () => {
       expect(rows).toHaveLength(0);
     }));
 });
+
+describe("nota do TMDB no título", () => {
+  it("aceita a faixa de 0 a 10 e recusa o resto", async () => {
+    await inRollback(async (tx) => {
+      const insert = (average: string | null, count: number | null) =>
+        tx.transaction((sp) =>
+          sp.insert(titles).values({
+            mediaType: "movie",
+            originalTitle: "Nota",
+            tmdbVoteAverage: average,
+            tmdbVoteCount: count,
+          }),
+        );
+      await insert("7.8", 1234);
+      await insert(null, null);
+      for (const [average, count] of [
+        ["10.1", 1],
+        ["-0.1", 1],
+        ["5.0", -1],
+      ] as const) {
+        await expect(insert(average, count)).rejects.toEqual(
+          expect.objectContaining({
+            cause: expect.objectContaining({ code: "23514" }),
+          }),
+        );
+      }
+    });
+  });
+});
