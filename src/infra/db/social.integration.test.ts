@@ -219,6 +219,33 @@ describe("reviews no banco", () => {
       );
       const [row] = await tx.select().from(reviews).where(eq(reviews.id, created.id));
       expect(row.moderationStatus).toBe("hidden");
+
+      // Nem junto com uma edição do texto.
+      await expect(
+        asUser(tx, owner, (utx) =>
+          utx
+            .update(reviews)
+            .set({ body: "De novo.", moderationStatus: "published" })
+            .where(eq(reviews.id, created.id)),
+        ),
+      ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+    }));
+
+  it("ocultar pela moderação não conta como edição do autor", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      const titleId = await createTitle(tx);
+      const old = new Date("2020-01-01T00:00:00Z");
+      const [created] = await tx
+        .insert(reviews)
+        .values({ userId: owner, titleId, body: "Texto.", updatedAt: old })
+        .returning();
+      await tx
+        .update(reviews)
+        .set({ moderationStatus: "hidden" })
+        .where(eq(reviews.id, created.id));
+      const [row] = await tx.select().from(reviews).where(eq(reviews.id, created.id));
+      expect(row.updatedAt).toEqual(old);
     }));
 
   it("ninguém lê, altera ou grava review de outro usuário", () =>
