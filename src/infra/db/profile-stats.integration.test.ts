@@ -14,6 +14,7 @@ import {
   seasons,
   titles,
   userEpisodeProgress,
+  userTitles,
   watchEvents,
 } from "./schema";
 
@@ -53,7 +54,11 @@ async function createCatalog(tx: Tx) {
     .returning({ id: titles.id });
   const [movie] = await tx
     .insert(titles)
-    .values({ mediaType: "movie", originalTitle: "Filme de teste", runtime: 120 })
+    .values({
+      mediaType: "movie",
+      originalTitle: "Filme de teste",
+      runtime: 120,
+    })
     .returning({ id: titles.id });
   const [season] = await tx
     .insert(seasons)
@@ -69,13 +74,18 @@ async function createCatalog(tx: Tx) {
   return { seriesId: series.id, movieId: movie.id, ep1: ep1.id, ep2: ep2.id };
 }
 
-// Dois episódios vistos, o filme visto duas vezes e uma nota no filme.
+// Série e filme na biblioteca, dois episódios vistos, o filme visto duas
+// vezes e uma nota no filme.
 async function seed(
   tx: Tx,
   userId: string,
   c: Awaited<ReturnType<typeof createCatalog>>,
 ) {
   await asUser(tx, userId, async (utx) => {
+    await utx.insert(userTitles).values([
+      { userId, titleId: c.seriesId, status: "watching" },
+      { userId, titleId: c.movieId, status: "watched" },
+    ]);
     for (const episodeId of [c.ep1, c.ep2]) {
       await utx.insert(userEpisodeProgress).values({
         userId,
@@ -114,6 +124,29 @@ describe("app.profile_stats", () => {
           // 50 + 40 (sem duração: a da série) + 120 (filme revisto conta uma vez)
           minutes_watched: "210",
           ratings_count: 1,
+        },
+      ]);
+    }));
+
+  it("não conta título oculto nem tirado da biblioteca", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      const c = await createCatalog(tx);
+      await seed(tx, owner, c);
+      await tx
+        .update(userTitles)
+        .set({ hidden: true })
+        .where(eq(userTitles.titleId, c.movieId));
+      await tx.delete(userTitles).where(eq(userTitles.titleId, c.seriesId));
+
+      const rows = await asUser(tx, owner, (utx) => statsOf(utx, owner));
+      expect([...rows]).toEqual([
+        {
+          series_count: 0,
+          movies_count: 0,
+          episodes_count: 0,
+          minutes_watched: "0",
+          ratings_count: 0,
         },
       ]);
     }));
@@ -161,6 +194,16 @@ describe("app.profile_stats", () => {
       const rows = await asUser(tx, viewer, (utx) =>
         statsOf(utx, "00000000-0000-4000-8000-000000000000"),
       );
+      expect(rows).toHaveLength(0);
+    }));
+
+  it("sem usuário na requisição não responde, mesmo com o papel authenticated", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      const rows = await tx.transaction(async (sp) => {
+        await sp.execute(sql`set local role authenticated`);
+        return statsOf(sp, owner);
+      });
       expect(rows).toHaveLength(0);
     }));
 

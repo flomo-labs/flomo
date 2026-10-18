@@ -4,7 +4,7 @@
 update public.profiles
 set display_name = nullif(left(btrim(display_name), 50), '')
 where display_name is not null
-  and (char_length(display_name) > 50 or display_name !~ '\S' or display_name <> btrim(display_name));
+  and (char_length(display_name) > 50 or display_name !~ '\S');
 --> statement-breakpoint
 update public.profiles
 set bio = nullif(left(btrim(bio), 160), '')
@@ -43,6 +43,8 @@ revoke execute on function app.handle_new_user() from public;
 -- título nem qual nota. Responde só a quem entrou, e só para o próprio perfil
 -- ou um perfil público; para perfil privado de outra pessoa, ou sem login,
 -- não devolve linha nenhuma (decisão de 2026-10-18: perfil só para logados).
+-- Só conta títulos que estão na biblioteca e não estão ocultos: um título
+-- oculto ou tirado da biblioteca não aparece nem como número.
 --   series_count: séries com pelo menos um episódio visto;
 --   movies_count: filmes vistos (rever conta uma vez);
 --   episodes_count: episódios vistos (rever conta uma vez);
@@ -76,6 +78,8 @@ as $$
     select uep.title_id, coalesce(e.runtime, t.runtime, 0) as minutes
     from allowed a
     join public.user_episode_progress uep on uep.user_id = a.id
+    join public.user_titles ut
+      on ut.user_id = a.id and ut.title_id = uep.title_id and not ut.hidden
     join public.episodes e on e.id = uep.episode_id
     join public.titles t on t.id = uep.title_id
   ),
@@ -83,7 +87,9 @@ as $$
     select distinct we.title_id, coalesce(t.runtime, 0) as minutes
     from allowed a
     join public.watch_events we on we.user_id = a.id and we.episode_id is null
-    join public.titles t on t.id = we.title_id
+    join public.user_titles ut
+      on ut.user_id = a.id and ut.title_id = we.title_id and not ut.hidden
+    join public.titles t on t.id = we.title_id and t.media_type = 'movie'
   )
   select
     (select count(distinct title_id) from episodes_seen)::integer,
@@ -91,7 +97,11 @@ as $$
     (select count(*) from episodes_seen)::integer,
     ((select coalesce(sum(minutes), 0) from episodes_seen)
       + (select coalesce(sum(minutes), 0) from movies_seen))::bigint,
-    (select count(*) from allowed a join public.ratings r on r.user_id = a.id)::integer
+    (select count(*)
+       from allowed a
+       join public.ratings r on r.user_id = a.id
+       join public.user_titles ut
+         on ut.user_id = a.id and ut.title_id = r.title_id and not ut.hidden)::integer
   from allowed
 $$;
 --> statement-breakpoint
