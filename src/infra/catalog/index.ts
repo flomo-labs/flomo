@@ -24,7 +24,11 @@ function getTmdbClient(): TmdbClient {
     );
     throw new CatalogUnavailableError("TMDB não configurado.");
   }
-  globalForTmdb.flomoTmdb ??= createTmdbClient({ credential });
+  globalForTmdb.flomoTmdb ??= createTmdbClient({
+    credential,
+    // Vazia em produção; o E2E aponta para o TMDB falso.
+    baseUrl: process.env.TMDB_BASE_URL || undefined,
+  });
   return globalForTmdb.flomoTmdb;
 }
 

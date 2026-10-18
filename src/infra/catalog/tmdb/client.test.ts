@@ -48,6 +48,22 @@ describe("createTmdbClient", () => {
     ).toBeUndefined();
   });
 
+  it("aceita outra URL base (TMDB falso do E2E)", async () => {
+    const fetch = vi.fn(async (input: URL | RequestInfo) => {
+      void input;
+      return json(200);
+    });
+    const client = createTmdbClient({
+      credential: V4_TOKEN,
+      baseUrl: "http://localhost:3999/3/",
+      fetch,
+    });
+    await client.get("tv/1", { language: "pt-BR" });
+    expect(String(fetch.mock.calls[0][0])).toBe(
+      "http://localhost:3999/3/tv/1?language=pt-BR",
+    );
+  });
+
   it("404 vira null", async () => {
     const { client } = setup([json(404)]);
     await expect(client.get("movie/1")).resolves.toBeNull();
