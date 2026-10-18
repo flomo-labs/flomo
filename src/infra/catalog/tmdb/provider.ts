@@ -43,6 +43,24 @@ const optionalMinutes = z
     typeof value === "number" && value > 0 ? Math.round(value) : null,
   );
 
+// O TMDB manda 0 e 0 para título sem voto; fora da faixa 0 a 10 é dado ruim.
+// Nos dois casos fica sem nota, sem derrubar o título.
+const voteAverage = z
+  .number()
+  .nullish()
+  .transform((v) => (typeof v === "number" && v >= 0 && v <= 10 ? v : null));
+const voteCount = z
+  .number()
+  .int()
+  .nullish()
+  .transform((v) => (typeof v === "number" && v > 0 ? v : null));
+
+function vote(average: number | null, count: number | null) {
+  return count === null || average === null
+    ? { voteAverage: null, voteCount: null }
+    : { voteAverage: Math.round(average * 10) / 10, voteCount: count };
+}
+
 const searchResultSchema = z.object({
   page: z.number(),
   total_pages: z.number(),
@@ -89,6 +107,8 @@ const movieSchema = z.object({
   overview: optionalText,
   poster_path: optionalText,
   backdrop_path: optionalText,
+  vote_average: voteAverage,
+  vote_count: voteCount,
   genres: z.array(genreSchema).default([]),
 });
 
@@ -103,6 +123,8 @@ const tvSchema = z.object({
   overview: optionalText,
   poster_path: optionalText,
   backdrop_path: optionalText,
+  vote_average: voteAverage,
+  vote_count: voteCount,
   genres: z.array(genreSchema).default([]),
   seasons: z
     .array(z.object({ season_number: z.number().int().nonnegative() }))
@@ -270,6 +292,7 @@ export function mapMovie(data: unknown, locale: string): ProviderTitle {
     runtime: movie.runtime,
     status: (movie.status && MOVIE_STATUS[movie.status]) || "unknown",
     backdropPath: movie.backdrop_path,
+    ...vote(movie.vote_average, movie.vote_count),
     translation: {
       locale,
       title: movie.title || movie.original_title,
@@ -337,6 +360,7 @@ export function mapTv(
     runtime: runtimes.length > 0 ? Math.round(Math.min(...runtimes)) : null,
     status: (tv.status && TV_STATUS[tv.status]) || "unknown",
     backdropPath: tv.backdrop_path,
+    ...vote(tv.vote_average, tv.vote_count),
     translation: {
       locale,
       title: tv.name || tv.original_name,

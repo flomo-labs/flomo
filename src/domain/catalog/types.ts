@@ -66,6 +66,10 @@ export type ProviderTitle = {
   runtime: number | null; // minutos (séries: duração típica do episódio)
   status: TitleStatus;
   backdropPath: string | null;
+  // Nota do público no provedor (0 a 10) e quantos votos a formam; nulos
+  // quando o título ainda não tem voto.
+  voteAverage: number | null;
+  voteCount: number | null;
   translation: {
     locale: string;
     title: string;
@@ -98,6 +102,8 @@ export type CatalogTitle = {
   status: TitleStatus;
   posterPath: string | null;
   backdropPath: string | null;
+  // Nota do público no TMDB (0 a 10), à parte da nota do Flomo.
+  tmdbRating: { average: number; count: number } | null;
   genres: string[];
   seasons: SeasonSummary[];
 };

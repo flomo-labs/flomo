@@ -49,6 +49,7 @@ describe("catalog store", () => {
             status: "ended",
             posterPath: "/poster.jpg",
             backdropPath: null,
+            tmdbRating: { average: 8.4, count: 25000 },
             genres: ["Drama"],
             seasons: [
               {
@@ -267,6 +268,29 @@ describe("RLS do catálogo", () => {
 });
 
 describe("nota do TMDB no título", () => {
+  it("regravar atualiza a nota, e título sem voto fica sem nota", () =>
+    inRollback(async (tx) => {
+      const store = createCatalogStore(tx, PROVIDER);
+      const id = await store.writeTitle(
+        providerTitle({ voteAverage: 7.8, voteCount: 1234 }),
+        EXPIRES,
+      );
+      await store.writeTitle(
+        providerTitle({ voteAverage: 8, voteCount: 1300 }),
+        EXPIRES,
+      );
+      expect((await store.readTitle(id, "pt-BR"))?.value.title.tmdbRating).toEqual(
+        { average: 8, count: 1300 },
+      );
+      await store.writeTitle(
+        providerTitle({ voteAverage: null, voteCount: null }),
+        EXPIRES,
+      );
+      expect(
+        (await store.readTitle(id, "pt-BR"))?.value.title.tmdbRating,
+      ).toBeNull();
+    }));
+
   it("aceita a faixa de 0 a 10 e recusa o resto", async () => {
     await inRollback(async (tx) => {
       const insert = (average: string | null, count: number | null) =>
