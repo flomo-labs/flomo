@@ -1,4 +1,4 @@
-import type { RatingGroup } from "./ports";
+import type { EpisodeRatingGroup, RatingGroup } from "./ports";
 
 export type RatingAverage = {
   // Em meias estrelas (1 a 10), com casas decimais.
@@ -12,11 +12,16 @@ export type TitleRatingSummary = {
   overall: RatingAverage | null;
   // Média por número de temporada, só das que têm nota.
   bySeason: Record<number, RatingAverage>;
+  // Média por id de episódio, só dos que têm nota.
+  byEpisode: Record<string, RatingAverage>;
 };
 
 // A média da série é a de todas as notas, não a média das médias das
 // temporadas: cada grupo pesa pela quantidade de notas.
-export function summarizeRatings(groups: RatingGroup[]): TitleRatingSummary {
+export function summarizeRatings(
+  groups: RatingGroup[],
+  episodes: EpisodeRatingGroup[] = [],
+): TitleRatingSummary {
   const bySeason: Record<number, RatingAverage> = {};
   let sum = 0;
   let count = 0;
@@ -31,5 +36,10 @@ export function summarizeRatings(groups: RatingGroup[]): TitleRatingSummary {
   return {
     overall: count > 0 ? { average: sum / count, count } : null,
     bySeason,
+    byEpisode: Object.fromEntries(
+      episodes
+        .filter((e) => e.count > 0)
+        .map((e) => [e.episodeId, { average: e.average, count: e.count }]),
+    ),
   };
 }

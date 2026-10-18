@@ -152,6 +152,11 @@ describe("getTitleRatingSummary", () => {
           1: { average: 8, count: 3 },
           2: { average: 2, count: 1 },
         },
+        byEpisode: {
+          [EP1.id]: { average: 8, count: 2 },
+          [EP2.id]: { average: 8, count: 1 },
+          [S2EP1.id]: { average: 2, count: 1 },
+        },
       },
     });
   });

@@ -1,5 +1,6 @@
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import type {
+  EpisodeRatingGroup,
   RatingGroup,
   RatingRepository,
 } from "@/domain/rating/ports";
@@ -61,6 +62,18 @@ export function createRatingRepository(tx: Tx | Db): RatingRepository {
       }>(sql`select * from app.title_rating_summary(${titleId}::uuid)`);
       return [...rows].map((r) => ({
         seasonNumber: r.season_number,
+        average: Number(r.average),
+        count: r.ratings_count,
+      }));
+    },
+    async summarizeEpisodes(titleId): Promise<EpisodeRatingGroup[]> {
+      const rows = await tx.execute<{
+        episode_id: string;
+        average: string;
+        ratings_count: number;
+      }>(sql`select * from app.title_episode_rating_summary(${titleId}::uuid)`);
+      return [...rows].map((r) => ({
+        episodeId: r.episode_id,
         average: Number(r.average),
         count: r.ratings_count,
       }));

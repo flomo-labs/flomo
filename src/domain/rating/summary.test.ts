@@ -3,7 +3,11 @@ import { summarizeRatings } from "./summary";
 
 describe("summarizeRatings", () => {
   it("sem notas não há média", () => {
-    expect(summarizeRatings([])).toEqual({ overall: null, bySeason: {} });
+    expect(summarizeRatings([])).toEqual({
+      overall: null,
+      bySeason: {},
+      byEpisode: {},
+    });
   });
 
   it("a média da série é a de todas as notas, não a média das temporadas", () => {
@@ -22,5 +26,16 @@ describe("summarizeRatings", () => {
     ]);
     expect(summary.overall).toEqual({ average: 7, count: 2 });
     expect(summary.bySeason).toEqual({});
+  });
+
+  it("indexa a média de cada episódio pelo id e ignora quantidade zero", () => {
+    const summary = summarizeRatings(
+      [],
+      [
+        { episodeId: "e1", average: 7.5, count: 2 },
+        { episodeId: "e2", average: 3, count: 0 },
+      ],
+    );
+    expect(summary.byEpisode).toEqual({ e1: { average: 7.5, count: 2 } });
   });
 });

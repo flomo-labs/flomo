@@ -15,6 +15,13 @@ export type RatingGroup = {
   count: number;
 };
 
+// Média e quantidade das notas de um episódio, de todos os usuários.
+export type EpisodeRatingGroup = {
+  episodeId: string;
+  average: number;
+  count: number;
+};
+
 export interface RatingRepository {
   // Grava a nota atual do filme ou do episódio, trocando a anterior.
   upsertMovieRating(
@@ -38,6 +45,8 @@ export interface RatingRepository {
   // Agregados do título somando todos os usuários (função
   // app.title_rating_summary). Roda também sem login.
   summarizeTitle(titleId: string): Promise<RatingGroup[]>;
+  // O mesmo por episódio (app.title_episode_rating_summary), só os que têm nota.
+  summarizeEpisodes(titleId: string): Promise<EpisodeRatingGroup[]>;
 }
 
 // A regra "só se avalia o que foi assistido" usa o estado da biblioteca.

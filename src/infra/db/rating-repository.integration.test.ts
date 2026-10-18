@@ -220,6 +220,11 @@ describe("notas no banco", () => {
             1: { average: 8, count: 3 },
             2: { average: 2, count: 1 },
           },
+          byEpisode: {
+            [c.ep.S1E1]: { average: 8, count: 2 },
+            [c.ep.S1E2]: { average: 8, count: 1 },
+            [c.ep.S2E1]: { average: 2, count: 1 },
+          },
         },
       });
     }));
