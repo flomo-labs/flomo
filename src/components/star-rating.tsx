@@ -67,7 +67,12 @@ export function StarRating({
                 )}
                 onMouseEnter={() => interactive && setHover(half)}
                 onMouseLeave={() => setHover(null)}
-                onClick={() => onChange(half)}
+                onClick={() => {
+                  // Em tela de toque o mouseenter simulado não é desfeito;
+                  // sem isto a pré-visualização ficaria no lugar da nota.
+                  setHover(null);
+                  onChange(half);
+                }}
               />
             ))
           : null}
