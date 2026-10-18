@@ -78,6 +78,27 @@
       "when": 1792286351209,
       "tag": "0010_reviews_guard_fixes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792290066985,
+      "tag": "0011_ratings_por_episodio",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792290079816,
+      "tag": "0012_reviews_para_comments",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792290229648,
+      "tag": "0013_ratings_medias",
+      "breakpoints": true
     }
   ]
 }

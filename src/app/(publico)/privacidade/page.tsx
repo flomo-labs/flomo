@@ -41,7 +41,7 @@ export default function PrivacidadePage() {
           <li>
             <strong>Do que você faz no Flomo</strong>, à medida que as funções
             forem sendo lançadas: títulos que você acompanha, episódios
-            marcados, notas e reviews.
+            marcados, notas e comentários.
           </li>
         </ul>
         <p>
