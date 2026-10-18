@@ -9,8 +9,11 @@ import {
 } from "@/app/_catalog/gateway";
 import { StatusSlot } from "@/app/_library/status-slot";
 import { WatchSlot } from "@/app/_library/watch-slot";
+import { RatingSlot } from "@/app/_ratings/rating-slot";
+import { getRatingSummary } from "@/app/_ratings/state";
 import { Poster } from "@/components/catalog/poster";
 import { WatchProviders } from "@/components/catalog/watch-providers";
+import { RatingAverage } from "@/components/rating-average";
 import { Badge } from "@/components/ui/badge";
 import type { CatalogTitle } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
@@ -85,6 +88,9 @@ async function TitleContent({
           ) : null}
           <p className="text-sm text-muted-foreground">{facts.join(" · ")}</p>
           <Suspense fallback={null}>
+            <TitleAverage titleId={title.id} />
+          </Suspense>
+          <Suspense fallback={null}>
             <StatusSlot titleId={title.id} />
           </Suspense>
           {title.mediaType === "movie" ? (
@@ -94,6 +100,7 @@ async function TitleContent({
                 titleId={title.id}
                 loginHref={loginHref(`/titulo/${title.id}`)}
               />
+              <RatingSlot titleId={title.id} />
             </Suspense>
           ) : null}
           {title.genres.length > 0 ? (
@@ -126,6 +133,26 @@ async function TitleContent({
       ) : null}
     </article>
   );
+}
+
+// Média das notas de todos os usuários: do filme ou, na série, de todos os
+// episódios. Sem nota nenhuma, nada aparece.
+async function TitleAverage({ titleId }: { titleId: string }) {
+  const summary = await getRatingSummary(titleId);
+  if (!summary?.overall) return null;
+  return <RatingAverage average={summary.overall} />;
+}
+
+async function SeasonAverage({
+  titleId,
+  seasonNumber,
+}: {
+  titleId: string;
+  seasonNumber: number;
+}) {
+  const summary = await getRatingSummary(titleId);
+  const average = summary?.bySeason[seasonNumber];
+  return average ? <RatingAverage average={average} /> : null;
 }
 
 function loginHref(next: string) {
@@ -186,6 +213,12 @@ async function Seasons({
         {label(current.seasonNumber)} ·{" "}
         {t("episodeCount", { count: current.episodeCount })}
       </p>
+      <Suspense fallback={null}>
+        <SeasonAverage
+          titleId={title.id}
+          seasonNumber={current.seasonNumber}
+        />
+      </Suspense>
       <Suspense fallback={<p className="text-muted-foreground">…</p>}>
         <Episodes titleId={title.id} seasonNumber={current.seasonNumber} />
       </Suspense>
@@ -242,6 +275,7 @@ async function Episodes({
                 `/titulo/${titleId}?temporada=${seasonNumber}`,
               )}
             />
+            <RatingSlot titleId={titleId} episodeId={episode.id} />
           </Suspense>
         </li>
       ))}
