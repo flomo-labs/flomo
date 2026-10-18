@@ -41,6 +41,17 @@ export const profiles = pgTable(
       "profiles_handle_format",
       sql`char_length(${t.handle}) between 5 and 20 and ${t.handle} ~ '^[a-z0-9]+([._][a-z0-9]+)*$'`,
     ),
+    // Nome de exibição (até 50) e bio (até 160), Fase 1.6: sem texto vazio ou
+    // só de espaços. `char_length` conta caracteres, não bytes; o contrato da
+    // edição do perfil precisa contar igual. Mudar o limite exige migration.
+    check(
+      "profiles_display_name_length",
+      sql`${t.displayName} is null or (char_length(${t.displayName}) between 1 and 50 and ${t.displayName} ~ '\\S')`,
+    ),
+    check(
+      "profiles_bio_length",
+      sql`${t.bio} is null or (char_length(${t.bio}) between 1 and 160 and ${t.bio} ~ '\\S')`,
+    ),
     // Único ignorando os separadores: renato.silva = renato_silva = renatosilva.
     uniqueIndex("profiles_handle_normalized_key").using(
       "btree",
