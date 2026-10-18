@@ -9,6 +9,7 @@ import {
 } from "@/app/_catalog/gateway";
 import { StatusSlot } from "@/app/_library/status-slot";
 import { WatchSlot } from "@/app/_library/watch-slot";
+import { CommentSection } from "@/app/_comments/comment-section";
 import { RatingSlot } from "@/app/_ratings/rating-slot";
 import { getRatingSummary } from "@/app/_ratings/state";
 import { Poster } from "@/components/catalog/poster";
@@ -131,6 +132,13 @@ async function TitleContent({
       {title.mediaType === "tv" && title.seasons.length > 0 ? (
         <Seasons title={title} selected={firstValue(query.temporada)} />
       ) : null}
+
+      <Suspense fallback={null}>
+        <CommentSection
+          titleId={title.id}
+          loginHref={loginHref(`/titulo/${title.id}`)}
+        />
+      </Suspense>
     </article>
   );
 }

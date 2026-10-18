@@ -49,6 +49,26 @@
     "averageAria": "Média {average} de 5 estrelas, {count, plural, one {1 nota} other {# notas}}",
     "failed": "Não foi possível salvar a nota. Tente de novo."
   },
+  "Comments": {
+    "title": "Comentários",
+    "login": "Entre para comentar",
+    "unavailable": "Não foi possível carregar seus comentários agora.",
+    "empty": "Você ainda não comentou neste título.",
+    "body": "Seu comentário",
+    "placeholder": "Escreva um comentário (só você o vê por enquanto)",
+    "spoilersOption": "Este comentário tem spoiler",
+    "spoilersBadge": "Spoiler",
+    "counter": "{count} / {max}",
+    "submit": "Comentar",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "edited": "editado",
+    "remove": "Apagar",
+    "confirmRemove": "Apagar mesmo",
+    "moderated": "Oculto pela moderação",
+    "failed": "Não foi possível salvar o comentário. Tente de novo."
+  },
   "Library": {
     "markWatched": "Marcar como assistido",
     "markOnlyThis": "Marcar só este",
