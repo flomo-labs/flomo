@@ -188,6 +188,8 @@ export function createCatalogStore(
           runtime: titles.runtime,
           status: titles.status,
           backdropPath: titles.backdropPath,
+          tmdbVoteAverage: titles.tmdbVoteAverage,
+          tmdbVoteCount: titles.tmdbVoteCount,
           title: titleTranslations.title,
           overview: titleTranslations.overview,
           posterPath: titleTranslations.posterPath,
@@ -262,6 +264,13 @@ export function createCatalogStore(
             status: row.status as TitleStatus,
             posterPath: row.posterPath,
             backdropPath: row.backdropPath,
+            tmdbRating:
+              row.tmdbVoteAverage !== null && row.tmdbVoteCount !== null
+                ? {
+                    average: Number(row.tmdbVoteAverage),
+                    count: row.tmdbVoteCount,
+                  }
+                : null,
             genres: genreRows.map((g) => g.name),
             seasons: seasonRows,
           },
@@ -294,6 +303,9 @@ export function createCatalogStore(
           runtime: title.runtime,
           status: title.status,
           backdropPath: title.backdropPath,
+          tmdbVoteAverage:
+            title.voteAverage === null ? null : title.voteAverage.toFixed(1),
+          tmdbVoteCount: title.voteCount,
         };
         let titleId: string;
         if (existing) {

@@ -15,6 +15,7 @@ import { getRatingSummary } from "@/app/_ratings/state";
 import { Poster } from "@/components/catalog/poster";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { RatingAverage } from "@/components/rating-average";
+import { TmdbRating } from "@/components/tmdb-rating";
 import { Badge } from "@/components/ui/badge";
 import type { CatalogTitle } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,7 @@ async function TitleContent({
           <Suspense fallback={null}>
             <TitleAverage titleId={title.id} />
           </Suspense>
+          {title.tmdbRating ? <TmdbRating rating={title.tmdbRating} /> : null}
           <Suspense fallback={null}>
             <StatusSlot titleId={title.id} />
           </Suspense>

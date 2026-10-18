@@ -53,6 +53,8 @@ const MOVIE = {
   overview: "Sinopse.",
   poster_path: "/matrix.jpg",
   backdrop_path: "/fundo.jpg",
+  vote_average: 8.2063,
+  vote_count: 25000,
   genres: [{ id: 28, name: "Ação" }],
   budget: 63000000,
 };
@@ -138,6 +140,8 @@ describe("mapMovie", () => {
       runtime: 136,
       status: "released",
       backdropPath: "/fundo.jpg",
+      voteAverage: 8.2,
+      voteCount: 25000,
       translation: {
         locale: "pt-BR",
         title: "Matrix",
@@ -156,6 +160,23 @@ describe("mapMovie", () => {
     );
     expect(movie.status).toBe("unknown");
     expect(movie.runtime).toBeNull();
+  });
+
+  it("sem voto (0 e 0), nota fora de 0 a 10 ou campo ausente: sem nota do TMDB", () => {
+    for (const vote of [
+      { vote_average: 0, vote_count: 0 },
+      { vote_average: 11, vote_count: 5 },
+      { vote_average: -1, vote_count: 5 },
+      { vote_average: 7, vote_count: null },
+      { vote_average: null, vote_count: 5 },
+      {},
+    ]) {
+      const movie = mapMovie(
+        { ...MOVIE, vote_average: undefined, vote_count: undefined, ...vote },
+        "pt-BR",
+      );
+      expect([movie.voteAverage, movie.voteCount]).toEqual([null, null]);
+    }
   });
 });
 

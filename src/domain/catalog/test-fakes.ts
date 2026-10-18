@@ -24,6 +24,8 @@ export function providerTitle(
     runtime: 60,
     status: "ended",
     backdropPath: null,
+    voteAverage: 8.4,
+    voteCount: 25000,
     translation: {
       locale: "pt-BR",
       title: "A Guerra dos Tronos",
@@ -158,6 +160,10 @@ export function memoryStore() {
         status: t.status,
         posterPath: t.translation.posterPath,
         backdropPath: t.backdropPath,
+        tmdbRating:
+          t.voteAverage !== null && t.voteCount !== null
+            ? { average: t.voteAverage, count: t.voteCount }
+            : null,
         genres: t.genres.map((g) => g.name),
         seasons: t.seasons.map((s) => ({
           id: `${id}-s${s.seasonNumber}`,
