@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon } from "lucide-react";
+import { Icon } from "@/components/icon";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,7 +118,7 @@ export function StatusControl({
           />
         }
       >
-        <CheckIcon data-icon="inline-start" />
+        <Icon name="check" data-icon="inline-start" />
         {labels.inLibrary}
       </DialogTrigger>
       <DialogContent>

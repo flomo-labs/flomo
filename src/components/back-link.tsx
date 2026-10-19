@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon } from "lucide-react";
+import { Icon } from "@/components/icon";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -49,7 +49,7 @@ export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
         }
       }}
     >
-      <ArrowLeftIcon data-icon="inline-start" />
+      <Icon name="arrowBack" data-icon="inline-start" />
       Voltar
     </Button>
   );

@@ -8,7 +8,7 @@ import {
 } from "./nav-items";
 
 describe("isNavItemActive", () => {
-  it("marca Início na Home, em Seguintes e em /inicio", () => {
+  it("marca Seguintes na Home, em Seguintes e em /inicio", () => {
     for (const path of ["/", "/seguintes", "/inicio"]) {
       expect(isNavItemActive(HOME_ITEM, path)).toBe(true);
     }

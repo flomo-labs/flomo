@@ -1,5 +1,5 @@
 // Dados puros (passam do servidor para os componentes de cliente).
-export type NavIcon = "home" | "discover" | "library" | "profile";
+export type NavIcon = "following" | "discover" | "library" | "profile";
 
 export type NavItem = {
   href: string;
@@ -19,11 +19,11 @@ export function isNavItemActive(item: NavItem, pathname: string): boolean {
   );
 }
 
-// Início hoje leva à tela escolhida pelo usuário (Home ou Seguintes).
+// Seguintes hoje leva à tela escolhida pelo usuário (Home ou Seguintes).
 export const HOME_ITEM: NavItem = {
   href: "/inicio",
-  label: "Início",
-  icon: "home",
+  label: "Seguintes",
+  icon: "following",
   exact: ["/", "/seguintes", "/inicio"],
   fullNavigation: true,
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { StarIcon } from "lucide-react";
+import { Icon } from "@/components/icon";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -41,12 +41,12 @@ export function StarRating({
     const fill = Math.min(Math.max(shown / 2 - i, 0), 1) * 100;
     return (
       <span key={i} className="relative inline-flex size-6">
-        <StarIcon className="size-6 text-muted-foreground/40" aria-hidden />
+        <Icon name="star" filled className="size-6 text-muted-foreground/30" />
         <span
           className="absolute inset-y-0 left-0 overflow-hidden"
           style={{ width: `${fill}%` }}
         >
-          <StarIcon className="size-6 fill-current text-primary" aria-hidden />
+          <Icon name="star" filled className="size-6 text-primary" />
         </span>
         {onChange
           ? [i * 2 + 1, i * 2 + 2].map((half) => (
