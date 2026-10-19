@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { getProfilePage } from "@/domain/profile/profile-page";
 import { getStartScreen } from "@/domain/profile/start-screen";
@@ -11,9 +12,10 @@ import { createSettingsRepository } from "@/infra/db/settings-repository";
 import type { CurrentUser } from "../_auth/session";
 import { START_SCREEN_PATH } from "./start-screen-path";
 
-export function getOwnProfile(user: CurrentUser) {
-  return withUser(user.claims, (tx) => findOwnProfile(tx, user.id));
-}
+// Uma consulta por requisição: o cabeçalho e a barra do celular usam o mesmo.
+export const getOwnProfile = cache((user: CurrentUser) =>
+  withUser(user.claims, (tx) => findOwnProfile(tx, user.id)),
+);
 
 // Página do perfil de alguém (ou o próprio), com as regras de visibilidade.
 export function loadProfilePage(user: CurrentUser, handle: string) {

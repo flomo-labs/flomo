@@ -53,6 +53,9 @@ export function UserMenu({
             Meu perfil
           </DropdownMenuItem>
         ) : null}
+        <DropdownMenuItem render={<Link href="/biblioteca" />}>
+          Biblioteca
+        </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/configuracoes" />}>
           Configurações
         </DropdownMenuItem>
