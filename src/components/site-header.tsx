@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { signOut } from "@/app/_auth/actions";
 import { getCurrentUser } from "@/app/_auth/session";
-import { getOwnProfile } from "@/app/_profile/queries";
+import { getOwnProfile, profilePath } from "@/app/_profile/queries";
 import { UserMenu } from "./user-menu";
 
 export function SiteHeader() {
@@ -83,6 +83,7 @@ async function Account() {
       label={handle ? `@${handle}` : "Minha conta"}
       initials={handle ? handle.slice(0, 2).toUpperCase() : "?"}
       needsHandle={!handle}
+      profileHref={handle ? profilePath(handle) : null}
       signOut={signOut}
     />
   );

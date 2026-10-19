@@ -16,11 +16,13 @@ export function UserMenu({
   label,
   initials,
   needsHandle,
+  profileHref,
   signOut,
 }: {
   label: string;
   initials: string;
   needsHandle: boolean;
+  profileHref: string | null;
   signOut: () => Promise<void>;
 }) {
   return (
@@ -44,6 +46,11 @@ export function UserMenu({
         {needsHandle ? (
           <DropdownMenuItem render={<Link href="/cadastro" />}>
             Escolher nome de usuário
+          </DropdownMenuItem>
+        ) : null}
+        {profileHref ? (
+          <DropdownMenuItem render={<Link href={profileHref} />}>
+            Meu perfil
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem render={<Link href="/configuracoes" />}>

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { handleSchema, isProvisionalHandle, normalizeHandle } from "./profile";
+import {
+  handleSchema,
+  isProvisionalHandle,
+  normalizeHandle,
+  updateProfileInputSchema,
+} from "./profile";
 
 describe("handleSchema", () => {
   it("aceita handles válidos", () => {
@@ -86,5 +91,57 @@ describe("isProvisionalHandle", () => {
     ]) {
       expect(isProvisionalHandle(handle)).toBe(false);
     }
+  });
+});
+
+describe("updateProfileInputSchema", () => {
+  const base = {
+    displayName: "Ana",
+    bio: "Gosto de séries.",
+    isPrivate: false,
+  };
+
+  it("corta as pontas e aceita até 50 e 160 caracteres", () => {
+    const parsed = updateProfileInputSchema.parse({
+      displayName: `  ${"n".repeat(50)}  `,
+      bio: "b".repeat(160),
+      isPrivate: true,
+    });
+    expect(parsed).toEqual({
+      displayName: "n".repeat(50),
+      bio: "b".repeat(160),
+      isPrivate: true,
+    });
+  });
+
+  it("conta caracteres como o banco (emoji de um código vale 1)", () => {
+    expect(
+      updateProfileInputSchema.safeParse({
+        ...base,
+        displayName: "🎬".repeat(50),
+      }).success,
+    ).toBe(true);
+  });
+
+  it("recusa acima do limite", () => {
+    expect(
+      updateProfileInputSchema.safeParse({
+        ...base,
+        displayName: "n".repeat(51),
+      }).success,
+    ).toBe(false);
+    expect(
+      updateProfileInputSchema.safeParse({ ...base, bio: "b".repeat(161) })
+        .success,
+    ).toBe(false);
+  });
+
+  it("vazio ou só espaços vira null", () => {
+    expect(
+      updateProfileInputSchema.parse({ ...base, displayName: "   ", bio: "" }),
+    ).toMatchObject({ displayName: null, bio: null });
+    expect(
+      updateProfileInputSchema.parse({ ...base, bio: "\u0085" }).bio,
+    ).toBeNull();
   });
 });

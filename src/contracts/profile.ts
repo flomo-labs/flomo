@@ -98,3 +98,33 @@ export type StartScreen = (typeof START_SCREENS)[number];
 export const setStartScreenInputSchema = z.object({
   startScreen: z.enum(START_SCREENS),
 });
+
+// Nome de exibição e bio (Fase 1.6). Os limites valem aqui e nos CHECKs de
+// `profiles` (migration 0016): mudar um exige mudar o outro. O banco conta
+// caracteres, não unidades UTF-16; `[...s].length` conta como ele.
+export const DISPLAY_NAME_MAX_LENGTH = 50;
+export const BIO_MAX_LENGTH = 160;
+
+// Texto opcional: cortado nas pontas; vazio ou só espaços vira `null` (sem
+// nome ou sem bio). U+0085 conta como espaço, como no banco.
+function optionalText(max: number, message: string) {
+  return z
+    .string()
+    .trim()
+    .refine((s) => [...s].length <= max, { message })
+    .transform((s) => (/[^\s\u0085]/.test(s) ? s : null));
+}
+
+export const updateProfileInputSchema = z.object({
+  displayName: optionalText(
+    DISPLAY_NAME_MAX_LENGTH,
+    `O nome pode ter até ${DISPLAY_NAME_MAX_LENGTH} caracteres.`,
+  ),
+  bio: optionalText(
+    BIO_MAX_LENGTH,
+    `A bio pode ter até ${BIO_MAX_LENGTH} caracteres.`,
+  ),
+  isPrivate: z.boolean(),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
