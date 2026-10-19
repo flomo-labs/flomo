@@ -12,8 +12,6 @@
       "Bash(pnpm test:integration *)",
       "Bash(git fetch origin)",
       "Bash(git fetch origin main)",
-      "Bash(git config user.name \"Renato Montini\")",
-      "Bash(git config user.email renatohmc@gmail.com)",
       "Bash(service postgresql start)",
       "Bash(pg_isready *)",
       "Bash(psql -h localhost -U postgres -d flomo_ci -v ON_ERROR_STOP=1 -q -f scripts/ci/supabase-stub.sql)",
