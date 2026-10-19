@@ -114,6 +114,10 @@ describe("updateProfileInputSchema", () => {
     });
   });
 
+  it("recusa o caractere nulo, que o banco não guarda", () => {
+    expect(updateProfileInputSchema.safeParse({ ...base, bio: "a\u0000b" }).success).toBe(false);
+  });
+
   it("conta caracteres como o banco (emoji de um código vale 1)", () => {
     expect(
       updateProfileInputSchema.safeParse({
