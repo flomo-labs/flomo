@@ -83,7 +83,7 @@ Anote em local seguro. Você vai usá-los na parte B.
 
 > **Atenção ao usuário da URL.** No pooler, o usuário é **`postgres.<ref>`** (com o ref do projeto). Só `postgres` (conexão direta) não funciona no pooler e dá o erro `password authentication failed for user "postgres"`.
 
-> **Usuário do app.** A `DATABASE_URL` usa o usuário **`flomo_app`**, criado pela migration 0019: ele não é dono das tabelas, não ignora o RLS e só alcança o catálogo (dados de usuário só pelas policies). A `DATABASE_URL_MIGRATIONS` continua com `postgres`. Depois de aplicar as migrations (A.4), no **SQL Editor** do projeto, rode `alter role flomo_app with password '<senha forte>';` e monte a `DATABASE_URL` com a URL do Transaction pooler trocando o usuário por **`flomo_app.<ref>`** e a senha por essa nova.
+> **Usuário do app.** A `DATABASE_URL` usa o usuário **`flomo_app`**, criado pela migration 0019: ele não é dono das tabelas, não ignora o RLS e, sozinho, só alcança o catálogo (dados de usuário só pelas policies, como o usuário logado). A `DATABASE_URL_MIGRATIONS` continua com `postgres`. Só depois do passo A.4 (o usuário nasce na migration), no **SQL Editor** do projeto, rode `alter role flomo_app with password '<senha forte>';` e monte a `DATABASE_URL` com a URL do Transaction pooler trocando o usuário por **`flomo_app.<ref>`** e a senha por essa nova. O SQL Editor guarda o histórico de consultas: apague a consulta com a senha depois de rodar. Logo depois de trocar a `DATABASE_URL`, abra `/cadastro` e uma página de título para conferir a conexão.
 
 ### A.4 Aplicar as migrations
 

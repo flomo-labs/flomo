@@ -22,7 +22,7 @@ import { authenticatedRole } from "drizzle-orm/supabase";
 // O RLS fica ligado em todas as tabelas: o papel `authenticated` só lê, para
 // as consultas de biblioteca (dentro do `withUser`) poderem juntar títulos e
 // episódios; quem escreve é o usuário do app no banco, `flomo_app` (criado na
-// migration 0019), que só tem acesso ao catálogo. O id do provedor nunca é PK:
+// migration 0019), que por conta própria só alcança o catálogo. O id do provedor nunca é PK:
 // fica em `external_ids`.
 
 const timestamps = {

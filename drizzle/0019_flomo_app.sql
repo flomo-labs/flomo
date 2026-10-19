@@ -2,9 +2,16 @@
 --
 -- Até aqui o app se conectava como `postgres`, dono das tabelas: um erro de
 -- código ou uma injeção de SQL que saísse do papel `authenticated` (reset
--- role) passava a ler e apagar tudo. `flomo_app` não é dono de nada, não
--- ignora o RLS e só alcança o catálogo, que é público; dados de usuário só
--- com `set local role authenticated` dentro do `withUser`, sob as policies.
+-- role) passava a ler e apagar tudo de uma vez, e até mudar o schema.
+-- `flomo_app` não é dono de nada, não ignora o RLS, não faz DDL nem TRUNCATE
+-- e, por conta própria, só alcança o catálogo, que é público. Dados de
+-- usuário só com `set local role authenticated` e as claims de um usuário,
+-- sob as policies. Limite: quem injetar SQL ainda pode se passar por um
+-- usuário de cada vez (as claims vêm do app); o ganho é tirar o acesso total.
+--
+-- - Moderação de comentários: o gatilho de 0012 só aceita mudar a
+--   moderação como `postgres`; quando houver moderação pelo servidor, ela
+--   precisa de outro caminho.
 --
 -- - NOINHERIT: as permissões de `authenticated` só valem depois do
 --   `set role`, não na conexão em si.

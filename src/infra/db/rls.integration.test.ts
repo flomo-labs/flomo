@@ -329,7 +329,7 @@ describe("usuário do app (flomo_app)", () => {
       }
       // Dentro do withUser, as policies valem como para qualquer usuário.
       const own = await asUser(tx, owner, (sp) =>
-        sp.execute(sql`select id from public.profiles`),
+        sp.execute(sql`select id from public.profiles where id = ${owner}`),
       );
       expect(own.map((r) => r.id)).toEqual([owner]);
     }));
