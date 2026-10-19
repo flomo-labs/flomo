@@ -86,6 +86,41 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // Injeção de SQL: valor nunca vai colado no texto do comando. O `sql`
+  // do Drizzle manda os valores à parte; estas saídas colam texto cru.
+  // Exceções: definições de schema (CHECKs com listas fixas do código) e
+  // testes (nomes de papel e de tabela escritos no próprio teste). Se um
+  // caso novo parecer precisar delas, use `sql` com parâmetros ou
+  // `sql.identifier`; não desative a regra com eslint-disable.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/infra/db/schema/**",
+      "src/**/*.{test,spec}.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "MemberExpression[object.name='sql'][property.name='raw']",
+          message:
+            "sql.raw cola texto cru no comando (risco de injeção de SQL). Use o template sql`...` com parâmetros.",
+        },
+        {
+          selector: "CallExpression[callee.property.name='unsafe']",
+          message:
+            ".unsafe() do postgres.js executa texto cru (risco de injeção de SQL). Use o template sql`...` do Drizzle.",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='execute'][arguments.0.type=/^(TemplateLiteral|BinaryExpression)$/]",
+          message:
+            "execute() com texto montado na mão é injeção de SQL esperando acontecer. Use o template sql`...` do Drizzle.",
+        },
+      ],
+    },
+  },
+
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
