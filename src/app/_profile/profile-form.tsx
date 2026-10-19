@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BIO_MAX_LENGTH, DISPLAY_NAME_MAX_LENGTH } from "@/contracts/profile";
+import { BIO_MAX_LENGTH } from "@/contracts/profile";
 import { saveProfile } from "./actions";
 
 type Props = {
@@ -14,12 +14,24 @@ type Props = {
 };
 
 // Nome de exibição, bio e perfil privado. Os campos são controlados: o React
-// limpa o formulário ao fim da ação, e o Checkbox não volta sozinho.
+// limpa o formulário ao fim da ação, e o Checkbox não volta sozinho. Sem
+// `maxLength`: o navegador conta unidades UTF-16 (um emoji vale dois) e o
+// limite conta caracteres; quem barra é o servidor, e o contador avisa.
 export function ProfileForm({ defaults }: Props) {
   const [state, formAction, pending] = useActionState(saveProfile, {});
   const [displayName, setDisplayName] = useState(defaults.displayName);
   const [bio, setBio] = useState(defaults.bio);
   const [isPrivate, setIsPrivate] = useState(defaults.isPrivate);
+  // Depois de salvar, mostra o que ficou gravado (sem os espaços das pontas).
+  const [shownState, setShownState] = useState(state);
+  if (state !== shownState) {
+    setShownState(state);
+    if (state.saved && state.submitted) {
+      setDisplayName(state.submitted.displayName);
+      setBio(state.submitted.bio);
+      setIsPrivate(state.submitted.isPrivate);
+    }
+  }
   const bioLength = [...bio].length;
   const errorId = "perfil-erro";
 
@@ -31,7 +43,6 @@ export function ProfileForm({ defaults }: Props) {
         name="displayName"
         value={displayName}
         onChange={(event) => setDisplayName(event.target.value)}
-        maxLength={DISPLAY_NAME_MAX_LENGTH}
         autoComplete="name"
         aria-invalid={state.error ? true : undefined}
         aria-describedby={state.error ? errorId : undefined}
@@ -42,7 +53,6 @@ export function ProfileForm({ defaults }: Props) {
         name="bio"
         value={bio}
         onChange={(event) => setBio(event.target.value)}
-        maxLength={BIO_MAX_LENGTH}
         aria-invalid={state.error ? true : undefined}
         aria-describedby={state.error ? `${errorId} bio-contador` : "bio-contador"}
       />

@@ -112,6 +112,8 @@ function optionalText(max: number, message: string) {
     .string()
     .trim()
     .refine((s) => [...s].length <= max, { message })
+    // O Postgres não guarda o caractere nulo em `text`.
+    .refine((s) => !s.includes("\u0000"), { message: "Use só caracteres de texto." })
     .transform((s) => (/[^\s\u0085]/.test(s) ? s : null));
 }
 

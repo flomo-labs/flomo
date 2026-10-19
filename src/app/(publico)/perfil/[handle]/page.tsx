@@ -32,7 +32,8 @@ async function ProfileContent({
   params,
 }: Pick<PageProps<"/perfil/[handle]">, "params">) {
   const { handle } = await params;
-  const raw = decodeURIComponent(handle);
+  // O Next já decodifica o parâmetro; nenhum handle válido tem `%`.
+  const raw = handle;
   const user = await requireUser(profilePath(raw));
   const result = await loadProfilePage(user, raw);
   if (!result.ok) notFound();
