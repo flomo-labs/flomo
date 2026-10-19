@@ -159,13 +159,19 @@ describe("policies de profiles", () => {
   it("anon não vê perfis", () =>
     inRollback(async (tx) => {
       const id = await createUser(tx);
-      const rows = await asAnon(tx, (atx) =>
-        atx
-          .select({ id: profiles.id })
-          .from(profiles)
-          .where(eq(profiles.id, id)),
+      // Sem grant nenhum desde a 0018.
+      await expect(
+        asAnon(tx, (atx) =>
+          atx
+            .select({ id: profiles.id })
+            .from(profiles)
+            .where(eq(profiles.id, id)),
+        ),
+      ).rejects.toEqual(
+        expect.objectContaining({
+          cause: expect.objectContaining({ code: INSUFFICIENT_PRIVILEGE }),
+        }),
       );
-      expect(rows).toHaveLength(0);
     }));
 
   it("admin (papel do servidor) vê todos os perfis, inclusive privados", () =>

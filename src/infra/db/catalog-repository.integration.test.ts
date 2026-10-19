@@ -255,15 +255,21 @@ describe("RLS do catálogo", () => {
       );
     }));
 
+  // Sem grant nenhum desde a 0018: o visitante lê o catálogo pelo servidor.
   it("anon não lê o catálogo direto do banco", () =>
     inRollback(async (tx) => {
       const store = createCatalogStore(tx, PROVIDER);
       await store.writeTitle(providerTitle(), EXPIRES);
-      const rows = await tx.transaction(async (sp) => {
-        await sp.execute(sql`set local role anon`);
-        return sp.select().from(titles);
-      });
-      expect(rows).toHaveLength(0);
+      await expect(
+        tx.transaction(async (sp) => {
+          await sp.execute(sql`set local role anon`);
+          await sp.select().from(titles);
+        }),
+      ).rejects.toEqual(
+        expect.objectContaining({
+          cause: expect.objectContaining({ code: "42501" }),
+        }),
+      );
     }));
 });
 

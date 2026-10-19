@@ -29,6 +29,9 @@ Precisa de Docker e da CLI do Supabase (`pnpm dlx supabase@2.121.0`).
    `TMDB_READ_ACCESS_TOKEN=e2e-tmdb-falso` e
    `TMDB_BASE_URL=http://localhost:3999/3`.
 4. `pnpm db:migrate`
+   Para rodar como o CI e a produção, com o usuário restrito do app: no banco
+   local, `alter role flomo_app with password 'flomo-e2e'`, e troque o
+   usuário e a senha da `DATABASE_URL` por `flomo_app:flomo-e2e`.
 5. `pnpm build` (o build guarda as variáveis `NEXT_PUBLIC_*`; não reaproveite
    um build feito com o `.env.local`)
 6. `pnpm exec playwright install chromium` (só na primeira vez; se já houver

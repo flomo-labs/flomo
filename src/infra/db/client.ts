@@ -22,8 +22,9 @@ export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 // Reaproveita o pool entre recargas do `next dev`.
 const globalForDb = globalThis as unknown as { flomoDb?: Db };
 
-// Cliente com o papel do servidor: IGNORA o RLS. Só para catálogo, jobs e
-// tarefas administrativas. Dados de usuário passam por `withUser` (ADR-003).
+// Cliente com o usuário do app (`flomo_app`, migration 0019): sozinho, lê e
+// grava o catálogo e chama as funções de média, sob o RLS. Dados de usuário
+// passam por `withUser` (ADR-003).
 export function getDb(): Db {
   globalForDb.flomoDb ??= createDb();
   return globalForDb.flomoDb;

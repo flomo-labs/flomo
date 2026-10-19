@@ -184,14 +184,19 @@ describe("policies da biblioteca", () => {
       const c = await createCatalog(tx);
       await seedLibrary(tx, owner, c);
 
-      const seen = await tx.transaction(async (sp) => {
-        await sp.execute(sql`set local role anon`);
-        const rows = await countRows(sp, owner);
-        // Liberar o savepoint não desfaz o `set local`.
-        await sp.execute(sql`reset role`);
-        return rows;
-      });
-      expect(seen).toEqual([0, 0, 0]);
+      // Sem grant nenhum desde a 0018.
+      for (const table of [userTitles, userEpisodeProgress, watchEvents]) {
+        await expect(
+          tx.transaction(async (sp) => {
+            await sp.execute(sql`set local role anon`);
+            await sp.select().from(table).where(eq(table.userId, owner));
+          }),
+        ).rejects.toEqual(
+          expect.objectContaining({
+            cause: expect.objectContaining({ code: "42501" }),
+          }),
+        );
+      }
     }));
 });
 

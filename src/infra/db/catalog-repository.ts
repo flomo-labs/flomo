@@ -40,8 +40,8 @@ function lock(tx: Tx, key: string) {
   );
 }
 
-// Cache do catálogo no Postgres. Usa o cliente do servidor (sem RLS), o que
-// o ADR-003 permite para o catálogo, que é público.
+// Cache do catálogo no Postgres. Usa o cliente do servidor (`flomo_app`, que
+// só escreve no catálogo, sob as policies dele).
 export function createCatalogStore(
   db: Db | Tx,
   provider: string,

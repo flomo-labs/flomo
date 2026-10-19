@@ -113,6 +113,19 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - run: pnpm db:migrate
+
+      # O app usa o usuário restrito, como em produção (migration 0019). A
+      # senha só vale neste Supabase local, descartado ao fim do job.
+      - name: App com o usuário flomo_app
+        run: |
+          psql "$DATABASE_URL_MIGRATIONS" -v ON_ERROR_STOP=1 -q -c "alter role flomo_app with password 'flomo-e2e'"
+          url="${DATABASE_URL_MIGRATIONS/postgres:postgres@/flomo_app:flomo-e2e@}"
+          if [ "$url" = "$DATABASE_URL_MIGRATIONS" ]; then
+            echo "::error::DB_URL do Supabase local mudou de formato; ajuste a troca de usuário."
+            exit 1
+          fi
+          echo "DATABASE_URL=$url" >> "$GITHUB_ENV"
+
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
