@@ -1,0 +1,56 @@
+# Supabase local, usado só pelo E2E (e2e/README.md). Não é o flomo-dev nem a
+# produção: sobe com `supabase start`, só com Postgres e Auth, e o schema vem
+# das migrations do Drizzle (pnpm db:migrate), não de supabase/migrations.
+# NUNCA rode `supabase link` nem `supabase config push` com este arquivo: ele
+# liga cadastro por senha sem confirmação e aponta o site para localhost.
+project_id = "flomo-e2e"
+
+[api]
+# Data API desligada, como nos projetos de verdade (ADR-003).
+enabled = false
+port = 54321
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = false
+
+[db.seed]
+enabled = false
+
+[db.pooler]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = false
+
+[storage]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+jwt_expiry = 3600
+enable_signup = true
+
+# O E2E entra com e-mail e senha de um usuário criado pelo próprio teste; o
+# app continua oferecendo só o Google.
+[auth.email]
+enable_signup = true
+enable_confirmations = false

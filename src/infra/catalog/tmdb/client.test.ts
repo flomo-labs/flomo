@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { CatalogUnavailableError } from "@/domain/catalog/ports";
-import { createTmdbClient, retryDelayMs } from "./client";
+import { createTmdbClient, localTmdbBaseUrl, retryDelayMs } from "./client";
 
 const V3_KEY = "0123456789abcdef0123456789abcdef";
 const V4_TOKEN = "eyJhbGciOiJIUzI1NiJ9.e30.assinatura";
@@ -46,6 +46,39 @@ describe("createTmdbClient", () => {
     expect(
       (init?.headers as Record<string, string>).authorization,
     ).toBeUndefined();
+  });
+
+  it("aceita outra URL base (TMDB falso do E2E)", async () => {
+    const fetch = vi.fn(async (input: URL | RequestInfo) => {
+      void input;
+      return json(200);
+    });
+    const client = createTmdbClient({
+      credential: V4_TOKEN,
+      baseUrl: "http://localhost:3999/3/",
+      fetch,
+    });
+    await client.get("tv/1", { language: "pt-BR" });
+    expect(String(fetch.mock.calls[0][0])).toBe(
+      "http://localhost:3999/3/tv/1?language=pt-BR",
+    );
+  });
+
+  it("URL base fora de localhost é ignorada (vale a do TMDB)", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(localTmdbBaseUrl(undefined)).toBeUndefined();
+    expect(localTmdbBaseUrl("")).toBeUndefined();
+    expect(localTmdbBaseUrl("http://localhost:3999/3")).toBe(
+      "http://localhost:3999/3",
+    );
+    expect(localTmdbBaseUrl("http://127.0.0.1:3999/3")).toBe(
+      "http://127.0.0.1:3999/3",
+    );
+    expect(localTmdbBaseUrl("https://exemplo.com/3")).toBeUndefined();
+    expect(localTmdbBaseUrl("http://localhost.exemplo.com/3")).toBeUndefined();
+    expect(localTmdbBaseUrl("não é url")).toBeUndefined();
+    expect(error).toHaveBeenCalledTimes(3);
+    error.mockRestore();
   });
 
   it("404 vira null", async () => {

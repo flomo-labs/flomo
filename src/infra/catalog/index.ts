@@ -5,7 +5,11 @@ import {
 } from "@/domain/catalog/ports";
 import { getDb } from "../db/client";
 import { createCatalogStore } from "../db/catalog-repository";
-import { createTmdbClient, type TmdbClient } from "./tmdb/client";
+import {
+  createTmdbClient,
+  localTmdbBaseUrl,
+  type TmdbClient,
+} from "./tmdb/client";
 import { createTmdbProvider, TMDB_PROVIDER } from "./tmdb/provider";
 
 // Um cliente por instância do servidor: o limite de concorrência só vale se
@@ -24,7 +28,10 @@ function getTmdbClient(): TmdbClient {
     );
     throw new CatalogUnavailableError("TMDB não configurado.");
   }
-  globalForTmdb.flomoTmdb ??= createTmdbClient({ credential });
+  globalForTmdb.flomoTmdb ??= createTmdbClient({
+    credential,
+    baseUrl: localTmdbBaseUrl(process.env.TMDB_BASE_URL),
+  });
   return globalForTmdb.flomoTmdb;
 }
 

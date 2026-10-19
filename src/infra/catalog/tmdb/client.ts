@@ -6,12 +6,28 @@ import { createLimiter } from "../limiter";
 // `server-only`). Limita as chamadas simultâneas e tenta de novo quando o TMDB
 // responde 429, respeitando o `Retry-After`.
 
-const BASE_URL = "https://api.themoviedb.org/3";
+const DEFAULT_BASE_URL = "https://api.themoviedb.org/3";
+
+// URL do TMDB falso do E2E. Vazia em produção; só aceita endereço local, para
+// que um valor errado no ambiente não mande a credencial para outro servidor.
+export function localTmdbBaseUrl(value: string | undefined) {
+  if (!value) return undefined;
+  try {
+    const { hostname } = new URL(value);
+    if (hostname === "localhost" || hostname === "127.0.0.1") return value;
+  } catch {
+    // cai no aviso abaixo
+  }
+  console.error("TMDB_BASE_URL ignorada: só vale endereço local (E2E).");
+  return undefined;
+}
 
 export type TmdbClientOptions = {
   // Token de leitura (v4, enviado como Bearer) ou chave da API (v3, enviada
   // como `api_key`). O token é o recomendado: não aparece na URL.
   credential: string;
+  // Só o E2E troca (TMDB falso em e2e/tmdb-fake/); o padrão é a API real.
+  baseUrl?: string;
   maxConcurrent?: number;
   maxRetries?: number;
   timeoutMs?: number;
@@ -68,6 +84,7 @@ const defaultSleep = (ms: number) =>
 export function createTmdbClient(options: TmdbClientOptions): TmdbClient {
   const {
     credential,
+    baseUrl = DEFAULT_BASE_URL,
     maxConcurrent = 8,
     maxRetries = 3,
     timeoutMs = 8000,
@@ -87,7 +104,9 @@ export function createTmdbClient(options: TmdbClientOptions): TmdbClient {
 
   return {
     async get(path, params = {}) {
-      const url = new URL(`${BASE_URL}/${path.replace(/^\//, "")}`);
+      const url = new URL(
+        `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`,
+      );
       for (const [name, value] of Object.entries(params)) {
         url.searchParams.set(name, String(value));
       }
