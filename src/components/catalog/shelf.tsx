@@ -55,7 +55,7 @@ export function ShelfSkeleton() {
       {Array.from({ length: 5 }, (_, i) => (
         <div
           key={i}
-          className="aspect-[2/3] animate-pulse rounded-lg bg-muted"
+          className="aspect-[2/3] animate-pulse rounded-poster bg-muted"
         />
       ))}
     </div>

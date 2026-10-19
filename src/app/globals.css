@@ -46,6 +46,41 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Tokens de layout e forma da interface (Fase 1.8, direção A). Telas usam
+     estes nomes, nunca valores soltos: trocar o visual depois mexe só aqui. */
+  --radius-poster: 0.75rem;
+  --radius-card: 1rem;
+  /* Largura da página. Hoje 48rem (a coluna de antes); sobe para 70rem junto
+     com as telas que usam grades largas (PR 4). */
+  --container-page: 48rem;
+  --container-reading: 48rem;
+}
+
+/* Coluna principal: margem de 16px no celular e 32px a partir de 768px. */
+@utility page-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-page);
+  padding-inline: 1rem;
+  @media (min-width: 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Escala de títulos: página (24px no celular, 30px no desktop) e seção. */
+@utility text-page-title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  @media (min-width: 48rem) {
+    font-size: 1.875rem;
+  }
+}
+
+@utility text-section-title {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 600;
 }
 
 :root {

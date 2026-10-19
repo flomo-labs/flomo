@@ -106,7 +106,7 @@ async function StatsList({ stats, label }: { stats: ProfileStats; label: string 
         {items.map(({ key, count }) => (
           <div
             key={key}
-            className="flex flex-col-reverse rounded-lg border border-border p-3"
+            className="flex flex-col-reverse rounded-card border border-border p-3"
           >
             <dt className="text-sm text-muted-foreground">{t(key, { count })}</dt>
             <dd className="text-2xl font-semibold tabular-nums">

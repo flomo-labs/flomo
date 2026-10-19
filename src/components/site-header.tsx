@@ -10,7 +10,7 @@ import { UserMenu } from "./user-menu";
 export function SiteHeader() {
   return (
     <header className="border-b border-border py-3">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-6">
+      <div className="page-container flex items-center justify-between">
         <div className="flex items-center gap-5">
           <Link href="/" className="text-lg font-bold">
             Flomo
@@ -46,7 +46,7 @@ async function NavLinks() {
     <>
       {signedIn && (
         // Rota que redireciona (e grava cookie): navegação completa, sem Link.
-        <a href="/inicio" className={NAV_LINK_CLASS}>
+        <a href="/inicio" className={`${NAV_LINK_CLASS} hidden sm:inline`}>
           Início
         </a>
       )}

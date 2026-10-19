@@ -41,7 +41,7 @@ export async function CommentSection({
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="comentarios">
-      <h2 id="comentarios" className="text-xl font-semibold">
+      <h2 id="comentarios" className="text-section-title">
         {t("title")}
       </h2>
       {view.kind === "anonymous" ? (

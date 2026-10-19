@@ -96,7 +96,7 @@ export async function FollowingShortcut() {
   return (
     <section className="flex flex-col gap-3" aria-labelledby="seguintes">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id="seguintes" className="text-xl font-semibold">
+        <h2 id="seguintes" className="text-section-title">
           {t("title")}
         </h2>
         <Link

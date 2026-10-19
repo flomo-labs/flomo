@@ -24,7 +24,7 @@ export default function BibliotecaPage() {
 
 async function Heading() {
   const t = await getTranslations("LibraryPage");
-  return <h1 className="text-3xl font-bold">{t("title")}</h1>;
+  return <h1 className="text-page-title">{t("title")}</h1>;
 }
 
 async function Body() {
