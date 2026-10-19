@@ -25,6 +25,9 @@ function fakeProfiles(initial: Record<string, string>) {
       handles.set(userId, handle);
       return "updated";
     },
+    findByHandle: async () => null,
+    getStats: async () => null,
+    updateDetails: async () => "not_found",
   };
   return { repo, handles };
 }

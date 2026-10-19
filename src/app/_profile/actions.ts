@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { StartScreen } from "@/contracts/profile";
 import { fail, type Result, type UseCaseError } from "@/domain/result";
@@ -8,6 +9,7 @@ import {
   type ChangeHandleErrorCode,
 } from "@/domain/profile/change-handle";
 import { withUser } from "@/infra/db/client";
+import { updateProfile } from "@/domain/profile/profile-page";
 import { setStartScreen } from "@/domain/profile/start-screen";
 import { createProfileRepository } from "@/infra/db/profile-repository";
 import { createSettingsRepository } from "@/infra/db/settings-repository";
@@ -90,4 +92,51 @@ export async function changeStartScreen(
       input,
     ),
   );
+}
+
+export type ProfileFormState = {
+  error?: UseCaseError<"INVALID_INPUT" | "PROFILE_NOT_FOUND" | "UNAUTHENTICATED">;
+  saved?: boolean;
+  // O que foi enviado: o React limpa o formulário ao fim da ação.
+  submitted?: { displayName: string; bio: string; isPrivate: boolean };
+};
+
+function text(formData: FormData, name: string) {
+  const value = formData.get(name);
+  return typeof value === "string" ? value : "";
+}
+
+// Nome de exibição, bio e privacidade, nas configurações.
+export async function saveProfile(
+  _prev: ProfileFormState,
+  formData: FormData,
+): Promise<ProfileFormState> {
+  const submitted = {
+    displayName: text(formData, "displayName"),
+    bio: text(formData, "bio"),
+    isPrivate: formData.get("isPrivate") === "on",
+  };
+  const user = await getCurrentUser();
+  if (!user) {
+    return {
+      error: {
+        code: "UNAUTHENTICATED",
+        message: "Sua sessão expirou. Entre de novo.",
+      },
+      submitted,
+    };
+  }
+  const result = await withUser(user.claims, (tx) =>
+    updateProfile({ profiles: createProfileRepository(tx) }, user, submitted),
+  );
+  if (!result.ok) return { error: result.error, submitted };
+  revalidatePath("/perfil/[handle]", "page");
+  return {
+    saved: true,
+    submitted: {
+      displayName: result.value.displayName ?? "",
+      bio: result.value.bio ?? "",
+      isPrivate: result.value.isPrivate,
+    },
+  };
 }

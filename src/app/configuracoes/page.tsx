@@ -5,6 +5,7 @@ import { isProvisionalHandle } from "@/contracts/profile";
 import { requireUser } from "../_auth/session";
 import { updateHandle } from "../_profile/actions";
 import { HandleForm } from "../_profile/handle-form";
+import { ProfileForm } from "../_profile/profile-form";
 import { getOwnProfile, getOwnStartScreen } from "../_profile/queries";
 import { StartScreenForm } from "../_profile/start-screen-form";
 
@@ -18,6 +19,12 @@ export default function ConfiguracoesPage() {
       <Suspense>
         <ChangeHandle />
       </Suspense>
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">Perfil</h2>
+        <Suspense>
+          <EditProfile />
+        </Suspense>
+      </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Tela inicial</h2>
         <p className="text-sm text-muted-foreground">
@@ -45,6 +52,21 @@ async function ChangeHandle() {
       action={updateHandle}
       defaultHandle={current}
       submitLabel="Salvar"
+    />
+  );
+}
+
+// Nome de exibição, bio e perfil privado; a foto continua a do Google.
+async function EditProfile() {
+  const user = await requireUser("/configuracoes");
+  const profile = await getOwnProfile(user);
+  return (
+    <ProfileForm
+      defaults={{
+        displayName: profile?.displayName ?? "",
+        bio: profile?.bio ?? "",
+        isPrivate: profile?.isPrivate ?? false,
+      }}
     />
   );
 }

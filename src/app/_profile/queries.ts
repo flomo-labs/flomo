@@ -1,14 +1,31 @@
 import "server-only";
 import { isProvisionalHandle } from "@/contracts/profile";
+import { getProfilePage } from "@/domain/profile/profile-page";
 import { getStartScreen } from "@/domain/profile/start-screen";
 import { withUser } from "@/infra/db/client";
-import { findOwnProfile } from "@/infra/db/profile-repository";
+import {
+  createProfileRepository,
+  findOwnProfile,
+} from "@/infra/db/profile-repository";
 import { createSettingsRepository } from "@/infra/db/settings-repository";
 import type { CurrentUser } from "../_auth/session";
 import { START_SCREEN_PATH } from "./start-screen-path";
 
 export function getOwnProfile(user: CurrentUser) {
   return withUser(user.claims, (tx) => findOwnProfile(tx, user.id));
+}
+
+// Página do perfil de alguém (ou o próprio), com as regras de visibilidade.
+export function loadProfilePage(user: CurrentUser, handle: string) {
+  return withUser(user.claims, (tx) =>
+    getProfilePage({ profiles: createProfileRepository(tx) }, user, handle),
+  );
+}
+
+// Endereço público do perfil; /@handle é reescrito para /perfil/handle
+// (next.config.ts), porque pastas com @ são slots no App Router.
+export function profilePath(handle: string) {
+  return `/@${handle}`;
 }
 
 // Para onde mandar quem acabou de entrar. Sem destino pedido (`next` = "/"),

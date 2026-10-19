@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { changeHandle } from "@/domain/profile/change-handle";
+import { getProfilePage, updateProfile } from "@/domain/profile/profile-page";
 import {
   asUser,
   closeTestDb,
@@ -105,5 +106,102 @@ describe("changeHandle com o banco", () => {
 
       const seen = await asUser(tx, owner, (utx) => findOwnProfile(utx, other));
       expect(seen).toBeNull();
+    }));
+});
+
+describe("página e edição do perfil com o banco", () => {
+  it("dono edita nome, bio e privacidade; perfil privado mostra ao outro só o resumo", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      const other = await createUser(tx);
+      const handle = `p${owner.slice(0, 8)}`;
+      await tx.update(profiles).set({ handle }).where(eq(profiles.id, owner));
+
+      const updated = await asUser(tx, owner, (utx) =>
+        updateProfile(
+          { profiles: createProfileRepository(utx) },
+          { id: owner },
+          {
+            displayName: "Ana",
+            bio: "Séries coreanas.",
+            isPrivate: false,
+          },
+        ),
+      );
+      expect(updated.ok).toBe(true);
+
+      const seen = await asUser(tx, other, (utx) =>
+        getProfilePage(
+          { profiles: createProfileRepository(utx) },
+          { id: other },
+          handle,
+        ),
+      );
+      expect(seen.ok && seen.value).toMatchObject({
+        profile: {
+          displayName: "Ana",
+          bio: "Séries coreanas.",
+          isPrivate: false,
+        },
+        stats: { seriesCount: 0, minutesWatched: 0 },
+        isOwn: false,
+      });
+
+      await asUser(tx, owner, (utx) =>
+        updateProfile(
+          { profiles: createProfileRepository(utx) },
+          { id: owner },
+          {
+            displayName: "Ana",
+            bio: "Fica escondida.",
+            isPrivate: true,
+          },
+        ),
+      );
+      const hidden = await asUser(tx, other, (utx) =>
+        getProfilePage(
+          { profiles: createProfileRepository(utx) },
+          { id: other },
+          handle,
+        ),
+      );
+      expect(hidden.ok && hidden.value).toMatchObject({
+        profile: {
+          displayName: "Ana",
+          handle,
+          bio: null,
+          isPrivate: true,
+          canSeeDetails: false,
+        },
+        stats: null,
+        isOwn: false,
+      });
+
+      const own = await asUser(tx, owner, (utx) =>
+        getProfilePage(
+          { profiles: createProfileRepository(utx) },
+          { id: owner },
+          handle,
+        ),
+      );
+      expect(own.ok && own.value).toMatchObject({
+        profile: { bio: "Fica escondida.", isPrivate: true, canSeeDetails: true },
+        stats: { seriesCount: 0 },
+        isOwn: true,
+      });
+    }));
+
+  it("um usuário não altera o perfil de outro", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      const other = await createUser(tx);
+      const result = await asUser(tx, other, (utx) =>
+        createProfileRepository(utx).updateDetails(owner, {
+          displayName: "Invasor",
+          bio: null,
+          isPrivate: true,
+        }),
+      );
+      expect(result).toBe("not_found");
     }));
 });
