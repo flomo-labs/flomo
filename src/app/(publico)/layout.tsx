@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { BackBar } from "@/components/back-link";
-import { SiteHeader } from "@/components/site-header";
+import { MobileNav, SiteHeader } from "@/components/site-header";
 
 export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (
@@ -12,6 +12,9 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         </Suspense>
         {children}
       </main>
+      <Suspense>
+        <MobileNav />
+      </Suspense>
     </>
   );
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 import { NavigationTracker } from "@/components/back-link";
 import { SiteFooter } from "@/components/site-footer";
@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Flomo",
   description: "Acompanhe filmes e séries, avalie e compartilhe com amigos.",
 };
+
+// Deixa a barra inferior usar a área segura do iPhone (env(safe-area-inset-bottom)).
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

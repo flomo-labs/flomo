@@ -165,3 +165,11 @@
     @apply font-sans;
   }
 }
+
+/* Celular logado: a barra inferior (4rem) é fixa; reserva o espaço dela no fim
+   da página, depois do rodapé. */
+@media (max-width: 47.99rem) {
+  body:has([data-bottom-nav]) {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
