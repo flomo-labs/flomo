@@ -33,7 +33,7 @@ export default function BuscarPage({ searchParams }: PageProps<"/buscar">) {
 
 async function SearchHeading() {
   const t = await getTranslations("Search");
-  return <h1 className="text-3xl font-bold">{t("title")}</h1>;
+  return <h1 className="text-page-title">{t("title")}</h1>;
 }
 
 async function SearchBody({
@@ -103,7 +103,7 @@ async function ResultCard({ item }: { item: SearchItem }) {
   return (
     <Link
       href={titleRefPath(item.ref)}
-      className="flex gap-4 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+      className="flex gap-4 rounded-card border border-border p-3 transition-colors hover:bg-muted/50"
     >
       <Poster
         path={item.posterPath}

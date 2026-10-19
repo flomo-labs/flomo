@@ -37,7 +37,7 @@ async function Hero() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold">Flomo</h1>
+        <h1 className="text-page-title">Flomo</h1>
         <p className="text-muted-foreground">{t("tagline")}</p>
       </div>
       <SearchForm />
@@ -90,7 +90,7 @@ function ShelfSection({
 async function ShelfHeading({ id }: { id: string }) {
   const t = await getTranslations("Home");
   return (
-    <h2 id={id} className="text-xl font-semibold">
+    <h2 id={id} className="text-section-title">
       {t(`shelf.${id}`)}
     </h2>
   );

@@ -13,7 +13,7 @@ export default function TermosPage() {
   return (
     <Prose>
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold">Termos de uso</h1>
+        <h1 className="text-page-title">Termos de uso</h1>
         <p className="text-sm text-muted-foreground">
           Última atualização: {LEGAL_UPDATED_AT}
         </p>

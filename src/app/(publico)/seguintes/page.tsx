@@ -33,7 +33,7 @@ async function Heading() {
   const t = await getTranslations("Following");
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="text-3xl font-bold">{t("title")}</h1>
+      <h1 className="text-page-title">{t("title")}</h1>
       <p className="text-muted-foreground">{t("description")}</p>
     </div>
   );

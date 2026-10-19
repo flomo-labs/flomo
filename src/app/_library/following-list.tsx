@@ -74,7 +74,7 @@ export function FollowingList({
           {shown.map((row) => (
             <li
               key={row.titleId}
-              className="flex items-center gap-4 rounded-lg border border-border p-3"
+              className="flex items-center gap-4 rounded-card border border-border p-3"
             >
               <Poster
                 path={row.posterPath}

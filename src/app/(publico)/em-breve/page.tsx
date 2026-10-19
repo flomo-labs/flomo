@@ -11,7 +11,7 @@ export default function EmBrevePage() {
   return (
     <>
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Em breve</h1>
+        <h1 className="text-page-title">Em breve</h1>
         <p className="text-muted-foreground">
           O que vem por aí no Flomo, na ordem aproximada em que deve chegar.
           Itens “planejados” já têm lugar no nosso caminho; os “em estudo” ainda

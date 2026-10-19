@@ -72,7 +72,7 @@ async function Row({ item }: { item: LibraryItem }) {
   return (
     <Link
       href={`/titulo/${item.titleId}`}
-      className="flex gap-4 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+      className="flex gap-4 rounded-card border border-border p-3 transition-colors hover:bg-muted/50"
     >
       <Poster
         path={item.posterPath}

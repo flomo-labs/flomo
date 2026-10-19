@@ -10,7 +10,7 @@ export const FOOTER_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border py-6 text-sm text-muted-foreground">
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 px-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="page-container flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Informações do site">
           <ul className="flex flex-wrap gap-x-4 gap-y-1">
             {FOOTER_LINKS.map((link) => (
@@ -29,7 +29,7 @@ export function SiteFooter() {
       </div>
       {/* Aviso exigido pelos Termos do TMDB (seção 3): em destaque na
           aplicação inteira, não só em /sobre. */}
-      <p className="mx-auto mt-3 max-w-3xl px-6 text-xs">
+      <p className="page-container mt-3 text-xs">
         This website uses TMDB and the TMDB APIs but is not endorsed, certified,
         or otherwise approved by TMDB.{" "}
         <Link href="/sobre" className="underline underline-offset-4">

@@ -20,7 +20,7 @@ export function Poster({
   return (
     <div
       className={cn(
-        "relative aspect-[2/3] overflow-hidden rounded-lg bg-muted",
+        "relative aspect-[2/3] overflow-hidden rounded-poster bg-muted",
         className,
       )}
     >

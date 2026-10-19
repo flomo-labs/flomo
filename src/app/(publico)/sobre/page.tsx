@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function SobrePage() {
   return (
     <Prose>
-      <h1 className="text-3xl font-bold">Sobre o Flomo</h1>
+      <h1 className="text-page-title">Sobre o Flomo</h1>
       <div className="flex flex-col gap-3">
         <p>
           O Flomo é um lugar para acompanhar filmes e séries, saber qual é o

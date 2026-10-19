@@ -16,7 +16,7 @@ export async function WatchProviders({ titleId }: { titleId: string }) {
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="onde-assistir">
-      <h2 id="onde-assistir" className="text-xl font-semibold">
+      <h2 id="onde-assistir" className="text-section-title">
         {t("title")}
       </h2>
       {!result.ok ? (

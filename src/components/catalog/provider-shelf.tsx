@@ -127,7 +127,7 @@ export function ProviderShelf({
       className="flex flex-col gap-3"
       aria-labelledby="em-alta-no-servico"
     >
-      <h2 id="em-alta-no-servico" className="text-xl font-semibold">
+      <h2 id="em-alta-no-servico" className="text-section-title">
         {shown.heading}
       </h2>
       <ul aria-label={labels.providerNav} className="flex flex-wrap gap-2">

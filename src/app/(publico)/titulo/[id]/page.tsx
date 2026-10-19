@@ -82,7 +82,7 @@ async function TitleContent({
           className="w-32 shrink-0 sm:w-48"
         />
         <div className="flex min-w-0 flex-col items-start gap-3">
-          <h1 className="text-3xl font-bold">{title.title}</h1>
+          <h1 className="text-page-title">{title.title}</h1>
           {title.originalTitle !== title.title ? (
             <p className="text-sm text-muted-foreground italic">
               {t("Title.originalTitle", { title: title.originalTitle })}
@@ -119,7 +119,7 @@ async function TitleContent({
       </header>
 
       <section className="flex flex-col gap-2" aria-labelledby="sinopse">
-        <h2 id="sinopse" className="text-xl font-semibold">
+        <h2 id="sinopse" className="text-section-title">
           {t("Title.overview")}
         </h2>
         <p className={cn(!title.overview && "text-muted-foreground")}>
@@ -203,7 +203,7 @@ async function Seasons({
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="temporadas">
-      <h2 id="temporadas" className="text-xl font-semibold">
+      <h2 id="temporadas" className="text-section-title">
         {t("seasons")}
       </h2>
       <nav aria-label={t("seasonsNav")}>
@@ -261,7 +261,7 @@ async function Episodes({
     return <p className="text-muted-foreground">{t("noEpisodes")}</p>;
   }
   return (
-    <ol className="flex flex-col divide-y divide-border rounded-lg border border-border">
+    <ol className="flex flex-col divide-y divide-border rounded-card border border-border">
       {result.value.map((episode) => (
         <li key={episode.id} className="flex flex-col gap-1 p-3">
           <p className="font-medium">
