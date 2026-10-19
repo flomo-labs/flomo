@@ -2,7 +2,7 @@
 
 Media tracker social brasileiro: acompanhe filmes, séries e outros tipos de mídia, marque episódios, avalie com meia estrela, escreva reviews, crie listas e siga amigos.
 
-> Status: **pré-spike**. Nenhum código de produto ainda. Arquitetura definida em [`docs/`](docs/).
+> Status: **spike concluído** (fluxo login → busca → título → episódio → nota → comentários → `/em-breve` coberto por E2E). Em desenvolvimento rumo ao beta. Arquitetura em [`docs/`](docs/).
 
 ## Documentação
 
@@ -20,8 +20,6 @@ TypeScript · Next.js (App Router) · shadcn/ui + Tailwind · Supabase (Postgres
 Estilo: monólito modular com casos de uso em `domain/`; a API `/api/v1` é uma camada fina sobre eles e nasce junto com o app mobile ([ADR-004](docs/adr/ADR-004-casos-de-uso-primeiro.md)). O domínio nunca importa `next` nem `react`. Dados de usuário passam pelo RLS do Postgres ([ADR-003](docs/adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)).
 
 ## Como rodar localmente
-
-> Preencher na Fase 0, quando o bootstrap existir.
 
 1. Pré-requisitos: Node 22 LTS e pnpm 10 (`npm install -g pnpm@10`)
 2. Copie `.env.example` para `.env.local` e preencha as variáveis (`Copy-Item .env.example .env.local` no PowerShell, `cp .env.example .env.local` no Linux/macOS)
@@ -60,8 +58,8 @@ Veja `.env.example`. Nunca commitar secrets. Chaves server-only (TMDB, chave sec
 
 ## Fluxo de trabalho
 
-- Nunca fazer push direto na `main`: toda mudança entra por PR com CI verde (lint, typecheck, test, build). O ruleset da `main` exige PR, 1 aprovação e o check `verify`
-- Um revisor da dupla por PR
+- Nunca fazer push direto na `main`: toda mudança entra por PR com CI verde (lint, typecheck, test, build). O ruleset da `main` exige PR e o check `verify`
+- O outro dev da dupla revisa cada PR (o autor não aprova o próprio)
 - Branches no formato `tipo/descricao-curta` (`feat/`, `fix/`, `chore/`, `docs/`)
 - [Conventional Commits](https://www.conventionalcommits.org/pt-br/) e PRs pequenos
 - **Estratégia de merge: "Create a merge commit"**, sempre. Não usar squash nem rebase. O histórico completo da branch fica na `main`, e `git branch --merged` mostra o que já entrou. Como os commits da branch ficam no histórico, mantenha-os limpos: mensagens em Conventional Commits, sem "wip" nem commits repetidos
@@ -69,17 +67,17 @@ Veja `.env.example`. Nunca commitar secrets. Chaves server-only (TMDB, chave sec
 
 ## Spike vertical (checklist)
 
-Fluxo-alvo: login Google → buscar → abrir título → marcar episódio → avaliar 3,5★ → 2 reviews → `/em-breve`.
+Fluxo-alvo: login Google → buscar → abrir título → marcar episódio → avaliar 3,5★ → 2 comentários → `/em-breve`.
 
-- [ ] Catalog Gateway (search, details, cache, credits)
-- [ ] Páginas de busca e título
-- [ ] Schema de biblioteca
-- [ ] Caso de uso `MarkEpisodeWatched` (transação, idempotente)
-- [ ] Biblioteca + progresso + próximo episódio
-- [ ] Ratings + reviews + `StarRating`
-- [ ] Perfil mínimo
-- [ ] RLS + testes de domínio
-- [ ] `/em-breve`
+- [x] Catalog Gateway (search, details, cache, credits)
+- [x] Páginas de busca e título
+- [x] Schema de biblioteca
+- [x] Caso de uso `MarkEpisodeWatched` (transação, idempotente)
+- [x] Biblioteca + progresso + próximo episódio
+- [x] Ratings + comentários + `StarRating`
+- [x] Perfil mínimo
+- [x] RLS + testes de domínio
+- [x] `/em-breve`
 
 ## Licença
 
