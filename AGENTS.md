@@ -44,6 +44,11 @@ Regras de dependência entre pastas, impostas pelo ESLint (`eslint.config.mjs`):
 Para `domain/`, a regra é uma lista de proibidos: bibliotecas puras podem ser
 importadas, mas nunca as listadas acima.
 
+## Injeção de SQL
+
+- Consultas só com o template `sql\`...\`` do Drizzle ou o query builder, que mandam os valores à parte do comando.
+- O ESLint barra `sql.raw`, `.unsafe()` e `execute()` com texto montado na mão fora de `src/infra/db/schema/` e dos testes. Não use `eslint-disable` para fugir da regra: para nome de tabela ou coluna dinâmico, use `sql.identifier`.
+
 ## Componentização da interface
 
 Ao criar ou alterar uma tela, antes de codar, veja se algum elemento (lista, card, botão padrão, diálogo, bloco) já existe em outra tela ou vai existir em mais de uma. Se sim, vira componente; se é de uso único, deixe na própria tela. Não crie abstração "por precaução".
