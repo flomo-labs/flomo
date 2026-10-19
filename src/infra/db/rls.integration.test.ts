@@ -310,6 +310,12 @@ describe("usuário do app (flomo_app)", () => {
   it("grava no catálogo e não alcança dados de usuário", () =>
     inRollback(async (tx) => {
       const owner = await createUser(tx);
+      // No Supabase, `postgres` não é superusuário: administra flomo_app (é
+      // quem o criou), mas não pode virar ele sem esta concessão, desfeita
+      // junto com a transação do teste.
+      await tx.execute(
+        sql`grant flomo_app to current_user with inherit false, set true`,
+      );
       await tx.execute(sql`set local role flomo_app`);
       const series = await createTitle(tx, "tv");
       await tx.execute(
