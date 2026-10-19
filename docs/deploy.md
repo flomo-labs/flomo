@@ -83,6 +83,8 @@ Anote em local seguro. Você vai usá-los na parte B.
 
 > **Atenção ao usuário da URL.** No pooler, o usuário é **`postgres.<ref>`** (com o ref do projeto). Só `postgres` (conexão direta) não funciona no pooler e dá o erro `password authentication failed for user "postgres"`.
 
+> **Usuário do app.** A `DATABASE_URL` usa o usuário **`flomo_app`**, criado pela migration 0019: ele não é dono das tabelas, não ignora o RLS e só alcança o catálogo (dados de usuário só pelas policies). A `DATABASE_URL_MIGRATIONS` continua com `postgres`. Depois de aplicar as migrations (A.4), no **SQL Editor** do projeto, rode `alter role flomo_app with password '<senha forte>';` e monte a `DATABASE_URL` com a URL do Transaction pooler trocando o usuário por **`flomo_app.<ref>`** e a senha por essa nova.
+
 ### A.4 Aplicar as migrations
 
 As migrations (pasta `drizzle/`) criam as tabelas, as políticas de acesso (RLS) e os gatilhos. No `flomo-prod`, quem aplica é o GitHub Actions (`.github/workflows/migrations-prod.yml`): a cada merge na `main` que muda a pasta `drizzle/`, o workflow **Migrations (produção)** roda `pnpm db:migrate` sozinho, sem pedir aprovação (decisão de 2026-10-16; ver A.4.2). A URL do banco fica só como segredo no GitHub e não passa pelo seu computador. O GitHub esconde o valor do segredo nos logs, mas não pedaços dele que apareçam numa mensagem de erro: se um job falhar, leia o log antes de compartilhá-lo.
@@ -184,7 +186,7 @@ Abra **Environment Variables** na mesma tela e cadastre, uma a uma (nome, valor 
 | `NEXT_PUBLIC_SUPABASE_URL`             | Project URL do `flomo-prod`               | Project URL do `flomo-dev`               |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable do `flomo-prod`               | publishable do `flomo-dev`               |
 | `SUPABASE_SECRET_KEY`                  | secret do `flomo-prod`                    | secret do `flomo-dev`                    |
-| `DATABASE_URL`                         | Transaction pooler do `flomo-prod` (6543) | Transaction pooler do `flomo-dev` (6543) |
+| `DATABASE_URL`                         | Transaction pooler do `flomo-prod` (6543), usuário `flomo_app.<ref>` | Transaction pooler do `flomo-dev` (6543), usuário `flomo_app.<ref>` |
 | `TMDB_API_KEY`                         | chave do TMDB                             | a mesma chave                            |
 | `SENTRY_DSN` (opcional)                | DSN do projeto no Sentry (B.2.1)          | **não definir** (ou um projeto de teste) |
 
@@ -296,7 +298,7 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 
 | Sintoma                                                                                                  | Causa e solução                                                                                                                                                                     |
 | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `password authentication failed for user "postgres"` nos logs, `/cadastro` com "A server error occurred" | `DATABASE_URL` com usuário `postgres` (conexão direta) ou senha errada. Use a URL do **Transaction pooler**, com usuário `postgres.<ref>`, e refaça o Redeploy.                     |
+| `password authentication failed for user "postgres"` (ou `"flomo_app"`) nos logs, `/cadastro` com "A server error occurred" | Usuário sem o `.<ref>` (conexão direta) ou senha errada. Use a URL do **Transaction pooler**, com usuário `flomo_app.<ref>` e a senha definida em A.3, e refaça o Redeploy. |
 | `$env:DATABASE_URL_MIGRATIONS` vazio e migrations "aplicadas" que só mostram `already exists, skipping`  | No plano B (A.4.3), a variável não foi definida e o `drizzle-kit` usou o `.env.local` (flomo-dev). Defina a variável e confira antes de rodar.                                      |
 | Workflow **Migrations (produção)** falha com "Defina o segredo..." ou "não é a URL do Session pooler"    | Falta o segredo ou a variável no ambiente `supabase-prod`, ou a URL é de outro projeto (A.4.1). Confira se `FLOMO_PROD_DB_REF` está em **Environment variables**, e não em secrets. |
 | Workflow parado em **Waiting**                                                                           | A trava de aprovação do `supabase-prod` está ligada: aprove (A.4.2) ou desligue em A.4.1.                                                                                           |

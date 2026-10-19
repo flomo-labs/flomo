@@ -254,3 +254,83 @@ describe("médias públicas", () => {
       }
     }));
 });
+
+// Usuário com que o app se conecta (migration 0019). Os testes rodam como
+// `postgres` e trocam para `flomo_app` com `set local role`, o que confere as
+// permissões dele, mas não o login; o papel em si é conferido no catálogo.
+const CATALOG_TABLES = [
+  "episodes",
+  "external_ids",
+  "genres",
+  "provider_payloads",
+  "seasons",
+  "title_genres",
+  "title_translations",
+  "titles",
+];
+
+describe("usuário do app (flomo_app)", () => {
+  it("não é admin, não ignora o RLS e só vira authenticated", () =>
+    inRollback(async (tx) => {
+      const [role] = await tx.execute<Record<string, boolean>>(sql`
+        select rolsuper, rolbypassrls, rolinherit, rolcreaterole, rolcreatedb,
+          pg_has_role('flomo_app', 'authenticated', 'SET') as set_authenticated,
+          pg_has_role('flomo_app', 'postgres', 'MEMBER') as postgres_member,
+          pg_has_role('flomo_app', 'service_role', 'MEMBER') as service_member
+        from pg_roles where rolname = 'flomo_app'
+      `);
+      expect(role).toEqual({
+        rolsuper: false,
+        rolbypassrls: false,
+        rolinherit: false,
+        rolcreaterole: false,
+        rolcreatedb: false,
+        set_authenticated: true,
+        postgres_member: false,
+        service_member: false,
+      });
+    }));
+
+  it("só tem permissão nas tabelas do catálogo", () =>
+    inRollback(async (tx) => {
+      const rows = await tx.execute<{ table: string }>(sql`
+        select distinct table_name as table
+        from information_schema.role_table_grants
+        where grantee = 'flomo_app'
+        order by 1
+      `);
+      expect(rows.map((r) => r.table)).toEqual(CATALOG_TABLES);
+      const owned = await tx.execute(sql`
+        select 1 from pg_class c join pg_roles r on r.oid = c.relowner
+        where r.rolname = 'flomo_app'
+      `);
+      expect([...owned]).toEqual([]);
+    }));
+
+  it("grava no catálogo e não alcança dados de usuário", () =>
+    inRollback(async (tx) => {
+      const owner = await createUser(tx);
+      await tx.execute(sql`set local role flomo_app`);
+      const series = await createTitle(tx, "tv");
+      await tx.execute(
+        sql`select * from app.title_rating_summary(${series}::uuid)`,
+      );
+      for (const table of [
+        "profiles",
+        "ratings",
+        "comments",
+        "user_settings",
+      ]) {
+        await expect(
+          tx.transaction((sp) =>
+            sp.execute(sql.raw(`select 1 from public.${table}`)),
+          ),
+        ).rejects.toThrow(pgError(INSUFFICIENT_PRIVILEGE));
+      }
+      // Dentro do withUser, as policies valem como para qualquer usuário.
+      const own = await asUser(tx, owner, (sp) =>
+        sp.execute(sql`select id from public.profiles`),
+      );
+      expect(own.map((r) => r.id)).toEqual([owner]);
+    }));
+});

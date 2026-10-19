@@ -134,6 +134,13 @@
       "when": 1792374770166,
       "tag": "0018_rls_permissoes",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792379192460,
+      "tag": "0019_flomo_app",
+      "breakpoints": true
     }
   ]
 }
