@@ -68,6 +68,16 @@ Ao criar ou alterar uma tela, antes de codar, veja se algum elemento (lista, car
 - Nunca fazer `git push --force` em branch compartilhada ou na `main`.
 - PRs pequenos e focados, usando o template de `.github/pull_request_template.md`.
 
+### Migrations e trabalho em dupla
+
+- Mudou o schema: `pnpm db:generate`, revise o SQL e só então `pnpm db:migrate`. Nunca edite migration já aplicada.
+- **PR de migration separado do código que a usa.** Depois do merge da migration, o código vem em outro PR.
+- No `flomo-prod`, o workflow **Migrations (produção)** aplica sozinho no merge que mexe em `drizzle/`. No `flomo-dev` de cada dev a migration é manual (`pnpm db:migrate`); quem revisa um PR com migration roda `pnpm db:migrate` e `pnpm test:integration` no próprio `flomo-dev`.
+- Duas branches gerando migration ao mesmo tempo colidem na numeração e no journal (`drizzle/meta`): avise a dupla antes de mexer em `drizzle/`; quem chegar depois faz `git merge origin/main` e regenera.
+- Função `security definer`, grants do `flomo_app` e mudança de RLS pedem o outro dev como revisor.
+- Antes de começar tarefa ou abrir branch: `git fetch origin` e confira se a `main` mudou.
+- Configuração pessoal (modelo, permissões, identidade git) vai em `.claude/settings.local.json` e `CLAUDE.local.md`, que não são versionados. Mudanças em `.claude/`, `eslint.config.mjs`, `AGENTS.md` e `CLAUDE.md` afetam os dois: PR próprio.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
