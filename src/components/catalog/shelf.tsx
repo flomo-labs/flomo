@@ -33,7 +33,7 @@ export async function Shelf({
                 <div className="absolute inset-x-0 bottom-0 flex items-end gap-1.5 bg-linear-to-t from-black/85 via-black/50 to-transparent px-2 pt-10 pb-2.5">
                   <span
                     aria-hidden
-                    className="-ml-2.5 shrink-0 bg-linear-to-b from-pink-400 to-violet-500 bg-clip-text text-4xl leading-[0.8] font-extrabold tracking-tighter text-transparent sm:text-6xl"
+                    className="-ml-[15px] shrink-0 bg-linear-to-b from-pink-400 to-violet-500 bg-clip-text text-4xl leading-[0.8] font-extrabold tracking-tighter text-transparent sm:text-6xl"
                   >
                     {index + 1}
                   </span>
