@@ -8,8 +8,8 @@ import {
 } from "./nav-items";
 
 describe("isNavItemActive", () => {
-  it("marca Seguintes na raiz, em /seguintes e em /inicio", () => {
-    for (const path of ["/", "/seguintes", "/inicio"]) {
+  it("marca Seguintes na raiz e em /seguintes", () => {
+    for (const path of ["/", "/seguintes"]) {
       expect(isNavItemActive(FOLLOWING_ITEM, path)).toBe(true);
     }
     expect(isNavItemActive(FOLLOWING_ITEM, "/buscar")).toBe(false);

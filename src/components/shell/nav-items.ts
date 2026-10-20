@@ -8,8 +8,6 @@ export type NavItem = {
   // Telas em que o item aparece como o atual: igual a, ou começando por.
   exact?: string[];
   prefixes?: string[];
-  // Rota que redireciona (e grava cookie): navegação completa, sem Link.
-  fullNavigation?: boolean;
 };
 
 // O Next entrega "/@renato" como "/%40renato"; compara sempre decodificado.
@@ -34,7 +32,7 @@ export const FOLLOWING_ITEM: NavItem = {
   href: "/seguintes",
   label: "Seguintes",
   icon: "following",
-  exact: ["/", "/seguintes", "/inicio"],
+  exact: ["/", "/seguintes"],
 };
 
 // Descobrir é a busca de hoje; ganha recomendações depois.

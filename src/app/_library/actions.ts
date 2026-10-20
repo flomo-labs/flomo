@@ -62,7 +62,6 @@ async function run(
   // título para quem estiver com elas abertas.
   revalidatePath("/titulo/[id]", "page");
   // Telas que mostram o progresso: Seguintes e biblioteca.
-  revalidatePath("/");
   revalidatePath("/seguintes");
   revalidatePath("/biblioteca");
   return { ok: true, value: {} };

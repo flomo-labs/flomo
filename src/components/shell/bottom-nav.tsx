@@ -26,9 +26,13 @@ export function BottomNav({ items }: { items: NavItem[] }) {
       <ul className="flex h-16 items-stretch justify-around">
         {items.map((item) => {
           const active = isNavItemActive(item, pathname);
-                    const content = (
+          const content = (
             <>
-              <Icon name={ICONS[item.icon]} filled={active} className="size-6" />
+              <Icon
+                name={ICONS[item.icon]}
+                filled={active}
+                className="size-6"
+              />
               <span
                 className={cn(
                   "text-[0.625rem]",
@@ -45,23 +49,13 @@ export function BottomNav({ items }: { items: NavItem[] }) {
           );
           return (
             <li key={item.href} className="flex flex-1">
-              {item.fullNavigation ? (
-                <a
-                  href={item.href}
-                  className={cn(className, "w-full")}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {content}
-                </a>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={cn(className, "w-full")}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {content}
-                </Link>
-              )}
+              <Link
+                href={item.href}
+                className={cn(className, "w-full")}
+                aria-current={active ? "page" : undefined}
+              >
+                {content}
+              </Link>
             </li>
           );
         })}

@@ -1,8 +1,7 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { START_COOKIE } from "../_profile/start-screen-path";
 import { safeNextPath } from "./redirect";
 import { resolveSiteUrl } from "./site-url";
 import { getRequestAuth } from "./session";
@@ -35,7 +34,5 @@ export async function signInWithGoogle(formData: FormData) {
 export async function signOut() {
   const auth = await getRequestAuth();
   await auth.signOut();
-  // O próximo login volta a cair na tela inicial escolhida.
-  (await cookies()).delete(START_COOKIE);
   redirect("/");
 }

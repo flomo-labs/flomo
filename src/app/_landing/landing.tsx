@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { signInWithGoogle } from "@/app/_auth/actions";
 import { listShelfCached } from "@/app/_catalog/cached-shelf";
+import { FOLLOWING_PATH } from "@/app/_profile/start-screen-path";
 import { LandingMenu } from "@/components/landing/landing-menu";
 import { PosterWall } from "@/components/landing/poster-wall";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ export async function Landing() {
         </p>
         <div className="mt-1 flex flex-col gap-4 md:mt-3 md:flex-row md:items-center md:gap-6">
           <form action={signInWithGoogle}>
-            <input type="hidden" name="next" value="/" />
+            <input type="hidden" name="next" value={FOLLOWING_PATH} />
             <Button
               type="submit"
               className="h-13 w-full rounded-full px-7 text-base md:w-auto"
