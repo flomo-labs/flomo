@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -85,11 +86,22 @@ async function ProfileContent({
       ) : (
         <p className="text-muted-foreground">{t("privateLocked")}</p>
       )}
+      {isOwn ? (
+        <Suspense fallback={null}>
+          <LibraryPreview user={user} />
+        </Suspense>
+      ) : null}
     </article>
   );
 }
 
-async function StatsList({ stats, label }: { stats: ProfileStats; label: string }) {
+async function StatsList({
+  stats,
+  label,
+}: {
+  stats: ProfileStats;
+  label: string;
+}) {
   const t = await getTranslations("Profile");
   const hours = watchedHours(stats.minutesWatched);
   const items = [
@@ -108,7 +120,9 @@ async function StatsList({ stats, label }: { stats: ProfileStats; label: string 
             key={key}
             className="flex flex-col-reverse rounded-card border border-border p-3"
           >
-            <dt className="text-sm text-muted-foreground">{t(key, { count })}</dt>
+            <dt className="text-sm text-muted-foreground">
+              {t(key, { count })}
+            </dt>
             <dd className="text-2xl font-semibold tabular-nums">
               {format.format(count)}
             </dd>
