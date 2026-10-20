@@ -22,7 +22,7 @@ export async function Shelf({
             href={titleRefPath(item.ref)}
             className="group flex flex-col gap-1.5"
           >
-            <div className="relative">
+            <div className="relative overflow-hidden rounded-poster">
               <Poster
                 path={item.posterPath}
                 size="w342"
@@ -30,18 +30,25 @@ export async function Shelf({
                 className="transition-opacity group-hover:opacity-80"
               />
               {ranked ? (
-                <span
-                  aria-hidden
-                  className="absolute bottom-1 left-1 flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                >
-                  {index + 1}
-                </span>
+                <div className="absolute inset-x-0 bottom-0 flex items-end gap-1.5 bg-linear-to-t from-black/85 via-black/50 to-transparent px-2 pt-10 pb-2.5">
+                  <span
+                    aria-hidden
+                    className="shrink-0 bg-linear-to-b from-pink-400 to-violet-500 bg-clip-text text-4xl leading-[0.8] font-extrabold tracking-tighter text-transparent sm:text-6xl"
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="line-clamp-3 min-w-0 wrap-anywhere pb-0.5 text-sm leading-tight font-bold text-white">
+                    <span className="sr-only">{index + 1}. </span>
+                    {item.title}
+                  </span>
+                </div>
               ) : null}
             </div>
-            <span className="line-clamp-2 text-sm leading-tight font-medium">
-              {ranked ? <span className="sr-only">{index + 1}. </span> : null}
-              {item.title}
-            </span>
+            {ranked ? null : (
+              <span className="line-clamp-2 text-sm leading-tight font-medium">
+                {item.title}
+              </span>
+            )}
           </Link>
         </li>
       ))}
