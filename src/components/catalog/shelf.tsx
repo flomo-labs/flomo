@@ -22,7 +22,7 @@ export async function Shelf({
             href={titleRefPath(item.ref)}
             className="group flex flex-col gap-1.5"
           >
-            <div className="relative overflow-hidden rounded-poster">
+            <div className="relative">
               <Poster
                 path={item.posterPath}
                 size="w342"
@@ -30,7 +30,7 @@ export async function Shelf({
                 className="transition-opacity group-hover:opacity-80"
               />
               {ranked ? (
-                <div className="absolute inset-x-0 bottom-0 flex items-end gap-1.5 bg-linear-to-t from-black/85 via-black/50 to-transparent px-2 pt-10 pb-2.5">
+                <div className="absolute inset-x-0 bottom-0 flex items-end rounded-b-poster gap-1.5 bg-linear-to-t from-black/85 via-black/50 to-transparent px-2 pt-10 pb-2.5">
                   <span
                     aria-hidden
                     className="-ml-[15px] shrink-0 bg-linear-to-b from-pink-400 to-violet-500 bg-clip-text text-4xl leading-[0.8] font-extrabold tracking-tighter text-transparent sm:text-6xl"
