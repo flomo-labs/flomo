@@ -9,7 +9,7 @@ import { LandingMenu } from "@/components/landing/landing-menu";
 import { PosterWall } from "@/components/landing/poster-wall";
 import { Button } from "@/components/ui/button";
 
-const WALL_SIZE = 16;
+const WALL_SIZE = 25;
 
 // Raiz do site para quem não entrou, em tela cheia (sem o cabeçalho e o rodapé
 // do app): os pôsteres mais populares da semana, a chamada, o botão de entrar e
@@ -82,19 +82,25 @@ export async function Landing() {
   );
 }
 
-// Sem pôsteres (TMDB fora do ar, por exemplo) a chamada fica sem o mosaico.
+// Pôsteres das duas listas que o Descobrir já carrega (em alta e nos cinemas),
+// alternados e sem repetir. Sem pôsteres suficientes (TMDB fora do ar, por
+// exemplo) a chamada fica sem o mosaico.
 async function Wall() {
   await connection();
-  let posters: string[] = [];
-  try {
-    const { value } = await listShelfCached({ kind: "trending" });
-    posters = value
-      .map((item) => item.posterPath)
-      .filter((path): path is string => path !== null)
-      .slice(0, WALL_SIZE);
-  } catch (error) {
-    console.error("Falha ao carregar os pôsteres da landing:", error);
-  }
+  const shelves = await Promise.allSettled([
+    listShelfCached({ kind: "trending" }),
+    listShelfCached({ kind: "now_playing" }),
+  ]);
+  const lists = shelves.map((shelf) => {
+    if (shelf.status === "fulfilled") return shelf.value.value;
+    console.error("Falha ao carregar os pôsteres da landing:", shelf.reason);
+    return [];
+  });
+  const posters = interleave(lists)
+    .map((item) => item.posterPath)
+    .filter((path): path is string => path !== null)
+    .filter((path, i, all) => all.indexOf(path) === i)
+    .slice(0, WALL_SIZE);
   if (posters.length < 8) return null;
   return (
     <PosterWall
@@ -102,4 +108,11 @@ async function Wall() {
       className="relative -mt-15 h-[26rem] shrink-0 md:absolute md:mt-0 md:inset-0 md:-z-10 md:h-auto"
     />
   );
+}
+
+function interleave<T>(lists: T[][]): T[] {
+  const longest = Math.max(0, ...lists.map((list) => list.length));
+  return Array.from({ length: longest }, (_, i) =>
+    lists.flatMap((list) => (i < list.length ? [list[i]] : [])),
+  ).flat();
 }

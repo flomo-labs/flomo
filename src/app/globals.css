@@ -266,24 +266,24 @@ body:has([data-landing]) > footer {
   }
 }
 
-/* Cada coluna do mosaico sobe e desce devagar, no seu ritmo (`--float-duration`,
-   `--float-delay`). Parados com "reduzir movimento". */
-@keyframes poster-float {
+/* Onda do mosaico da landing: cada pôster sobe e desce no mesmo ritmo, com
+   atraso conforme a posição (definido no componente). Parada com "reduzir
+   movimento". */
+@keyframes poster-wave {
   from {
-    transform: translateY(0);
+    transform: translateY(0.6rem);
   }
   to {
-    transform: translateY(-1.5rem);
+    transform: translateY(-0.6rem);
   }
 }
 
-.poster-float {
-  animation: poster-float var(--float-duration, 9s) ease-in-out
-    var(--float-delay, 0s) infinite alternate;
+.poster-wave {
+  animation: poster-wave 3.2s ease-in-out infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .poster-float {
+  .poster-wave {
     animation: none;
   }
 }
