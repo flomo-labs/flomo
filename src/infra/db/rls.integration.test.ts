@@ -7,7 +7,7 @@ import {
   createUser,
   inRollback,
 } from "./integration-test-utils";
-import { comments, ratings, titles, userSettings } from "./schema";
+import { comments, ratings, titles } from "./schema";
 
 // Revisão de RLS da Fase 1.6 (migration 0018): confere no catálogo do banco
 // as regras que valem para todas as tabelas e funções, para que uma tabela ou
@@ -150,7 +150,7 @@ describe("nota sem episódio", () => {
 });
 
 describe("outro usuário não altera nem apaga linhas alheias", () => {
-  it("notas, comentários e configurações", () =>
+  it("notas e comentários", () =>
     inRollback(async (tx) => {
       const owner = await createUser(tx);
       const other = await createUser(tx);
@@ -162,7 +162,6 @@ describe("outro usuário não altera nem apaga linhas alheias", () => {
         await utx
           .insert(comments)
           .values({ userId: owner, titleId: movie, body: "Bom." });
-        await utx.insert(userSettings).values({ userId: owner });
       });
 
       await asUser(tx, other, async (utx) => {
@@ -185,19 +184,6 @@ describe("outro usuário não altera nem apaga linhas alheias", () => {
             .where(eq(comments.userId, owner))
             .returning(),
         ).toEqual([]);
-        expect(
-          await utx
-            .update(userSettings)
-            .set({ startScreen: "following" })
-            .where(eq(userSettings.userId, owner))
-            .returning(),
-        ).toEqual([]);
-        expect(
-          await utx
-            .delete(userSettings)
-            .where(eq(userSettings.userId, owner))
-            .returning(),
-        ).toEqual([]);
       });
 
       // O dono não passa a própria linha para outra pessoa.
@@ -212,11 +198,6 @@ describe("outro usuário não altera nem apaga linhas alheias", () => {
             .update(comments)
             .set({ userId: other })
             .where(eq(comments.userId, owner)),
-        (utx: Tx) =>
-          utx
-            .update(userSettings)
-            .set({ userId: other })
-            .where(eq(userSettings.userId, owner)),
       ]) {
         await expect(asUser(tx, owner, change)).rejects.toEqual(
           pgError(INSUFFICIENT_PRIVILEGE),
@@ -226,14 +207,12 @@ describe("outro usuário não altera nem apaga linhas alheias", () => {
       const [counts] = await tx.execute<{
         r: number;
         c: number;
-        s: number;
       }>(sql`
         select
           (select count(*)::int from public.ratings where user_id = ${owner}) as r,
-          (select count(*)::int from public.comments where user_id = ${owner}) as c,
-          (select count(*)::int from public.user_settings where user_id = ${owner}) as s
+          (select count(*)::int from public.comments where user_id = ${owner}) as c
       `);
-      expect(counts).toEqual({ r: 1, c: 1, s: 1 });
+      expect(counts).toEqual({ r: 1, c: 1 });
     }));
 });
 
@@ -321,12 +300,7 @@ describe("usuário do app (flomo_app)", () => {
       await tx.execute(
         sql`select * from app.title_rating_summary(${series}::uuid)`,
       );
-      for (const table of [
-        "profiles",
-        "ratings",
-        "comments",
-        "user_settings",
-      ]) {
+      for (const table of ["profiles", "ratings", "comments"]) {
         await expect(
           tx.transaction((sp) =>
             sp.execute(sql.raw(`select 1 from public.${table}`)),

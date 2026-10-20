@@ -1,5 +1,4 @@
 export * from "./profiles";
 export * from "./catalog";
 export * from "./library";
-export * from "./settings";
 export * from "./social";
