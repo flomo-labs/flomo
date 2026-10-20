@@ -18,7 +18,7 @@ test("fluxo do spike, do login ao /em-breve", async ({ page, context }) => {
   // Busca e página da série.
   await page.goto("/buscar");
   await page
-    .getByRole("searchbox", { name: "O que você quer assistir?" })
+    .getByRole("combobox", { name: "O que você quer assistir?" })
     .fill("flomo");
   await page.getByRole("button", { name: "Buscar" }).click();
   await page
