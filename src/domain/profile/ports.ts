@@ -52,7 +52,7 @@ export interface ProfileRepository {
 
 // Preferências do usuário (tabela `user_settings`); só o dono as lê e altera.
 export interface SettingsRepository {
-  // Sem linha gravada, vale a Home.
+  // Sem linha gravada, vale a tela de Seguintes.
   getStartScreen(userId: string): Promise<StartScreen>;
   setStartScreen(userId: string, startScreen: StartScreen): Promise<void>;
 }

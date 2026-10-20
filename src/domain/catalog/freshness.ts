@@ -11,7 +11,7 @@ export const SEARCH_TTL_MS = DAY_MS;
 // Onde assistir muda com frequência (catálogos de streaming).
 export const WATCH_PROVIDERS_TTL_MS = DAY_MS;
 
-// Prateleiras da Home (em alta, em cartaz): mudam devagar e são muito lidas.
+// Prateleiras do Descobrir (em alta, em cartaz): mudam devagar e são muito lidas.
 export const SHELF_TTL_MS = 6 * 60 * 60 * 1000;
 
 // Título que sumiu do provedor: mantém o que está gravado e só tenta de

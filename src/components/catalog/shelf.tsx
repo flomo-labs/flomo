@@ -4,7 +4,7 @@ import { Poster } from "@/components/catalog/poster";
 import type { SearchItem } from "@/domain/catalog/types";
 import { titleRefPath } from "@/lib/title-paths";
 
-// Prateleira de pôsteres da Home: cada item abre a página do título.
+// Prateleira de pôsteres do Descobrir: cada item abre a página do título.
 // `ranked` mostra a posição (Top 10).
 export async function Shelf({
   items,

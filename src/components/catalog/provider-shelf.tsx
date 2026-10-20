@@ -35,7 +35,7 @@ const pill = (active: boolean) =>
 
 // "Em alta no serviço X" com os menus de serviço e tipo. O serviço aberto
 // chega com todos os tipos; os outros serviços carregam em segundo plano logo
-// depois da Home abrir, um de cada vez. A escolha vive só nesta tela: não vai
+// depois do Descobrir abrir, um de cada vez. A escolha vive só nesta tela: não vai
 // para a URL nem é lembrada (volta ao padrão ao reabrir).
 export function ProviderShelf({
   providers,

@@ -87,7 +87,7 @@ function route(url) {
   }
   if (path === `movie/${MOVIE.id}`) return movieDetails;
   if (path.endsWith("/watch/providers")) return { id: 0, results: {} };
-  // Prateleiras da Home (trending, now_playing, discover): vazias.
+  // Prateleiras do Descobrir (trending, now_playing, discover): vazias.
   if (/^(trending|movie\/now_playing|discover)\b/.test(path)) return emptyList;
   return null;
 }

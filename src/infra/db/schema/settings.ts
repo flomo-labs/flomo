@@ -13,7 +13,8 @@ export const userSettings = pgTable(
     userId: uuid("user_id")
       .primaryKey()
       .references(() => profiles.id, { onDelete: "cascade" }),
-    // Tela em que o usuário começa ao entrar: a Home ou a fila Seguintes.
+    // Preferência antiga de tela inicial ("home" ou "following"); hoje os dois
+    // valores abrem o Seguintes.
     startScreen: text("start_screen").notNull().default("home"),
   },
   (t) => [
