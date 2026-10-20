@@ -18,8 +18,9 @@ export type FollowingRow = {
   posterPath: string | null;
   posterAlt: string;
   href: string;
-  // "T2 · E3 · Nome" numa série; nulo em filme.
-  detail: string | null;
+  // Próximo episódio de uma série ("T2:E3" e o nome); nulos em filme.
+  position: string | null;
+  episodeName: string | null;
   mark: QuickMarkTarget;
   markLabel: string;
 };
@@ -32,22 +33,17 @@ export type FollowingLabels = {
 };
 
 // Lista "Seguintes" com o menu Ambos / Séries / Filmes. A escolha vive
-// só na tela (fora da URL, sem memória: reabrir volta para "Ambos"). Usada na Home e em /seguintes.
+// só na tela (fora da URL, sem memória: reabrir volta para "Ambos").
 export function FollowingList({
   rows,
   labels,
-  max,
 }: {
   rows: FollowingRow[];
   labels: FollowingLabels;
-  // Limite depois de filtrar (a Home mostra só os primeiros).
-  max?: number;
 }) {
   const [kind, setKind] = useState<FollowingKind>("both");
 
-  const shown = rows
-    .filter((r) => kind === "both" || r.mediaType === kind)
-    .slice(0, max);
+  const shown = rows.filter((r) => kind === "both" || r.mediaType === kind);
 
   return (
     <div className="flex flex-col gap-3">
@@ -63,7 +59,7 @@ export function FollowingList({
       {shown.length === 0 ? (
         <EmptyState message={labels.emptyFilter} />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-3 md:grid-cols-2">
           {shown.map((row) => (
             <li key={row.titleId}>
               <PosterRow
@@ -85,10 +81,15 @@ export function FollowingList({
                 >
                   {row.title}
                 </Link>
-                {row.detail ? (
-                  <p className="truncate text-sm text-muted-foreground">
-                    {row.detail}
-                  </p>
+                {row.position ? (
+                  <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                    <span className="shrink-0 rounded-full bg-primary/25 px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                      {row.position}
+                    </span>
+                    {row.episodeName ? (
+                      <span className="truncate">{row.episodeName}</span>
+                    ) : null}
+                  </div>
                 ) : null}
               </PosterRow>
             </li>

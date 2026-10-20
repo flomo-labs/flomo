@@ -29,13 +29,12 @@ export function isNavItemActive(item: NavItem, rawPathname: string): boolean {
   );
 }
 
-// Seguintes hoje leva à tela escolhida pelo usuário (Home ou Seguintes).
-export const HOME_ITEM: NavItem = {
-  href: "/inicio",
+// Seguintes é a tela inicial de quem está logado.
+export const FOLLOWING_ITEM: NavItem = {
+  href: "/seguintes",
   label: "Seguintes",
   icon: "following",
   exact: ["/", "/seguintes", "/inicio"],
-  fullNavigation: true,
 };
 
 // Descobrir é a busca de hoje; ganha recomendações depois.

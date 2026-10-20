@@ -1,13 +1,8 @@
-import type { StartScreen } from "@/contracts/profile";
+// Tela inicial de quem está logado.
+export const FOLLOWING_PATH = "/seguintes";
 
-// Caminho de cada tela inicial.
-export const START_SCREEN_PATH: Record<StartScreen, string> = {
-  home: "/",
-  following: "/seguintes",
-};
-
-// Rota que manda o usuário para a tela dele (menu "Início" e primeira
-// entrada da sessão) e grava o cookie de sessão abaixo.
+// Rota que manda o usuário para o Seguintes (primeira entrada da sessão) e
+// grava o cookie de sessão abaixo.
 export const START_ROUTE = "/inicio";
 
 // Cookie de sessão (some ao fechar o navegador): marca que o redirecionamento
@@ -31,9 +26,8 @@ type Navigation = {
   signedIn: boolean;
 };
 
-// Primeira entrada da sessão: quem está logado e abre a Home sem o cookie vai
-// para /inicio, que decide pela preferência. Depois disso a Home é a Home, e
-// o logo do site sempre a alcança.
+// Primeira entrada da sessão: quem está logado e abre a raiz sem o cookie vai
+// para /inicio, que leva ao Seguintes.
 export function shouldRedirectToStart(nav: Navigation): boolean {
   return (
     nav.signedIn &&

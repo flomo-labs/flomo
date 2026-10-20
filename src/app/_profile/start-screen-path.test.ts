@@ -11,11 +11,11 @@ const base = {
 };
 
 describe("redirecionamento da primeira entrada", () => {
-  it("logado, na Home e sem o cookie da sessão: vai para /inicio", () => {
+  it("logado, na raiz e sem o cookie da sessão: vai para /inicio", () => {
     expect(shouldRedirectToStart(base)).toBe(true);
   });
 
-  it("com o cookie, a Home é a Home (o logo sempre chega nela)", () => {
+  it("com o cookie, não redireciona", () => {
     expect(shouldRedirectToStart({ ...base, hasCookie: true })).toBe(false);
   });
 

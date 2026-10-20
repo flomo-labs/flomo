@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { DiscoverShelves } from "@/app/_catalog/discover-shelves";
 import { searchCatalog } from "@/app/_catalog/gateway";
 import { Poster } from "@/components/catalog/poster";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,6 @@ async function SearchBody({
 }: {
   searchParams: PageProps<"/buscar">["searchParams"];
 }) {
-  const t = await getTranslations("Search");
   const params = await searchParams;
   const query = firstValue(params.q).trim();
   // Página fora do intervalo vira a mais próxima (o TMDB só vai até a 500).
@@ -51,11 +51,7 @@ async function SearchBody({
   return (
     <>
       <SearchForm query={query} />
-      {query ? (
-        <Results query={query} page={page} />
-      ) : (
-        <p className="text-muted-foreground">{t("intro")}</p>
-      )}
+      {query ? <Results query={query} page={page} /> : <DiscoverShelves />}
     </>
   );
 }

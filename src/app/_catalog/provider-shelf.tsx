@@ -13,7 +13,7 @@ import { ShelfItems } from "./shelf-items";
 export async function buildProviderBundle(
   providerId?: string,
 ): Promise<ProviderBundle> {
-  const t = await getTranslations("Home");
+  const t = await getTranslations("Discover");
   const provider =
     SHELF_PROVIDERS.find((p) => p.id === providerId) ?? SHELF_PROVIDERS[0];
   // O filtro Novelas só aparece se o serviço tiver alguma (a consulta é a
