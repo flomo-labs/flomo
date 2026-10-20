@@ -54,6 +54,9 @@ export function SearchCombobox({
   const [value, setValue] = useState(defaultValue);
   const [fetched, setFetched] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
+  // Só busca sugestões depois que a pessoa digita: em /buscar?q=… o campo já
+  // vem preenchido e a lista não deve abrir sozinha por cima dos resultados.
+  const [typed, setTyped] = useState(false);
   const [active, setActive] = useState(-1);
 
   const query = value.trim();
@@ -63,7 +66,7 @@ export function SearchCombobox({
   const expanded = open && items.length > 0;
 
   useEffect(() => {
-    if (query.length < SUGGESTION_MIN_LENGTH) return;
+    if (!typed || query.length < SUGGESTION_MIN_LENGTH) return;
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
@@ -84,7 +87,7 @@ export function SearchCombobox({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query]);
+  }, [query, typed]);
 
   function openSearch() {
     setOpen(false);
@@ -149,6 +152,7 @@ export function SearchCombobox({
         value={value}
         onChange={(event) => {
           setValue(event.target.value);
+          setTyped(true);
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
