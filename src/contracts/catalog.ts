@@ -23,6 +23,32 @@ export const catalogSearchInputSchema = z.object({
 });
 export type CatalogSearchInput = z.input<typeof catalogSearchInputSchema>;
 
+// Sugestões enquanto o usuário digita: a partir de 2 letras, só a primeira
+// página da busca, limitada a poucos títulos.
+export const SUGGESTION_MIN_LENGTH = 2;
+export const SUGGESTION_LIMIT = 5;
+
+export const suggestionsInputSchema = z.object({
+  query: z
+    .string()
+    .trim()
+    .min(SUGGESTION_MIN_LENGTH, "Digite pelo menos 2 letras.")
+    .max(
+      SEARCH_QUERY_MAX_LENGTH,
+      `A busca pode ter no máximo ${SEARCH_QUERY_MAX_LENGTH} caracteres.`,
+    ),
+});
+export type SuggestionsInput = z.input<typeof suggestionsInputSchema>;
+
+// Resposta de GET /api/sugestoes: só o que a lista mostra.
+export type Suggestion = {
+  mediaType: "movie" | "tv";
+  externalId: string;
+  title: string;
+  year: string | null;
+  posterPath: string | null;
+};
+
 // Referência de um título no provedor de catálogo (hoje o TMDB), usada só
 // para abrir um resultado de busca que ainda não está no banco. Dentro do
 // Flomo o título é identificado pelo uuid (o id do provedor nunca é PK).

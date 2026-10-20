@@ -13,7 +13,11 @@
     "next": "Próxima",
     "pagination": "Paginação dos resultados",
     "noOverview": "Sem sinopse em português.",
-    "unknownYear": "Ano desconhecido"
+    "unknownYear": "Ano desconhecido",
+    "suggestions": "Sugestões de títulos",
+    "seeAll": "Ver todos os resultados para “{query}”",
+    "headerLabel": "Buscar títulos",
+    "headerPlaceholder": "Buscar títulos"
   },
   "MediaType": {
     "movie": "Filme",

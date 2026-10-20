@@ -294,6 +294,14 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 
 ---
 
+## F. Limite de requisições das sugestões da busca (recomendado)
+
+`GET /api/sugestoes` é público e tem só um freio parcial na memória de cada instância (`src/lib/rate-limit.ts`, 60 por minuto por IP). O corte firme é uma regra de rate limit na Vercel, que barra na borda antes de o código rodar:
+
+1. No projeto da Vercel, abra **Firewall** e crie uma regra de rate limit (o nome dos botões pode mudar; veja a documentação "Vercel WAF rate limiting").
+2. Condição: caminho igual a `/api/sugestoes`. Limite sugerido: 100 requisições por minuto por IP. Ação: responder 429.
+3. Se o plano não permitir a regra, o freio da memória e o cache de 1 dia da resposta continuam valendo.
+
 ## Armadilhas conhecidas
 
 | Sintoma                                                                                                  | Causa e solução                                                                                                                                                                     |
