@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SegmentedControl } from "@/components/segmented-control";
 import { LIBRARY_FILTERS, type LibraryFilter } from "@/contracts/library";
 
 // Abas da Biblioteca. As listas de todas as abas chegam de uma vez, então
@@ -16,22 +16,17 @@ export function LibraryFilters({
 }) {
   const [filter, setFilter] = useState<LibraryFilter>("all");
 
-  function choose(value: unknown) {
-    const next = LIBRARY_FILTERS.find((f) => f === value);
-    if (next) setFilter(next);
-  }
-
   return (
     <>
-      <Tabs value={filter} onValueChange={choose}>
-        <TabsList aria-label={labels.filters}>
-          {LIBRARY_FILTERS.map((f) => (
-            <TabsTrigger key={f} value={f}>
-              {labels.filter[f]}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <SegmentedControl
+        value={filter}
+        onChange={setFilter}
+        ariaLabel={labels.filters}
+        options={LIBRARY_FILTERS.map((f) => ({
+          value: f,
+          label: labels.filter[f],
+        }))}
+      />
       {lists[filter]}
     </>
   );

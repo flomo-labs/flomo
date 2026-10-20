@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/empty-state";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -67,12 +68,14 @@ async function Body() {
           {t("unavailable")}
         </p>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-start gap-3">
-          <p className="text-muted-foreground">{t("empty")}</p>
-          <Button render={<Link href="/buscar" />} nativeButton={false}>
-            {t("search")}
-          </Button>
-        </div>
+        <EmptyState
+          message={t("empty")}
+          action={
+            <Button render={<Link href="/buscar" />} nativeButton={false}>
+              {t("search")}
+            </Button>
+          }
+        />
       ) : (
         <FollowingList rows={rows} labels={await followingLabels()} />
       )}

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Poster } from "@/components/catalog/poster";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PosterRow } from "@/components/catalog/poster-row";
+import { EmptyState } from "@/components/empty-state";
+import { SegmentedControl } from "@/components/segmented-control";
 import { QuickMark, type QuickMarkTarget } from "./quick-mark";
 
 export const FOLLOWING_KINDS = ["both", "tv", "movie"] as const;
@@ -30,10 +31,6 @@ export type FollowingLabels = {
   markFailed: string;
 };
 
-function isKind(value: unknown): value is FollowingKind {
-  return FOLLOWING_KINDS.includes(value as FollowingKind);
-}
-
 // Lista "Seguintes" com o menu Ambos / Séries / Filmes. A escolha vive
 // só na tela (fora da URL, sem memória: reabrir volta para "Ambos"). Usada na Home e em /seguintes.
 export function FollowingList({
@@ -48,41 +45,40 @@ export function FollowingList({
 }) {
   const [kind, setKind] = useState<FollowingKind>("both");
 
-  function choose(value: unknown) {
-    if (isKind(value)) setKind(value);
-  }
-
   const shown = rows
     .filter((r) => kind === "both" || r.mediaType === kind)
     .slice(0, max);
 
   return (
     <div className="flex flex-col gap-3">
-      <Tabs value={kind} onValueChange={choose}>
-        <TabsList aria-label={labels.filters}>
-          {FOLLOWING_KINDS.map((k) => (
-            <TabsTrigger key={k} value={k}>
-              {labels.kinds[k]}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <SegmentedControl
+        value={kind}
+        onChange={setKind}
+        ariaLabel={labels.filters}
+        options={FOLLOWING_KINDS.map((k) => ({
+          value: k,
+          label: labels.kinds[k],
+        }))}
+      />
       {shown.length === 0 ? (
-        <p className="text-muted-foreground">{labels.emptyFilter}</p>
+        <EmptyState message={labels.emptyFilter} />
       ) : (
         <ul className="flex flex-col gap-3">
           {shown.map((row) => (
-            <li
-              key={row.titleId}
-              className="flex items-center gap-4 rounded-card border border-border p-3"
-            >
-              <Poster
-                path={row.posterPath}
-                size="w185"
-                alt={row.posterAlt}
-                className="w-12 shrink-0 sm:w-14"
-              />
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <li key={row.titleId}>
+              <PosterRow
+                posterPath={row.posterPath}
+                posterAlt={row.posterAlt}
+                size="sm"
+                centered
+                trailing={
+                  <QuickMark
+                    target={row.mark}
+                    label={row.markLabel}
+                    failed={labels.markFailed}
+                  />
+                }
+              >
                 <Link
                   href={row.href}
                   className="truncate font-semibold hover:underline"
@@ -94,12 +90,7 @@ export function FollowingList({
                     {row.detail}
                   </p>
                 ) : null}
-              </div>
-              <QuickMark
-                target={row.mark}
-                label={row.markLabel}
-                failed={labels.markFailed}
-              />
+              </PosterRow>
             </li>
           ))}
         </ul>
