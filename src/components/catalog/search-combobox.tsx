@@ -226,7 +226,7 @@ export function SearchCombobox({
             active === seeAllIndex && "bg-muted",
           )}
         >
-          {labels.seeAll.replace("{query}", query)}
+          {labels.seeAll.replace("{query}", () => query)}
         </li>
       </ul>
     </div>
