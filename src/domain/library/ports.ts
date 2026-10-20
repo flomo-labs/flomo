@@ -87,6 +87,7 @@ export interface LibraryRepository {
     scope: { statuses: readonly LibraryStatus[] | null; hidden: boolean },
     locale: string,
     today: string,
+    options?: { mediaType?: MediaType; limit?: number },
   ): Promise<LibraryItem[]>;
 
   // Fila "Seguintes": filmes em Quero ver e, para cada série em Assistindo ou

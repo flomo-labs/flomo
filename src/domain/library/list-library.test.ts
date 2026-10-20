@@ -79,6 +79,26 @@ describe("listLibrary", () => {
     expect(await ids("watched")).toEqual([OTHER]);
   });
 
+  it("filtra por tipo e limita a quantidade", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, { episodeId: E1.id });
+    await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
+    const ids = async (input: object) => {
+      const result = await listLibrary(lib.deps, USER, input);
+      return result.ok ? result.value.map((i) => i.titleId) : null;
+    };
+    expect(await ids({ mediaType: "movie" })).toEqual([MOVIE]);
+    expect(await ids({ mediaType: "tv" })).toEqual([SERIES]);
+    expect(await ids({ limit: 1 })).toHaveLength(1);
+  });
+
+  it("recusa limite inválido", async () => {
+    expect(await listLibrary(setup().deps, USER, { limit: 0 })).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INPUT" },
+    });
+  });
+
   it("recusa filtro desconhecido", async () => {
     expect(
       await listLibrary(setup().deps, USER, { filter: "abandonados" }),

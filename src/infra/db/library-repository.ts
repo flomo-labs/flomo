@@ -107,9 +107,9 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       return row.mediaType === "movie" ? "movie" : "tv";
     },
 
-    async listLibrary(userId, { statuses, hidden }, locale, today) {
+    async listLibrary(userId, { statuses, hidden }, locale, today, options) {
       if (statuses?.length === 0) return [];
-      const rows = await tx
+      const query = tx
         .select({
           titleId: userTitles.titleId,
           status: userTitles.status,
@@ -132,9 +132,14 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
             eq(userTitles.userId, userId),
             eq(userTitles.hidden, hidden),
             statuses ? inArray(userTitles.status, [...statuses]) : undefined,
+            options?.mediaType
+              ? eq(titles.mediaType, options.mediaType)
+              : undefined,
           ),
         )
-        .orderBy(desc(userTitles.updatedAt), desc(userTitles.titleId));
+        .orderBy(desc(userTitles.updatedAt), desc(userTitles.titleId))
+        .$dynamic();
+      const rows = await (options?.limit ? query.limit(options.limit) : query);
 
       const seriesIds = rows
         .filter((r) => r.mediaType === "tv")

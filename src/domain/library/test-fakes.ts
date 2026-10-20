@@ -49,7 +49,13 @@ export function createFakeLibrary(catalog: {
     async findTitleMediaType(titleId) {
       return titles[titleId] ?? null;
     },
-    async listLibrary(userId, { statuses: wanted, hidden }, _locale, today) {
+    async listLibrary(
+      userId,
+      { statuses: wanted, hidden },
+      _locale,
+      today,
+      options,
+    ) {
       const items: LibraryItem[] = [];
       for (const [k, status] of statuses) {
         const [owner, titleId] = k.split(":");
@@ -57,6 +63,7 @@ export function createFakeLibrary(catalog: {
         if (hiddenTitles.has(k) !== hidden) continue;
         const mediaType = titles[titleId];
         if (!mediaType) continue;
+        if (options?.mediaType && options.mediaType !== mediaType) continue;
         const released = episodes.filter(
           (e) =>
             e.titleId === titleId &&
@@ -80,7 +87,7 @@ export function createFakeLibrary(catalog: {
               : null,
         });
       }
-      return items;
+      return options?.limit ? items.slice(0, options.limit) : items;
     },
     async listFollowing(userId, _locale, today, limit) {
       // A ordem real (subir ao adicionar, marcar ou sair episódio novo) é

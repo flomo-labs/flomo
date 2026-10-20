@@ -95,13 +95,7 @@ async function ProfileContent({
   );
 }
 
-async function StatsList({
-  stats,
-  label,
-}: {
-  stats: ProfileStats;
-  label: string;
-}) {
+async function StatsList({ stats, label }: { stats: ProfileStats; label: string }) {
   const t = await getTranslations("Profile");
   const hours = watchedHours(stats.minutesWatched);
   const items = [
@@ -120,9 +114,7 @@ async function StatsList({
             key={key}
             className="flex flex-col-reverse rounded-card border border-border p-3"
           >
-            <dt className="text-sm text-muted-foreground">
-              {t(key, { count })}
-            </dt>
+            <dt className="text-sm text-muted-foreground">{t(key, { count })}</dt>
             <dd className="text-2xl font-semibold tabular-nums">
               {format.format(count)}
             </dd>

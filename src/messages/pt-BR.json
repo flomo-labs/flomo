@@ -221,7 +221,7 @@
     "moviesSection": "Filmes",
     "seeAll": "Ver tudo",
     "seeAllIn": "Ver tudo em {section}",
-    "libraryEmpty": "Sua biblioteca está vazia. Busque um título para começar.",
+    "libraryEmpty": "Nenhum título na sua biblioteca ainda. Busque um para começar.",
     "libraryUnavailable": "Não foi possível carregar sua biblioteca agora.",
     "search": "Buscar títulos",
     "notFoundTitle": "Perfil não encontrado",

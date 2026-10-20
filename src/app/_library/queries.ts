@@ -1,6 +1,8 @@
 import type { CurrentUser } from "@/app/_auth/session";
 import type { LibraryFilter } from "@/contracts/library";
 import { listLibrary } from "@/domain/library/list-library";
+import type { LibraryPreview } from "@/domain/library/library-preview";
+import { PREVIEW_SIZE } from "@/domain/library/library-preview";
 import type { LibraryItem } from "@/domain/library/ports";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
@@ -19,6 +21,38 @@ export async function loadLibraryItems(
       ),
     );
     return result.ok ? result.value : null;
+  } catch (error) {
+    console.error("Falha ao listar a biblioteca:", error);
+    return null;
+  }
+}
+
+// Prévia do perfil: os primeiros títulos de cada tipo (sem ocultos), lidos já
+// limitados no banco.
+export async function loadLibraryPreview(
+  user: CurrentUser,
+  perType: number = PREVIEW_SIZE,
+): Promise<LibraryPreview | null> {
+  try {
+    return await withUser(user.claims, async (tx) => {
+      const deps = {
+        library: createLibraryRepository(tx),
+        now: () => new Date(),
+      };
+      const read = (mediaType: "tv" | "movie") =>
+        listLibrary(
+          deps,
+          { id: user.id },
+          {
+            filter: "all",
+            mediaType,
+            limit: perType,
+          },
+        );
+      const [series, movies] = [await read("tv"), await read("movie")];
+      if (!series.ok || !movies.ok) return null;
+      return { series: series.value, movies: movies.value };
+    });
   } catch (error) {
     console.error("Falha ao listar a biblioteca:", error);
     return null;

@@ -2,26 +2,25 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { CurrentUser } from "@/app/_auth/session";
 import { LibraryCard } from "@/app/_library/library-card";
-import { loadLibraryItems } from "@/app/_library/queries";
+import { loadLibraryPreview } from "@/app/_library/queries";
 import { EmptyState } from "@/components/empty-state";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
-import { libraryPreview } from "@/domain/library/library-preview";
 import type { LibraryItem } from "@/domain/library/ports";
 
 // Prévia da biblioteca no perfil do próprio usuário: séries e filmes em seções
 // separadas, cada uma com "Ver tudo" para a Biblioteca.
 export async function LibraryPreview({ user }: { user: CurrentUser }) {
   const t = await getTranslations("Profile");
-  const items = await loadLibraryItems(user, "all");
-  if (items === null) {
+  const preview = await loadLibraryPreview(user);
+  if (preview === null) {
     return (
       <p role="alert" className="text-destructive">
         {t("libraryUnavailable")}
       </p>
     );
   }
-  const { series, movies } = libraryPreview(items);
+  const { series, movies } = preview;
   if (series.length === 0 && movies.length === 0) {
     return (
       <EmptyState
