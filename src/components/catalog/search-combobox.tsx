@@ -52,7 +52,10 @@ export function SearchCombobox({
   const listId = useId();
   const root = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(defaultValue);
-  const [fetched, setFetched] = useState<Suggestion[]>([]);
+  const [fetched, setFetched] = useState<{
+    query: string;
+    items: Suggestion[];
+  }>({ query: "", items: [] });
   const [open, setOpen] = useState(false);
   // Só busca sugestões depois que a pessoa digita: em /buscar?q=… o campo já
   // vem preenchido e a lista não deve abrir sozinha por cima dos resultados.
@@ -60,8 +63,14 @@ export function SearchCombobox({
   const [active, setActive] = useState(-1);
 
   const query = value.trim();
-  // Abaixo do mínimo de letras a lista some, mesmo com resposta antiga guardada.
-  const items = query.length >= SUGGESTION_MIN_LENGTH ? fetched : [];
+  // A resposta guardada só vale enquanto a pessoa continua na mesma busca
+  // (acrescentando ou apagando letras). Ao trocar por outra coisa a lista some
+  // até chegarem as sugestões novas, em vez de mostrar as da busca anterior.
+  const sameSearch =
+    query.length >= SUGGESTION_MIN_LENGTH &&
+    (query.toLowerCase().startsWith(fetched.query) ||
+      fetched.query.startsWith(query.toLowerCase()));
+  const items = sameSearch ? fetched.items : [];
   const seeAllIndex = items.length;
   const expanded = open && items.length > 0;
 
@@ -74,9 +83,9 @@ export function SearchCombobox({
           `/api/sugestoes?${new URLSearchParams({ q: query })}`,
           { signal: controller.signal },
         );
-        if (!response.ok) return setFetched([]);
+        if (!response.ok) return setFetched({ query: "", items: [] });
         const body: { items: Suggestion[] } = await response.json();
-        setFetched(body.items);
+        setFetched({ query: query.toLowerCase(), items: body.items });
         setActive(-1);
         setOpen(true);
       } catch {
