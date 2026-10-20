@@ -59,7 +59,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Tudo, menos arquivos estáticos e imagens.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Tudo, menos arquivos estáticos, imagens e as sugestões da busca (pública,
+    // sem sessão, e a resposta vai para o cache compartilhado).
+    "/((?!_next/static|_next/image|favicon.ico|api/sugestoes|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
