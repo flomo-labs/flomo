@@ -28,7 +28,7 @@ export default function ConfiguracoesPage() {
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Tela inicial</h2>
         <p className="text-sm text-muted-foreground">
-          Onde você começa ao entrar e o que o menu Início abre. O logo do Flomo
+          Onde você começa ao entrar e o que o item Seguintes do menu abre. O logo do Flomo
           sempre leva à Home.
         </p>
         <Suspense>

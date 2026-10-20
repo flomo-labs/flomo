@@ -1,6 +1,6 @@
-import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { signOut } from "@/app/_auth/actions";
@@ -37,7 +37,7 @@ export function SiteHeader() {
             aria-label="Buscar"
             className="grid size-11 place-items-center rounded-full text-muted-foreground hover:text-foreground md:hidden"
           >
-            <SearchIcon className="size-5" aria-hidden />
+            <Icon name="search" className="size-5" />
           </Link>
           <Suspense fallback={<div className="size-8" />}>
             <Account />
@@ -62,7 +62,7 @@ function DiscoverLink() {
 }
 
 // No celular os destinos ficam na barra inferior; aqui só no desktop.
-// Início e Biblioteca só existem para quem está logado.
+// Seguintes e Biblioteca só existem para quem está logado.
 async function NavLinks() {
   const signedIn = Boolean(await getCurrentUser());
   return (

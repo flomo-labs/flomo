@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon } from "lucide-react";
+import { Icon } from "@/components/icon";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { markEpisode, markMovie } from "./actions";
@@ -50,7 +50,7 @@ export function QuickMark({
         disabled={pending}
         onClick={mark}
       >
-        <CheckIcon />
+        <Icon name="check" />
       </Button>
       {error ? (
         <p role="alert" className="text-xs text-destructive">

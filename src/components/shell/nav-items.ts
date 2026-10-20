@@ -1,5 +1,5 @@
 // Dados puros (passam do servidor para os componentes de cliente).
-export type NavIcon = "home" | "discover" | "library" | "profile";
+export type NavIcon = "following" | "discover" | "library" | "profile";
 
 export type NavItem = {
   href: string;
@@ -12,18 +12,28 @@ export type NavItem = {
   fullNavigation?: boolean;
 };
 
-export function isNavItemActive(item: NavItem, pathname: string): boolean {
+// O Next entrega "/@renato" como "/%40renato"; compara sempre decodificado.
+function decodePathname(pathname: string): string {
+  try {
+    return decodeURIComponent(pathname);
+  } catch {
+    return pathname;
+  }
+}
+
+export function isNavItemActive(item: NavItem, rawPathname: string): boolean {
+  const pathname = decodePathname(rawPathname);
   return (
     Boolean(item.exact?.includes(pathname)) ||
     Boolean(item.prefixes?.some((prefix) => pathname.startsWith(prefix)))
   );
 }
 
-// Início hoje leva à tela escolhida pelo usuário (Home ou Seguintes).
+// Seguintes hoje leva à tela escolhida pelo usuário (Home ou Seguintes).
 export const HOME_ITEM: NavItem = {
   href: "/inicio",
-  label: "Início",
-  icon: "home",
+  label: "Seguintes",
+  icon: "following",
   exact: ["/", "/seguintes", "/inicio"],
   fullNavigation: true,
 };
@@ -48,6 +58,9 @@ export function profileItem(href: string): NavItem {
     href,
     label: "Perfil",
     icon: "profile",
-    prefixes: ["/perfil/", "/configuracoes"],
+    // /@handle é reescrito para /perfil/handle; conforme a navegação, o
+    // pathname chega de um jeito ou de outro.
+    exact: [href, href.replace(/^\/@/, "/perfil/")],
+    prefixes: ["/configuracoes"],
   };
 }

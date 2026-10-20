@@ -1,0 +1,136 @@
+import type { ReactNode, SVGProps } from "react";
+
+// Ícones do Ionicons (v8, licença MIT, https://ionic.io/ionicons), copiados
+// como dados para não depender do web component do pacote. Só os que a
+// interface usa. `filled` troca o contorno pelo preenchido (aba ativa, nota).
+// Para um ícone novo, copie o SVG de `ionicons/dist/svg/<nome>.svg`.
+const outline = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  strokeWidth: 32,
+} as const;
+
+type Glyph = { outline: ReactNode; filled: ReactNode };
+
+const stroke = (d: string, width = 32): ReactNode => (
+  <path d={d} {...outline} strokeWidth={width} />
+);
+
+const GLYPHS = {
+  search: {
+    outline: (
+      <>
+        {stroke(
+          "M221.09 64a157.09 157.09 0 1 0 157.09 157.09A157.1 157.1 0 0 0 221.09 64Z",
+        )}
+        {stroke("M338.29 338.29 448 448")}
+      </>
+    ),
+    filled: (
+      <path d="M456.69 421.39 362.6 327.3a173.8 173.8 0 0 0 34.84-104.58C397.44 126.38 319.06 48 222.72 48S48 126.38 48 222.72s78.38 174.72 174.72 174.72A173.8 173.8 0 0 0 327.3 362.6l94.09 94.09a25 25 0 0 0 35.3-35.3M97.92 222.72a124.8 124.8 0 1 1 124.8 124.8 124.95 124.95 0 0 1-124.8-124.8" />
+    ),
+  },
+  close: {
+    outline: stroke("M368 368 144 144M368 144 144 368"),
+    filled: stroke("M368 368 144 144M368 144 144 368"),
+  },
+  check: {
+    outline: stroke("M416 128 192 384l-96-96"),
+    filled: stroke("M416 128 192 384l-96-96"),
+  },
+  chevronForward: {
+    outline: stroke("m184 112 144 144-144 144", 48),
+    filled: stroke("m184 112 144 144-144 144", 48),
+  },
+  arrowBack: {
+    outline: stroke("M244 400 100 256l144-144M120 256h292", 48),
+    filled: stroke("M244 400 100 256l144-144M120 256h292", 48),
+  },
+  star: {
+    outline: stroke(
+      "M480 208H308L256 48l-52 160H32l140 96-54 160 138-100 138 100-54-160Z",
+    ),
+    filled: (
+      <path d="M394 480a16 16 0 0 1-9.39-3L256 383.76 127.39 477a16 16 0 0 1-24.55-18.08L153 310.35 23 221.2a16 16 0 0 1 9-29.2h160.38l48.4-148.95a16 16 0 0 1 30.44 0l48.4 149H480a16 16 0 0 1 9.05 29.2L359 310.35l50.13 148.53A16 16 0 0 1 394 480" />
+    ),
+  },
+  playCircle: {
+    outline: (
+      <>
+        <path
+          d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192Z"
+          {...outline}
+        />
+        <path d="m216.32 334.44 114.45-69.14a10.89 10.89 0 0 0 0-18.6l-114.45-69.14a10.78 10.78 0 0 0-16.32 9.31v138.26a10.78 10.78 0 0 0 16.32 9.31" />
+      </>
+    ),
+    filled: (
+      <path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48m74.77 217.3-114.45 69.14a10.78 10.78 0 0 1-16.32-9.31V186.87a10.78 10.78 0 0 1 16.32-9.31l114.45 69.14a10.89 10.89 0 0 1 0 18.6" />
+    ),
+  },
+  compass: {
+    outline: (
+      <>
+        <path
+          d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192Z"
+          {...outline}
+        />
+        <path d="m350.67 150.93-117.2 46.88a64 64 0 0 0-35.66 35.66l-46.88 117.2a8 8 0 0 0 10.4 10.4l117.2-46.88a64 64 0 0 0 35.66-35.66l46.88-117.2a8 8 0 0 0-10.4-10.4M256 280a24 24 0 1 1 24-24 24 24 0 0 1-24 24" />
+      </>
+    ),
+    filled: (
+      <>
+        <circle cx="256" cy="256" r="24" />
+        <path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48m105.07 113.33-46.88 117.2a64 64 0 0 1-35.66 35.66l-117.2 46.88a8 8 0 0 1-10.4-10.4l46.88-117.2a64 64 0 0 1 35.66-35.66l117.2-46.88a8 8 0 0 1 10.4 10.4" />
+      </>
+    ),
+  },
+  personCircle: {
+    outline: (
+      <>
+        <path d="M258.9 48C141.92 46.42 46.42 141.92 48 258.9c1.56 112.19 92.91 203.54 205.1 205.1 117 1.6 212.48-93.9 210.88-210.88C462.44 140.91 371.09 49.56 258.9 48m126.42 327.25a4 4 0 0 1-6.14-.32 124.3 124.3 0 0 0-32.35-29.59C321.37 329 289.11 320 256 320s-65.37 9-90.83 25.34a124.2 124.2 0 0 0-32.35 29.58 4 4 0 0 1-6.14.32A175.32 175.32 0 0 1 80 259c-1.63-97.31 78.22-178.76 175.57-179S432 158.81 432 256a175.32 175.32 0 0 1-46.68 119.25" />
+        <path d="M256 144c-19.72 0-37.55 7.39-50.22 20.82s-19 32-17.57 51.93C191.11 256 221.52 288 256 288s64.83-32 67.79-71.24c1.48-19.74-4.8-38.14-17.68-51.82C293.39 151.44 275.59 144 256 144" />
+      </>
+    ),
+    filled: (
+      <path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48m-50.22 116.82C218.45 151.39 236.28 144 256 144s37.39 7.44 50.11 20.94c12.89 13.68 19.16 32.06 17.68 51.82C320.83 256 290.43 288 256 288s-64.89-32-67.79-71.25c-1.47-19.92 4.79-38.36 17.57-51.93M256 432a175.5 175.5 0 0 1-126-53.22 122.9 122.9 0 0 1 35.14-33.44C190.63 329 222.89 320 256 320s65.37 9 90.83 25.34A122.9 122.9 0 0 1 382 378.78 175.45 175.45 0 0 1 256 432" />
+    ),
+  },
+  bookmark: {
+    outline: stroke(
+      "M352 48H160a48 48 0 0 0-48 48v368l144-128 144 128V96a48 48 0 0 0-48-48",
+    ),
+    filled: (
+      <path d="M400 480a16 16 0 0 1-10.63-4L256 357.41 122.63 476A16 16 0 0 1 96 464V96a64.07 64.07 0 0 1 64-64h192a64.07 64.07 0 0 1 64 64v368a16 16 0 0 1-16 16" />
+    ),
+  },
+} satisfies Record<string, Glyph>;
+
+export type IconName = keyof typeof GLYPHS;
+
+// 1em de lado por padrão, na cor do texto; o tamanho vem de `size-*` e, nos
+// componentes do shadcn, das regras `[&_svg]` do pai.
+export function Icon({
+  name,
+  filled = false,
+  ...props
+}: { name: IconName; filled?: boolean } & Omit<
+  SVGProps<SVGSVGElement>,
+  "name" | "children" | "viewBox"
+>) {
+  const glyph = GLYPHS[name];
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      width="1em"
+      height="1em"
+      fill="currentColor"
+      aria-hidden={props["aria-label"] ? undefined : true}
+      {...props}
+    >
+      {filled ? glyph.filled : glyph.outline}
+    </svg>
+  );
+}

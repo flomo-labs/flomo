@@ -8,7 +8,7 @@ import {
 } from "./nav-items";
 
 describe("isNavItemActive", () => {
-  it("marca Início na Home, em Seguintes e em /inicio", () => {
+  it("marca Seguintes na Home, em Seguintes e em /inicio", () => {
     for (const path of ["/", "/seguintes", "/inicio"]) {
       expect(isNavItemActive(HOME_ITEM, path)).toBe(true);
     }
@@ -21,10 +21,14 @@ describe("isNavItemActive", () => {
     expect(isNavItemActive(LIBRARY_ITEM, "/seguintes")).toBe(false);
   });
 
-  it("marca Perfil no perfil de alguém e nas configurações", () => {
+  it("marca Perfil no perfil do usuário (com @ codificado ou não) e nas configurações", () => {
     const item = profileItem("/@renato");
+    expect(isNavItemActive(item, "/@renato")).toBe(true);
+    expect(isNavItemActive(item, "/%40renato")).toBe(true);
     expect(isNavItemActive(item, "/perfil/renato")).toBe(true);
     expect(isNavItemActive(item, "/configuracoes")).toBe(true);
+    expect(isNavItemActive(item, "/@outra-pessoa")).toBe(false);
+    expect(isNavItemActive(item, "/perfil/outra-pessoa")).toBe(false);
     expect(isNavItemActive(item, "/")).toBe(false);
   });
 });

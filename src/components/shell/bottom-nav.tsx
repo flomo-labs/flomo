@@ -3,20 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  BookmarkIcon,
-  CompassIcon,
-  HouseIcon,
-  UserIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon, type IconName } from "@/components/icon";
 import { isNavItemActive, type NavItem, type NavIcon } from "./nav-items";
 
-const ICONS: Record<NavIcon, LucideIcon> = {
-  home: HouseIcon,
-  discover: CompassIcon,
-  library: BookmarkIcon,
-  profile: UserIcon,
+const ICONS: Record<NavIcon, IconName> = {
+  following: "playCircle",
+  discover: "compass",
+  library: "bookmark",
+  profile: "personCircle",
 };
 
 // Barra fixa do celular (só para quem está logado). `data-bottom-nav` faz o
@@ -32,10 +26,9 @@ export function BottomNav({ items }: { items: NavItem[] }) {
       <ul className="flex h-16 items-stretch justify-around">
         {items.map((item) => {
           const active = isNavItemActive(item, pathname);
-          const Icon = ICONS[item.icon];
-          const content = (
+                    const content = (
             <>
-              <Icon className="size-6" aria-hidden />
+              <Icon name={ICONS[item.icon]} filled={active} className="size-6" />
               <span
                 className={cn(
                   "text-[0.625rem]",
