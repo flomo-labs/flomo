@@ -58,6 +58,8 @@
      claro em cima e mais vivo embaixo, para ler bem sobre o escurecimento. */
   --color-rank-from: oklch(0.85 0.12 3.8);
   --color-rank-to: oklch(0.62 0.22 3.8);
+  /* Azul claro da marca do TMDB, só no nome dele no aviso de atribuição. */
+  --color-tmdb: #01b4e4;
 }
 
 /* Coluna principal: margem de 16px no celular e 32px a partir de 768px. */
@@ -175,5 +177,113 @@
 @media (max-width: 47.99rem) {
   body:has([data-bottom-nav]) {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* A landing tem tela cheia e o aviso do TMDB no menu "···": sem o rodapé do app. */
+body:has([data-landing]) > footer {
+  display: none;
+}
+
+/* Menu "···" da landing: cinza entre o popover e o muted, quase opaco (o
+   desfoque do que está atrás vem do componente), e sombra que se vê sobre o
+   fundo escuro. */
+.landing-menu {
+  background: color-mix(
+    in oklch,
+    color-mix(in oklch, var(--popover) 60%, var(--muted)) 95%,
+    transparent
+  );
+  box-shadow:
+    0 18px 40px -8px rgb(0 0 0 / 0.75),
+    0 4px 12px rgb(0 0 0 / 0.5);
+}
+
+/* Mosaico da landing. Celular: faixa no topo, colunas retas, some nas
+   bordas de cima e de baixo. Desktop: ocupa a tela toda por trás do texto,
+   colunas inclinadas à direita, sumindo no escuro perto do texto. */
+.landing-wall {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 35%,
+    black 68%,
+    transparent
+  );
+}
+
+/* Brilho: um único ponto de luz no tom do accent, atrás dos pôsteres. */
+.landing-wall-glow {
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    oklch(0.55 0.2 330 / 0.28),
+    transparent 65%
+  );
+}
+
+@media (min-width: 48rem) {
+  .landing-wall-glow {
+    background: radial-gradient(
+      ellipse 40% 55% at 76% 48%,
+      oklch(0.55 0.2 330 / 0.3),
+      transparent 100%
+    );
+  }
+}
+
+.landing-wall-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-inline: -12%;
+}
+
+@media (min-width: 48rem) {
+  .landing-wall {
+    /* Os pôsteres somem no escuro em direção ao texto. A curva suave evita
+       uma linha visível onde o degradê começa. */
+    mask-image: linear-gradient(
+      to right,
+      transparent 38%,
+      rgb(0 0 0 / 0.08) 46%,
+      rgb(0 0 0 / 0.25) 54%,
+      rgb(0 0 0 / 0.5) 62%,
+      rgb(0 0 0 / 0.8) 70%,
+      black 80%
+    );
+  }
+
+  .landing-wall-grid {
+    position: absolute;
+    top: -30%;
+    left: 53%;
+    width: 65%;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+    margin-inline: 0;
+    transform: rotate(10deg);
+    transform-origin: top left;
+  }
+}
+
+/* Onda do mosaico da landing: cada pôster sobe e desce no mesmo ritmo, com
+   atraso conforme a posição (definido no componente). Parada com "reduzir
+   movimento". */
+@keyframes poster-wave {
+  from {
+    transform: translateY(0.6rem);
+  }
+  to {
+    transform: translateY(-0.6rem);
+  }
+}
+
+.poster-wave {
+  animation: poster-wave 3.2s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-wave {
+    animation: none;
   }
 }

@@ -12,7 +12,7 @@ import { NavLink } from "./shell/nav-link";
 import { navLinkClass } from "./shell/nav-link-style";
 import {
   DISCOVER_ITEM,
-  HOME_ITEM,
+  FOLLOWING_ITEM,
   LIBRARY_ITEM,
   profileItem,
 } from "./shell/nav-items";
@@ -23,9 +23,9 @@ export function SiteHeader() {
     <header className="border-b border-border">
       <div className="page-container flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-4 md:gap-6">
-          <Link href="/" className="text-lg font-bold">
-            Flomo
-          </Link>
+          <Suspense fallback={<Logo href="/" />}>
+            <HomeLogo />
+          </Suspense>
           <Suspense fallback={<DiscoverLink />}>
             <NavLinks />
           </Suspense>
@@ -46,6 +46,20 @@ export function SiteHeader() {
       </div>
     </header>
   );
+}
+
+function Logo({ href }: { href: string }) {
+  return (
+    <Link href={href} className="text-lg font-bold">
+      Flomo
+    </Link>
+  );
+}
+
+// O logo leva ao Seguintes para quem entrou e à landing para o visitante.
+async function HomeLogo() {
+  const signedIn = Boolean(await getCurrentUser());
+  return <Logo href={signedIn ? FOLLOWING_ITEM.href : "/"} />;
 }
 
 // Enquanto a sessão não foi lida, só o Descobrir, que todos têm. Sem o hook
@@ -70,7 +84,7 @@ async function NavLinks() {
       aria-label="Navegação principal"
       className="hidden items-center gap-1 md:flex"
     >
-      {signedIn && <NavLink item={HOME_ITEM} />}
+      {signedIn && <NavLink item={FOLLOWING_ITEM} />}
       <NavLink item={DISCOVER_ITEM} />
       {signedIn && <NavLink item={LIBRARY_ITEM} />}
     </nav>
@@ -87,7 +101,7 @@ export async function MobileNav() {
   return (
     <BottomNav
       items={[
-        HOME_ITEM,
+        FOLLOWING_ITEM,
         DISCOVER_ITEM,
         profileItem(handle ? profilePath(handle) : "/cadastro"),
       ]}

@@ -134,6 +134,6 @@ export type WatchProviders = {
   buy: WatchProvider[];
 };
 
-// Prateleira da Home: lista de referências (como os resultados de busca), sem
+// Prateleira da tela Descobrir: lista de referências (como os resultados de busca), sem
 // uuid; cada prateleira mostra no máximo isto.
 export const SHELF_SIZE = 10;

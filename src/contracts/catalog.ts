@@ -67,7 +67,7 @@ export const seasonEpisodesInputSchema = z.object({
   seasonNumber: z.coerce.number().int().min(0).max(9999),
 });
 
-// Prateleiras da Home pública (Fase 1.2b): em alta, nos cinemas e "em alta no
+// Prateleiras do Descobrir (Fase 1.2b): em alta, nos cinemas e "em alta no
 // serviço X". Os serviços são uma lista fixa (os principais do Brasil, ids de
 // provedor do TMDB), para a entrada nunca virar parâmetro livre do provedor.
 export const SHELF_PROVIDER_IDS = [
@@ -96,7 +96,7 @@ const SHELF_PROVIDER_INFO: Record<
   "307": { name: "Globoplay", feminine: false },
 };
 
-// Em ordem alfabética (é a ordem do seletor na Home; o primeiro é o padrão).
+// Em ordem alfabética (é a ordem do seletor no Descobrir; o primeiro é o padrão).
 export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
   id,
   ...SHELF_PROVIDER_INFO[id],

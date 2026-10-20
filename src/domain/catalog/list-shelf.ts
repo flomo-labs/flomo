@@ -21,7 +21,7 @@ function cacheKey(query: ShelfQuery) {
     : base;
 }
 
-// Prateleiras da Home pública (em alta, nos cinemas, em alta no serviço X).
+// Prateleiras da tela Descobrir (em alta, nos cinemas, em alta no serviço X).
 // Mesmo cache das buscas: responde do Postgres e, vencido o prazo, responde
 // com o gravado e atualiza em segundo plano. Itens são referências: o título
 // só ganha uuid quando alguém o abre.

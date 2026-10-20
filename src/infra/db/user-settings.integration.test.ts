@@ -13,7 +13,7 @@ import { getStartScreen, setStartScreen } from "@/domain/profile/start-screen";
 afterAll(closeTestDb);
 
 describe("preferências do usuário no banco", () => {
-  it("o dono grava e lê a própria tela inicial; o padrão é a Home", () =>
+  it("o dono grava e lê a própria tela inicial; o padrão é o inicial", () =>
     inRollback(async (tx) => {
       const id = await createUser(tx);
       await asUser(tx, id, (utx) =>

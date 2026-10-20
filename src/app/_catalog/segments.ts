@@ -1,4 +1,4 @@
-// Tipos da prateleira "Em alta no serviço" da Home e o tipo de catálogo de cada um.
+// Tipos da prateleira "Em alta no serviço" do Descobrir e o tipo de catálogo de cada um.
 export const MEDIA_SEGMENTS = {
   tudo: "all",
   filmes: "movie",

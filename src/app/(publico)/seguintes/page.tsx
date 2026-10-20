@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { HandleReminder } from "@/app/_profile/handle-reminder";
 import { followingLabels, loadFollowing } from "@/app/_library/following";
 import { FollowingList } from "@/app/_library/following-list";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,9 @@ export default function SeguintesPage() {
   return (
     <>
       <Heading />
+      <Suspense>
+        <HandleReminder />
+      </Suspense>
       <Suspense fallback={<p className="text-muted-foreground">…</p>}>
         <Body />
       </Suspense>
@@ -32,12 +36,7 @@ export default function SeguintesPage() {
 
 async function Heading() {
   const t = await getTranslations("Following");
-  return (
-    <div className="flex flex-col gap-1">
-      <h1 className="text-page-title">{t("title")}</h1>
-      <p className="text-muted-foreground">{t("description")}</p>
-    </div>
-  );
+  return <h1 className="text-page-title">{t("title")}</h1>;
 }
 
 async function Body() {

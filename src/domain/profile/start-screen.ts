@@ -6,8 +6,8 @@ import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
 import type { SettingsRepository } from "./ports";
 
-// Tela inicial preferida: onde o usuário cai ao entrar e no menu "Início".
-// O logo do site leva sempre à Home, qualquer que seja a escolha.
+// Preferência antiga de tela inicial. Não tem mais efeito (quem está logado
+// começa sempre no Seguintes) e sai junto com a tabela `user_settings`.
 export async function getStartScreen(
   deps: { settings: SettingsRepository },
   user: AuthenticatedUser,

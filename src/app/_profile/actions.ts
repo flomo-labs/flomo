@@ -2,17 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { StartScreen } from "@/contracts/profile";
-import { fail, type Result, type UseCaseError } from "@/domain/result";
+import { type UseCaseError } from "@/domain/result";
 import {
   changeHandle,
   type ChangeHandleErrorCode,
 } from "@/domain/profile/change-handle";
 import { withUser } from "@/infra/db/client";
 import { updateProfile } from "@/domain/profile/profile-page";
-import { setStartScreen } from "@/domain/profile/start-screen";
 import { createProfileRepository } from "@/infra/db/profile-repository";
-import { createSettingsRepository } from "@/infra/db/settings-repository";
 import { safeNextPath } from "../_auth/redirect";
 import { getCurrentUser } from "../_auth/session";
 
@@ -73,29 +70,10 @@ export async function updateHandle(
   return { savedHandle: result.value.handle, submitted: result.value.handle };
 }
 
-export type StartScreenResult = Result<
-  { startScreen: StartScreen },
-  "INVALID_INPUT" | "UNAUTHENTICATED"
->;
-
-// Escolha da tela inicial, nas configurações.
-export async function changeStartScreen(
-  input: unknown,
-): Promise<StartScreenResult> {
-  const user = await getCurrentUser();
-  if (!user)
-    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
-  return withUser(user.claims, (tx) =>
-    setStartScreen(
-      { settings: createSettingsRepository(tx) },
-      { id: user.id },
-      input,
-    ),
-  );
-}
-
 export type ProfileFormState = {
-  error?: UseCaseError<"INVALID_INPUT" | "PROFILE_NOT_FOUND" | "UNAUTHENTICATED">;
+  error?: UseCaseError<
+    "INVALID_INPUT" | "PROFILE_NOT_FOUND" | "UNAUTHENTICATED"
+  >;
   saved?: boolean;
   // O que foi enviado: o React limpa o formulário ao fim da ação.
   submitted?: { displayName: string; bio: string; isPrivate: boolean };

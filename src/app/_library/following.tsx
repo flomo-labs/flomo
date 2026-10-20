@@ -1,15 +1,10 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/app/_auth/session";
 import { listFollowing } from "@/domain/library/following";
 import type { FollowingItem } from "@/domain/library/ports";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
-import {
-  FollowingList,
-  type FollowingLabels,
-  type FollowingRow,
-} from "./following-list";
+import type { FollowingLabels, FollowingRow } from "./following-list";
 
 type Translate = Awaited<ReturnType<typeof getTranslations<"Following">>>;
 
@@ -34,7 +29,8 @@ function toRow(
     return {
       ...base,
       href: `/titulo/${item.titleId}?temporada=${seasonNumber}`,
-      detail: episodeName ? `${position} · ${episodeName}` : position,
+      position,
+      episodeName: episodeName || null,
       mark: { kind: "episode", episodeId },
       markLabel: t("markEpisode", {
         title: item.title,
@@ -46,7 +42,8 @@ function toRow(
   return {
     ...base,
     href: `/titulo/${item.titleId}`,
-    detail: null,
+    position: null,
+    episodeName: null,
     mark: { kind: "movie", titleId: item.titleId },
     markLabel: t("markMovie", { title: item.title }),
   };
@@ -86,27 +83,4 @@ export async function followingLabels(): Promise<FollowingLabels> {
     emptyFilter: t("emptyFilter"),
     markFailed: t("markFailed"),
   };
-}
-
-// Atalho da Home: só aparece para quem está logado e tem algo na fila.
-export async function FollowingShortcut() {
-  const rows = await loadFollowing();
-  if (!rows || rows.length === 0) return null;
-  const t = await getTranslations("Following");
-  return (
-    <section className="flex flex-col gap-3" aria-labelledby="seguintes">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id="seguintes" className="text-section-title">
-          {t("title")}
-        </h2>
-        <Link
-          href="/seguintes"
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          {t("seeAll")}
-        </Link>
-      </div>
-      <FollowingList rows={rows} labels={await followingLabels()} max={5} />
-    </section>
-  );
 }

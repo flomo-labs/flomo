@@ -5,7 +5,7 @@ import type { ShelfInput } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
 import { listShelfCached } from "./cached-shelf";
 
-// Prateleira que falha mostra um aviso no lugar da lista (a Home segue de pé);
+// Prateleira que falha mostra um aviso no lugar da lista (a tela segue de pé);
 // o erro fica no log.
 export async function ShelfItems({
   input,
@@ -18,7 +18,7 @@ export async function ShelfItems({
   // tentaria montar a prateleira no build, sem banco, e a gravaria no HTML
   // estático.
   await connection();
-  const t = await getTranslations("Home");
+  const t = await getTranslations("Discover");
   let items: SearchItem[] = [];
   try {
     items = (await listShelfCached(input)).value;

@@ -91,7 +91,8 @@ export const changeHandleInputSchema = z.object({ handle: handleSchema });
 
 export type ChangeHandleInput = z.infer<typeof changeHandleInputSchema>;
 
-// Tela em que o usuário quer começar ao entrar: a Home ou a fila Seguintes.
+// Preferência antiga de tela inicial. "home" é o nome que ficou no banco (a
+// tela Home não existe mais: hoje os dois valores abrem o Seguintes).
 export const START_SCREENS = ["home", "following"] as const;
 export type StartScreen = (typeof START_SCREENS)[number];
 

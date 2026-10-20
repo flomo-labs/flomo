@@ -19,7 +19,7 @@ function fakeSettings() {
 }
 
 describe("tela inicial preferida", () => {
-  it("sem escolha, vale a Home", async () => {
+  it("sem escolha, vale o padrão", async () => {
     const { deps } = fakeSettings();
     expect(await getStartScreen(deps, USER)).toEqual({
       ok: true,
