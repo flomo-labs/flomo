@@ -50,10 +50,14 @@
      estes nomes, nunca valores soltos: trocar o visual depois mexe só aqui. */
   --radius-poster: 0.75rem;
   --radius-card: 1rem;
-  /* Largura da página. Hoje 48rem (a coluna de antes); sobe para 70rem junto
-     com as telas que usam grades largas (PR 4). */
-  --container-page: 48rem;
+  /* Largura da página: 60rem (era 48rem) para aproveitar melhor a tela no
+     desktop; pode subir para 70rem junto com as grades largas (PR 4). */
+  --container-page: 60rem;
   --container-reading: 48rem;
+  /* Degradê do número do ranking: mesmo matiz (~4) do accent do tema, mais
+     claro em cima e mais vivo embaixo, para ler bem sobre o escurecimento. */
+  --color-rank-from: oklch(0.85 0.12 3.8);
+  --color-rank-to: oklch(0.62 0.22 3.8);
 }
 
 /* Coluna principal: margem de 16px no celular e 32px a partir de 768px. */
