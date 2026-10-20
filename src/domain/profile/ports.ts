@@ -1,4 +1,4 @@
-import type { StartScreen, UpdateProfileInput } from "@/contracts/profile";
+import type { UpdateProfileInput } from "@/contracts/profile";
 
 // Perfil como aparece na página do perfil (função app.profile_card, migration
 // 0017). De perfil privado de outra pessoa vêm só nome, handle e foto: `bio`
@@ -48,11 +48,4 @@ export interface ProfileRepository {
     userId: string,
     details: UpdateProfileInput,
   ): Promise<"updated" | "not_found">;
-}
-
-// Preferências do usuário (tabela `user_settings`); só o dono as lê e altera.
-export interface SettingsRepository {
-  // Sem linha gravada, vale "home" (preferência antiga, hoje sem efeito).
-  getStartScreen(userId: string): Promise<StartScreen>;
-  setStartScreen(userId: string, startScreen: StartScreen): Promise<void>;
 }
