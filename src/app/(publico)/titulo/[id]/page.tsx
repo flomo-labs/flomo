@@ -74,14 +74,14 @@ async function TitleContent({
 
   return (
     <article className="flex flex-col gap-8">
-      <header className="flex gap-5">
+      <header className="flex gap-4 sm:gap-6">
         <Poster
           path={title.posterPath}
           size="w342"
           alt={t("Title.poster", { title: title.title })}
-          className="w-32 shrink-0 sm:w-48"
+          className="w-24 shrink-0 sm:w-44"
         />
-        <div className="flex min-w-0 flex-col items-start gap-3">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
           <h1 className="text-page-title">{title.title}</h1>
           {title.originalTitle !== title.title ? (
             <p className="text-sm text-muted-foreground italic">
@@ -206,8 +206,11 @@ async function Seasons({
       <h2 id="temporadas" className="text-section-title">
         {t("seasons")}
       </h2>
-      <nav aria-label={t("seasonsNav")}>
-        <ul className="flex flex-wrap gap-2">
+      <nav
+        aria-label={t("seasonsNav")}
+        className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0"
+      >
+        <ul className="flex gap-2 md:flex-wrap">
           {title.seasons.map((season) => {
             const active = season.id === current.id;
             return (
@@ -218,7 +221,7 @@ async function Seasons({
                   replace
                   aria-current={active ? "true" : undefined}
                   className={cn(
-                    "inline-flex rounded-lg border px-3 py-1.5 text-sm transition-colors",
+                    "inline-flex min-h-11 items-center whitespace-nowrap rounded-full border px-4 text-sm transition-colors md:min-h-9",
                     active
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border hover:bg-muted",
@@ -236,10 +239,7 @@ async function Seasons({
         {t("episodeCount", { count: current.episodeCount })}
       </p>
       <Suspense fallback={null}>
-        <SeasonAverage
-          titleId={title.id}
-          seasonNumber={current.seasonNumber}
-        />
+        <SeasonAverage titleId={title.id} seasonNumber={current.seasonNumber} />
       </Suspense>
       <Suspense fallback={<p className="text-muted-foreground">…</p>}>
         <Episodes titleId={title.id} seasonNumber={current.seasonNumber} />
@@ -261,9 +261,12 @@ async function Episodes({
     return <p className="text-muted-foreground">{t("noEpisodes")}</p>;
   }
   return (
-    <ol className="flex flex-col divide-y divide-border rounded-card border border-border">
+    <ol className="flex max-w-reading flex-col gap-2">
       {result.value.map((episode) => (
-        <li key={episode.id} className="flex flex-col gap-1 p-3">
+        <li
+          key={episode.id}
+          className="flex flex-col gap-1 rounded-card border border-border p-3"
+        >
           <p className="font-medium">
             <span className="text-muted-foreground">
               {episode.episodeNumber}.

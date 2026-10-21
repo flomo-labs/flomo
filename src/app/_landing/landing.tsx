@@ -56,7 +56,7 @@ export async function Landing() {
             </Button>
           </form>
           <Link
-            href="/buscar"
+            href="/descobrir"
             className="text-center text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
             {t("seeTrending")}

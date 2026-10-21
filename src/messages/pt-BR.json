@@ -176,6 +176,8 @@
     "consent": "Ao entrar, você declara ter 18 anos ou mais e concorda com os <terms>Termos de uso</terms> e com a <privacy>Política de privacidade</privacy>."
   },
   "Discover": {
+  "title": "Descobrir",
+  "description": "Em alta, nos cinemas e nos serviços de streaming.",
     "shelf": {
       "trending": "Em alta esta semana",
       "now_playing": "Nos cinemas",

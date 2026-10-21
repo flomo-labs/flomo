@@ -37,7 +37,7 @@ export async function LibraryList({
         message={filter === "hidden" ? t("emptyHidden") : t("emptyAll")}
         action={
           filter === "all" ? (
-            <Button render={<Link href="/buscar" />} nativeButton={false}>
+            <Button render={<Link href="/descobrir" />} nativeButton={false}>
               {t("search")}
             </Button>
           ) : undefined

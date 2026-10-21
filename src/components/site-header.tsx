@@ -31,9 +31,11 @@ export function SiteHeader() {
           </Suspense>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
-          <HeaderSearch />
+          <Suspense fallback={<div className="hidden h-9 w-64 md:block" />}>
+            <HeaderSearch />
+          </Suspense>
           <Link
-            href="/buscar"
+            href="/descobrir"
             aria-label="Buscar"
             className="grid size-11 place-items-center rounded-full text-muted-foreground hover:text-foreground md:hidden"
           >

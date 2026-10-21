@@ -26,7 +26,7 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
       <EmptyState
         message={t("libraryEmpty")}
         action={
-          <Button render={<Link href="/buscar" />} nativeButton={false}>
+          <Button render={<Link href="/descobrir" />} nativeButton={false}>
             {t("search")}
           </Button>
         }
