@@ -110,14 +110,20 @@
   "LibraryPage": {
     "title": "Biblioteca",
     "description": "Tudo o que você acompanha no Flomo.",
-    "filters": "Filtrar por situação",
+    "filters": "Visão da biblioteca",
     "filter": {
-      "all": "Todos",
+      "all": "Séries e filmes",
+      "hidden": "Ocultos"
+    },
+    "series": "Séries",
+    "movies": "Filmes",
+    "group": {
       "watching": "Assistindo",
       "watchlist": "Quero ver",
       "paused": "Pausado",
+      "dropped": "Abandonados",
       "watched": "Assistidos",
-      "hidden": "Ocultos"
+      "watchedMovie": "Vistos"
     },
     "status": {
       "watchlist": "Quero ver",
@@ -128,9 +134,10 @@
     },
     "progress": "{watched} de {released} episódios",
     "progressLabel": "Progresso de {title}",
+    "seen": "Visto ✓",
+    "notSeen": "Não visto",
     "noEpisodes": "Sem episódios lançados",
     "emptyAll": "Sua biblioteca está vazia. Busque um título e marque o que você já viu.",
-    "emptyFilter": "Nenhum título nesta situação.",
     "emptyHidden": "Você não ocultou nenhum título.",
     "search": "Buscar títulos",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."

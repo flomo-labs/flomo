@@ -2,19 +2,24 @@
 
 import { type ReactNode, useState } from "react";
 import { SegmentedControl } from "@/components/segmented-control";
-import { LIBRARY_FILTERS, type LibraryFilter } from "@/contracts/library";
+import type { LibraryFilter } from "@/contracts/library";
 
-// Abas da Biblioteca. As listas de todas as abas chegam de uma vez, então
-// trocar de aba é instantâneo. A aba vive só nesta tela: não vai para a URL
-// nem é lembrada (ao reabrir, volta para "Todos").
+// Visões da Biblioteca. As listas de todas as visões chegam de uma vez, então
+// trocar é instantâneo. A visão vive só nesta tela: não vai para a URL nem é
+// lembrada (ao reabrir, volta para a primeira).
 export function LibraryFilters({
+  filters,
   lists,
   labels,
 }: {
-  lists: Record<LibraryFilter, ReactNode>;
-  labels: { filters: string; filter: Record<LibraryFilter, string> };
+  filters: readonly LibraryFilter[];
+  lists: Partial<Record<LibraryFilter, ReactNode>>;
+  labels: {
+    filters: string;
+    filter: Partial<Record<LibraryFilter, string>>;
+  };
 }) {
-  const [filter, setFilter] = useState<LibraryFilter>("all");
+  const [filter, setFilter] = useState<LibraryFilter>(filters[0]);
 
   return (
     <>
@@ -22,9 +27,9 @@ export function LibraryFilters({
         value={filter}
         onChange={setFilter}
         ariaLabel={labels.filters}
-        options={LIBRARY_FILTERS.map((f) => ({
+        options={filters.map((f) => ({
           value: f,
-          label: labels.filter[f],
+          label: labels.filter[f] ?? f,
         }))}
       />
       {lists[filter]}

@@ -78,8 +78,10 @@ export interface LibraryRepository {
   findEpisode(episodeId: string): Promise<LibraryEpisode | null>;
   findTitleMediaType(titleId: string): Promise<MediaType | null>;
 
-  // Biblioteca do usuário, com a situação mudada mais recentemente primeiro
-  // (`updated_at` de `user_titles`; marcar episódio não o altera). `statuses` nulo = todas; `hidden` escolhe entre os ocultos e os demais.
+  // Biblioteca do usuário, com o que foi marcado como visto mais recentemente
+  // primeiro (episódio ou filme marcado); o que nunca foi marcado vem depois,
+  // pela situação mudada mais recentemente (`updated_at` de `user_titles`).
+  // A fila "Seguintes" tem ordem própria. `statuses` nulo = todas; `hidden` escolhe entre os ocultos e os demais.
   // Título no idioma `locale`
   // (cai no título original); `today` (AAAA-MM-DD) define o que já foi lançado.
   listLibrary(
