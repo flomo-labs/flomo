@@ -37,6 +37,7 @@ export async function listLibrary(
       SCOPE_BY_FILTER[parsed.data.filter],
       CATALOG_LOCALE,
       todayIn(CATALOG_COUNTRY, deps.now()),
+      { mediaType: parsed.data.mediaType, limit: parsed.data.limit },
     ),
   );
 }
