@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/app/_auth/session";
 import { getOwnProfile, profilePath } from "@/app/_profile/queries";
 import { BottomNav } from "./shell/bottom-nav";
 import { HeaderSearch } from "./shell/header-search";
+import { NavLabel } from "./shell/nav-label";
 import { NavLink } from "./shell/nav-link";
 import { navLinkClass } from "./shell/nav-link-style";
 import {
@@ -72,7 +73,7 @@ function DiscoverLink() {
       href={DISCOVER_ITEM.href}
       className={`hidden md:block ${navLinkClass(false)}`}
     >
-      {DISCOVER_ITEM.label}
+      <NavLabel active={false}>{DISCOVER_ITEM.label}</NavLabel>
     </Link>
   );
 }

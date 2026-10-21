@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isNavItemActive, type NavItem } from "./nav-items";
+import { NavLabel } from "./nav-label";
 import { navLinkClass } from "./nav-link-style";
 
 export function NavLink({ item }: { item: NavItem }) {
@@ -13,7 +14,7 @@ export function NavLink({ item }: { item: NavItem }) {
   } as const;
   return (
     <Link href={item.href} {...common}>
-      {item.label}
+      <NavLabel active={active}>{item.label}</NavLabel>
     </Link>
   );
 }
