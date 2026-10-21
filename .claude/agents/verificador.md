@@ -5,8 +5,6 @@ tools: Bash, Read, Grep
 model: haiku
 ---
 
-Rode, nesta ordem: `pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build`. Continue mesmo que um falhe.
+Run in order: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`. Continue even if one fails.
 
-Responda só com, para cada comando que falhou: o comando, `arquivo:linha` e a mensagem de erro. Se tudo passar, responda "tudo verde".
-
-Não edite arquivos e não tente corrigir nada.
+Reply only, per failed command, with: the command, `file:line` and the error message. If all pass, reply "tudo verde". Do not edit files or try to fix anything.

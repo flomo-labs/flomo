@@ -1,84 +1,54 @@
-## Nome do produto: Flomo (não use "UpNext")
+## Product name: Flomo (never "UpNext")
 
-O produto se chama **Flomo**. O nome antigo **UpNext** foi abandonado (ver `docs/adr/ADR-002-renomeacao-upnext-para-flomo.md`). Repositório: `flomo-labs/flomo`.
+The product is **Flomo** (old name UpNext was dropped, see `docs/adr/ADR-002-renomeacao-upnext-para-flomo.md`). Repo: `flomo-labs/flomo`.
 
-Regras para quem for alterar código ou documentos:
+- All new code, UI text, docs, tests, commits and PR text say only "Flomo".
+- Migration is gradual: when editing a file that still has `UpNext`/`upnext`/`UPNEXT`, rename every occurrence in that file in the same PR. No bulk-rename PRs. Never assume "UpNext" is correct because a file uses it.
+- Keep "Up Next"/"UpNext" only for (1) the competitor Up Next TV (upnexttv.app) and brand-conflict discussion, (2) historical text (timeline, accepted ADRs; at most add "(hoje Flomo)"), (3) git history.
+- If a rename touches anything outside the repo (env var, Vercel/Supabase project, OAuth redirect), list what must be updated in the PR.
+- Find leftovers: `git grep -n -i "upnext" -- . ":!pnpm-lock.yaml"`.
 
-- Todo código, texto de UI, README, teste, mensagem de commit e descrição de PR **novos** usam apenas "Flomo".
-- A migração é gradual: ao editar um arquivo que ainda contém `UpNext`, `upnext` ou `UPNEXT`, **renomeie as ocorrências daquele arquivo no mesmo PR** para `Flomo`, `flomo` ou `FLOMO`. Não faça PR de renomeação em massa.
-- Não presuma que "UpNext" é o nome correto só porque aparece em um arquivo: é resíduo da migração.
-- **Mantenha** "Up Next" / "UpNext" apenas em (1) referências ao app concorrente Up Next TV (upnexttv.app) e à discussão de conflito de marca, (2) texto histórico (linha do tempo, ADRs já aceitos; no máximo acrescente "(hoje Flomo)"), (3) histórico do git.
-- Se a renomeação tocar algo fora do repositório (variável de ambiente, projeto Vercel/Supabase, redirect do OAuth), registre no PR o que precisa ser atualizado.
-- Para listar o que falta: `git grep -n -i "upnext" -- . ":!pnpm-lock.yaml"`.
+## Business rules
 
-## Regras de negócio
+Read `docs/regras-de-negocio.md` before implementing or changing a rule. Record new/changed rules there in the same PR, after the evaluation described at the top of that file (repo is public: no strategy, protection values or personal data).
 
-- Antes de implementar ou mudar uma regra de negócio, consulte `docs/regras-de-negocio.md`.
-- Regra nova ou alterada é registrada lá no mesmo PR, **depois da avaliação** descrita no topo do arquivo (o repositório é público: estratégia, valores de proteções e dados de pessoas não entram).
+## Layers and imports (ADR-001, enforced by `eslint.config.mjs`)
 
-## Camadas e imports (ADR-001)
+- `src/domain/`: pure TypeScript (denylist). No `next`, `react`, `drizzle-orm`, `@supabase/*`, nor `infra/`, `app/`, `components/`, `lib/`. DB and external services come in through interfaces (ports) implemented in `infra/`. Other pure libs are fine.
+- `src/contracts/`: allowlist. Only `zod`, other `contracts/` files, relative paths.
+- `src/infra/` may import `domain/`. `src/app/` may import `domain/`, `infra/`, `contracts/`.
 
-Regras de dependência entre pastas, impostas pelo ESLint (`eslint.config.mjs`):
+New dependency in `contracts/`: never `eslint-disable`, never move code elsewhere to dodge the rule. First ask: does it run on Node, browser and React Native? If not, it doesn't belong there. If yes, add a lookahead `(?!package-name(/|$))` to the `regex` of the `contracts/` block in `eslint.config.mjs`, justify it in the PR, and confirm the rule still blocks others (temp file in `src/contracts/` importing another package must fail `pnpm lint`).
 
-- `src/domain/`: TypeScript puro. Não importa `next`, `react`, `drizzle-orm`,
-  `@supabase/*`, nem `infra/`, `app/`, `components/` ou `lib/`. Acesso a banco e
-  serviços externos entra por interface (porta), implementada em `infra/`.
-- `src/contracts/`: só pode importar `zod`, outros arquivos de `contracts/` ou
-  caminhos relativos. É uma lista de permitidos.
-- `src/infra/` pode importar `domain/`. `src/app/` pode importar `domain/`,
-  `infra/` e `contracts/`.
+## SQL injection
 
-### Ao precisar de uma dependência nova em `contracts/`
+Queries only via Drizzle's `sql\`...\`` template or query builder. ESLint blocks `sql.raw`, `.unsafe()` and hand-built `execute()` outside `src/infra/db/schema/` and tests; no `eslint-disable`. Dynamic table/column names: `sql.identifier`.
 
-1. A regra de `contracts/` bloqueia qualquer import que não seja `zod`. Se o
-   lint falhar, não use `eslint-disable` e não mova o código para outra pasta só
-   para fugir da regra.
-2. Pergunte antes: a dependência roda em Node, navegador e React Native? Se não,
-   o código não pertence a `contracts/`.
-3. Se for adequada, libere manualmente: acrescente um lookahead
-   `(?!nome-do-pacote(/|$))` ao `regex` do bloco de `contracts/` no
-   `eslint.config.mjs`, e justifique a inclusão na descrição do PR.
-4. Teste que a regra continua barrando o resto: crie um arquivo temporário em
-   `src/contracts/` importando outro pacote e confirme que o `pnpm lint` falha.
+## UI componentization
 
-Para `domain/`, a regra é uma lista de proibidos: bibliotecas puras podem ser
-importadas, mas nunca as listadas acima.
+Before coding a new or changed screen, check which elements (list, card, standard button, dialog, block) already exist elsewhere or will appear in more than one screen. Those become components; single-use stays in the screen. No speculative abstractions.
 
-## Injeção de SQL
+- Reuse first: shadcn in `src/components/ui/`, then project components in `src/components/`. Create new only if none fits.
+- One component per file, clear name, grouped by domain (e.g. `catalog/`), no duplicated markup across screens. Example: the Seguintes list is one component used on Home and `/seguintes`.
+- PR: one line on what was componentized/reused and what was left out.
 
-- Consultas só com o template `sql\`...\`` do Drizzle ou o query builder, que mandam os valores à parte do comando.
-- O ESLint barra `sql.raw`, `.unsafe()` e `execute()` com texto montado na mão fora de `src/infra/db/schema/` e dos testes. Não use `eslint-disable` para fugir da regra: para nome de tabela ou coluna dinâmico, use `sql.identifier`.
+## Git and PRs
 
-## Componentização da interface
+- Never push to `main`; everything goes through a PR with green CI. Branch: `type/short-desc` (`feat/`, `fix/`, `chore/`, `docs/`).
+- Commits: Conventional Commits in Portuguese (`feat:`, `fix:`, `chore:`, `docs:`, `ci:`, `test:`, optional scope), one purpose each, no "wip"/duplicates (they land on `main`).
+- Merge strategy: "Create a merge commit". Never squash or rebase to merge.
+- Update a branch with `git merge origin/main`, not rebase; rebase only on never-pushed local branches. Never `git push --force` on shared branches or `main`.
+- Small focused PRs using `.github/pull_request_template.md`.
+- Before starting a task or branch: `git fetch origin` and check whether `main` changed.
+- Personal config (model, permissions, git identity) goes in `.claude/settings.local.json` and `CLAUDE.local.md` (unversioned). Changes to `.claude/`, `eslint.config.mjs`, `AGENTS.md`, `CLAUDE.md` affect both devs: own PR.
 
-Ao criar ou alterar uma tela, antes de codar, veja se algum elemento (lista, card, botão padrão, diálogo, bloco) já existe em outra tela ou vai existir em mais de uma. Se sim, vira componente; se é de uso único, deixe na própria tela. Não crie abstração "por precaução".
+### Migrations
 
-- Reutilize primeiro o que existe: shadcn em `src/components/ui/` ou do projeto em `src/components/`. Crie novo só quando não houver.
-- Um componente por arquivo, nome claro, agrupado por domínio quando houver (ex.: `catalog/`). Sem marcação duplicada entre telas.
-- Exemplo: a lista de Seguintes é um componente usado na Home e em `/seguintes`.
-- No PR, uma linha: o que foi componentizado ou reaproveitado e o que ficou de fora.
-
-## Git e Pull Requests
-
-- Nunca dar push direto na `main`. Toda mudança entra por PR com o CI verde.
-- Nomeie a branch como `tipo/descricao-curta` (`feat/`, `fix/`, `chore/`, `docs/`).
-- Commits em Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `ci:`, `test:`, com escopo opcional), em português, no imperativo ou descritivo curto.
-- **Estratégia de merge: "Create a merge commit"**. Nunca usar squash nem rebase para mesclar PRs. Como os commits da branch vão para a `main`, mantenha-os limpos: um propósito por commit, sem "wip" nem commits duplicados.
-- Para atualizar uma branch com a `main`, use `git merge origin/main`, e não rebase, para evitar `force push` em branch com PR aberto. Rebase só em branch local que nunca foi enviada.
-- Nunca fazer `git push --force` em branch compartilhada ou na `main`.
-- PRs pequenos e focados, usando o template de `.github/pull_request_template.md`.
-
-### Migrations e trabalho em dupla
-
-- Mudou o schema: `pnpm db:generate`, revise o SQL e só então `pnpm db:migrate`. Nunca edite migration já aplicada.
-- **PR de migration separado do código que a usa.** Depois do merge da migration, o código vem em outro PR. Por isso a migration precisa ser compatível com o código que já está em produção (acrescente antes de remover ou renomear; `drop` e `rename` só depois que nenhum código usa a coluna).
-- No `flomo-prod`, o workflow **Migrations (produção)** aplica sozinho no merge que mexe em `drizzle/`. No `flomo-dev` de cada dev a migration é manual (`pnpm db:migrate`); quem revisa um PR com migration roda `pnpm db:migrate` e `pnpm test:integration` no próprio `flomo-dev`.
-- Duas branches gerando migration ao mesmo tempo colidem na numeração e no journal (`drizzle/meta`): avise a dupla antes de mexer em `drizzle/`; quem chegar depois faz `git merge origin/main`, apaga a sua migration (arquivo `.sql`, snapshot e entrada do journal) e roda `pnpm db:generate` de novo.
-- Função `security definer`, grants do `flomo_app` e mudança de RLS pedem o outro dev como revisor.
-- Antes de começar tarefa ou abrir branch: `git fetch origin` e confira se a `main` mudou.
-- Configuração pessoal (modelo, permissões, identidade git) vai em `.claude/settings.local.json` e `CLAUDE.local.md`, que não são versionados. Mudanças em `.claude/`, `eslint.config.mjs`, `AGENTS.md` e `CLAUDE.md` afetam os dois: PR próprio.
-
-<!-- BEGIN:nextjs-agent-rules -->
+- Schema change: `pnpm db:generate`, review the SQL, then `pnpm db:migrate`. Never edit an applied migration.
+- Migration PR is separate from the code using it, and must be compatible with the code in production (add before remove/rename; `drop`/`rename` only once no code uses the column).
+- `flomo-prod`: workflow **Migrations (produção)** applies it on merge touching `drizzle/`. Each dev's `flomo-dev` is manual (`pnpm db:migrate`); a reviewer of a migration PR runs `pnpm db:migrate` and `pnpm test:integration` on their own `flomo-dev`.
+- Two branches generating migrations collide in numbering and `drizzle/meta` journal: warn your pair before touching `drizzle/`; whoever comes later does `git merge origin/main`, deletes their migration (`.sql`, snapshot, journal entry) and reruns `pnpm db:generate`.
+- `security definer` functions, `flomo_app` grants and RLS changes need the other dev as reviewer.
 
 ## This is NOT the Next.js you know
 
