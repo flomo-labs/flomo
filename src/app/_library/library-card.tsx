@@ -61,8 +61,9 @@ async function LibraryCaption({
         : t("noEpisodes"),
     );
   }
-  if (showStatus && progress) parts.push(t(`status.${item.status}`));
-  if (showSeen && !progress) {
+  if (showStatus && item.mediaType === "tv")
+    parts.push(t(`status.${item.status}`));
+  if (showSeen && item.mediaType === "movie") {
     parts.push(item.status === "watched" ? t("seen") : t("notSeen"));
   }
   if (parts.length === 0) return null;

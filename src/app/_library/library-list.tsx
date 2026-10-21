@@ -15,7 +15,11 @@ import { loadLibraryItems } from "./queries";
 const GRID = "grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5";
 
 // Grade da Biblioteca para um filtro; usada na abertura da tela e ao trocar de aba.
-export async function LibraryList({ filter }: { filter: LibraryFilter }) {
+export async function LibraryList({
+  filter,
+}: {
+  filter: Extract<LibraryFilter, "all" | "hidden">;
+}) {
   const t = await getTranslations("LibraryPage");
   const user = await requireUser("/biblioteca");
   const items = await loadLibraryItems(user, filter);
@@ -55,8 +59,8 @@ export async function LibraryList({ filter }: { filter: LibraryFilter }) {
   const { series, movies } = groupLibrary(items);
   return (
     <div className="flex flex-col gap-8">
-      <LibrarySection title={t("series")} groups={series} />
-      <LibrarySection title={t("movies")} groups={movies} />
+      <LibrarySection title={t("series")} groups={series} kind="tv" />
+      <LibrarySection title={t("movies")} groups={movies} kind="movie" />
     </div>
   );
 }
@@ -65,9 +69,11 @@ export async function LibraryList({ filter }: { filter: LibraryFilter }) {
 async function LibrarySection({
   title,
   groups,
+  kind,
 }: {
   title: string;
   groups: LibraryGroup[];
+  kind: "tv" | "movie";
 }) {
   if (groups.length === 0) return null;
   const t = await getTranslations("LibraryPage");
@@ -78,7 +84,7 @@ async function LibrarySection({
         <div key={status} className="flex flex-col gap-2">
           <h3 className="text-sm font-semibold text-muted-foreground">
             {t(
-              `group.${status === "watched" && items[0].mediaType === "movie" ? "watchedMovie" : status}`,
+              `group.${status === "watched" && kind === "movie" ? "watchedMovie" : status}`,
             )}
           </h3>
           <ul className={GRID}>
