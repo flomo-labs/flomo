@@ -166,9 +166,6 @@ export function WatchControl({
         <div className="flex flex-col gap-2">
           {watched ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium">
-                {labels.watched} · {watched.dateLabel}
-              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -180,6 +177,9 @@ export function WatchControl({
               >
                 <Icon name="calendar" className="size-5" />
               </Button>
+              <span className="text-sm font-medium">
+                {labels.watched} · {watched.dateLabel}
+              </span>
               {isEpisode ? null : (
                 <>
                   <Button
@@ -256,7 +256,7 @@ export function WatchControl({
             <Button
               type="button"
               variant="destructive"
-              className="rounded-full border-destructive/40"
+              className="rounded-full"
               disabled={pending}
               onClick={() => {
                 setChoosing(false);
@@ -347,7 +347,7 @@ export function WatchControl({
             <Button
               type="button"
               variant="destructive"
-              className="rounded-full border-destructive/40"
+              className="rounded-full"
               disabled={pending}
               onClick={() => {
                 setConfirmingUnmark(false);

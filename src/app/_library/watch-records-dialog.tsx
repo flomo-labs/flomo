@@ -7,6 +7,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -153,15 +154,7 @@ export function WatchRecordsDialog({
                 />
               </label>
             </div>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                className="rounded-full"
-                disabled={pending || (choice.kind === "day" && !day)}
-                onClick={() => finish(view.eventId)}
-              >
-                {labels.done}
-              </Button>
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -170,7 +163,15 @@ export function WatchRecordsDialog({
               >
                 {labels.back}
               </Button>
-            </div>
+              <Button
+                type="button"
+                className="rounded-full"
+                disabled={pending || (choice.kind === "day" && !day)}
+                onClick={() => finish(view.eventId)}
+              >
+                {labels.done}
+              </Button>
+            </DialogFooter>
           </>
         ) : (
           <>
@@ -180,19 +181,7 @@ export function WatchRecordsDialog({
                 {labels.deleteRecordConfirm}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="destructive"
-                className="rounded-full border-destructive/40"
-                disabled={pending}
-                onClick={() => {
-                  onDelete(view.eventId);
-                  back();
-                }}
-              >
-                {labels.deleteRecord}
-              </Button>
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -201,7 +190,19 @@ export function WatchRecordsDialog({
               >
                 {labels.back}
               </Button>
-            </div>
+              <Button
+                type="button"
+                variant="destructive"
+                className="rounded-full"
+                disabled={pending}
+                onClick={() => {
+                  onDelete(view.eventId);
+                  back();
+                }}
+              >
+                {labels.deleteRecord}
+              </Button>
+            </DialogFooter>
           </>
         )}
       </DialogContent>
