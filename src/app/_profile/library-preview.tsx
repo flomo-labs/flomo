@@ -78,7 +78,7 @@ async function PreviewSection({
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 max-sm:[&>li:nth-child(n+4)]:hidden">
         {items.map((item) => (
           <li key={item.titleId}>
-            <LibraryCard item={item} />
+            <LibraryCard item={item} showSeen />
           </li>
         ))}
       </ul>

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
-import { LIBRARY_FILTERS, type LibraryFilter } from "@/contracts/library";
+import type { LibraryFilter } from "@/contracts/library";
 import { requireUser } from "@/app/_auth/session";
 import { LibraryFilters } from "@/app/_library/library-filters";
 import { LibraryList } from "@/app/_library/library-list";
+
+// Visões da Biblioteca: a padrão (séries e filmes em sub-listas) e os ocultos.
+const VIEWS = ["all", "hidden"] as const satisfies readonly LibraryFilter[];
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("LibraryPage");
@@ -31,9 +34,9 @@ async function Body() {
   const t = await getTranslations("LibraryPage");
   // Confere o login antes de montar a tela.
   await requireUser("/biblioteca");
-  // Todas as abas vêm de uma vez: trocar de aba não volta ao servidor.
+  // Todas as visões vêm de uma vez: trocar não volta ao servidor.
   const lists = Object.fromEntries(
-    LIBRARY_FILTERS.map((filter) => [
+    VIEWS.map((filter) => [
       filter,
       <Suspense
         key={filter}
@@ -42,20 +45,14 @@ async function Body() {
         <LibraryList filter={filter} />
       </Suspense>,
     ]),
-  ) as Record<LibraryFilter, ReactNode>;
+  ) as Partial<Record<LibraryFilter, ReactNode>>;
   return (
     <LibraryFilters
+      filters={VIEWS}
       lists={lists}
       labels={{
         filters: t("filters"),
-        filter: {
-          all: t("filter.all"),
-          watching: t("filter.watching"),
-          watchlist: t("filter.watchlist"),
-          paused: t("filter.paused"),
-          watched: t("filter.watched"),
-          hidden: t("filter.hidden"),
-        },
+        filter: { all: t("filter.all"), hidden: t("filter.hidden") },
       }}
     />
   );
