@@ -55,7 +55,7 @@ async function Resolve({
         </Button>
         <Button
           variant="outline"
-          render={<Link href="/buscar" />}
+          render={<Link href="/descobrir" />}
           nativeButton={false}
         >
           {t("backToSearch")}

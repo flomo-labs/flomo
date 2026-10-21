@@ -35,12 +35,12 @@ export const FOLLOWING_ITEM: NavItem = {
   exact: ["/", "/seguintes"],
 };
 
-// Descobrir é a busca de hoje; ganha recomendações depois.
+// Descobrir reúne as listas; a busca (/buscar) fica sob o mesmo item.
 export const DISCOVER_ITEM: NavItem = {
-  href: "/buscar",
+  href: "/descobrir",
   label: "Descobrir",
   icon: "discover",
-  prefixes: ["/buscar"],
+  prefixes: ["/descobrir", "/buscar"],
 };
 
 export const LIBRARY_ITEM: NavItem = {

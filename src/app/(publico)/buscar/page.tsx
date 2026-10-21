@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { DiscoverShelves } from "@/app/_catalog/discover-shelves";
 import { searchCatalog } from "@/app/_catalog/gateway";
 import { Poster } from "@/components/catalog/poster";
-import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/components/icon";
 import { SearchForm } from "@/components/catalog/search-form";
 import { Button } from "@/components/ui/button";
 import { SEARCH_MAX_PAGE } from "@/contracts/catalog";
@@ -48,10 +48,13 @@ async function SearchBody({
   const requested = Math.trunc(Number(firstValue(params.pagina))) || 1;
   const page = Math.min(Math.max(requested, 1), SEARCH_MAX_PAGE);
 
+  // Sem termo não há o que mostrar: as listas ficam em Descobrir.
+  if (!query) redirect("/descobrir");
+
   return (
     <>
       <SearchForm query={query} />
-      {query ? <Results query={query} page={page} /> : <DiscoverShelves />}
+      <Results query={query} page={page} />
     </>
   );
 }
@@ -77,7 +80,7 @@ async function Results({ query, page }: { query: string; page: number }) {
       <p className="text-sm text-muted-foreground">
         {t("results", { count: totalResults, query })}
       </p>
-      <ul className="flex flex-col gap-3">
+      <ul className="flex max-w-reading flex-col gap-3">
         {items.map((item) => (
           <li key={`${item.ref.mediaType}-${item.ref.externalId}`}>
             <ResultCard item={item} />
@@ -95,33 +98,35 @@ async function Results({ query, page }: { query: string; page: number }) {
 
 async function ResultCard({ item }: { item: SearchItem }) {
   const t = await getTranslations();
-  const year = item.releaseDate?.slice(0, 4);
+  const year = item.releaseDate?.slice(0, 4) ?? t("Search.unknownYear");
+  const facts = [t(`MediaType.${item.ref.mediaType}`), year];
   return (
     <Link
       href={titleRefPath(item.ref)}
-      className="flex gap-4 rounded-card border border-border p-3 transition-colors hover:bg-muted/50"
+      className="flex min-h-11 items-center gap-4 rounded-card border border-border p-2.5 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50"
     >
       <Poster
         path={item.posterPath}
         size="w185"
         alt={t("Title.poster", { title: item.title })}
-        className="w-20 shrink-0 sm:w-24"
+        className="w-14 shrink-0"
       />
-      <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h2 className="font-semibold">{item.title}</h2>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <Badge variant="secondary">
-            {t(`MediaType.${item.ref.mediaType}`)}
-          </Badge>
-          <span>{year ?? t("Search.unknownYear")}</span>
+        <p className="text-sm text-muted-foreground">
+          {facts.join(" · ")}
           {item.originalTitle !== item.title ? (
-            <span className="italic">{item.originalTitle}</span>
+            <span className="italic"> · {item.originalTitle}</span>
           ) : null}
-        </div>
-        <p className="line-clamp-3 text-sm text-muted-foreground">
+        </p>
+        <p className="line-clamp-2 hidden text-sm text-muted-foreground md:block">
           {item.overview ?? t("Search.noOverview")}
         </p>
       </div>
+      <Icon
+        name="chevronForward"
+        className="size-4 shrink-0 text-muted-foreground"
+      />
     </Link>
   );
 }

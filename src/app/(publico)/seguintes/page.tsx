@@ -70,7 +70,7 @@ async function Body() {
         <EmptyState
           message={t("empty")}
           action={
-            <Button render={<Link href="/buscar" />} nativeButton={false}>
+            <Button render={<Link href="/descobrir" />} nativeButton={false}>
               {t("search")}
             </Button>
           }
