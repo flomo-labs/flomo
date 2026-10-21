@@ -84,7 +84,7 @@ async function NavLinks() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="hidden items-center gap-1 md:flex"
+      className="hidden transform-gpu items-center gap-1 md:flex"
     >
       {signedIn && <NavLink item={FOLLOWING_ITEM} />}
       <NavLink item={DISCOVER_ITEM} />
