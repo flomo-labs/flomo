@@ -265,31 +265,33 @@ async function Episodes({
       {result.value.map((episode) => (
         <li
           key={episode.id}
-          className="flex flex-col gap-1 rounded-card border border-border p-3"
+          className="grid grid-cols-[1fr_auto] gap-x-3 rounded-card border border-border p-3 [&>*:not(:first-child):not(button)]:mt-1"
         >
-          <p className="font-medium">
-            <span className="text-muted-foreground">
-              {episode.episodeNumber}.
-            </span>{" "}
-            {episode.name ??
-              t("unnamedEpisode", { number: episode.episodeNumber })}
-          </p>
-          {episode.overview ? (
-            <p className="line-clamp-3 text-sm text-muted-foreground">
-              {episode.overview}
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="font-medium">
+              <span className="text-muted-foreground">
+                {episode.episodeNumber}.
+              </span>{" "}
+              {episode.name ??
+                t("unnamedEpisode", { number: episode.episodeNumber })}
             </p>
-          ) : null}
-          <p className="text-xs text-muted-foreground">
-            {[
-              episode.airDate,
-              episode.runtime ? `${episode.runtime} min` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
-          <Suspense fallback={null}>
-            <EpisodeAverage titleId={titleId} episodeId={episode.id} />
-          </Suspense>
+            {episode.overview ? (
+              <p className="line-clamp-3 text-sm text-muted-foreground">
+                {episode.overview}
+              </p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              {[
+                episode.airDate,
+                episode.runtime ? `${episode.runtime} min` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            <Suspense fallback={null}>
+              <EpisodeAverage titleId={titleId} episodeId={episode.id} />
+            </Suspense>
+          </div>
           <Suspense fallback={null}>
             <WatchSlot
               kind="episode"

@@ -81,6 +81,7 @@
     "previousTitle": "Episódios anteriores",
     "previousDescription": "{count, plural, one {Você tem 1 episódio não visto antes deste.} other {Você tem # episódios não vistos antes deste.}}",
     "watchAgain": "Ver de novo",
+    "watchedChoice": "O que você quer fazer com este episódio?",
     "watched": "Assistido",
     "unmark": "Desmarcar",
     "unmarkConfirm": "Isso apaga o último registro deste item. Desmarcar?",

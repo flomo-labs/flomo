@@ -81,6 +81,7 @@ export async function WatchSlot({
         }),
         cancel: t("cancel"),
         watchAgain: t("watchAgain"),
+        watchedChoice: t("watchedChoice"),
         history: t("history"),
         deleteRecord: t("deleteRecord"),
         deleteRecordConfirm: t("deleteRecordConfirm"),
