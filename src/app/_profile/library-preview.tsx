@@ -4,6 +4,7 @@ import type { CurrentUser } from "@/app/_auth/session";
 import { LibraryCard } from "@/app/_library/library-card";
 import { loadLibraryPreview } from "@/app/_library/queries";
 import { EmptyState } from "@/components/empty-state";
+import { EmptyTray } from "@/components/illustrations/empty-tray";
 import { SectionHeader } from "@/components/section-header";
 import { SeeAllLink } from "@/components/see-all-link";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,9 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
   if (series.length === 0 && movies.length === 0) {
     return (
       <EmptyState
-        message={t("libraryEmpty")}
+        title={t("libraryEmptyTitle")}
+        description={t("libraryEmpty")}
+        icon={<EmptyTray className="size-24" />}
         action={
           <Button render={<Link href="/descobrir" />} nativeButton={false}>
             {t("search")}

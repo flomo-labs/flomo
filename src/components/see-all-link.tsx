@@ -16,7 +16,7 @@ export function SeeAllLink({
     <Link
       href={href}
       aria-label={ariaLabel}
-      className="inline-flex items-center gap-0.5 text-sm text-sidebar-primary hover:underline"
+      className="inline-flex items-center gap-0.5 text-sm text-sidebar-primary transition-opacity hover:opacity-80"
     >
       {label}
       <Icon name="chevronForward" className="size-3.5" />

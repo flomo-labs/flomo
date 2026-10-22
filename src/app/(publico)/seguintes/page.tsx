@@ -68,7 +68,8 @@ async function Body() {
         </p>
       ) : rows.length === 0 ? (
         <EmptyState
-          message={t("empty")}
+          title={t("emptyTitle")}
+          description={t("empty")}
           action={
             <Button render={<Link href="/descobrir" />} nativeButton={false}>
               {t("search")}

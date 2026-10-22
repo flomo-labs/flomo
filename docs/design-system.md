@@ -79,8 +79,8 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
 | `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela |
 | `SectionHeader` | título de seção + ação ("Ver tudo") | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
-| `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, `ariaLabel` por seção |
-| `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: mensagem `muted` + botão do próximo passo |
+| `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, hover `opacity-80` (como o pôster, sem sublinhado), `ariaLabel` por seção |
+| `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tray`, bandeja com mosca, `size-24`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
 | `StarRating` | nota em meias estrelas | tamanhos `xs/sm/md/lg`; `sm` cinza (média), `lg` para sheet; radio group acessível |
 | `RatingAverage`, `TmdbRating` | médias | apoio, sem competir com a nota do usuário |
 | `BackLink` / `BackBar` | voltar | só volta dentro do app; fallback por `href` |

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/app/_auth/session";
 import { EmptyState } from "@/components/empty-state";
+import { EmptyTray } from "@/components/illustrations/empty-tray";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,7 +106,9 @@ async function LibraryItems({
   if (items.length === 0) {
     return (
       <EmptyState
-        message={view === "hidden" ? t("emptyHidden") : t("emptyAll")}
+        title={view === "hidden" ? t("emptyHidden") : t("emptyAllTitle")}
+        description={view === "hidden" ? undefined : t("emptyAll")}
+        icon={view === "hidden" ? undefined : <EmptyTray className="size-24" />}
         action={
           view === "hidden" ? undefined : (
             <Button render={<Link href="/descobrir" />} nativeButton={false}>
