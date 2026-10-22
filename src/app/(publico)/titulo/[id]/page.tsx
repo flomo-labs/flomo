@@ -265,9 +265,9 @@ async function Episodes({
       {result.value.map((episode) => (
         <li
           key={episode.id}
-          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-card border border-border p-3 [&>*:not(:first-child):not(button)]:mt-1"
+          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-card border border-border p-4 [&>*:not(:first-child):not(button)]:mt-3"
         >
-          <div className="col-span-2 flex min-w-0 flex-col gap-1">
+          <div className="col-span-2 flex min-w-0 flex-col gap-2">
             <p className="font-medium">
               <span className="text-muted-foreground">
                 {episode.episodeNumber}.

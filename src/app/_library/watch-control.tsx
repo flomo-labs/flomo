@@ -169,7 +169,6 @@ export function WatchControl({
               <Button
                 type="button"
                 variant="outline"
-                size="lg"
                 title={labels.history}
                 disabled={pending}
                 onClick={() => setRecordsOpen(true)}
