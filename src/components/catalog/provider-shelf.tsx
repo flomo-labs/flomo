@@ -9,6 +9,7 @@ import {
 } from "react";
 import { loadProviderBundle } from "@/app/_catalog/provider-shelf-actions";
 import type { MediaSegment } from "@/app/_catalog/segments";
+import { SectionHeader } from "@/components/section-header";
 import { cn } from "@/lib/utils";
 
 // Listas de um serviço, já montadas pelo servidor, uma por tipo.
@@ -127,9 +128,7 @@ export function ProviderShelf({
       className="flex flex-col gap-3"
       aria-labelledby="em-alta-no-servico"
     >
-      <h2 id="em-alta-no-servico" className="text-section-title">
-        {shown.heading}
-      </h2>
+      <SectionHeader id="em-alta-no-servico" title={shown.heading} size="lg" />
       <ul aria-label={labels.providerNav} className="flex flex-wrap gap-2">
         {providers.map((p) => (
           <li key={p.id}>

@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { SectionHeader } from "@/components/section-header";
 import { ProviderShelf } from "@/components/catalog/provider-shelf";
 import { ShelfSkeleton } from "@/components/catalog/shelf";
 import { SHELF_PROVIDERS } from "@/contracts/catalog";
@@ -10,13 +11,13 @@ import { ShelfItems } from "./shelf-items";
 // Listas da tela Descobrir: em alta, nos cinemas e em alta por serviço.
 export function DiscoverShelves() {
   return (
-    <>
+    <div className="flex flex-col gap-10 md:gap-12">
       <ShelfSection kind="trending" ranked />
       <ShelfSection kind="now_playing" />
       <Suspense fallback={<ShelfSkeleton />}>
         <ProviderSection />
       </Suspense>
-    </>
+    </div>
   );
 }
 
@@ -39,11 +40,7 @@ function ShelfSection({
 
 async function ShelfHeading({ id }: { id: string }) {
   const t = await getTranslations("Discover");
-  return (
-    <h2 id={id} className="text-section-title">
-      {t(`shelf.${id}`)}
-    </h2>
-  );
+  return <SectionHeader id={id} title={t(`shelf.${id}`)} size="lg" />;
 }
 
 // "Em alta no serviço X": serviço e tipo mudam na própria tela, sem URL nem
