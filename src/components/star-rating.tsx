@@ -33,8 +33,9 @@ export function StarRating({
   className?: string;
   // "sm": estrelas pequenas e cinza, para um valor de apoio (a média ao lado
   // de outros metadados) sem competir com a nota do usuário. "lg": alvos de
-  // toque maiores, para a nota num bottom sheet.
-  size?: "sm" | "md" | "lg";
+  // toque maiores, para a nota num bottom sheet. "xs": estrelas coloridas
+  // um pouco menores, para caber dentro de um botão em pílula.
+  size?: "sm" | "xs" | "md" | "lg";
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
@@ -42,7 +43,9 @@ export function StarRating({
   const shown = hover ?? value ?? 0;
   const selected = value === null ? null : Math.round(value);
 
-  const box = { sm: "size-3.5", md: "size-6", lg: "size-10" }[size];
+  const box = { sm: "size-3.5", xs: "size-5", md: "size-6", lg: "size-10" }[
+    size
+  ];
   const stars = Array.from({ length: STARS }, (_, i) => {
     const fill = Math.min(Math.max(shown / 2 - i, 0), 1) * 100;
     return (

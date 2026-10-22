@@ -157,7 +157,7 @@ export function WatchControl({
           title={watched ? labels.unmark : labels.markWatched}
           disabled={pending}
           onClick={watched ? () => setChoosing(true) : mark}
-          className="col-start-3 row-start-1 row-span-3 size-11 self-center rounded-full"
+          className="col-start-3 row-start-1 row-span-1 sm:row-span-3 size-11 self-center rounded-full"
         >
           {watched ? <Icon name="check" className="size-5" /> : null}
         </Button>

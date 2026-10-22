@@ -63,7 +63,9 @@ export function RatingControl({
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    // No celular o botão da nota pode ocupar também a coluna do check (que só
+    // ocupa a primeira linha do card do episódio).
+    <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
       <div className="hidden flex-wrap items-center gap-2 sm:flex">
         <StarRating
           value={value}
@@ -96,6 +98,7 @@ export function RatingControl({
           className="rounded-full px-4"
         >
           <StarRating
+            size="xs"
             value={value}
             labels={{ ...labels.stars, readOnly: undefined }}
           />
