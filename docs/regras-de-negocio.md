@@ -82,7 +82,7 @@ Na dúvida, não entra: registre no plano privado e decida com a dupla. Quem rev
 - **Páginas legais:** `/privacidade` e `/termos` descrevem o que o app faz hoje; mudou o tratamento de dados, atualize as páginas e a data no mesmo PR. [`src/app/(publico)/`](<../src/app/(publico)>)
 - **Cookies:** só o de sessão (`HttpOnly`, `SameSite=Lax`, `Secure` em produção), estritamente necessário; nenhum cookie de rastreamento, publicidade ou analytics. [ADR-003, seção 5](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), [`src/infra/auth/supabase/`](../src/infra/auth/supabase/index.ts)
 - **Sair:** encerra a sessão só no dispositivo atual.
-- **Exclusão de conta:** apaga em cascata os dados do usuário. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
+- **Exclusão de conta:** o próprio usuário exclui a conta, sem volta: apaga a conta de login e, em cascata, perfil, biblioteca, progresso, histórico, notas e comentários; depois a sessão é encerrada. Exige ter entrado na conta nos últimos 5 minutos (senão, a tela pede uma nova entrada, com a escolha de conta do Google) e a confirmação na tela. Exportar os dados antes fica para depois. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md), caso de uso em [`src/domain/account/delete-account.ts`](../src/domain/account/delete-account.ts), cascata provada em [`src/infra/db/account-deletion.integration.test.ts`](../src/infra/db/account-deletion.integration.test.ts); tela _(prevista)_
 - **Retenção legal:** registros de acesso (Marco Civil, 6 meses) e registros de moderação ficam fora da cascata e são apagados ao fim do prazo. [ADR-003, seção 9](adr/ADR-003-rls-drizzle-conexoes-e-perfil.md)
 
 ## Catálogo
