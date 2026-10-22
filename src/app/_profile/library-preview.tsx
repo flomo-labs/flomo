@@ -5,6 +5,7 @@ import { LibraryCard } from "@/app/_library/library-card";
 import { loadLibraryPreview } from "@/app/_library/queries";
 import { EmptyState } from "@/components/empty-state";
 import { SectionHeader } from "@/components/section-header";
+import { SeeAllLink } from "@/components/see-all-link";
 import { Button } from "@/components/ui/button";
 import type { LibraryItem } from "@/domain/library/ports";
 
@@ -70,13 +71,11 @@ async function PreviewSection({
         id={id}
         title={title}
         action={
-          <Link
+          <SeeAllLink
             href={href}
-            aria-label={t("seeAllIn", { section: title })}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            {t("seeAll")}
-          </Link>
+            label={t("seeAll")}
+            ariaLabel={t("seeAllIn", { section: title })}
+          />
         }
       />
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 max-sm:[&>li:nth-child(n+4)]:hidden">
