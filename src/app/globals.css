@@ -167,6 +167,13 @@
     @apply bg-background text-foreground;
   }
 
+  /* O preflight do Tailwind v4 tira o cursor de mão dos botões. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+
   html {
     @apply font-sans;
   }

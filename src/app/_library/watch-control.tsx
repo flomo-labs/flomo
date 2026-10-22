@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import type { WatchDateInput } from "@/contracts/library";
 import {
@@ -23,6 +24,7 @@ import {
   unmarkMovie,
   type LibraryActionResult,
 } from "./actions";
+import { WatchRecordsDialog } from "./watch-records-dialog";
 
 export type WatchControlLabels = {
   markWatched: string;
@@ -34,17 +36,20 @@ export type WatchControlLabels = {
   previousDescription: string;
   cancel: string;
   watchAgain: string;
+  // Pergunta do diálogo que o check abre num episódio já visto.
+  watchedChoice: string;
+  back: string;
+  done: string;
+  editRecord: string;
   history: string;
   deleteRecord: string;
   deleteRecordConfirm: string;
   watched: string;
   unmark: string;
   unmarkConfirm: string;
-  changeDate: string;
   today: string;
   noDate: string;
   pickDate: string;
-  saveDate: string;
   failed: string;
 };
 
@@ -67,7 +72,9 @@ type Props = {
 };
 
 // Marcar com a data de hoje é o padrão (DEFAULT_WATCH_DATE no domínio); a
-// data se tira ou se troca depois, sem sair da lista.
+// data se tira ou se troca depois, sem sair da lista. No episódio o controle
+// é o check em círculo (44px) e o resto vai numa linha abaixo; o pai deve ser
+// uma grade de três colunas (data, nota, check). No filme, botões de texto.
 export function WatchControl({
   kind,
   targetId,
@@ -78,13 +85,14 @@ export function WatchControl({
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [pickedDay, setPickedDay] = useState(today);
   // Diálogo "só este ou também os anteriores" aberto.
   const [askPrevious, setAskPrevious] = useState(false);
-  // Desmarcar e apagar registro apagam dados: pedem confirmação num diálogo.
-  const [confirming, setConfirming] = useState<
-    { kind: "unmark" } | { kind: "delete"; eventId: string } | null
-  >(null);
+  // Episódio já visto: o check abre "desmarcar, ver de novo ou cancelar".
+  const [choosing, setChoosing] = useState(false);
+  // Diálogo com todos os registros (editar a data, apagar).
+  const [recordsOpen, setRecordsOpen] = useState(false);
+  // Desmarcar o filme apaga dados: pede confirmação num diálogo.
+  const [confirmingUnmark, setConfirmingUnmark] = useState(false);
 
   function run(action: () => Promise<LibraryActionResult>) {
     setError(null);
@@ -127,140 +135,148 @@ export function WatchControl({
         ? recordEpisodeAgain({ episodeId: targetId })
         : recordMovieAgain({ titleId: targetId }),
     );
-  const confirmAction = () => {
-    const action = confirming;
-    setConfirming(null);
-    if (!action) return;
-    if (action.kind === "delete") {
-      run(() => removeWatchRecord({ eventId: action.eventId }));
-    } else {
-      run(() =>
-        kind === "episode"
-          ? unmarkEpisode({ episodeId: targetId })
-          : unmarkMovie({ titleId: targetId }),
-      );
-    }
-  };
-  const setDate = (when: WatchDateInput) => {
-    if (!watched) return;
-    run(() => changeWatchDate({ eventId: watched.eventId, when }));
-  };
+  const unmark = () =>
+    run(() =>
+      kind === "episode"
+        ? unmarkEpisode({ episodeId: targetId })
+        : unmarkMovie({ titleId: targetId }),
+    );
+  const setDate = (eventId: string, when: WatchDateInput) =>
+    run(() => changeWatchDate({ eventId, when }));
+
+  const isEpisode = kind === "episode";
+  const showBody = !isEpisode || watched !== undefined || error !== null;
 
   return (
-    <div className="flex flex-col gap-2">
-      {watched ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">
-            {labels.watched} · {watched.dateLabel}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={pending}
-            onClick={() => setConfirming({ kind: "unmark" })}
-          >
-            {labels.unmark}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={pending}
-            onClick={watchAgain}
-          >
-            {labels.watchAgain}
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending}
-            onClick={mark}
-          >
-            {labels.markWatched}
-          </Button>
-        </div>
-      )}
-      {watched && watched.records.length > 1 ? (
-        <details className="text-sm">
-          <summary className="cursor-pointer text-muted-foreground">
-            {labels.history} ({watched.records.length})
-          </summary>
-          <ul className="mt-2 flex flex-col gap-1">
-            {watched.records.map((record) => (
-              <li
-                key={record.eventId}
-                className="flex items-center justify-between gap-2"
+    <>
+      {isEpisode ? (
+        <Button
+          type="button"
+          variant={watched ? "default" : "outline"}
+          aria-label={watched ? labels.unmark : labels.markWatched}
+          title={watched ? labels.unmark : labels.markWatched}
+          disabled={pending}
+          onClick={watched ? () => setChoosing(true) : mark}
+          className="col-start-3 row-start-1 row-span-1 sm:row-span-3 size-11 self-center rounded-full"
+        >
+          {watched ? <Icon name="check" className="size-5" /> : null}
+        </Button>
+      ) : null}
+      {showBody ? (
+        <div className="flex flex-col gap-2">
+          {watched ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                title={labels.history}
+                disabled={pending}
+                onClick={() => setRecordsOpen(true)}
+                className="rounded-full px-4"
               >
-                <span>{record.dateLabel}</span>
+                {labels.watched} · {watched.dateLabel}
+              </Button>
+              {isEpisode ? null : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={pending}
+                    onClick={() => setConfirmingUnmark(true)}
+                  >
+                    {labels.unmark}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={pending}
+                    onClick={watchAgain}
+                  >
+                    {labels.watchAgain}
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : isEpisode ? null : (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+                disabled={pending}
+                onClick={mark}
+              >
+                {labels.markWatched}
+              </Button>
+            </div>
+          )}
+          {error ? (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {watched ? (
+        <WatchRecordsDialog
+          open={recordsOpen}
+          onOpenChange={setRecordsOpen}
+          records={watched.records}
+          today={today}
+          pending={pending}
+          labels={labels}
+          onSetDate={setDate}
+          onDelete={(eventId) => run(() => removeWatchRecord({ eventId }))}
+        />
+      ) : null}
+      <Dialog open={choosing} onOpenChange={setChoosing}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{labels.watched}</DialogTitle>
+            <DialogDescription>{labels.watchedChoice}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={pending}
+              onClick={() => {
+                setChoosing(false);
+                watchAgain();
+              }}
+            >
+              {labels.watchAgain}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="rounded-full"
+              disabled={pending}
+              onClick={() => {
+                setChoosing(false);
+                unmark();
+              }}
+            >
+              {labels.unmark}
+            </Button>
+          </div>
+          <DialogFooter>
+            <DialogClose
+              render={
                 <Button
                   type="button"
                   variant="ghost"
-                  size="xs"
-                  disabled={pending}
-                  onClick={() =>
-                    setConfirming({ kind: "delete", eventId: record.eventId })
-                  }
-                >
-                  {labels.deleteRecord}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
-      {watched ? (
-        <details className="text-sm">
-          <summary className="cursor-pointer text-muted-foreground">
-            {labels.changeDate}
-          </summary>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={pending}
-              onClick={() => setDate({ kind: "now" })}
-            >
-              {labels.today}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={pending}
-              onClick={() => setDate({ kind: "unknown" })}
-            >
-              {labels.noDate}
-            </Button>
-            <label className="flex items-center gap-2">
-              <span className="sr-only">{labels.pickDate}</span>
-              <input
-                type="date"
-                value={pickedDay}
-                max={today}
-                min="1900-01-01"
-                onChange={(e) => setPickedDay(e.target.value)}
-                className="h-7 rounded-lg border border-border bg-background px-2 text-sm"
-              />
-            </label>
-            <Button
-              type="button"
-              size="sm"
-              disabled={pending || !pickedDay}
-              onClick={() =>
-                setDate({ kind: "date", precision: "day", value: pickedDay })
+                  className="rounded-full"
+                />
               }
             >
-              {labels.saveDate}
-            </Button>
-          </div>
-        </details>
-      ) : null}
+              {labels.cancel}
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={askPrevious}
         onOpenChange={(open) => {
@@ -273,12 +289,18 @@ export function WatchControl({
             <DialogDescription>{labels.previousDescription}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
-            <Button type="button" disabled={pending} onClick={markWithPrevious}>
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={pending}
+              onClick={markWithPrevious}
+            >
               {labels.markWithPrevious}
             </Button>
             <Button
               type="button"
               variant="outline"
+              className="rounded-full"
               disabled={pending}
               onClick={markOnlyThis}
             >
@@ -286,53 +308,53 @@ export function WatchControl({
             </Button>
           </div>
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="ghost" />}>
+            <DialogClose
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-full"
+                />
+              }
+            >
               {labels.cancel}
             </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={confirming !== null}
-        onOpenChange={(open) => {
-          if (!open) setConfirming(null);
-        }}
-      >
+      <Dialog open={confirmingUnmark} onOpenChange={setConfirmingUnmark}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {confirming?.kind === "delete"
-                ? labels.deleteRecord
-                : labels.unmark}
-            </DialogTitle>
-            <DialogDescription>
-              {confirming?.kind === "delete"
-                ? labels.deleteRecordConfirm
-                : labels.unmarkConfirm}
-            </DialogDescription>
+            <DialogTitle>{labels.unmark}</DialogTitle>
+            <DialogDescription>{labels.unmarkConfirm}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>
+            <DialogClose
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                />
+              }
+            >
               {labels.cancel}
             </DialogClose>
             <Button
               type="button"
               variant="destructive"
+              className="rounded-full"
               disabled={pending}
-              onClick={confirmAction}
+              onClick={() => {
+                setConfirmingUnmark(false);
+                unmark();
+              }}
             >
-              {confirming?.kind === "delete"
-                ? labels.deleteRecord
-                : labels.unmark}
+              {labels.unmark}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    </>
   );
 }

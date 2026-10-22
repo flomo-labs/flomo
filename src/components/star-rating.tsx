@@ -24,12 +24,18 @@ export function StarRating({
   disabled = false,
   labels,
   className,
+  size = "md",
 }: {
   value: number | null;
   onChange?: (halfStars: number) => void;
   disabled?: boolean;
   labels: StarRatingLabels;
   className?: string;
+  // "sm": estrelas pequenas e cinza, para um valor de apoio (a média ao lado
+  // de outros metadados) sem competir com a nota do usuário. "lg": alvos de
+  // toque maiores, para a nota num bottom sheet. "xs": estrelas coloridas
+  // um pouco menores, para caber dentro de um botão em pílula.
+  size?: "sm" | "xs" | "md" | "lg";
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
@@ -37,16 +43,30 @@ export function StarRating({
   const shown = hover ?? value ?? 0;
   const selected = value === null ? null : Math.round(value);
 
+  const box = { sm: "size-3.5", xs: "size-5", md: "size-6", lg: "size-10" }[
+    size
+  ];
   const stars = Array.from({ length: STARS }, (_, i) => {
     const fill = Math.min(Math.max(shown / 2 - i, 0), 1) * 100;
     return (
-      <span key={i} className="relative inline-flex size-6">
-        <Icon name="star" filled className="size-6 text-muted-foreground/30" />
+      <span key={i} className={cn("relative inline-flex", box)}>
+        <Icon
+          name="star"
+          filled
+          className={cn("text-muted-foreground/30", box)}
+        />
         <span
           className="absolute inset-y-0 left-0 overflow-hidden"
           style={{ width: `${fill}%` }}
         >
-          <Icon name="star" filled className="size-6 text-primary" />
+          <Icon
+            name="star"
+            filled
+            className={cn(
+              box,
+              size === "sm" ? "text-muted-foreground" : "text-primary",
+            )}
+          />
         </span>
         {onChange
           ? [i * 2 + 1, i * 2 + 2].map((half) => (
@@ -85,7 +105,13 @@ export function StarRating({
       <span
         role="img"
         aria-label={labels.readOnly}
-        className={cn("inline-flex", className)}
+        // A massa da estrela fica abaixo do centro da caixa: sobe 1px no
+        // tamanho pequeno para alinhar com o texto da linha.
+        className={cn(
+          "inline-flex",
+          size === "sm" && "-translate-y-px",
+          className,
+        )}
       >
         {stars}
       </span>

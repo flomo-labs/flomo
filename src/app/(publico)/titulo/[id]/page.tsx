@@ -174,7 +174,7 @@ async function EpisodeAverage({
 }) {
   const summary = await getRatingSummary(titleId);
   const average = summary?.byEpisode[episodeId];
-  return average ? <RatingAverage average={average} /> : null;
+  return average ? <RatingAverage average={average} compact /> : null;
 }
 
 function loginHref(next: string) {
@@ -265,31 +265,35 @@ async function Episodes({
       {result.value.map((episode) => (
         <li
           key={episode.id}
-          className="flex flex-col gap-1 rounded-card border border-border p-3"
+          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-card border border-border p-4 [&>*:not(:first-child):not(button)]:mt-3"
         >
-          <p className="font-medium">
-            <span className="text-muted-foreground">
-              {episode.episodeNumber}.
-            </span>{" "}
-            {episode.name ??
-              t("unnamedEpisode", { number: episode.episodeNumber })}
-          </p>
-          {episode.overview ? (
-            <p className="line-clamp-3 text-sm text-muted-foreground">
-              {episode.overview}
+          <div className="col-span-2 flex min-w-0 flex-col gap-2">
+            <p className="font-medium">
+              <span className="text-muted-foreground">
+                {episode.episodeNumber}.
+              </span>{" "}
+              {episode.name ??
+                t("unnamedEpisode", { number: episode.episodeNumber })}
             </p>
-          ) : null}
-          <p className="text-xs text-muted-foreground">
-            {[
-              episode.airDate,
-              episode.runtime ? `${episode.runtime} min` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
-          <Suspense fallback={null}>
-            <EpisodeAverage titleId={titleId} episodeId={episode.id} />
-          </Suspense>
+            {episode.overview ? (
+              <p className="line-clamp-3 text-sm text-muted-foreground">
+                {episode.overview}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="text-xs text-muted-foreground">
+                {[
+                  episode.airDate,
+                  episode.runtime ? `${episode.runtime} min` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              <Suspense fallback={null}>
+                <EpisodeAverage titleId={titleId} episodeId={episode.id} />
+              </Suspense>
+            </div>
+          </div>
           <Suspense fallback={null}>
             <WatchSlot
               kind="episode"
