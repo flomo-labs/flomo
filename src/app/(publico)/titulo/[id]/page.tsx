@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SectionHeader } from "@/components/section-header";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -119,9 +120,7 @@ async function TitleContent({
       </header>
 
       <section className="flex flex-col gap-2" aria-labelledby="sinopse">
-        <h2 id="sinopse" className="text-section-title">
-          {t("Title.overview")}
-        </h2>
+        <SectionHeader id="sinopse" title={t("Title.overview")} />
         <p className={cn(!title.overview && "text-muted-foreground")}>
           {title.overview ?? t("Title.noOverview")}
         </p>
@@ -203,9 +202,7 @@ async function Seasons({
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="temporadas">
-      <h2 id="temporadas" className="text-section-title">
-        {t("seasons")}
-      </h2>
+      <SectionHeader id="temporadas" title={t("seasons")} />
       <nav
         aria-label={t("seasonsNav")}
         className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0"
