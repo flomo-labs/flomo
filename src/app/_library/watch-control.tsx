@@ -169,17 +169,14 @@ export function WatchControl({
               <Button
                 type="button"
                 variant="outline"
-                aria-label={labels.history}
+                size="lg"
                 title={labels.history}
                 disabled={pending}
                 onClick={() => setRecordsOpen(true)}
-                className="size-11 rounded-full"
+                className="rounded-full px-4"
               >
-                <Icon name="calendar" className="size-5" />
-              </Button>
-              <span className="text-sm font-medium">
                 {labels.watched} · {watched.dateLabel}
-              </span>
+              </Button>
               {isEpisode ? null : (
                 <>
                   <Button
