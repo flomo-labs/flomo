@@ -20,15 +20,28 @@ async function siteUrl() {
   return url;
 }
 
-// Inicia o login com Google. A volta é em /auth/callback.
-export async function signInWithGoogle(formData: FormData) {
+async function startGoogleSignIn(
+  formData: FormData,
+  options: { selectAccount?: boolean } = {},
+) {
   const callback = new URL("/auth/callback", await siteUrl());
   const next = safeNextPath(formData.get("next"));
   callback.searchParams.set("next", next);
 
   const auth = await getRequestAuth();
-  const googleUrl = await auth.startGoogleSignIn(callback.toString());
+  const googleUrl = await auth.startGoogleSignIn(callback.toString(), options);
   redirect(googleUrl ?? `/entrar?erro=google&next=${encodeURIComponent(next)}`);
+}
+
+// Inicia o login com Google. A volta é em /auth/callback.
+export async function signInWithGoogle(formData: FormData) {
+  await startGoogleSignIn(formData);
+}
+
+// Nova entrada de quem já está logado, antes de uma ação sem volta (excluir a
+// conta): o Google mostra a escolha de conta, e a volta segue para `next`.
+export async function reauthenticateWithGoogle(formData: FormData) {
+  await startGoogleSignIn(formData, { selectAccount: true });
 }
 
 export async function signOut() {
