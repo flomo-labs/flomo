@@ -38,12 +38,12 @@ Padrões de uso de cor:
 
 ### Tipografia
 - Fonte: **Inter** (`--font-sans`, também `--font-heading`); mono: Geist Mono (`--font-mono`).
-- Utilitários: `text-page-title` (24px celular / 30px desktop, 700), `text-section-title` (20px, 600).
+- Utilitários: `text-page-title` (24px celular / 30px desktop, 700), `text-section-title` (20px, 600), `text-section-title-lg` (24px, 700; telas só de listas, como o Descobrir).
 - Corpo `text-sm` (14px) é o padrão da interface (64 usos); `text-xs` (12px) para etiquetas e metadados; `text-base` só em campos (evita zoom no iOS; `md:text-sm`).
 - Título de cartão: `text-sm font-medium leading-tight line-clamp-2`. Logo: `text-lg font-bold`. Rótulo da barra inferior: `0.625rem`.
 
 ### Espaçamento
-Escala Tailwind (4px). Mais usados: `gap-2` (8), `gap-3` (12), `gap-1`, `gap-4`, `gap-6` (seções). Grades de pôster: `gap-3`. Sem espaçamentos arbitrários.
+Escala Tailwind (4px). Mais usados: `gap-2` (8), `gap-3` (12), `gap-1`, `gap-4`, `gap-6` (entre blocos da página); entre seções de listas do Descobrir, `gap-10` (celular) / `gap-12` (`md+`). Grades de pôster: `gap-3`. Sem espaçamentos arbitrários.
 
 ### Raios
 Base `--radius: 0.875rem` (14px). Escala shadcn: `sm` 0.6×, `md` 0.8×, `lg` 1×, `xl` 1.4×, `2xl` 1.8×, `4xl` 2.6×.
@@ -77,7 +77,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `PosterRow` | linha de título | pôster 64/80px (`md`) ou 48/56px (`sm`), `rounded-card border p-3`, ação à direita (`trailing`) |
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
 | `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela |
-| `SectionHeader` | título de seção + ação ("Ver tudo") | `text-section-title` |
+| `SectionHeader` | título de seção + ação ("Ver tudo") | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
 | `EmptyState` | lista vazia | mensagem `muted` + botão do próximo passo |
 | `StarRating` | nota em meias estrelas | tamanhos `xs/sm/md/lg`; `sm` cinza (média), `lg` para sheet; radio group acessível |
 | `RatingAverage`, `TmdbRating` | médias | apoio, sem competir com a nota do usuário |
