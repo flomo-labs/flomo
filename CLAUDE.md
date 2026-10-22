@@ -1,17 +1,16 @@
 @AGENTS.md
 
-# Verificação
+# Verification
 
-- Antes de dizer que terminou: `pnpm lint`, `pnpm typecheck` e `pnpm test`. O `pnpm build` só antes de abrir PR.
-- Enquanto itera, rode só o teste do arquivo: `pnpm test caminho/do/arquivo`.
-- Para rodar tudo e receber só as falhas, use o subagente `verificador`.
-- Antes de abrir PR, use `/pr-pronto`.
+- Before saying you're done: `pnpm lint`, `pnpm typecheck`, `pnpm test`. `pnpm build` only before opening a PR.
+- While iterating, run only the file's test: `pnpm test path/to/file`.
+- To run everything and get only failures, use the `verificador` subagent. Before opening a PR, use `/pr-pronto`.
 
-# Segredos
+# Secrets
 
-- Nunca leia nem peça `.env.local`. Variáveis novas entram primeiro no `.env.example`.
-- O repositório é público: nada de segredo, e-mail corporativo ou caminho local de máquina.
+- Never read or ask for `.env.local`. New variables go in `.env.example` first.
+- The repo is public: no secrets, corporate emails or local machine paths.
 
-# Compactação
+# Compaction
 
-Ao compactar, preserve a lista de arquivos alterados, os comandos de verificação e as decisões tomadas.
+Keep the list of changed files, verification commands and decisions made.

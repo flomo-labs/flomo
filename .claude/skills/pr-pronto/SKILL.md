@@ -4,11 +4,11 @@ description: Confere a branch atual antes de abrir PR (verificação, dados sens
 disable-model-invocation: true
 ---
 
-Prepare a branch atual para PR, sem fazer push nem abrir o PR.
+Prepare the current branch for a PR; do not push or open it.
 
-1. Use o subagente `verificador`. Se algo falhar, pare e mostre as falhas.
-2. Veja o diff contra a `main` (`git --no-pager diff origin/main...HEAD`). O repositório é público: procure segredo, chave, e-mail pessoal ou corporativo, caminho absoluto de máquina (por exemplo `C:\Users`), link privado e qualquer trecho copiado de arquivos "UpNext". Liste o que achar.
-3. Confira `git grep -n -i "upnext"` nos arquivos alterados: ocorrências novas devem virar "Flomo" (veja as exceções no `AGENTS.md`).
-4. Confira se os commits seguem Conventional Commits em português e se cada um tem um propósito só.
-5. Escreva o texto do PR seguindo `.github/pull_request_template.md`.
-6. Termine dizendo o que ainda falta e lembrando que o outro dev precisa revisar (o autor não aprova o próprio PR).
+1. Run the `verificador` subagent. On failure, stop and show the failures.
+2. Review `git --no-pager diff origin/main...HEAD`. The repo is public: look for secrets, keys, personal/corporate emails, absolute machine paths (e.g. `C:\Users`), private links, text copied from "UpNext" files. List findings.
+3. `git grep -n -i "upnext"` on changed files: new occurrences become "Flomo" (exceptions in `AGENTS.md`).
+4. Check commits follow Conventional Commits in Portuguese, one purpose each.
+5. Write the PR text following `.github/pull_request_template.md`.
+6. End with what's still missing and a reminder that the other dev must review (authors don't approve their own PR).
