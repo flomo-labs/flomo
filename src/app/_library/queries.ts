@@ -7,17 +7,18 @@ import type { LibraryItem } from "@/domain/library/ports";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
 
-// Itens da biblioteca do usuário para um filtro; `null` quando a leitura falha.
+// Itens da biblioteca do usuário para um filtro (e, se pedido, um tipo); `null` quando a leitura falha.
 export async function loadLibraryItems(
   user: CurrentUser,
   filter: LibraryFilter,
+  mediaType?: "tv" | "movie",
 ): Promise<LibraryItem[] | null> {
   try {
     const result = await withUser(user.claims, (tx) =>
       listLibrary(
         { library: createLibraryRepository(tx), now: () => new Date() },
         { id: user.id },
-        { filter },
+        { filter, mediaType },
       ),
     );
     return result.ok ? result.value : null;
