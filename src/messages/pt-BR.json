@@ -121,8 +121,10 @@
       "list": "Lista",
       "hidden": "Ocultos"
     },
-    "seriesTitle": "Séries",
-    "moviesTitle": "Filmes",
+    "types": "Tipo de título",
+    "type": {
+      "all": "Todos"
+    },
     "series": "Séries",
     "movies": "Filmes",
     "group": {

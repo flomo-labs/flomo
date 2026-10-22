@@ -13,27 +13,34 @@ import { LibraryCard } from "./library-card";
 import { LibraryFilters } from "./library-filters";
 import { LibraryRow } from "./library-row";
 import { loadLibraryItems } from "./queries";
-import { LIBRARY_VIEWS, type LibraryView } from "./library-view";
+import {
+  LIBRARY_TYPE_PATH,
+  LIBRARY_TYPES,
+  LIBRARY_VIEWS,
+  type LibraryType,
+  type LibraryView,
+} from "./library-view";
 
 const GRID = "grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5";
 
 export type LibraryMedia = "tv" | "movie";
 
-// Biblioteca inteira (ou só séries/filmes, nas telas "Ver tudo" do Perfil) com
-// as visões lado a lado. Lê a biblioteca e os ocultos uma vez e monta todas as
-// visões a partir deles, para trocar de visão não voltar ao servidor.
+// Biblioteca inteira com as visões e o recorte por tipo lado a lado. Lê a
+// biblioteca e os ocultos uma vez e monta todas as combinações a partir deles,
+// para trocar de visão ou de tipo não voltar ao servidor. `initialType` é o
+// recorte da rota aberta.
 export async function LibraryViews({
   path,
-  mediaType,
+  initialType = "all",
 }: {
   path: string;
-  mediaType?: LibraryMedia;
+  initialType?: LibraryType;
 }) {
   const t = await getTranslations("LibraryPage");
   const user = await requireUser(path);
   const [all, hidden] = await Promise.all([
-    loadLibraryItems(user, "all", mediaType),
-    loadLibraryItems(user, "hidden", mediaType),
+    loadLibraryItems(user, "all"),
+    loadLibraryItems(user, "hidden"),
   ]);
   if (all === null || hidden === null) {
     return (
@@ -43,19 +50,32 @@ export async function LibraryViews({
     );
   }
   const lists = Object.fromEntries(
-    LIBRARY_VIEWS.map((view) => [
-      view,
-      <LibraryItems
-        key={view}
-        view={view}
-        items={view === "hidden" ? hidden : all}
-        mediaType={mediaType}
-      />,
-    ]),
-  ) as Record<LibraryView, React.ReactNode>;
+    LIBRARY_VIEWS.flatMap((view) =>
+      LIBRARY_TYPES.map((type) => {
+        const source = view === "hidden" ? hidden : all;
+        const mediaType = type === "all" ? undefined : type;
+        return [
+          `${view}:${type}`,
+          <LibraryItems
+            key={`${view}:${type}`}
+            view={view}
+            items={
+              mediaType
+                ? source.filter((i) => i.mediaType === mediaType)
+                : source
+            }
+            mediaType={mediaType}
+          />,
+        ];
+      }),
+    ),
+  ) as Record<`${LibraryView}:${LibraryType}`, React.ReactNode>;
   return (
-    <LibraryFilters
+    <LibraryFilters<LibraryView, LibraryType>
       views={LIBRARY_VIEWS}
+      types={LIBRARY_TYPES}
+      initialType={initialType}
+      typePaths={LIBRARY_TYPE_PATH}
       lists={lists}
       labels={{
         views: t("views"),
@@ -65,6 +85,8 @@ export async function LibraryViews({
           list: t("view.list"),
           hidden: t("view.hidden"),
         },
+        types: t("types"),
+        type: { all: t("type.all"), tv: t("series"), movie: t("movies") },
       }}
     />
   );
