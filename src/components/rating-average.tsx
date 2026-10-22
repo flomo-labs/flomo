@@ -26,7 +26,7 @@ export async function RatingAverage({
       }
     >
       <StarRating
-        compact={compact}
+        size={compact ? "sm" : "md"}
         value={average.average}
         labels={await getStarLabels(
           t("averageAria", { average: stars, count: average.count }),

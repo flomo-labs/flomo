@@ -24,16 +24,17 @@ export function StarRating({
   disabled = false,
   labels,
   className,
-  compact = false,
+  size = "md",
 }: {
   value: number | null;
   onChange?: (halfStars: number) => void;
   disabled?: boolean;
   labels: StarRatingLabels;
   className?: string;
-  // Estrelas pequenas e cinza, para um valor de apoio (a média ao lado de
-  // outros metadados), sem competir com a nota do usuário.
-  compact?: boolean;
+  // "sm": estrelas pequenas e cinza, para um valor de apoio (a média ao lado
+  // de outros metadados) sem competir com a nota do usuário. "lg": alvos de
+  // toque maiores, para a nota num bottom sheet.
+  size?: "sm" | "md" | "lg";
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
@@ -41,20 +42,15 @@ export function StarRating({
   const shown = hover ?? value ?? 0;
   const selected = value === null ? null : Math.round(value);
 
+  const box = { sm: "size-3.5", md: "size-6", lg: "size-10" }[size];
   const stars = Array.from({ length: STARS }, (_, i) => {
     const fill = Math.min(Math.max(shown / 2 - i, 0), 1) * 100;
     return (
-      <span
-        key={i}
-        className={cn("relative inline-flex", compact ? "size-3.5" : "size-6")}
-      >
+      <span key={i} className={cn("relative inline-flex", box)}>
         <Icon
           name="star"
           filled
-          className={cn(
-            "text-muted-foreground/30",
-            compact ? "size-3.5" : "size-6",
-          )}
+          className={cn("text-muted-foreground/30", box)}
         />
         <span
           className="absolute inset-y-0 left-0 overflow-hidden"
@@ -64,9 +60,8 @@ export function StarRating({
             name="star"
             filled
             className={cn(
-              compact
-                ? "size-3.5 text-muted-foreground"
-                : "size-6 text-primary",
+              box,
+              size === "sm" ? "text-muted-foreground" : "text-primary",
             )}
           />
         </span>
@@ -109,7 +104,11 @@ export function StarRating({
         aria-label={labels.readOnly}
         // A massa da estrela fica abaixo do centro da caixa: sobe 1px no
         // tamanho pequeno para alinhar com o texto da linha.
-        className={cn("inline-flex", compact && "-translate-y-px", className)}
+        className={cn(
+          "inline-flex",
+          size === "sm" && "-translate-y-px",
+          className,
+        )}
       >
         {stars}
       </span>

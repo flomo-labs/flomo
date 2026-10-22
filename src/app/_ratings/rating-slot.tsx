@@ -34,9 +34,12 @@ export async function RatingSlot({
       canRate={watched}
       labels={{
         stars: await getStarLabels(
-          mine ? t("option", { stars: formatStars(mine.halfStars) }) : undefined,
+          mine
+            ? t("option", { stars: formatStars(mine.halfStars) })
+            : undefined,
         ),
         remove: t("remove"),
+        done: t("done"),
         failed: t("failed"),
       }}
     />
