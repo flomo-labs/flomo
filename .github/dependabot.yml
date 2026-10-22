@@ -18,6 +18,10 @@ updates:
       # TypeScript 7 é uma major grande; avaliar em PR manual.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # Os tipos acompanham o Node do CI (node-version 22 nos workflows). Subir
+      # a major junto com o node-version, em PR manual.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
