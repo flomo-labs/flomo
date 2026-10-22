@@ -1,25 +1,25 @@
-import { Icon } from "@/components/icon";
-import { Input } from "@/components/ui/input";
+import { getTranslations } from "next-intl/server";
+import { HeaderSearchField } from "./header-search-field";
 
-// Campo do cabeçalho do desktop: envia para /buscar (funciona sem JavaScript).
-export function HeaderSearch() {
+// Campo do cabeçalho do desktop: sugestões enquanto digita e, ao enviar,
+// /buscar (funciona sem JavaScript). No celular a busca fica na própria tela.
+export async function HeaderSearch() {
+  const t = await getTranslations();
   return (
     <form
       action="/buscar"
       role="search"
-      className="relative hidden w-64 md:block"
+      className="relative hidden w-64 md:flex"
     >
-      <Icon
-        name="search"
-        className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
-      />
-      <Input
-        type="search"
-        name="q"
-        aria-label="Buscar títulos"
-        placeholder="Buscar títulos"
-        autoComplete="off"
-        className="h-9 rounded-full pl-9"
+      <HeaderSearchField
+        ariaLabel={t("Search.headerLabel")}
+        labels={{
+          placeholder: t("Search.headerPlaceholder"),
+          suggestions: t("Search.suggestions"),
+          seeAll: t.raw("Search.seeAll"),
+          movie: t("MediaType.movie"),
+          tv: t("MediaType.tv"),
+        }}
       />
     </form>
   );

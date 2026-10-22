@@ -5,7 +5,6 @@
     "label": "O que você quer assistir?",
     "placeholder": "Filme ou série",
     "submit": "Buscar",
-    "intro": "Digite o nome de um filme ou de uma série.",
     "results": "{count, plural, =0 {Nenhum resultado} one {1 resultado} other {# resultados}} para “{query}”",
     "empty": "Não encontramos nada para “{query}”. Confira a grafia ou tente outro nome.",
     "page": "Página {page} de {total}",
@@ -13,7 +12,11 @@
     "next": "Próxima",
     "pagination": "Paginação dos resultados",
     "noOverview": "Sem sinopse em português.",
-    "unknownYear": "Ano desconhecido"
+    "unknownYear": "Ano desconhecido",
+    "suggestions": "Sugestões de títulos",
+    "seeAll": "Ver todos os resultados para “{query}”",
+    "headerLabel": "Buscar títulos",
+    "headerPlaceholder": "Buscar títulos"
   },
   "MediaType": {
     "movie": "Filme",
@@ -45,6 +48,8 @@
     "group": "Sua nota",
     "option": "{stars} de 5 estrelas",
     "remove": "Remover nota",
+    "done": "Concluir",
+    "cancel": "Cancelar",
     "average": "{average} · {count, plural, one {1 nota} other {# notas}}",
     "averageAria": "Média {average} de 5 estrelas, {count, plural, one {1 nota} other {# notas}}",
     "failed": "Não foi possível salvar a nota. Tente de novo.",
@@ -78,17 +83,19 @@
     "previousTitle": "Episódios anteriores",
     "previousDescription": "{count, plural, one {Você tem 1 episódio não visto antes deste.} other {Você tem # episódios não vistos antes deste.}}",
     "watchAgain": "Ver de novo",
+    "back": "Voltar",
+    "done": "Concluir",
+    "editRecord": "Editar registro",
+    "watchedChoice": "O que você quer fazer com este episódio?",
     "watched": "Assistido",
     "unmark": "Desmarcar",
     "unmarkConfirm": "Isso apaga o último registro deste item. Desmarcar?",
     "history": "Registros",
     "deleteRecord": "Apagar",
     "deleteRecordConfirm": "Apagar este registro?",
-    "changeDate": "Mudar a data",
     "today": "Foi hoje",
     "noDate": "Tirar a data",
     "pickDate": "Outro dia",
-    "saveDate": "Salvar data",
     "signIn": "Entre para marcar o que você já viu",
     "unavailable": "Não foi possível carregar a sua biblioteca agora.",
     "addToLibrary": "Adicionar à biblioteca",
@@ -107,14 +114,26 @@
   "LibraryPage": {
     "title": "Biblioteca",
     "description": "Tudo o que você acompanha no Flomo.",
-    "filters": "Filtrar por situação",
-    "filter": {
-      "all": "Todos",
+    "views": "Visão da biblioteca",
+    "view": {
+      "grouped": "Por situação",
+      "posters": "Pôsteres",
+      "list": "Lista",
+      "hidden": "Ocultos"
+    },
+    "types": "Tipo de título",
+    "type": {
+      "all": "Todos"
+    },
+    "series": "Séries",
+    "movies": "Filmes",
+    "group": {
       "watching": "Assistindo",
       "watchlist": "Quero ver",
       "paused": "Pausado",
+      "dropped": "Abandonados",
       "watched": "Assistidos",
-      "hidden": "Ocultos"
+      "watchedMovie": "Vistos"
     },
     "status": {
       "watchlist": "Quero ver",
@@ -125,9 +144,10 @@
     },
     "progress": "{watched} de {released} episódios",
     "progressLabel": "Progresso de {title}",
+    "seen": "Visto ✓",
+    "notSeen": "Não visto",
     "noEpisodes": "Sem episódios lançados",
     "emptyAll": "Sua biblioteca está vazia. Busque um título e marque o que você já viu.",
-    "emptyFilter": "Nenhum título nesta situação.",
     "emptyHidden": "Você não ocultou nenhum título.",
     "search": "Buscar títulos",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
@@ -135,7 +155,6 @@
   "Following": {
     "title": "Seguintes",
     "description": "O que assistir em seguida: o próximo episódio das suas séries e os filmes que você quer ver.",
-    "seeAll": "Ver tudo",
     "sections": "Seções",
     "queue": "Para assistir",
     "soon": "Em breve",
@@ -146,14 +165,44 @@
       "tv": "Séries",
       "movie": "Filmes"
     },
-    "position": "T{season} · E{episode}",
+    "position": "T{season}:E{episode}",
     "markEpisode": "Marcar {title} T{season} E{episode} como assistido",
     "markMovie": "Marcar {title} como assistido",
     "markFailed": "Não foi possível marcar. Tente de novo.",
     "emptyFilter": "Nada por aqui neste tipo.",
     "empty": "Sua fila está vazia. Adicione séries e filmes à biblioteca para ver o que vem a seguir.",
     "search": "Buscar títulos",
-    "unavailable": "Não foi possível carregar os Seguintes agora. Tente de novo em instantes."
+    "unavailable": "Não foi possível carregar os Seguintes agora. Tente de novo em instantes.",
+    "chooseHandle": "Escolha seu nome de usuário para concluir o cadastro."
+  },
+  "Landing": {
+    "headline": "O próximo episódio, sempre à mão.",
+    "body": "Marque o que você já viu, saiba o que assistir em seguida e conte o que achou para os amigos.",
+    "signIn": "Entrar com Google",
+    "enter": "Entrar",
+    "menu": "Mais opções",
+    "tmdbNotice": "This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.",
+    "seeTrending": "Ver o que está em alta →",
+    "consent": "Ao entrar, você declara ter 18 anos ou mais e concorda com os <terms>Termos de uso</terms> e com a <privacy>Política de privacidade</privacy>."
+  },
+  "Discover": {
+  "title": "Descobrir",
+  "description": "Em alta, nos cinemas e nos serviços de streaming.",
+    "shelf": {
+      "trending": "Em alta esta semana",
+      "now_playing": "Nos cinemas",
+      "provider": "Em alta {gender, select, feminine {na} other {no}} {provider}"
+    },
+    "providerNav": "Serviço de streaming",
+    "mediaNav": "Filmes, séries ou novelas",
+    "media": {
+      "tudo": "Tudo",
+      "filmes": "Filmes",
+      "series": "Séries",
+      "novelas": "Novelas"
+    },
+    "providerNote": "Popularidade geral do TMDB entre os títulos de assinatura do serviço, não é o ranking dele. Dados de onde assistir por",
+    "shelfUnavailable": "Não foi possível carregar esta lista agora."
   },
   "Status": {
     "planned": "Planejado",
@@ -175,25 +224,6 @@
     "seeAll": "Ver a lista completa no TMDB",
     "credit": "Dados de onde assistir por"
   },
-  "Home": {
-    "tagline": "Acompanhe filmes e séries, avalie e compartilhe com amigos.",
-    "chooseHandle": "Escolha seu nome de usuário para concluir o cadastro.",
-    "shelf": {
-      "trending": "Em alta esta semana",
-      "now_playing": "Nos cinemas",
-      "provider": "Em alta {gender, select, feminine {na} other {no}} {provider}"
-    },
-    "providerNav": "Serviço de streaming",
-    "mediaNav": "Filmes, séries ou novelas",
-    "media": {
-      "tudo": "Tudo",
-      "filmes": "Filmes",
-      "series": "Séries",
-      "novelas": "Novelas"
-    },
-    "providerNote": "Popularidade geral do TMDB entre os títulos de assinatura do serviço, não é o ranking dele. Dados de onde assistir por",
-    "shelfUnavailable": "Não foi possível carregar esta lista agora."
-  },
   "Profile": {
     "private": "Perfil privado",
     "privateHint": "Quem não é você vê só nome, handle e foto.",
@@ -206,6 +236,13 @@
     "episodes": "{count, plural, =0 {episódios} one {episódio} other {episódios}}",
     "hours": "{count, plural, =0 {horas} one {hora} other {horas}}",
     "ratings": "{count, plural, =0 {notas} one {nota} other {notas}}",
+    "seriesSection": "Séries",
+    "moviesSection": "Filmes",
+    "seeAll": "Ver tudo",
+    "seeAllIn": "Ver tudo em {section}",
+    "libraryEmpty": "Nenhum título na sua biblioteca ainda. Busque um para começar.",
+    "libraryUnavailable": "Não foi possível carregar sua biblioteca agora.",
+    "search": "Buscar títulos",
     "notFoundTitle": "Perfil não encontrado",
     "notFound": "Este perfil não existe."
   }

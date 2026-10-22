@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +86,11 @@ async function ProfileContent({
       ) : (
         <p className="text-muted-foreground">{t("privateLocked")}</p>
       )}
+      {isOwn ? (
+        <Suspense fallback={null}>
+          <LibraryPreview user={user} />
+        </Suspense>
+      ) : null}
     </article>
   );
 }

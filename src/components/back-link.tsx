@@ -55,10 +55,10 @@ export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
   );
 }
 
-// Faixa de voltar das páginas públicas: a Home é a raiz e não tem para onde
-// voltar.
+// Faixa de voltar das páginas públicas: a landing e o Seguintes (as telas
+// iniciais) não têm para onde voltar.
 export function BackBar() {
   const pathname = usePathname();
-  if (pathname === "/") return null;
+  if (pathname === "/" || pathname === "/seguintes") return null;
   return <BackLink />;
 }

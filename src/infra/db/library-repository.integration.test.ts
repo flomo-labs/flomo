@@ -515,6 +515,51 @@ describe("marcar como assistido no banco", () => {
       ]);
     }));
 
+  it("biblioteca: quem foi marcado como visto por último vem primeiro", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      const order = async () => {
+        const r = await run(tx, user, (deps, u) => listLibrary(deps, u, {}));
+        return r.ok ? r.value.map((i) => i.titleId) : null;
+      };
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S1E1 }),
+      );
+      await run(tx, user, (deps, u) =>
+        markMovieWatched(deps, u, { titleId: c.movieId }),
+      );
+
+      // Dentro de uma transação `now()` não muda: as datas vão à mão, e o
+      // trigger de `updated_at` fica desligado.
+      await tx.execute(sql`set local session_replication_role = replica`);
+      const at = (iso: string) => new Date(iso);
+      await tx
+        .update(userTitles)
+        .set({ updatedAt: at("2026-01-01") })
+        .where(eq(userTitles.titleId, c.movieId));
+      await tx
+        .update(userTitles)
+        .set({ updatedAt: at("2026-01-02") })
+        .where(eq(userTitles.titleId, c.seriesId));
+      await tx
+        .update(watchEvents)
+        .set({ createdAt: at("2026-02-01") })
+        .where(eq(watchEvents.titleId, c.movieId));
+      await tx
+        .update(watchEvents)
+        .set({ createdAt: at("2026-02-02") })
+        .where(eq(watchEvents.titleId, c.seriesId));
+      expect(await order()).toEqual([c.seriesId, c.movieId]);
+
+      // Assistir o filme de novo o leva ao topo, sem mudar a situação.
+      await tx
+        .update(watchEvents)
+        .set({ createdAt: at("2026-02-03") })
+        .where(eq(watchEvents.titleId, c.movieId));
+      expect(await order()).toEqual([c.movieId, c.seriesId]);
+    }));
+
   it("seguintes: série e filme na fila, o que mexeu por último no topo", () =>
     inRollback(async (tx) => {
       const user = await createUser(tx);

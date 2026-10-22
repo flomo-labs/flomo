@@ -8,7 +8,7 @@ export default async function TitleNotFound() {
     <div className="flex flex-col items-start gap-3">
       <h1 className="text-2xl font-bold">{t("notFound")}</h1>
       <p className="text-muted-foreground">{t("notFoundHint")}</p>
-      <Button render={<Link href="/buscar" />} nativeButton={false}>
+      <Button render={<Link href="/descobrir" />} nativeButton={false}>
         {t("backToSearch")}
       </Button>
     </div>

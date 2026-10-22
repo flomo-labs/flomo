@@ -27,6 +27,12 @@ export const roadmap: readonly RoadmapItem[] = [
     status: "planned",
   },
   {
+    id: "descobrir-personalizado",
+    title: "Personalizar o Descobrir",
+    description: "Escolha quais listas aparecem no Descobrir e em que ordem.",
+    status: "planned",
+  },
+  {
     id: "listas-avancadas",
     title: "Listas avançadas",
     description:

@@ -1,115 +1,196 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/app/_auth/session";
-import { Poster } from "@/components/catalog/poster";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/empty-state";
+import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import type { LibraryFilter } from "@/contracts/library";
-import { listLibrary } from "@/domain/library/list-library";
+import {
+  groupLibrary,
+  type LibraryGroup,
+} from "@/domain/library/library-groups";
 import type { LibraryItem } from "@/domain/library/ports";
-import { withUser } from "@/infra/db/client";
-import { createLibraryRepository } from "@/infra/db/library-repository";
+import { LibraryCard } from "./library-card";
+import { LibraryFilters } from "./library-filters";
+import { LibraryRow } from "./library-row";
+import { loadLibraryItems } from "./queries";
+import {
+  LIBRARY_TYPE_PATH,
+  LIBRARY_TYPES,
+  LIBRARY_VIEWS,
+  type LibraryType,
+  type LibraryView,
+} from "./library-view";
 
-// Lista da Biblioteca para um filtro; usada na abertura da tela e ao trocar de aba.
-export async function LibraryList({ filter }: { filter: LibraryFilter }) {
+const GRID = "grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5";
+
+export type LibraryMedia = "tv" | "movie";
+
+// Biblioteca inteira com as visões e o recorte por tipo lado a lado. Lê a
+// biblioteca e os ocultos uma vez e monta todas as combinações a partir deles,
+// para trocar de visão ou de tipo não voltar ao servidor. `initialType` é o
+// recorte da rota aberta.
+export async function LibraryViews({
+  path,
+  initialType = "all",
+}: {
+  path: string;
+  initialType?: LibraryType;
+}) {
   const t = await getTranslations("LibraryPage");
-  const user = await requireUser("/biblioteca");
-
-  let items: LibraryItem[] | null = null;
-  try {
-    const result = await withUser(user.claims, (tx) =>
-      listLibrary(
-        { library: createLibraryRepository(tx), now: () => new Date() },
-        { id: user.id },
-        { filter },
-      ),
-    );
-    if (result.ok) items = result.value;
-  } catch (error) {
-    console.error("Falha ao listar a biblioteca:", error);
-  }
-
-  if (items === null) {
+  const user = await requireUser(path);
+  const [all, hidden] = await Promise.all([
+    loadLibraryItems(user, "all"),
+    loadLibraryItems(user, "hidden"),
+  ]);
+  if (all === null || hidden === null) {
     return (
       <p role="alert" className="text-destructive">
         {t("unavailable")}
       </p>
     );
   }
-  if (items.length === 0) {
-    return (
-      <div className="flex flex-col items-start gap-3">
-        <p className="text-muted-foreground">
-          {filter === "all"
-            ? t("emptyAll")
-            : filter === "hidden"
-              ? t("emptyHidden")
-              : t("emptyFilter")}
-        </p>
-        {filter === "all" ? (
-          <Button render={<Link href="/buscar" />} nativeButton={false}>
-            {t("search")}
-          </Button>
-        ) : null}
-      </div>
-    );
-  }
+  const lists = Object.fromEntries(
+    LIBRARY_VIEWS.flatMap((view) =>
+      LIBRARY_TYPES.map((type) => {
+        const source = view === "hidden" ? hidden : all;
+        const mediaType = type === "all" ? undefined : type;
+        return [
+          `${view}:${type}`,
+          <LibraryItems
+            key={`${view}:${type}`}
+            view={view}
+            items={
+              mediaType
+                ? source.filter((i) => i.mediaType === mediaType)
+                : source
+            }
+            mediaType={mediaType}
+          />,
+        ];
+      }),
+    ),
+  ) as Record<`${LibraryView}:${LibraryType}`, React.ReactNode>;
   return (
-    <ul className="flex flex-col gap-3">
-      {items.map((item) => (
-        <li key={item.titleId}>
-          <Row item={item} />
-        </li>
-      ))}
-    </ul>
+    <LibraryFilters<LibraryView, LibraryType>
+      views={LIBRARY_VIEWS}
+      types={LIBRARY_TYPES}
+      initialType={initialType}
+      typePaths={LIBRARY_TYPE_PATH}
+      lists={lists}
+      labels={{
+        views: t("views"),
+        view: {
+          grouped: t("view.grouped"),
+          posters: t("view.posters"),
+          list: t("view.list"),
+          hidden: t("view.hidden"),
+        },
+        types: t("types"),
+        type: { all: t("type.all"), tv: t("series"), movie: t("movies") },
+      }}
+    />
   );
 }
 
-async function Row({ item }: { item: LibraryItem }) {
-  const t = await getTranslations();
-  const { progress } = item;
-  return (
-    <Link
-      href={`/titulo/${item.titleId}`}
-      className="flex gap-4 rounded-card border border-border p-3 transition-colors hover:bg-muted/50"
-    >
-      <Poster
-        path={item.posterPath}
-        size="w185"
-        alt={t("Title.poster", { title: item.title })}
-        className="w-16 shrink-0 sm:w-20"
+async function LibraryItems({
+  view,
+  items,
+  mediaType,
+}: {
+  view: LibraryView;
+  items: LibraryItem[];
+  mediaType?: LibraryMedia;
+}) {
+  const t = await getTranslations("LibraryPage");
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        message={view === "hidden" ? t("emptyHidden") : t("emptyAll")}
+        action={
+          view === "hidden" ? undefined : (
+            <Button render={<Link href="/descobrir" />} nativeButton={false}>
+              {t("search")}
+            </Button>
+          )
+        }
       />
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <h2 className="font-semibold">{item.title}</h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{t(`MediaType.${item.mediaType}`)}</Badge>
-          <Badge variant="outline">
-            {t(`LibraryPage.status.${item.status}`)}
-          </Badge>
+    );
+  }
+  if (view === "hidden" || view === "posters") {
+    return (
+      <ul className={GRID}>
+        {items.map((item) => (
+          <li key={item.titleId}>
+            <LibraryCard item={item} showStatus showSeen />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  if (view === "list") {
+    return (
+      <ul className="flex flex-col gap-3">
+        {items.map((item) => (
+          <li key={item.titleId}>
+            <LibraryRow item={item} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  const { series, movies } = groupLibrary(items);
+  return (
+    <div className="flex flex-col gap-8">
+      {mediaType === "movie" ? null : (
+        <LibrarySection
+          title={mediaType ? undefined : t("series")}
+          groups={series}
+          kind="tv"
+        />
+      )}
+      {mediaType === "tv" ? null : (
+        <LibrarySection
+          title={mediaType ? undefined : t("movies")}
+          groups={movies}
+          kind="movie"
+        />
+      )}
+    </div>
+  );
+}
+
+// Seção (Séries ou Filmes) com uma sub-lista por situação; some se vazia. Sem título nas telas de um tipo só, onde o
+// título da página já diz qual é.
+async function LibrarySection({
+  title,
+  groups,
+  kind,
+}: {
+  title?: string;
+  groups: LibraryGroup[];
+  kind: LibraryMedia;
+}) {
+  if (groups.length === 0) return null;
+  const t = await getTranslations("LibraryPage");
+  return (
+    <section className="flex flex-col gap-4">
+      {title ? <SectionHeader title={title} /> : null}
+      {groups.map(({ status, items }) => (
+        <div key={status} className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold text-muted-foreground">
+            {t(
+              `group.${status === "watched" && kind === "movie" ? "watchedMovie" : status}`,
+            )}
+          </h3>
+          <ul className={GRID}>
+            {items.map((item) => (
+              <li key={item.titleId}>
+                <LibraryCard item={item} />
+              </li>
+            ))}
+          </ul>
         </div>
-        {progress ? (
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-muted-foreground">
-              {progress.released > 0
-                ? t("LibraryPage.progress", {
-                    watched: progress.watched,
-                    released: progress.released,
-                  })
-                : t("LibraryPage.noEpisodes")}
-            </p>
-            {progress.released > 0 ? (
-              <Progress
-                value={progress.watched}
-                max={progress.released}
-                aria-label={t("LibraryPage.progressLabel", {
-                  title: item.title,
-                })}
-              />
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    </Link>
+      ))}
+    </section>
   );
 }

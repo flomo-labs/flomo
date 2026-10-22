@@ -3,11 +3,21 @@
 import { useState, useTransition } from "react";
 import { StarRating, type StarRatingLabels } from "@/components/star-rating";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { rateItem, removeRating, type RatingActionResult } from "./actions";
 
 export type RatingControlLabels = {
   stars: StarRatingLabels;
   remove: string;
+  done: string;
+  cancel: string;
   failed: string;
 };
 
@@ -26,6 +36,10 @@ export function RatingControl({
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Celular: a nota vira um botão que abre um bottom sheet. A nota escolhida
+  // no sheet é um rascunho: só grava em "Concluir"; fechar descarta.
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<number | null>(value);
 
   function run(action: () => Promise<RatingActionResult>) {
     setError(null);
@@ -39,17 +53,24 @@ export function RatingControl({
     });
   }
 
+  const rate = canRate
+    ? (halfStars: number) => run(() => rateItem({ ...target, halfStars }))
+    : undefined;
+  const remove = () => run(() => removeRating(target));
+  const finish = () => {
+    setOpen(false);
+    if (draft !== null && draft !== value) rate?.(draft);
+  };
+
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-wrap items-center gap-2">
+    // No celular o botão da nota pode ocupar também a coluna do check (que só
+    // ocupa a primeira linha do card do episódio).
+    <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+      <div className="hidden flex-wrap items-center gap-2 sm:flex">
         <StarRating
           value={value}
           disabled={pending}
-          onChange={
-            canRate
-              ? (halfStars) => run(() => rateItem({ ...target, halfStars }))
-              : undefined
-          }
+          onChange={rate}
           labels={labels.stars}
         />
         {value !== null ? (
@@ -58,12 +79,82 @@ export function RatingControl({
             variant="ghost"
             size="sm"
             disabled={pending}
-            onClick={() => run(() => removeRating(target))}
+            onClick={remove}
           >
             {labels.remove}
           </Button>
         ) : null}
       </div>
+      <div className="sm:hidden">
+        <Button
+          type="button"
+          variant="outline"
+          aria-label={labels.stars.group}
+          title={labels.stars.group}
+          onClick={() => {
+            setDraft(value);
+            setOpen(true);
+          }}
+          className="rounded-full px-4"
+        >
+          <StarRating
+            size="xs"
+            value={value}
+            labels={{ ...labels.stars, readOnly: undefined }}
+          />
+        </Button>
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent sheet>
+          <DialogHeader className="max-sm:text-center">
+            <DialogTitle>{labels.stars.group}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-3">
+            <StarRating
+              size="lg"
+              value={draft}
+              disabled={pending}
+              onChange={canRate ? setDraft : undefined}
+              labels={labels.stars}
+            />
+            {value !== null ? (
+              <Button
+                type="button"
+                variant="destructive"
+                className="rounded-full"
+                disabled={pending}
+                onClick={() => {
+                  setOpen(false);
+                  remove();
+                }}
+              >
+                {labels.remove}
+              </Button>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                />
+              }
+            >
+              {labels.cancel}
+            </DialogClose>
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={pending}
+              onClick={finish}
+            >
+              {labels.done}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}

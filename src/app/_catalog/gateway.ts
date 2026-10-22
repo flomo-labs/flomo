@@ -7,6 +7,7 @@ import type {
 } from "@/contracts/catalog";
 import { listShelf as listShelfUseCase } from "@/domain/catalog/list-shelf";
 import { searchCatalog as searchCatalogUseCase } from "@/domain/catalog/search-catalog";
+import { suggestTitles as suggestTitlesUseCase } from "@/domain/catalog/suggest-titles";
 import {
   getTitle as getTitleUseCase,
   getTitleByRef as getTitleByRefUseCase,
@@ -32,6 +33,10 @@ function deps() {
 
 export function searchCatalog(input: CatalogSearchInput) {
   return searchCatalogUseCase(deps(), input);
+}
+
+export function suggestTitles(query: string) {
+  return suggestTitlesUseCase(deps(), { query });
 }
 
 export function getTitle(titleId: string) {

@@ -16,11 +16,7 @@ test("fluxo do spike, do login ao /em-breve", async ({ page, context }) => {
   await expect(page).not.toHaveURL(/\/cadastro/);
 
   // Busca e página da série.
-  await page.goto("/buscar");
-  await page
-    .getByRole("searchbox", { name: "O que você quer assistir?" })
-    .fill("flomo");
-  await page.getByRole("button", { name: "Buscar" }).click();
+  await page.goto("/buscar?q=flomo");
   await page
     .getByRole("link", { name: /Série de Teste do Flomo/ })
     .first()

@@ -6,8 +6,7 @@ import { requireUser } from "../_auth/session";
 import { updateHandle } from "../_profile/actions";
 import { HandleForm } from "../_profile/handle-form";
 import { ProfileForm } from "../_profile/profile-form";
-import { getOwnProfile, getOwnStartScreen } from "../_profile/queries";
-import { StartScreenForm } from "../_profile/start-screen-form";
+import { getOwnProfile } from "../_profile/queries";
 
 export const metadata: Metadata = { title: "Configurações · Flomo" };
 
@@ -23,16 +22,6 @@ export default function ConfiguracoesPage() {
         <h2 className="text-lg font-semibold">Perfil</h2>
         <Suspense>
           <EditProfile />
-        </Suspense>
-      </section>
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Tela inicial</h2>
-        <p className="text-sm text-muted-foreground">
-          Onde você começa ao entrar e o que o item Seguintes do menu abre. O logo do Flomo
-          sempre leva à Home.
-        </p>
-        <Suspense>
-          <ChangeStartScreen />
         </Suspense>
       </section>
     </main>
@@ -69,9 +58,4 @@ async function EditProfile() {
       }}
     />
   );
-}
-
-async function ChangeStartScreen() {
-  const user = await requireUser("/configuracoes");
-  return <StartScreenForm current={await getOwnStartScreen(user)} />;
 }

@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createCookieAuth } from "@/infra/auth/supabase";
 import {
+  FOLLOWING_PATH,
   shouldRedirectToStart,
-  START_COOKIE,
-  START_ROUTE,
 } from "./app/_profile/start-screen-path";
 
 // Renova o token de sessão antes da renderização e grava os cookies novos na
@@ -34,18 +33,19 @@ export async function proxy(request: NextRequest) {
 
   const claims = await auth.getClaims();
 
-  // Primeira entrada da sessão: quem está logado cai na tela que escolheu.
+  // Quem está logado não vê a landing: a raiz leva ao Seguintes.
   if (
     shouldRedirectToStart({
       method: request.method,
       pathname: request.nextUrl.pathname,
       fetchMode: request.headers.get("sec-fetch-mode"),
       fetchDest: request.headers.get("sec-fetch-dest"),
-      hasCookie: request.cookies.has(START_COOKIE),
       signedIn: claims !== null,
     })
   ) {
-    const redirect = NextResponse.redirect(new URL(START_ROUTE, request.url));
+    const redirect = NextResponse.redirect(
+      new URL(FOLLOWING_PATH, request.url),
+    );
     // Mantém os cookies de sessão renovados acima.
     for (const cookie of response.cookies.getAll()) {
       redirect.cookies.set(cookie);
@@ -59,7 +59,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Tudo, menos arquivos estáticos e imagens.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Tudo, menos arquivos estáticos, imagens e as sugestões da busca (pública,
+    // sem sessão, e a resposta vai para o cache compartilhado).
+    "/((?!_next/static|_next/image|favicon.ico|api/sugestoes|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

@@ -1,21 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
   DISCOVER_ITEM,
-  HOME_ITEM,
+  FOLLOWING_ITEM,
   isNavItemActive,
   LIBRARY_ITEM,
   profileItem,
 } from "./nav-items";
 
 describe("isNavItemActive", () => {
-  it("marca Seguintes na Home, em Seguintes e em /inicio", () => {
-    for (const path of ["/", "/seguintes", "/inicio"]) {
-      expect(isNavItemActive(HOME_ITEM, path)).toBe(true);
+  it("marca Seguintes na raiz e em /seguintes", () => {
+    for (const path of ["/", "/seguintes"]) {
+      expect(isNavItemActive(FOLLOWING_ITEM, path)).toBe(true);
     }
-    expect(isNavItemActive(HOME_ITEM, "/buscar")).toBe(false);
+    expect(isNavItemActive(FOLLOWING_ITEM, "/buscar")).toBe(false);
   });
 
   it("marca Descobrir e Biblioteca pelo começo do caminho", () => {
+    expect(isNavItemActive(DISCOVER_ITEM, "/descobrir")).toBe(true);
     expect(isNavItemActive(DISCOVER_ITEM, "/buscar")).toBe(true);
     expect(isNavItemActive(LIBRARY_ITEM, "/biblioteca")).toBe(true);
     expect(isNavItemActive(LIBRARY_ITEM, "/seguintes")).toBe(false);

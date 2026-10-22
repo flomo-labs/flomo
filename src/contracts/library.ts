@@ -89,6 +89,9 @@ export type LibraryFilter = (typeof LIBRARY_FILTERS)[number];
 
 export const listLibraryInputSchema = z.object({
   filter: z.enum(LIBRARY_FILTERS).default("all"),
+  // Só um tipo e/ou só os primeiros títulos (prévia do perfil).
+  mediaType: z.enum(["tv", "movie"]).optional(),
+  limit: z.number().int().min(1).max(100).optional(),
 });
 
 // Colocar o título na biblioteca (ou mudar a situação) sem marcar nada.

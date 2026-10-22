@@ -91,14 +91,6 @@ export const changeHandleInputSchema = z.object({ handle: handleSchema });
 
 export type ChangeHandleInput = z.infer<typeof changeHandleInputSchema>;
 
-// Tela em que o usuário quer começar ao entrar: a Home ou a fila Seguintes.
-export const START_SCREENS = ["home", "following"] as const;
-export type StartScreen = (typeof START_SCREENS)[number];
-
-export const setStartScreenInputSchema = z.object({
-  startScreen: z.enum(START_SCREENS),
-});
-
 // Nome de exibição e bio (Fase 1.6). Os limites valem aqui e nos CHECKs de
 // `profiles` (migration 0016): mudar um exige mudar o outro. O banco conta
 // caracteres, não unidades UTF-16; `[...s].length` conta como ele.
@@ -108,13 +100,17 @@ export const BIO_MAX_LENGTH = 160;
 // Texto opcional: cortado nas pontas; vazio ou só espaços vira `null` (sem
 // nome ou sem bio). U+0085 conta como espaço, como no banco.
 function optionalText(max: number, message: string) {
-  return z
-    .string()
-    .trim()
-    .refine((s) => [...s].length <= max, { message })
-    // O Postgres não guarda o caractere nulo em `text`.
-    .refine((s) => !s.includes("\u0000"), { message: "Use só caracteres de texto." })
-    .transform((s) => (/[^\s\u0085]/.test(s) ? s : null));
+  return (
+    z
+      .string()
+      .trim()
+      .refine((s) => [...s].length <= max, { message })
+      // O Postgres não guarda o caractere nulo em `text`.
+      .refine((s) => !s.includes("\u0000"), {
+        message: "Use só caracteres de texto.",
+      })
+      .transform((s) => (/[^\s\u0085]/.test(s) ? s : null))
+  );
 }
 
 export const updateProfileInputSchema = z.object({

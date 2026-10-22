@@ -141,6 +141,13 @@
       "when": 1792379192460,
       "tag": "0019_flomo_app",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792481576593,
+      "tag": "0020_remover_user_settings",
+      "breakpoints": true
     }
   ]
 }

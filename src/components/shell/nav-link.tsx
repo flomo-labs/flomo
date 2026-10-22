@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isNavItemActive, type NavItem } from "./nav-items";
+import { NavLabel } from "./nav-label";
 import { navLinkClass } from "./nav-link-style";
 
 export function NavLink({ item }: { item: NavItem }) {
@@ -11,13 +12,9 @@ export function NavLink({ item }: { item: NavItem }) {
     className: navLinkClass(active),
     "aria-current": active ? "page" : undefined,
   } as const;
-  return item.fullNavigation ? (
-    <a href={item.href} {...common}>
-      {item.label}
-    </a>
-  ) : (
+  return (
     <Link href={item.href} {...common}>
-      {item.label}
+      <NavLabel active={active}>{item.label}</NavLabel>
     </Link>
   );
 }

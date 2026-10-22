@@ -23,6 +23,32 @@ export const catalogSearchInputSchema = z.object({
 });
 export type CatalogSearchInput = z.input<typeof catalogSearchInputSchema>;
 
+// Sugestões enquanto o usuário digita: a partir de 2 letras, só a primeira
+// página da busca, limitada a poucos títulos.
+export const SUGGESTION_MIN_LENGTH = 2;
+export const SUGGESTION_LIMIT = 5;
+
+export const suggestionsInputSchema = z.object({
+  query: z
+    .string()
+    .trim()
+    .min(SUGGESTION_MIN_LENGTH, "Digite pelo menos 2 letras.")
+    .max(
+      SEARCH_QUERY_MAX_LENGTH,
+      `A busca pode ter no máximo ${SEARCH_QUERY_MAX_LENGTH} caracteres.`,
+    ),
+});
+export type SuggestionsInput = z.input<typeof suggestionsInputSchema>;
+
+// Resposta de GET /api/sugestoes: só o que a lista mostra.
+export type Suggestion = {
+  mediaType: "movie" | "tv";
+  externalId: string;
+  title: string;
+  year: string | null;
+  posterPath: string | null;
+};
+
 // Referência de um título no provedor de catálogo (hoje o TMDB), usada só
 // para abrir um resultado de busca que ainda não está no banco. Dentro do
 // Flomo o título é identificado pelo uuid (o id do provedor nunca é PK).
@@ -41,7 +67,7 @@ export const seasonEpisodesInputSchema = z.object({
   seasonNumber: z.coerce.number().int().min(0).max(9999),
 });
 
-// Prateleiras da Home pública (Fase 1.2b): em alta, nos cinemas e "em alta no
+// Prateleiras do Descobrir (Fase 1.2b): em alta, nos cinemas e "em alta no
 // serviço X". Os serviços são uma lista fixa (os principais do Brasil, ids de
 // provedor do TMDB), para a entrada nunca virar parâmetro livre do provedor.
 export const SHELF_PROVIDER_IDS = [
@@ -70,7 +96,7 @@ const SHELF_PROVIDER_INFO: Record<
   "307": { name: "Globoplay", feminine: false },
 };
 
-// Em ordem alfabética (é a ordem do seletor na Home; o primeiro é o padrão).
+// Em ordem alfabética (é a ordem do seletor no Descobrir; o primeiro é o padrão).
 export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
   id,
   ...SHELF_PROVIDER_INFO[id],

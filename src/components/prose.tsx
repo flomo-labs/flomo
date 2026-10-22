@@ -6,7 +6,7 @@ export function Prose({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-6 leading-relaxed",
+        "flex max-w-reading flex-col gap-6 leading-relaxed",
         "[&_a]:underline [&_a]:underline-offset-4",
         "[&_h2]:text-section-title",
         "[&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5",

@@ -6,17 +6,12 @@ const base = {
   pathname: "/",
   fetchMode: "navigate",
   fetchDest: "document",
-  hasCookie: false,
   signedIn: true,
 };
 
-describe("redirecionamento da primeira entrada", () => {
-  it("logado, na Home e sem o cookie da sessão: vai para /inicio", () => {
+describe("redirecionamento da raiz para quem está logado", () => {
+  it("logado e na raiz: vai para o Seguintes", () => {
     expect(shouldRedirectToStart(base)).toBe(true);
-  });
-
-  it("com o cookie, a Home é a Home (o logo sempre chega nela)", () => {
-    expect(shouldRedirectToStart({ ...base, hasCookie: true })).toBe(false);
   });
 
   it("sem login, em outra tela, em prefetch ou fora de GET: não redireciona", () => {
