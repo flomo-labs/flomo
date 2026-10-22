@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionHeader } from "@/components/section-header";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { CommentForm } from "./comment-form";
 import { CommentItem, type CommentItemLabels } from "./comment-item";
@@ -41,9 +42,7 @@ export async function CommentSection({
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="comentarios">
-      <h2 id="comentarios" className="text-section-title">
-        {t("title")}
-      </h2>
+      <SectionHeader id="comentarios" title={t("title")} />
       {view.kind === "anonymous" ? (
         <p>
           <Link href={loginHref} className="underline underline-offset-4">

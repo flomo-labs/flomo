@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { SectionHeader } from "@/components/section-header";
 import { getWatchProviders } from "@/app/_catalog/gateway";
 import { Poster } from "@/components/catalog/poster";
 import type {
@@ -16,9 +17,7 @@ export async function WatchProviders({ titleId }: { titleId: string }) {
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="onde-assistir">
-      <h2 id="onde-assistir" className="text-section-title">
-        {t("title")}
-      </h2>
+      <SectionHeader id="onde-assistir" title={t("title")} />
       {!result.ok ? (
         <p className="text-muted-foreground">{t("unavailable")}</p>
       ) : (
