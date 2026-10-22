@@ -24,12 +24,16 @@ export function StarRating({
   disabled = false,
   labels,
   className,
+  compact = false,
 }: {
   value: number | null;
   onChange?: (halfStars: number) => void;
   disabled?: boolean;
   labels: StarRatingLabels;
   className?: string;
+  // Estrelas pequenas e cinza, para um valor de apoio (a média ao lado de
+  // outros metadados), sem competir com a nota do usuário.
+  compact?: boolean;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
@@ -40,13 +44,31 @@ export function StarRating({
   const stars = Array.from({ length: STARS }, (_, i) => {
     const fill = Math.min(Math.max(shown / 2 - i, 0), 1) * 100;
     return (
-      <span key={i} className="relative inline-flex size-6">
-        <Icon name="star" filled className="size-6 text-muted-foreground/30" />
+      <span
+        key={i}
+        className={cn("relative inline-flex", compact ? "size-3.5" : "size-6")}
+      >
+        <Icon
+          name="star"
+          filled
+          className={cn(
+            "text-muted-foreground/30",
+            compact ? "size-3.5" : "size-6",
+          )}
+        />
         <span
           className="absolute inset-y-0 left-0 overflow-hidden"
           style={{ width: `${fill}%` }}
         >
-          <Icon name="star" filled className="size-6 text-primary" />
+          <Icon
+            name="star"
+            filled
+            className={cn(
+              compact
+                ? "size-3.5 text-muted-foreground"
+                : "size-6 text-primary",
+            )}
+          />
         </span>
         {onChange
           ? [i * 2 + 1, i * 2 + 2].map((half) => (

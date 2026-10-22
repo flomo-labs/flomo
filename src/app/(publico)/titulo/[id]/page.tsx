@@ -174,7 +174,7 @@ async function EpisodeAverage({
 }) {
   const summary = await getRatingSummary(titleId);
   const average = summary?.byEpisode[episodeId];
-  return average ? <RatingAverage average={average} /> : null;
+  return average ? <RatingAverage average={average} compact /> : null;
 }
 
 function loginHref(next: string) {
@@ -280,17 +280,19 @@ async function Episodes({
                 {episode.overview}
               </p>
             ) : null}
-            <p className="text-xs text-muted-foreground">
-              {[
-                episode.airDate,
-                episode.runtime ? `${episode.runtime} min` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            <Suspense fallback={null}>
-              <EpisodeAverage titleId={titleId} episodeId={episode.id} />
-            </Suspense>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="text-xs text-muted-foreground">
+                {[
+                  episode.airDate,
+                  episode.runtime ? `${episode.runtime} min` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              <Suspense fallback={null}>
+                <EpisodeAverage titleId={titleId} episodeId={episode.id} />
+              </Suspense>
+            </div>
           </div>
           <Suspense fallback={null}>
             <WatchSlot
