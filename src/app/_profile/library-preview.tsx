@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import type { LibraryItem } from "@/domain/library/ports";
 
 // Prévia da biblioteca no perfil do próprio usuário: séries e filmes em seções
-// separadas, cada uma com "Ver tudo" para a Biblioteca.
+// separadas, cada uma com "Ver tudo" para a Biblioteca daquele tipo.
 export async function LibraryPreview({ user }: { user: CurrentUser }) {
   const t = await getTranslations("Profile");
   const preview = await loadLibraryPreview(user);
@@ -37,11 +37,13 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
     <>
       <PreviewSection
         id="perfil-series"
+        href="/biblioteca/series"
         title={t("seriesSection")}
         items={series}
       />
       <PreviewSection
         id="perfil-filmes"
+        href="/biblioteca/filmes"
         title={t("moviesSection")}
         items={movies}
       />
@@ -51,10 +53,12 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
 
 async function PreviewSection({
   id,
+  href,
   title,
   items,
 }: {
   id: string;
+  href: string;
   title: string;
   items: LibraryItem[];
 }) {
@@ -67,7 +71,7 @@ async function PreviewSection({
         title={title}
         action={
           <Link
-            href="/biblioteca"
+            href={href}
             aria-label={t("seeAllIn", { section: title })}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
