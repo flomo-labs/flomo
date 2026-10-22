@@ -32,6 +32,10 @@ Before coding a new or changed screen, check which elements (list, card, standar
 - One component per file, clear name, grouped by domain (e.g. `catalog/`), no duplicated markup across screens. Example: the Seguintes list is one component used on Home and `/seguintes`.
 - PR: one line on what was componentized/reused and what was left out.
 
+## Design system
+
+`docs/design-system.md` is the reference for tokens, components and patterns. Read it before changing UI. Any PR that adds or changes a token (`globals.css`), a shared component or variant, or a visual pattern (including the owner's specific UI adjustments, which are part of the standard, never deviations) updates that file in the same PR. Never overwrite an intentional adjustment when standardizing.
+
 ## Git and PRs
 
 - Never push to `main`; everything goes through a PR with green CI. Branch: `type/short-desc` (`feat/`, `fix/`, `chore/`, `docs/`).
