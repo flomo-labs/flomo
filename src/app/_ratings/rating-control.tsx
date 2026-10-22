@@ -17,6 +17,7 @@ export type RatingControlLabels = {
   stars: StarRatingLabels;
   remove: string;
   done: string;
+  cancel: string;
   failed: string;
 };
 
@@ -35,8 +36,10 @@ export function RatingControl({
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  // Celular: a nota vira um botão que abre um bottom sheet.
+  // Celular: a nota vira um botão que abre um bottom sheet. A nota escolhida
+  // no sheet é um rascunho: só grava em "Concluir"; fechar descarta.
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<number | null>(value);
 
   function run(action: () => Promise<RatingActionResult>) {
     setError(null);
@@ -54,6 +57,10 @@ export function RatingControl({
     ? (halfStars: number) => run(() => rateItem({ ...target, halfStars }))
     : undefined;
   const remove = () => run(() => removeRating(target));
+  const finish = () => {
+    setOpen(false);
+    if (draft !== null && draft !== value) rate?.(draft);
+  };
 
   return (
     <div className="flex flex-col gap-1">
@@ -82,7 +89,10 @@ export function RatingControl({
           variant="outline"
           aria-label={labels.stars.group}
           title={labels.stars.group}
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setDraft(value);
+            setOpen(true);
+          }}
           className="rounded-full px-4"
         >
           <StarRating
@@ -93,15 +103,15 @@ export function RatingControl({
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent sheet>
-          <DialogHeader>
+          <DialogHeader className="max-sm:text-center">
             <DialogTitle>{labels.stars.group}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-3">
             <StarRating
               size="lg"
-              value={value}
+              value={draft}
               disabled={pending}
-              onChange={rate}
+              onChange={canRate ? setDraft : undefined}
               labels={labels.stars}
             />
             {value !== null ? (
@@ -121,10 +131,24 @@ export function RatingControl({
           </div>
           <DialogFooter>
             <DialogClose
-              render={<Button type="button" className="rounded-full" />}
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                />
+              }
+            >
+              {labels.cancel}
+            </DialogClose>
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={pending}
+              onClick={finish}
             >
               {labels.done}
-            </DialogClose>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

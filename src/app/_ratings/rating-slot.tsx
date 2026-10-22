@@ -40,6 +40,7 @@ export async function RatingSlot({
         ),
         remove: t("remove"),
         done: t("done"),
+        cancel: t("cancel"),
         failed: t("failed"),
       }}
     />

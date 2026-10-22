@@ -49,6 +49,7 @@
     "option": "{stars} de 5 estrelas",
     "remove": "Remover nota",
     "done": "Concluir",
+    "cancel": "Cancelar",
     "average": "{average} · {count, plural, one {1 nota} other {# notas}}",
     "averageAria": "Média {average} de 5 estrelas, {count, plural, one {1 nota} other {# notas}}",
     "failed": "Não foi possível salvar a nota. Tente de novo.",
