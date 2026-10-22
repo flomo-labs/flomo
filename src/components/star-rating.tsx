@@ -107,7 +107,9 @@ export function StarRating({
       <span
         role="img"
         aria-label={labels.readOnly}
-        className={cn("inline-flex", className)}
+        // A massa da estrela fica abaixo do centro da caixa: sobe 1px no
+        // tamanho pequeno para alinhar com o texto da linha.
+        className={cn("inline-flex", compact && "-translate-y-px", className)}
       >
         {stars}
       </span>
