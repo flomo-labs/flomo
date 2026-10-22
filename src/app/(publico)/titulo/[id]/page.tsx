@@ -263,11 +263,9 @@ async function Episodes({
   return (
     <ol className="flex max-w-reading flex-col gap-2">
       {result.value.map((episode) => (
-        // Raio externo = raio do botão em pílula (16px) + padding (16px), a
-        // regra de raios concentricos; rounded-3xl é o token mais próximo.
         <li
           key={episode.id}
-          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-3xl border border-border p-4 [&>*:not(:first-child):not(button)]:mt-3"
+          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-card border border-border p-4 [&>*:not(:first-child):not(button)]:mt-3"
         >
           <div className="col-span-2 flex min-w-0 flex-col gap-2">
             <p className="font-medium">
