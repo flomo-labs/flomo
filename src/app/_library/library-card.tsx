@@ -37,9 +37,9 @@ export async function LibraryCard({
   );
 }
 
-// Linha de apoio do cartão: progresso nas séries e, quando a lista mistura
+// Linha de apoio do cartão e da linha da lista: progresso nas séries e, quando a lista mistura
 // situações, a situação do título.
-async function LibraryCaption({
+export async function LibraryCaption({
   item,
   showStatus,
   showSeen,

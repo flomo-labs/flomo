@@ -114,11 +114,15 @@
   "LibraryPage": {
     "title": "Biblioteca",
     "description": "Tudo o que você acompanha no Flomo.",
-    "filters": "Visão da biblioteca",
-    "filter": {
-      "all": "Séries e filmes",
+    "views": "Visão da biblioteca",
+    "view": {
+      "grouped": "Por situação",
+      "posters": "Pôsteres",
+      "list": "Lista",
       "hidden": "Ocultos"
     },
+    "seriesTitle": "Séries",
+    "moviesTitle": "Filmes",
     "series": "Séries",
     "movies": "Filmes",
     "group": {

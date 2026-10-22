@@ -2,37 +2,30 @@
 
 import { type ReactNode, useState } from "react";
 import { SegmentedControl } from "@/components/segmented-control";
-import type { LibraryFilter } from "@/contracts/library";
 
 // Visões da Biblioteca. As listas de todas as visões chegam de uma vez, então
 // trocar é instantâneo. A visão vive só nesta tela: não vai para a URL nem é
 // lembrada (ao reabrir, volta para a primeira).
-export function LibraryFilters({
-  filters,
+export function LibraryFilters<T extends string>({
+  views,
   lists,
   labels,
 }: {
-  filters: readonly LibraryFilter[];
-  lists: Partial<Record<LibraryFilter, ReactNode>>;
-  labels: {
-    filters: string;
-    filter: Partial<Record<LibraryFilter, string>>;
-  };
+  views: readonly T[];
+  lists: Record<T, ReactNode>;
+  labels: { views: string; view: Record<T, string> };
 }) {
-  const [filter, setFilter] = useState<LibraryFilter>(filters[0]);
+  const [view, setView] = useState<T>(views[0]);
 
   return (
     <>
       <SegmentedControl
-        value={filter}
-        onChange={setFilter}
-        ariaLabel={labels.filters}
-        options={filters.map((f) => ({
-          value: f,
-          label: labels.filter[f] ?? f,
-        }))}
+        value={view}
+        onChange={setView}
+        ariaLabel={labels.views}
+        options={views.map((v) => ({ value: v, label: labels.view[v] }))}
       />
-      {lists[filter]}
+      {lists[view]}
     </>
   );
 }
