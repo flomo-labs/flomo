@@ -120,22 +120,31 @@ async function LibraryItems({
   return (
     <div className="flex flex-col gap-8">
       {mediaType === "movie" ? null : (
-        <LibrarySection title={t("series")} groups={series} kind="tv" />
+        <LibrarySection
+          title={mediaType ? undefined : t("series")}
+          groups={series}
+          kind="tv"
+        />
       )}
       {mediaType === "tv" ? null : (
-        <LibrarySection title={t("movies")} groups={movies} kind="movie" />
+        <LibrarySection
+          title={mediaType ? undefined : t("movies")}
+          groups={movies}
+          kind="movie"
+        />
       )}
     </div>
   );
 }
 
-// Seção (Séries ou Filmes) com uma sub-lista por situação; some se vazia.
+// Seção (Séries ou Filmes) com uma sub-lista por situação; some se vazia. Sem título nas telas de um tipo só, onde o
+// título da página já diz qual é.
 async function LibrarySection({
   title,
   groups,
   kind,
 }: {
-  title: string;
+  title?: string;
   groups: LibraryGroup[];
   kind: LibraryMedia;
 }) {
@@ -143,7 +152,7 @@ async function LibrarySection({
   const t = await getTranslations("LibraryPage");
   return (
     <section className="flex flex-col gap-4">
-      <SectionHeader title={title} />
+      {title ? <SectionHeader title={title} /> : null}
       {groups.map(({ status, items }) => (
         <div key={status} className="flex flex-col gap-2">
           <h3 className="text-sm font-semibold text-muted-foreground">
