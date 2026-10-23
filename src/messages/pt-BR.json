@@ -150,7 +150,7 @@
     "emptyAllTitle": "Sua biblioteca está vazia",
     "emptyAll": "Busque um título e marque o que você já viu.",
     "emptyHidden": "Você não ocultou nenhum título",
-    "search": "Buscar títulos",
+    "search": "Descobrir",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
   },
   "Following": {
@@ -173,7 +173,7 @@
     "emptyFilter": "Nada por aqui neste tipo",
     "emptyTitle": "Sua fila está vazia",
     "empty": "Adicione séries e filmes à biblioteca para ver o que vem a seguir.",
-    "search": "Buscar títulos",
+    "search": "Descobrir",
     "unavailable": "Não foi possível carregar os Seguintes agora. Tente de novo em instantes.",
     "chooseHandle": "Escolha seu nome de usuário para concluir o cadastro."
   },
@@ -245,7 +245,7 @@
     "libraryEmptyTitle": "Nenhum título na sua biblioteca ainda",
     "libraryEmpty": "Busque um para começar.",
     "libraryUnavailable": "Não foi possível carregar sua biblioteca agora.",
-    "search": "Buscar títulos",
+    "search": "Descobrir",
     "notFoundTitle": "Perfil não encontrado",
     "notFound": "Este perfil não existe."
   }
