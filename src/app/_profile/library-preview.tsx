@@ -28,7 +28,7 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
       <EmptyState
         title={t("libraryEmptyTitle")}
         description={t("libraryEmpty")}
-        icon={<EmptyTv className="size-24" />}
+        icon={<EmptyTv className="size-28" />}
         action={
           <Button render={<Link href="/descobrir" />} nativeButton={false}>
             {t("search")}

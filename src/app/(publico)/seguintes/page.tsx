@@ -69,7 +69,7 @@ async function Body() {
         </p>
       ) : rows.length === 0 ? (
         <EmptyState
-          icon={<EmptyTv className="size-24" />}
+          icon={<EmptyTv className="size-28" />}
           title={t("emptyTitle")}
           description={t("empty")}
           action={

@@ -108,7 +108,7 @@ async function LibraryItems({
       <EmptyState
         title={view === "hidden" ? t("emptyHidden") : t("emptyAllTitle")}
         description={view === "hidden" ? undefined : t("emptyAll")}
-        icon={view === "hidden" ? undefined : <EmptyTv className="size-24" />}
+        icon={view === "hidden" ? undefined : <EmptyTv className="size-28" />}
         action={
           view === "hidden" ? undefined : (
             <Button render={<Link href="/descobrir" />} nativeButton={false}>

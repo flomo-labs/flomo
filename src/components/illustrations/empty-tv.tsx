@@ -1,4 +1,5 @@
-// TV fora do ar: tela em quadrados com transparências variadas (chuvisco) que piscam, para o EmptyState.
+// TV fora do ar no formato do tv-outline do Ionicons: tela em quadrados com transparências
+// variadas (chuvisco) que piscam, para o EmptyState.
 // Traço em `currentColor`; o tamanho vem do className.
 export function EmptyTv({ className }: { className?: string }) {
   return (
@@ -14,17 +15,17 @@ export function EmptyTv({ className }: { className?: string }) {
     >
       <defs>
         <clipPath id="empty-tv-screen">
-          <rect x="16" y="24" width="64" height="40" rx="8" />
+          <rect x="14" y="26" width="68" height="36" rx="8" />
         </clipPath>
       </defs>
-      <rect x="10" y="18" width="76" height="52" rx="9" />
-      <path d="M34 80h28" />
+      <rect x="6" y="18" width="84" height="51" rx="7" />
+      <path d="M24 78h48" />
       <g clipPath="url(#empty-tv-screen)" fill="currentColor" stroke="none">
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "0.0s" }}
-          x="16"
-          y="24"
+          x="14"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -32,8 +33,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.4s" }}
-          x="20"
-          y="24"
+          x="18"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -41,8 +42,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.5s" }}
-          x="24"
-          y="24"
+          x="22"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -50,8 +51,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.9s" }}
-          x="28"
-          y="24"
+          x="26"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -59,8 +60,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.0s" }}
-          x="40"
-          y="24"
+          x="38"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -68,8 +69,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.1s" }}
-          x="48"
-          y="24"
+          x="46"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -77,8 +78,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.5s" }}
-          x="52"
-          y="24"
+          x="50"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -86,8 +87,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.6s" }}
-          x="60"
-          y="24"
+          x="58"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -95,8 +96,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.0s" }}
-          x="64"
-          y="24"
+          x="62"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -104,8 +105,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.1s" }}
-          x="76"
-          y="24"
+          x="74"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -113,8 +114,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.2s" }}
-          x="16"
-          y="28"
+          x="78"
+          y="26"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -122,8 +123,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.6s" }}
-          x="24"
-          y="28"
+          x="18"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -131,8 +132,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.7s" }}
-          x="32"
-          y="28"
+          x="26"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -140,8 +141,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.1s" }}
-          x="36"
-          y="28"
+          x="30"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -149,8 +150,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.2s" }}
-          x="44"
-          y="28"
+          x="38"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -158,8 +159,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.3s" }}
-          x="52"
-          y="28"
+          x="46"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -167,8 +168,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.7s" }}
-          x="56"
-          y="28"
+          x="50"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -176,8 +177,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.8s" }}
-          x="60"
-          y="28"
+          x="54"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -185,8 +186,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.2s" }}
-          x="64"
-          y="28"
+          x="58"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -194,8 +195,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.3s" }}
-          x="72"
-          y="28"
+          x="66"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -203,8 +204,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.4s" }}
-          x="76"
-          y="28"
+          x="70"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -212,8 +213,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.8s" }}
-          x="16"
-          y="32"
+          x="74"
+          y="30"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -221,8 +222,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.9s" }}
-          x="24"
-          y="32"
+          x="14"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -230,8 +231,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "0.0s" }}
-          x="32"
-          y="32"
+          x="22"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -239,8 +240,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.4s" }}
-          x="36"
-          y="32"
+          x="26"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -248,8 +249,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.5s" }}
-          x="40"
-          y="32"
+          x="30"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -257,8 +258,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.9s" }}
-          x="44"
-          y="32"
+          x="34"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -266,8 +267,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.0s" }}
-          x="48"
-          y="32"
+          x="38"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -275,8 +276,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.1s" }}
-          x="52"
-          y="32"
+          x="42"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -284,8 +285,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.5s" }}
-          x="60"
-          y="32"
+          x="50"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -293,8 +294,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.6s" }}
-          x="64"
-          y="32"
+          x="54"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -302,8 +303,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.0s" }}
-          x="68"
-          y="32"
+          x="58"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -311,8 +312,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.1s" }}
-          x="72"
-          y="32"
+          x="62"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -320,8 +321,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.2s" }}
-          x="76"
-          y="32"
+          x="66"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -329,8 +330,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.6s" }}
-          x="20"
-          y="36"
+          x="74"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -338,8 +339,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.7s" }}
-          x="24"
-          y="36"
+          x="78"
+          y="34"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -347,8 +348,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.1s" }}
-          x="28"
-          y="36"
+          x="14"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -356,8 +357,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.2s" }}
-          x="32"
-          y="36"
+          x="18"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -365,8 +366,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.3s" }}
-          x="36"
-          y="36"
+          x="22"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -374,8 +375,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.7s" }}
-          x="44"
-          y="36"
+          x="30"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -383,8 +384,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.8s" }}
-          x="48"
-          y="36"
+          x="34"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -392,8 +393,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.2s" }}
-          x="56"
-          y="36"
+          x="42"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -401,8 +402,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.3s" }}
-          x="64"
-          y="36"
+          x="50"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -410,8 +411,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.4s" }}
-          x="68"
-          y="36"
+          x="54"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -419,8 +420,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.8s" }}
-          x="72"
-          y="36"
+          x="58"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -428,8 +429,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.9s" }}
-          x="76"
-          y="36"
+          x="62"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -437,8 +438,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "0.0s" }}
-          x="16"
-          y="40"
+          x="66"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -446,8 +447,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.4s" }}
-          x="20"
-          y="40"
+          x="70"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -455,8 +456,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.5s" }}
-          x="24"
-          y="40"
+          x="74"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -464,8 +465,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.9s" }}
-          x="28"
-          y="40"
+          x="78"
+          y="38"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -473,8 +474,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.0s" }}
-          x="32"
-          y="40"
+          x="14"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -482,8 +483,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.1s" }}
-          x="36"
-          y="40"
+          x="18"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -491,8 +492,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.5s" }}
-          x="40"
-          y="40"
+          x="22"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -500,8 +501,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.6s" }}
-          x="44"
-          y="40"
+          x="26"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -509,8 +510,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.0s" }}
-          x="48"
-          y="40"
+          x="30"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -518,8 +519,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.1s" }}
-          x="52"
-          y="40"
+          x="34"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -527,8 +528,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.2s" }}
-          x="56"
-          y="40"
+          x="38"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -536,8 +537,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.6s" }}
-          x="60"
-          y="40"
+          x="42"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -545,8 +546,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.7s" }}
-          x="68"
-          y="40"
+          x="50"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -554,8 +555,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.1s" }}
-          x="72"
-          y="40"
+          x="54"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -563,8 +564,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.2s" }}
-          x="76"
-          y="40"
+          x="58"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -572,8 +573,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.3s" }}
-          x="16"
-          y="44"
+          x="62"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -581,8 +582,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.7s" }}
-          x="20"
-          y="44"
+          x="66"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -590,8 +591,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.8s" }}
-          x="24"
-          y="44"
+          x="70"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -599,8 +600,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.2s" }}
-          x="28"
-          y="44"
+          x="74"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -608,8 +609,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.3s" }}
-          x="32"
-          y="44"
+          x="78"
+          y="42"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -617,8 +618,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.4s" }}
-          x="36"
-          y="44"
+          x="14"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -626,8 +627,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.8s" }}
-          x="48"
-          y="44"
+          x="26"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -635,8 +636,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.9s" }}
-          x="52"
-          y="44"
+          x="30"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -644,8 +645,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "0.0s" }}
-          x="56"
-          y="44"
+          x="34"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -653,8 +654,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.4s" }}
-          x="60"
-          y="44"
+          x="38"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -662,8 +663,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.5s" }}
-          x="64"
-          y="44"
+          x="42"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -671,8 +672,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.9s" }}
-          x="68"
-          y="44"
+          x="46"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -680,8 +681,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.0s" }}
-          x="72"
-          y="44"
+          x="50"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -689,8 +690,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.1s" }}
-          x="16"
-          y="48"
+          x="58"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -698,8 +699,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.5s" }}
-          x="24"
-          y="48"
+          x="66"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -707,8 +708,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.6s" }}
-          x="28"
-          y="48"
+          x="70"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -716,8 +717,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.0s" }}
-          x="32"
-          y="48"
+          x="74"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -725,8 +726,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.1s" }}
-          x="36"
-          y="48"
+          x="78"
+          y="46"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -734,8 +735,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.2s" }}
-          x="40"
-          y="48"
+          x="14"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -743,8 +744,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.6s" }}
-          x="44"
-          y="48"
+          x="18"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -752,8 +753,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.7s" }}
-          x="48"
-          y="48"
+          x="22"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -761,8 +762,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.1s" }}
-          x="52"
-          y="48"
+          x="26"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -770,8 +771,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.2s" }}
-          x="56"
-          y="48"
+          x="30"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -779,8 +780,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.3s" }}
-          x="60"
-          y="48"
+          x="34"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -788,8 +789,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.7s" }}
-          x="72"
-          y="48"
+          x="46"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -797,8 +798,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.8s" }}
-          x="76"
-          y="48"
+          x="50"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -806,8 +807,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.2s" }}
-          x="16"
-          y="52"
+          x="54"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -815,8 +816,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.3s" }}
-          x="20"
-          y="52"
+          x="58"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -824,8 +825,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.4s" }}
-          x="32"
-          y="52"
+          x="70"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -833,8 +834,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.8s" }}
-          x="36"
-          y="52"
+          x="74"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -842,8 +843,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.9s" }}
-          x="40"
-          y="52"
+          x="78"
+          y="50"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -851,8 +852,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "0.0s" }}
-          x="44"
-          y="52"
+          x="14"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -860,8 +861,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.4s" }}
-          x="48"
-          y="52"
+          x="18"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -869,8 +870,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.5s" }}
-          x="52"
-          y="52"
+          x="22"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -878,8 +879,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.9s" }}
-          x="56"
-          y="52"
+          x="26"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -887,8 +888,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.0s" }}
-          x="60"
-          y="52"
+          x="30"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -896,8 +897,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.1s" }}
-          x="64"
-          y="52"
+          x="34"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -905,8 +906,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.5s" }}
-          x="68"
-          y="52"
+          x="38"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -914,8 +915,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.6s" }}
-          x="72"
-          y="52"
+          x="42"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -923,8 +924,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.0s" }}
-          x="76"
-          y="52"
+          x="46"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -932,8 +933,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.1s" }}
-          x="20"
-          y="56"
+          x="54"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -941,8 +942,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.2s" }}
-          x="24"
-          y="56"
+          x="58"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -950,8 +951,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.6s" }}
-          x="28"
-          y="56"
+          x="62"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -959,8 +960,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.7s" }}
-          x="32"
-          y="56"
+          x="66"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -968,8 +969,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.1s" }}
-          x="40"
-          y="56"
+          x="74"
+          y="54"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -977,8 +978,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.2s" }}
-          x="48"
-          y="56"
+          x="14"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -986,8 +987,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.3s" }}
-          x="52"
-          y="56"
+          x="18"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -995,8 +996,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.7s" }}
-          x="56"
-          y="56"
+          x="22"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -1004,8 +1005,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.8s" }}
-          x="60"
-          y="56"
+          x="26"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.65}
@@ -1013,8 +1014,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-2.2s" }}
-          x="64"
-          y="56"
+          x="30"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -1022,8 +1023,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.3s" }}
-          x="68"
-          y="56"
+          x="34"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -1031,8 +1032,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.4s" }}
-          x="72"
-          y="56"
+          x="38"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -1040,8 +1041,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.8s" }}
-          x="76"
-          y="56"
+          x="42"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -1049,8 +1050,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.9s" }}
-          x="20"
-          y="60"
+          x="50"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -1058,8 +1059,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "0.0s" }}
-          x="24"
-          y="60"
+          x="54"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -1067,8 +1068,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.4s" }}
-          x="28"
-          y="60"
+          x="58"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -1076,8 +1077,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.5s" }}
-          x="32"
-          y="60"
+          x="62"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.45}
@@ -1085,8 +1086,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.9s" }}
-          x="36"
-          y="60"
+          x="66"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.18}
@@ -1094,8 +1095,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.0s" }}
-          x="40"
-          y="60"
+          x="70"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.1}
@@ -1103,8 +1104,8 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-0.1s" }}
-          x="44"
-          y="60"
+          x="74"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.3}
@@ -1112,74 +1113,11 @@ export function EmptyTv({ className }: { className?: string }) {
         <rect
           className="tv-static-cell"
           style={{ animationDelay: "-1.5s" }}
-          x="48"
-          y="60"
+          x="78"
+          y="58"
           width="4"
           height="4"
           fillOpacity={0.45}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-0.6s" }}
-          x="52"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.18}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-2.0s" }}
-          x="56"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.65}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-1.1s" }}
-          x="60"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.3}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-0.2s" }}
-          x="64"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.18}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-1.6s" }}
-          x="68"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.65}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-0.7s" }}
-          x="72"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.3}
-        />
-        <rect
-          className="tv-static-cell"
-          style={{ animationDelay: "-2.1s" }}
-          x="76"
-          y="60"
-          width="4"
-          height="4"
-          fillOpacity={0.1}
         />
       </g>
     </svg>
