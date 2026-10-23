@@ -113,6 +113,6 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 ## 4. Convenções
 - Reutilizar antes de criar (AGENTS.md, "UI componentization"): shadcn, depois `src/components/`. Um componente por arquivo, agrupado por domínio.
 - Só vira componente o que aparece em 2+ telas.
-- Cursor de mão em botões é global (`globals.css`).
+- Cursor de mão é global (`globals.css`): botões, abas, itens de menu/opção, checkbox/radio/switch e `summary`, exceto desabilitados (`disabled`, `aria-disabled="true"`, `data-disabled`), que ficam com o cursor padrão. Itens de `dropdown-menu`/`select` e `checkbox`/`radio` trazem `cursor-pointer` no próprio componente; não repetir `cursor-pointer` nas telas.
 - Acessibilidade: foco visível (ring), `aria-current` no item ativo, `sr-only` em ícones sem texto, alvos de 44px no toque.
 - Mockups partem do app real e se comparam pixel a pixel com o aprovado; medir antes de codar.
