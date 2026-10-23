@@ -51,13 +51,17 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
     <form action={formAction} className="flex w-full flex-col gap-3">
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <Label htmlFor="handle">{labels.label}</Label>
-      <div className="flex items-center gap-2">
-        <span aria-hidden className="text-muted-foreground">
+      <div className="relative">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base text-muted-foreground md:text-sm"
+        >
           @
         </span>
         <Input
           id="handle"
           name="handle"
+          className="pl-7"
           value={handle}
           onChange={(event) => setHandle(event.target.value)}
           required

@@ -48,7 +48,7 @@ Escala Tailwind (4px). Mais usados: `gap-2` (8), `gap-3` (12), `gap-1`, `gap-4`,
 
 ### Raios
 Base `--radius: 0.875rem` (14px). Escala shadcn: `sm` 0.6×, `md` 0.8×, `lg` 1×, `xl` 1.4×, `2xl` 1.8×, `4xl` 2.6×.
-Tokens do app: `rounded-poster` (12px, pôsteres) e `rounded-card` (16px, cartões e linhas). Botões e campos `rounded-lg`; diálogos `rounded-xl`; **filtros, abas e etiquetas `rounded-full`**; bottom sheet `rounded-t-2xl`. **Raios concêntricos:** o raio de um elemento dentro de outro = raio externo − espaço entre eles (ex.: chuvisco da `EmptyTv`: borda 8, traço 3, folga 2,5 → tela 4).
+Tokens do app: `rounded-poster` (12px, pôsteres) e `rounded-card` (16px, cartões e linhas). Campos `rounded-lg`, exceto os de **busca** (cabeçalho e `SearchForm` do celular), que são `rounded-full`; botões `rounded-full` (padrão do `Button`); diálogos `rounded-xl`; **filtros, abas e etiquetas `rounded-full`**; bottom sheet `rounded-t-2xl`. **Raios concêntricos:** o raio de um elemento dentro de outro = raio externo − espaço entre eles (ex.: chuvisco da `EmptyTv`: borda 8, traço 3, folga 2,5 → tela 4).
 
 ### Sombras e profundidade
 Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-foreground/10` (diálogo). Exceções: aba ativa `shadow-sm`; menu "···" da landing com sombra forte própria (`.landing-menu`). Overlay de diálogo: `bg-black/10` + `backdrop-blur-xs`.
@@ -63,7 +63,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 ## 2. Componentes
 
 ### Primitivos (`src/components/ui/`, shadcn + Base UI)
-- **Button**: variantes `default` (magenta), `outline`, `secondary`, `ghost`, `destructive` (translúcido), `link`. Tamanhos: `xs` 24, `sm` 28, `default` 32, `lg` 36, `icon`/`icon-xs/sm/lg`. No toque vira 44px. Botão de ação em pílula: `className="rounded-full"` (padrão em Biblioteca e Título). Ícone dentro: `data-icon="inline-start|inline-end"`.
+- **Button**: variantes `default` (magenta), `outline`, `secondary`, `ghost`, `destructive` (translúcido), `link`. Tamanhos: `xs` 24, `sm` 28, `default` 32, `lg` 36, `icon`/`icon-xs/sm/lg`. No toque vira 44px. **Todo botão é pílula (`rounded-full`) por padrão, em todos os tamanhos** (#162); não repetir `rounded-full` na tela. Dentro de `button-group` os botões voltam a `rounded-lg`. Ícone dentro: `data-icon="inline-start|inline-end"`.
 - **Badge**: pílula `h-5`, variantes `default`, `secondary`, `destructive`, `outline`, `ghost`, `link`.
 - **Input / Textarea / Checkbox / RadioGroup / Label**: altura 32, `rounded-lg`, borda `input`, fundo `input/30`, foco com ring 3px, erro via `aria-invalid`.
 - **Tabs**: lista `bg-muted` com `p-[3px]`, altura 32 (50 no toque), gatilho ativo `bg-background` + `shadow-sm` (escuro: `input/30`); variante `line` com sublinhado.
@@ -112,6 +112,7 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.
 - **Listas**: cartões `rounded-card border`, hover `bg-muted/50`.
 - **Texto longo** (#139): nada pode passar da tela em 320px. Texto de usuário ou do catálogo leva `break-words` (palavra única sem espaço); título de cartão usa `line-clamp-2` + `break-words`; linha única (episódio, handle, rótulo de menu) usa `truncate` com pai `min-w-0`. Em grid de coluna única, `grid-cols-[minmax(0,1fr)]` (a coluna `auto` cresce até o `nowrap`); em flex, `min-w-0` no filho. Já embutido em `PosterCard`, `PosterRow` e `LibraryRow`: reutilizar em vez de repetir classes.
+- **Prefixo dentro do campo** (handle, #162): o "@" fica dentro do `Input`, fixo e não editável (`span` `aria-hidden` absoluto, `pointer-events-none`, `text-muted-foreground`; campo com `pl-7`). O valor enviado não inclui o "@".
 - **Mensagens de erro**: `role="alert"`, `text-sm text-destructive`.
 
 ## 4. Convenções

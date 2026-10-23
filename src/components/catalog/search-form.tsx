@@ -22,7 +22,7 @@ export async function SearchForm({ query = "" }: { query?: string }) {
         defaultValue={query}
         withIcon
         required
-        className="h-11 pl-9 text-base"
+        className="h-11 rounded-full pl-9 text-base"
         labels={{
           placeholder: t("placeholder"),
           suggestions: t("suggestions"),
