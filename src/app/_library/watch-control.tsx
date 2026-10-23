@@ -267,7 +267,7 @@ export function WatchControl({
               render={
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   className="rounded-full"
                 />
               }
@@ -312,7 +312,7 @@ export function WatchControl({
               render={
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   className="rounded-full"
                 />
               }

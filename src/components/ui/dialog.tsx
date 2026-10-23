@@ -39,31 +39,78 @@ function DialogOverlay({
   );
 }
 
+// Arrastar a alça para baixo além deste limite fecha o sheet (#115).
+const SHEET_DRAG_CLOSE_PX = 80;
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
-  sheet = false,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
-  // No celular (abaixo de sm) sobe colado na base da tela, em largura total
-  // (bottom sheet); de sm para cima continua centralizado (#115).
-  sheet?: boolean;
 }) {
+  const popupRef = React.useRef<HTMLDivElement>(null);
+  const closeRef = React.useRef<HTMLButtonElement>(null);
+  const dragStartY = React.useRef<number | null>(null);
+
+  function onDragStart(event: React.PointerEvent<HTMLDivElement>) {
+    dragStartY.current = event.clientY;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (popupRef.current) popupRef.current.style.transition = "none";
+  }
+
+  function onDragMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (dragStartY.current === null || !popupRef.current) return;
+    const dy = Math.max(0, event.clientY - dragStartY.current);
+    popupRef.current.style.translate = `0 ${dy}px`;
+  }
+
+  function onDragEnd(event: React.PointerEvent<HTMLDivElement>) {
+    const start = dragStartY.current;
+    dragStartY.current = null;
+    const popup = popupRef.current;
+    if (start === null || !popup) return;
+    popup.style.transition = "";
+    if (event.clientY - start > SHEET_DRAG_CLOSE_PX) {
+      closeRef.current?.click();
+    } else {
+      popup.style.translate = "";
+    }
+  }
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
+        ref={popupRef}
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          sheet &&
-            "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-2xl max-sm:rounded-b-none max-sm:pb-[max(1rem,env(safe-area-inset-bottom))] max-sm:data-open:slide-in-from-bottom-full max-sm:data-open:zoom-in-100 max-sm:data-closed:slide-out-to-bottom-full max-sm:data-closed:zoom-out-100",
+          // Celular (abaixo de sm): bottom sheet colado na base, largura
+          // total, topo arredondado e área segura do iPhone. De sm para cima:
+          // centralizado (#115).
+          "fixed z-50 grid w-full gap-4 bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none max-sm:bottom-0 max-sm:left-0 max-sm:rounded-t-2xl max-sm:pt-6 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))] max-sm:data-open:animate-in max-sm:data-open:slide-in-from-bottom-full max-sm:data-closed:animate-out max-sm:data-closed:slide-out-to-bottom-full sm:top-1/2 sm:left-1/2 sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:data-open:animate-in sm:data-open:fade-in-0 sm:data-open:zoom-in-95 sm:data-closed:animate-out sm:data-closed:fade-out-0 sm:data-closed:zoom-out-95",
           className,
         )}
         {...props}
       >
+        <div
+          aria-hidden
+          data-slot="dialog-grabber"
+          className="absolute inset-x-0 top-0 flex h-6 cursor-grab touch-none justify-center pt-2 sm:hidden"
+          onPointerDown={onDragStart}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+          onPointerCancel={onDragEnd}
+        >
+          <span className="h-1 w-9 rounded-full bg-muted-foreground/40" />
+        </div>
+        <DialogPrimitive.Close
+          ref={closeRef}
+          tabIndex={-1}
+          aria-hidden
+          className="hidden"
+        />
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
@@ -107,7 +154,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:p-3 sm:justify-end",
+        "-mx-4 -mb-4 flex flex-col-reverse gap-2 border-t bg-muted/50 p-4 max-sm:-mb-[max(1rem,env(safe-area-inset-bottom))] max-sm:pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:rounded-b-xl sm:p-3 sm:justify-end",
         className,
       )}
       {...props}

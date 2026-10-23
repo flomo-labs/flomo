@@ -78,6 +78,7 @@ export function RatingControl({
             type="button"
             variant="ghost"
             size="sm"
+            className="rounded-full"
             disabled={pending}
             onClick={remove}
           >
@@ -95,7 +96,7 @@ export function RatingControl({
             setDraft(value);
             setOpen(true);
           }}
-          className="rounded-full px-4"
+          className="rounded-full px-3"
         >
           <StarRating
             size="xs"
@@ -105,7 +106,7 @@ export function RatingControl({
         </Button>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent sheet>
+        <DialogContent>
           <DialogHeader className="max-sm:text-center">
             <DialogTitle>{labels.stars.group}</DialogTitle>
           </DialogHeader>
