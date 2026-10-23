@@ -77,7 +77,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `PosterCard` | cartão de grade | pôster + título 2 linhas + complemento; hover `opacity-80` |
 | `PosterRow` | linha de título | pôster 64/80px (`md`) ou 48/56px (`sm`), `rounded-card border p-3`, ação à direita (`trailing`) |
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
-| `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela. Trilha `bg-muted` `rounded-full`, ativa em `bg-primary` + `text-primary-foreground` (magenta, texto branco), inativas cinza. Opção pode vir `disabled` com `hint` (tooltip). `Tabs` do shadcn continua só como base; telas usam o `SegmentedControl` (#122) |
+| `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes, tipo Tudo/Séries/Filmes do "Em alta no serviço") | uma opção ativa; estado fica na tela. Trilha `bg-muted` `rounded-full`, ativa em `bg-primary` + `text-primary-foreground` (magenta, texto branco), inativas cinza. Opção pode vir `disabled` com `hint` (tooltip). `Tabs` do shadcn continua só como base; telas usam o `SegmentedControl` (#122) |
 | `SectionHeader` | título de seção + ação ("Ver tudo") | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
 | `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, hover em pílula (`rounded-full`, fundo `bg-sidebar-primary/15`, igual ao item do cabeçalho; a cor do texto não muda), `ariaLabel` por seção |
 | `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tv`, TV fora do ar com chuvisco que pisca (`.tv-static-cell` em `globals.css`, para com `prefers-reduced-motion`); é a ilustração padrão dos estados vazios, `size-28`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
@@ -102,7 +102,7 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 
 ## 3. Padrões de tela
 - **Seguintes**: lista em 2 colunas (desktop), etiqueta `T2:E4` + nome do episódio, sem subtítulo.
-- **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`.
+- **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", os serviços são chips e o tipo (Tudo/Séries/Filmes) é um `SegmentedControl`.
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.
 - **Listas**: cartões `rounded-card border`, hover `bg-muted/50`.
 - **Mensagens de erro**: `role="alert"`, `text-sm text-destructive`.
