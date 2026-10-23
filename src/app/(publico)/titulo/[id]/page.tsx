@@ -13,6 +13,7 @@ import { WatchSlot } from "@/app/_library/watch-slot";
 import { CommentSection } from "@/app/_comments/comment-section";
 import { RatingSlot } from "@/app/_ratings/rating-slot";
 import { getRatingSummary } from "@/app/_ratings/state";
+import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { RatingAverage } from "@/components/rating-average";
@@ -43,9 +44,12 @@ export default function TitlePage({
   searchParams,
 }: PageProps<"/titulo/[id]">) {
   return (
-    <Suspense fallback={<p className="text-muted-foreground">…</p>}>
-      <TitleContent params={params} searchParams={searchParams} />
-    </Suspense>
+    <>
+      <BackLink fallbackHref="/descobrir" />
+      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+        <TitleContent params={params} searchParams={searchParams} />
+      </Suspense>
+    </>
   );
 }
 

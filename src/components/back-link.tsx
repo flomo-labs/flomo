@@ -2,37 +2,26 @@
 
 import { Icon } from "@/components/icon";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-// Quantas telas do próprio app há atrás da atual na sessão do navegador. Zera
-// a cada carga completa da página: link aberto direto, aba nova ou vindo de
-// outro site. Assim "Voltar" só volta entre telas do app, nunca para fora.
-let appHistoryDepth = 0;
-let tracking = false;
+// Navigation API (`window.navigation`), ainda fora dos tipos do TypeScript.
+// `canGoBack` só considera as entradas do próprio site na aba: chegando de
+// outro site ou por link direto, é falso.
+type NavigationLike = { canGoBack?: boolean };
 
-// Sem tela, montado uma vez no layout raiz. Conta as navegações do app
-// (`pushState`; `replaceState` não cria entrada) e desconta as voltas.
-export function NavigationTracker() {
-  useEffect(() => {
-    if (tracking) return;
-    tracking = true;
-    const push = window.history.pushState;
-    window.history.pushState = function (...args) {
-      appHistoryDepth += 1;
-      return push.apply(this, args);
-    };
-    window.addEventListener("popstate", () => {
-      appHistoryDepth = Math.max(0, appHistoryDepth - 1);
-    });
-  }, []);
-  return null;
+function canGoBackInApp(): boolean {
+  const navigation = (window as Window & { navigation?: NavigationLike })
+    .navigation;
+  return navigation?.canGoBack === true;
 }
 
-// Volta à tela anterior do app. Sem tela anterior do app (link aberto
-// direto, aba nova, vindo de outro site), leva ao `fallbackHref`. É um link de verdade: funciona sem
-// JavaScript, que só troca o clique por "voltar".
+// Voltar das telas de detalhe e de texto (#150); as telas raiz da navegação
+// (Seguintes, Descobrir, Biblioteca, Perfil) não têm. Volta à tela anterior
+// do app; sem tela anterior do app (link aberto direto, aba nova, vindo de
+// outro site, ou navegador sem a Navigation API), leva ao `fallbackHref`,
+// a tela-pai de quem usa. É um link de verdade: funciona sem JavaScript, que
+// só troca o clique por "voltar".
 export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
   const router = useRouter();
   return (
@@ -43,7 +32,7 @@ export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
       render={<Link href={fallbackHref} />}
       nativeButton={false}
       onClick={(event) => {
-        if (appHistoryDepth > 0) {
+        if (canGoBackInApp()) {
           event.preventDefault();
           router.back();
         }
@@ -53,12 +42,4 @@ export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
       Voltar
     </Button>
   );
-}
-
-// Faixa de voltar das páginas públicas: a landing e o Seguintes (as telas
-// iniciais) não têm para onde voltar.
-export function BackBar() {
-  const pathname = usePathname();
-  if (pathname === "/" || pathname === "/seguintes") return null;
-  return <BackLink />;
 }
