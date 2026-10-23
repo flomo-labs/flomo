@@ -63,9 +63,9 @@ export function RatingControl({
   };
 
   return (
-    // No celular o botão da nota pode ocupar também a coluna do check (que só
-    // ocupa a primeira linha do card do episódio).
-    <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+    // No celular o botão da nota ocupa a linha inteira do card do episódio
+    // (início ao check), para não estourar o card em larguras como 390px.
+    <div className="col-span-3 flex flex-col gap-1 max-sm:col-start-1 sm:col-span-1">
       <div className="hidden flex-wrap items-center gap-2 sm:flex">
         <StarRating
           value={value}

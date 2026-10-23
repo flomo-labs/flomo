@@ -207,7 +207,7 @@ async function Seasons({
       <SectionHeader id="temporadas" title={t("seasons")} />
       <nav
         aria-label={t("seasonsNav")}
-        className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0"
+        className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
       >
         <ul className="flex gap-2 md:flex-wrap">
           {title.seasons.map((season) => {
