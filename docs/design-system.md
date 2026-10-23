@@ -10,6 +10,7 @@ Referência do visual real do app (direção A, Fase 1.8), extraída do código.
 
 - Tema único: **escuro** (`<html class="dark">`). O tema claro existe nos tokens (shadcn) mas não é usado. Estilo shadcn `base-nova`, base `neutral`, ícones próprios (ver 4).
 - Cor de acento: **magenta** (matiz ~4 em oklch), vinda do preset.
+- Ícone do app (**provisório**, até termos um desenhado pela dupla): símbolo de "próximo" dos players (play + barra), branco sobre magenta `#A3004C` (o `primary` em hex), centrado nos dois eixos. Fala do Seguintes: o que assistir em seguida. Arquivos em `src/app/` pela convenção de metadados do Next: `icon.svg` (abas, cantos `rx="7"` em 32), `favicon.ico` (16, 32 e 48 px, navegadores antigos) e `apple-icon.png` (180 px, quadrado cheio: o iOS arredonda sozinho). Trocar o ícone = trocar os três arquivos.
 
 ### Cores (tokens semânticos; usar `bg-*`, `text-*`, `border-*`)
 
@@ -81,11 +82,12 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
 | `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes, tipo Tudo/Séries/Filmes do "Em alta no serviço") | uma opção ativa; estado fica na tela. Trilha `bg-muted` `rounded-full`, ativa em `bg-primary` + `text-primary-foreground` (magenta, texto branco), inativas cinza. A pílula magenta é um indicador (`Tabs.Indicator` da Base UI) que desliza até a opção escolhida e acompanha a largura dela (0,3 s, `ease-out`; sem animação com `prefers-reduced-motion`). Opção pode vir `disabled` com `hint` (tooltip). `Tabs` do shadcn continua só como base; telas usam o `SegmentedControl` (#122) |
 | `SectionHeader` | título de seção + ação ("Ver tudo"; `wrap` deixa a ação descer para a linha de baixo quando não cabe) | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
+| `SeasonStrip` (`catalog/`) | faixa de chips de temporadas (tela do título): no celular rola para o lado, abre com o chip ativo centralizado e mostra degradê largo (`from-background`, 96px) com seta `chevronForward` na borda direita, que some no fim; o último chip aparece cortado de propósito. Desktop quebra linha, sem degradê | `ariaLabel`; o título da seção traz a contagem em `text-muted-foreground`: "Temporadas (8)" |
 | `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, hover em pílula (`rounded-full`, fundo `bg-sidebar-primary/15`, igual ao item do cabeçalho; a cor do texto não muda), `ariaLabel` por seção |
 | `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tv`, TV fora do ar com chuvisco que pisca (`.tv-static-cell` em `globals.css`, para com `prefers-reduced-motion`); é a ilustração padrão dos estados vazios, `size-28`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
 | `StarRating` | nota em meias estrelas | tamanhos `xs/sm/md/lg`; `sm` cinza (média), `lg` para sheet; radio group acessível |
 | `RatingAverage`, `TmdbRating` | médias | apoio, sem competir com a nota do usuário |
-| `BackLink` / `BackBar` | voltar | só volta dentro do app; fallback por `href` |
+| `BackLink` | voltar (#150) | só nas telas de detalhe e de texto, colocado pela própria página como primeiro item (título e busca → `/descobrir`; configurações → perfil próprio; entrar, sobre, termos, privacidade, em breve → `/`). As telas raiz da navegação (Seguintes, Descobrir, Biblioteca, Perfil), a landing e o cadastro não têm. Volta à tela anterior só se ela for do Flomo (`navigation.canGoBack`, Navigation API); senão, ou sem a API, segue o `fallbackHref` (a tela-pai). Link de verdade, funciona sem JS |
 | `Icon` | ícones | Ionicons v8 copiados como dados; `filled` = ativo; tamanho por `size-*` |
 | `ProseBlock`, `RoadmapList`, `ContactInfo` | páginas de texto | |
 | Shell: `SiteHeader`, `NavLink`, `BottomNav`, `HeaderSearch`, `SiteFooter`, `UserMenu` | navegação | pílula magenta no ativo; barra inferior com ícone preenchido + rótulo |

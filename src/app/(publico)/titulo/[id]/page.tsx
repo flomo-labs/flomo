@@ -13,7 +13,9 @@ import { WatchSlot } from "@/app/_library/watch-slot";
 import { CommentSection } from "@/app/_comments/comment-section";
 import { RatingSlot } from "@/app/_ratings/rating-slot";
 import { getRatingSummary } from "@/app/_ratings/state";
+import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
+import { SeasonStrip } from "@/components/catalog/season-strip";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { RatingAverage } from "@/components/rating-average";
 import { TmdbRating } from "@/components/tmdb-rating";
@@ -43,9 +45,12 @@ export default function TitlePage({
   searchParams,
 }: PageProps<"/titulo/[id]">) {
   return (
-    <Suspense fallback={<p className="text-muted-foreground">…</p>}>
-      <TitleContent params={params} searchParams={searchParams} />
-    </Suspense>
+    <>
+      <BackLink fallbackHref="/descobrir" />
+      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+        <TitleContent params={params} searchParams={searchParams} />
+      </Suspense>
+    </>
   );
 }
 
@@ -204,11 +209,18 @@ async function Seasons({
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="temporadas">
-      <SectionHeader id="temporadas" title={t("seasons")} />
-      <nav
-        aria-label={t("seasonsNav")}
-        className="-mx-4 overflow-x-auto px-4 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] md:mx-0 md:overflow-visible md:px-0"
-      >
+      <SectionHeader
+        id="temporadas"
+        title={
+          <>
+            {t("seasons")}{" "}
+            <span className="font-normal text-muted-foreground">
+              ({title.seasons.filter((s) => s.seasonNumber > 0).length})
+            </span>
+          </>
+        }
+      />
+      <SeasonStrip ariaLabel={t("seasonsNav")}>
         <ul className="flex gap-2 md:flex-wrap">
           {title.seasons.map((season) => {
             const active = season.id === current.id;
@@ -232,7 +244,7 @@ async function Seasons({
             );
           })}
         </ul>
-      </nav>
+      </SeasonStrip>
       <p className="text-sm text-muted-foreground">
         {label(current.seasonNumber)} ·{" "}
         {t("episodeCount", { count: current.episodeCount })}
