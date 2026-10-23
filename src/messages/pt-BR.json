@@ -170,6 +170,8 @@
     "markEpisode": "Marcar {title} T{season} E{episode} como assistido",
     "markMovie": "Marcar {title} como assistido",
     "markFailed": "Não foi possível marcar. Tente de novo.",
+    "markedEpisode": "{title} T{season}:E{episode} marcado como assistido.",
+    "markedMovie": "{title} marcado como assistido.",
     "emptyFilter": "Nada por aqui neste tipo",
     "emptyTitle": "Sua fila está vazia",
     "empty": "Adicione séries e filmes à biblioteca para ver o que vem a seguir.",

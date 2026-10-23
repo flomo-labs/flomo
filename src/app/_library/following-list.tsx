@@ -23,6 +23,8 @@ export type FollowingRow = {
   episodeName: string | null;
   mark: QuickMarkTarget;
   markLabel: string;
+  // Aviso de sucesso ("Série T2:E3 marcado como assistido.").
+  markedLabel: string;
 };
 
 export type FollowingLabels = {
@@ -77,6 +79,7 @@ export function FollowingList({
                   <QuickMark
                     target={row.mark}
                     label={row.markLabel}
+                    marked={row.markedLabel}
                     failed={labels.markFailed}
                   />
                 }

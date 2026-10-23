@@ -37,6 +37,11 @@ function toRow(
         season: seasonNumber,
         episode: episodeNumber,
       }),
+      markedLabel: t("markedEpisode", {
+        title: item.title,
+        season: seasonNumber,
+        episode: episodeNumber,
+      }),
     };
   }
   return {
@@ -46,6 +51,7 @@ function toRow(
     episodeName: null,
     mark: { kind: "movie", titleId: item.titleId },
     markLabel: t("markMovie", { title: item.title }),
+    markedLabel: t("markedMovie", { title: item.title }),
   };
 }
 
