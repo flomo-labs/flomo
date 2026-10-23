@@ -180,7 +180,7 @@ export function SearchCombobox({
         // Mantém o foco no campo ao clicar numa sugestão.
         onMouseDown={(event) => event.preventDefault()}
         className={cn(
-          "absolute top-full z-50 mt-2 w-full min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
+          "absolute top-full z-50 mt-2 w-full min-w-0 sm:min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
           listClassName,
         )}
       >
@@ -204,7 +204,7 @@ export function SearchCombobox({
               className="w-8 shrink-0 sm:w-10"
             />
             <div className="min-w-0">
-              <div className="line-clamp-1 text-sm font-semibold">
+              <div className="line-clamp-1 text-sm font-semibold break-words">
                 {item.title}
               </div>
               <div className="text-xs text-muted-foreground">

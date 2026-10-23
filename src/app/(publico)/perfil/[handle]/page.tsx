@@ -52,7 +52,7 @@ async function ProfileContent({
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold break-words">{name}</h1>
-          <p className="text-muted-foreground">@{profile.handle}</p>
+          <p className="text-muted-foreground break-words">@{profile.handle}</p>
           {profile.isPrivate ? (
             <Badge
               variant="secondary"

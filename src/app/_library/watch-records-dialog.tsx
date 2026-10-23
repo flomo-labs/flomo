@@ -84,7 +84,9 @@ export function WatchRecordsDialog({
                   key={record.eventId}
                   className="flex items-center justify-between gap-2"
                 >
-                  <span>{record.dateLabel}</span>
+                  <span className="min-w-0 break-words">
+                    {record.dateLabel}
+                  </span>
                   <span className="flex gap-2">
                     <Button
                       type="button"

@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/empty-state";
+import { EmptyTv } from "@/components/illustrations/empty-tv";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -6,14 +7,9 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { HandleReminder } from "@/app/_profile/handle-reminder";
 import { followingLabels, loadFollowing } from "@/app/_library/following";
+import { FollowingSections } from "@/app/_library/following-sections";
 import { FollowingList } from "@/app/_library/following-list";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Following");
@@ -44,39 +40,46 @@ async function Body() {
   await requireUser("/seguintes");
   const rows = await loadFollowing();
 
+  const sections = (
+    <FollowingSections
+      labels={{
+        sections: t("sections"),
+        queue: t("queue"),
+        soon: t("soon"),
+        soonHint: t("soonHint"),
+      }}
+    />
+  );
+
   return (
     <>
-      <Tabs value="queue">
-        <TabsList aria-label={t("sections")}>
-          <TabsTrigger value="queue">{t("queue")}</TabsTrigger>
-          {/* Um elemento desabilitado não recebe o mouse: o tooltip fica no
-              invólucro. Sem atraso, para a dica não passar despercebida.
-              Calendário de lançamentos: Fase 2.3. */}
-          <Tooltip>
-            <TooltipTrigger delay={0} render={<span tabIndex={0} />}>
-              <TabsTrigger value="soon" disabled>
-                {t("soon")}
-              </TabsTrigger>
-            </TooltipTrigger>
-            <TooltipContent>{t("soonHint")}</TooltipContent>
-          </Tooltip>
-        </TabsList>
-      </Tabs>
       {rows === null ? (
-        <p role="alert" className="text-destructive">
-          {t("unavailable")}
-        </p>
+        <>
+          {sections}
+          <p role="alert" className="text-destructive">
+            {t("unavailable")}
+          </p>
+        </>
       ) : rows.length === 0 ? (
-        <EmptyState
-          message={t("empty")}
-          action={
-            <Button render={<Link href="/descobrir" />} nativeButton={false}>
-              {t("search")}
-            </Button>
-          }
-        />
+        <>
+          {sections}
+          <EmptyState
+            icon={<EmptyTv className="size-28" />}
+            title={t("emptyTitle")}
+            description={t("empty")}
+            action={
+              <Button render={<Link href="/descobrir" />} nativeButton={false}>
+                {t("search")}
+              </Button>
+            }
+          />
+        </>
       ) : (
-        <FollowingList rows={rows} labels={await followingLabels()} />
+        <FollowingList
+          rows={rows}
+          labels={await followingLabels()}
+          sections={sections}
+        />
       )}
     </>
   );

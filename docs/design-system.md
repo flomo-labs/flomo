@@ -47,7 +47,7 @@ Escala Tailwind (4px). Mais usados: `gap-2` (8), `gap-3` (12), `gap-1`, `gap-4`,
 
 ### Raios
 Base `--radius: 0.875rem` (14px). Escala shadcn: `sm` 0.6×, `md` 0.8×, `lg` 1×, `xl` 1.4×, `2xl` 1.8×, `4xl` 2.6×.
-Tokens do app: `rounded-poster` (12px, pôsteres) e `rounded-card` (16px, cartões e linhas). Botões e campos `rounded-lg`; diálogos `rounded-xl`; **filtros, abas e etiquetas `rounded-full`**; bottom sheet `rounded-t-2xl`.
+Tokens do app: `rounded-poster` (12px, pôsteres) e `rounded-card` (16px, cartões e linhas). Botões e campos `rounded-lg`; diálogos `rounded-xl`; **filtros, abas e etiquetas `rounded-full`**; bottom sheet `rounded-t-2xl`. **Raios concêntricos:** o raio de um elemento dentro de outro = raio externo − espaço entre eles (ex.: chuvisco da `EmptyTv`: borda 8, traço 3, folga 2,5 → tela 4).
 
 ### Sombras e profundidade
 Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-foreground/10` (diálogo). Exceções: aba ativa `shadow-sm`; menu "···" da landing com sombra forte própria (`.landing-menu`). Overlay de diálogo: `bg-black/10` + `backdrop-blur-xs`.
@@ -57,7 +57,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 - Breakpoints: `sm` 640, `md` 768 (corte celular/desktop do shell).
 - Cabeçalho: `h-16`, borda inferior. Barra inferior do celular: `h-16` + `safe-area-inset-bottom`, só logado; o `body` reserva o espaço (`[data-bottom-nav]`).
 - Alvos de toque: com `pointer-coarse`, botões, abas e ícones sobem para **44px** (`h-11`/`size-11`); abas, 50px de lista.
-- Movimento: respeitar `prefers-reduced-motion` (onda dos pôsteres da landing para).
+- Movimento: respeitar `prefers-reduced-motion` (onda dos pôsteres da landing e chuvisco da TV vazia param).
 
 ## 2. Componentes
 
@@ -67,6 +67,8 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 - **Input / Textarea / Checkbox / RadioGroup / Label**: altura 32, `rounded-lg`, borda `input`, fundo `input/30`, foco com ring 3px, erro via `aria-invalid`.
 - **Tabs**: lista `bg-muted` com `p-[3px]`, altura 32 (50 no toque), gatilho ativo `bg-background` + `shadow-sm` (escuro: `input/30`); variante `line` com sublinhado.
 - **Dialog**: `rounded-xl bg-popover`, `max-w-sm`, botão de fechar fantasma redondo. `sheet` = **bottom sheet no celular** (abaixo de `sm`: colado na base, largura total, `rounded-t-2xl`, respeita a área segura, desliza de baixo) e centralizado de `sm` para cima (#115). Rodapé: botões empilhados no celular, em linha no desktop.
+- **Select** (#145): Base UI `Select`. Gatilho neutro `h-8` (44px no toque) com `chevronDown`; popup `rounded-lg bg-popover`, item `min-h-8` (44px no toque) com check no selecionado. Dentro de um título, o gatilho ganha as classes de pílula magenta (ver "Descobrir").
+- **Skeleton**: bloco `animate-pulse bg-muted rounded-lg`; o formato vem do `className` (usado em `ShelfSkeleton`).
 - **DropdownMenu, Tooltip, Avatar, Progress (barra `h-1` `rounded-full`, preenchimento `primary`), Separator**.
 
 ### Compartilhados (`src/components/`)
@@ -76,9 +78,10 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `PosterCard` | cartão de grade | pôster + título 2 linhas + complemento; hover `opacity-80` |
 | `PosterRow` | linha de título | pôster 64/80px (`md`) ou 48/56px (`sm`), `rounded-card border p-3`, ação à direita (`trailing`) |
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
-| `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela |
-| `SectionHeader` | título de seção + ação ("Ver tudo") | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
-| `EmptyState` | lista vazia | mensagem `muted` + botão do próximo passo |
+| `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes, tipo Tudo/Séries/Filmes do "Em alta no serviço") | uma opção ativa; estado fica na tela. Trilha `bg-muted` `rounded-full`, ativa em `bg-primary` + `text-primary-foreground` (magenta, texto branco), inativas cinza. Opção pode vir `disabled` com `hint` (tooltip). `Tabs` do shadcn continua só como base; telas usam o `SegmentedControl` (#122) |
+| `SectionHeader` | título de seção + ação ("Ver tudo"; `wrap` deixa a ação descer para a linha de baixo quando não cabe) | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
+| `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, hover em pílula (`rounded-full`, fundo `bg-sidebar-primary/15`, igual ao item do cabeçalho; a cor do texto não muda), `ariaLabel` por seção |
+| `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tv`, TV fora do ar com chuvisco que pisca (`.tv-static-cell` em `globals.css`, para com `prefers-reduced-motion`); é a ilustração padrão dos estados vazios, `size-28`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
 | `StarRating` | nota em meias estrelas | tamanhos `xs/sm/md/lg`; `sm` cinza (média), `lg` para sheet; radio group acessível |
 | `RatingAverage`, `TmdbRating` | médias | apoio, sem competir com a nota do usuário |
 | `BackLink` / `BackBar` | voltar | só volta dentro do app; fallback por `href` |
@@ -87,16 +90,24 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | Shell: `SiteHeader`, `NavLink`, `BottomNav`, `HeaderSearch`, `SiteFooter`, `UserMenu` | navegação | pílula magenta no ativo; barra inferior com ícone preenchido + rótulo |
 | Landing: `LandingMenu`, `PosterWall` | landing do visitante | mosaico alinhado, um ponto de luz, aviso TMDB dentro do menu "···" |
 
-Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `following-list` (Seguintes), `library-card`, `watch-control` (check em círculo `size-11 rounded-full`), `status-control`, `rating-control`.
+Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `following-list` (Seguintes), `library-card`, `watch-control` e `quick-mark` (check em círculo `size-11 rounded-full`, mesmo botão em Seguintes e no episódio), `status-control`, `rating-control`.
 
 ### Pendências do desenho (PR 3) ainda sem componente
-`ProgressBar` com rótulo (S2:E4), `StatCard` (números do perfil). Só nascem com o 2º uso. Visual do SegmentedControl no desenho: pílula ativa em magenta sobre trilha cinza; no código a aba ativa ainda é `bg-background` (tema da aba). Padronizar em #122.
+`ProgressBar` com rótulo (S2:E4 · 9 de 16; hoje só o cartão da Biblioteca tem barra, estreito demais para rótulo ao lado) e `StatCard` (números do perfil; o Perfil ainda não mostra números). Só nascem com o 2º uso. Visual do SegmentedControl no desenho: pílula ativa em magenta sobre trilha cinza; padronizado em #122.
+
+### Inventário #123 (desenho PR 3 × código)
+- **Já igual**: `PosterCard` (pôster 2:3 `rounded-poster`, título 2 linhas), `PosterRow` (`rounded-card`, 12px de padding), barra `h-1` (4px) magenta, `SectionHeader` com títulos maiores no Descobrir.
+- **Ajustes de propósito que viram padrão (mantidos)**: ranking em degradê no lugar da bolinha numerada do desenho; check em círculo dos episódios; largura da página `60rem`; cantos do card de episódio; título de seção `lg` e espaço entre seções do Descobrir; peso da aba do cabeçalho (#109/#110, `nav-link-style`); cursor de mão global (#118).
+- **Alinhado ao desenho nesta rodada**: "Ver tudo ›" magenta com seta (era cinza, sem seta); `EmptyState` em cartão tracejado centralizado (era texto solto); `Skeleton` como primitivo.
+- **Feito em #122**: visual do `SegmentedControl` e a aba Para assistir / Em breve de `/seguintes` (agora `SegmentedControl`).
 
 ## 3. Padrões de tela
+- **Filtros**: o filtro de tipo, sempre na ordem Todos, Séries, Filmes ("Todos", não "Tudo"/"Ambos"), fica na mesma linha dos outros filtros, alinhado à direita (`flex flex-wrap justify-between`), como na Biblioteca, em Seguintes e no "Em alta no serviço".
 - **Seguintes**: lista em 2 colunas (desktop), etiqueta `T2:E4` + nome do episódio, sem subtítulo.
-- **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`.
+- **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", o serviço é um `Select` no próprio título ("Em alta na Netflix ▾", artigo conforme o gênero do serviço; só o nome é o seletor: botão em pílula magenta (`bg-primary`) com texto branco, na fonte do título, mais alto que a linha, 44px no toque, `aria-label` "Serviço de streaming") e o tipo (Todos/Séries/Filmes) é um `SegmentedControl` sozinho à direita, na mesma linha do título (`SectionHeader` com `wrap`: no celular desce para a linha de baixo). Abrir o `Select` pré-carrega os outros serviços.
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.
 - **Listas**: cartões `rounded-card border`, hover `bg-muted/50`.
+- **Texto longo** (#139): nada pode passar da tela em 320px. Texto de usuário ou do catálogo leva `break-words` (palavra única sem espaço); título de cartão usa `line-clamp-2` + `break-words`; linha única (episódio, handle, rótulo de menu) usa `truncate` com pai `min-w-0`. Em grid de coluna única, `grid-cols-[minmax(0,1fr)]` (a coluna `auto` cresce até o `nowrap`); em flex, `min-w-0` no filho. Já embutido em `PosterCard`, `PosterRow` e `LibraryRow`: reutilizar em vez de repetir classes.
 - **Mensagens de erro**: `role="alert"`, `text-sm text-destructive`.
 
 ## 4. Convenções

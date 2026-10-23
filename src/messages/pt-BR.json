@@ -147,9 +147,10 @@
     "seen": "Visto ✓",
     "notSeen": "Não visto",
     "noEpisodes": "Sem episódios lançados",
-    "emptyAll": "Sua biblioteca está vazia. Busque um título e marque o que você já viu.",
-    "emptyHidden": "Você não ocultou nenhum título.",
-    "search": "Buscar títulos",
+    "emptyAllTitle": "Sua biblioteca está vazia",
+    "emptyAll": "Busque um título e marque o que você já viu.",
+    "emptyHidden": "Você não ocultou nenhum título",
+    "search": "Descobrir",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
   },
   "Following": {
@@ -161,7 +162,7 @@
     "soonHint": "Os lançamentos das suas séries ainda não estão disponíveis.",
     "filters": "Filtrar por tipo",
     "kind": {
-      "both": "Ambos",
+      "both": "Todos",
       "tv": "Séries",
       "movie": "Filmes"
     },
@@ -169,9 +170,10 @@
     "markEpisode": "Marcar {title} T{season} E{episode} como assistido",
     "markMovie": "Marcar {title} como assistido",
     "markFailed": "Não foi possível marcar. Tente de novo.",
-    "emptyFilter": "Nada por aqui neste tipo.",
-    "empty": "Sua fila está vazia. Adicione séries e filmes à biblioteca para ver o que vem a seguir.",
-    "search": "Buscar títulos",
+    "emptyFilter": "Nada por aqui neste tipo",
+    "emptyTitle": "Sua fila está vazia",
+    "empty": "Adicione séries e filmes à biblioteca para ver o que vem a seguir.",
+    "search": "Descobrir",
     "unavailable": "Não foi possível carregar os Seguintes agora. Tente de novo em instantes.",
     "chooseHandle": "Escolha seu nome de usuário para concluir o cadastro."
   },
@@ -191,14 +193,14 @@
     "shelf": {
       "trending": "Em alta esta semana",
       "now_playing": "Nos cinemas",
-      "provider": "Em alta {gender, select, feminine {na} other {no}} {provider}"
+      "providerLead": "Em alta {gender, select, feminine {na} other {no}}"
     },
     "providerNav": "Serviço de streaming",
-    "mediaNav": "Filmes, séries ou novelas",
+    "mediaNav": "Séries, filmes ou novelas",
     "media": {
-      "tudo": "Tudo",
-      "filmes": "Filmes",
+      "tudo": "Todos",
       "series": "Séries",
+      "filmes": "Filmes",
       "novelas": "Novelas"
     },
     "providerNote": "Popularidade geral do TMDB entre os títulos de assinatura do serviço, não é o ranking dele. Dados de onde assistir por",
@@ -240,9 +242,10 @@
     "moviesSection": "Filmes",
     "seeAll": "Ver tudo",
     "seeAllIn": "Ver tudo em {section}",
-    "libraryEmpty": "Nenhum título na sua biblioteca ainda. Busque um para começar.",
+    "libraryEmptyTitle": "Nenhum título na sua biblioteca ainda",
+    "libraryEmpty": "Busque um para começar.",
     "libraryUnavailable": "Não foi possível carregar sua biblioteca agora.",
-    "search": "Buscar títulos",
+    "search": "Descobrir",
     "notFoundTitle": "Perfil não encontrado",
     "notFound": "Este perfil não existe."
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { PosterRow } from "@/components/catalog/poster-row";
 import { EmptyState } from "@/components/empty-state";
 import { SegmentedControl } from "@/components/segmented-control";
@@ -32,13 +32,16 @@ export type FollowingLabels = {
   markFailed: string;
 };
 
-// Lista "Seguintes" com o menu Ambos / Séries / Filmes. A escolha vive
-// só na tela (fora da URL, sem memória: reabrir volta para "Ambos").
+// Lista "Seguintes" com o menu Todos / Séries / Filmes, à direita das
+// seções (`sections`), como na Biblioteca. A escolha vive só na tela (fora da
+// URL, sem memória: reabrir volta para "Todos").
 export function FollowingList({
   rows,
   labels,
+  sections,
 }: {
   rows: FollowingRow[];
+  sections: ReactNode;
   labels: FollowingLabels;
 }) {
   const [kind, setKind] = useState<FollowingKind>("both");
@@ -47,21 +50,24 @@ export function FollowingList({
 
   return (
     <div className="flex flex-col gap-3">
-      <SegmentedControl
-        value={kind}
-        onChange={setKind}
-        ariaLabel={labels.filters}
-        options={FOLLOWING_KINDS.map((k) => ({
-          value: k,
-          label: labels.kinds[k],
-        }))}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {sections}
+        <SegmentedControl
+          value={kind}
+          onChange={setKind}
+          ariaLabel={labels.filters}
+          options={FOLLOWING_KINDS.map((k) => ({
+            value: k,
+            label: labels.kinds[k],
+          }))}
+        />
+      </div>
       {shown.length === 0 ? (
-        <EmptyState message={labels.emptyFilter} />
+        <EmptyState title={labels.emptyFilter} />
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
           {shown.map((row) => (
-            <li key={row.titleId}>
+            <li key={row.titleId} className="min-w-0">
               <PosterRow
                 posterPath={row.posterPath}
                 posterAlt={row.posterAlt}

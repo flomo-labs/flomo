@@ -1,6 +1,5 @@
 "use client";
 
-import { Icon } from "@/components/icon";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { markEpisode, markMovie } from "./actions";
@@ -44,14 +43,12 @@ export function QuickMark({
       <Button
         type="button"
         variant="outline"
-        size="icon"
+        className="size-11 rounded-full"
         aria-label={label}
         title={label}
         disabled={pending}
         onClick={mark}
-      >
-        <Icon name="check" />
-      </Button>
+      ></Button>
       {error ? (
         <p role="alert" className="text-xs text-destructive">
           {error}

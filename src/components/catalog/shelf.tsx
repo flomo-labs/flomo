@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Poster } from "@/components/catalog/poster";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchItem } from "@/domain/catalog/types";
 import { titleRefPath } from "@/lib/title-paths";
 
@@ -60,10 +61,7 @@ export function ShelfSkeleton() {
   return (
     <div aria-hidden className="grid grid-cols-3 gap-3 sm:grid-cols-5">
       {Array.from({ length: 5 }, (_, i) => (
-        <div
-          key={i}
-          className="aspect-[2/3] animate-pulse rounded-poster bg-muted"
-        />
+        <Skeleton key={i} className="aspect-[2/3] rounded-poster" />
       ))}
     </div>
   );

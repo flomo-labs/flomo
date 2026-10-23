@@ -112,14 +112,14 @@ async function ResultCard({ item }: { item: SearchItem }) {
         className="w-14 shrink-0"
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h2 className="font-semibold">{item.title}</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="font-semibold break-words">{item.title}</h2>
+        <p className="text-sm text-muted-foreground break-words">
           {facts.join(" · ")}
           {item.originalTitle !== item.title ? (
             <span className="italic"> · {item.originalTitle}</span>
           ) : null}
         </p>
-        <p className="line-clamp-2 hidden text-sm text-muted-foreground md:block">
+        <p className="line-clamp-2 hidden text-sm break-words text-muted-foreground md:block">
           {item.overview ?? t("Search.noOverview")}
         </p>
       </div>

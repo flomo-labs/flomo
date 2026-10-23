@@ -41,7 +41,9 @@ export function UserMenu({
         className="w-auto min-w-44"
       >
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{label}</DropdownMenuLabel>
+          <DropdownMenuLabel className="max-w-64 truncate">
+            {label}
+          </DropdownMenuLabel>
         </DropdownMenuGroup>
         {needsHandle ? (
           <DropdownMenuItem render={<Link href="/cadastro" />}>

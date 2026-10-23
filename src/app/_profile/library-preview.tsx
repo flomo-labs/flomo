@@ -4,7 +4,9 @@ import type { CurrentUser } from "@/app/_auth/session";
 import { LibraryCard } from "@/app/_library/library-card";
 import { loadLibraryPreview } from "@/app/_library/queries";
 import { EmptyState } from "@/components/empty-state";
+import { EmptyTv } from "@/components/illustrations/empty-tv";
 import { SectionHeader } from "@/components/section-header";
+import { SeeAllLink } from "@/components/see-all-link";
 import { Button } from "@/components/ui/button";
 import type { LibraryItem } from "@/domain/library/ports";
 
@@ -24,7 +26,9 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
   if (series.length === 0 && movies.length === 0) {
     return (
       <EmptyState
-        message={t("libraryEmpty")}
+        title={t("libraryEmptyTitle")}
+        description={t("libraryEmpty")}
+        icon={<EmptyTv className="size-28" />}
         action={
           <Button render={<Link href="/descobrir" />} nativeButton={false}>
             {t("search")}
@@ -70,13 +74,11 @@ async function PreviewSection({
         id={id}
         title={title}
         action={
-          <Link
+          <SeeAllLink
             href={href}
-            aria-label={t("seeAllIn", { section: title })}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            {t("seeAll")}
-          </Link>
+            label={t("seeAll")}
+            ariaLabel={t("seeAllIn", { section: title })}
+          />
         }
       />
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6 max-sm:[&>li:nth-child(n+4)]:hidden">

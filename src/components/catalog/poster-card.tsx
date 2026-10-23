@@ -18,14 +18,14 @@ export function PosterCard({
   children?: ReactNode;
 }) {
   return (
-    <Link href={href} className="group flex flex-col gap-1.5">
+    <Link href={href} className="group flex min-w-0 flex-col gap-1.5">
       <Poster
         path={posterPath}
         size="w342"
         alt={posterAlt}
         className="transition-opacity group-hover:opacity-80"
       />
-      <span className="line-clamp-2 text-sm leading-tight font-medium">
+      <span className="line-clamp-2 text-sm break-words leading-tight font-medium">
         {title}
       </span>
       {children}
