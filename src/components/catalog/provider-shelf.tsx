@@ -136,6 +136,18 @@ export function ProviderShelf({
       <SectionHeader
         id="em-alta-no-servico"
         size="lg"
+        wrap
+        action={
+          <SegmentedControl
+            value={segment}
+            onChange={chooseSegment}
+            ariaLabel={labels.mediaNav}
+            options={shown.segments.map((s) => ({
+              value: s,
+              label: labels.media[s],
+            }))}
+          />
+        }
         title={
           <>
             {provider?.lead}{" "}
@@ -166,17 +178,6 @@ export function ProviderShelf({
           </>
         }
       />
-      <div className="flex justify-end">
-        <SegmentedControl
-          value={segment}
-          onChange={chooseSegment}
-          ariaLabel={labels.mediaNav}
-          options={shown.segments.map((s) => ({
-            value: s,
-            label: labels.media[s],
-          }))}
-        />
-      </div>
       <div aria-busy={pending} className={pending ? "opacity-60" : undefined}>
         {shown.lists[segment]}
       </div>
