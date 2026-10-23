@@ -14,7 +14,9 @@ export async function LibraryRow({ item }: { item: LibraryItem }) {
       size="sm"
       centered
     >
-      <span className="line-clamp-2 text-sm font-medium">{item.title}</span>
+      <span className="line-clamp-2 text-sm font-medium break-words">
+        {item.title}
+      </span>
       <LibraryCaption item={item} showStatus showSeen />
     </PosterRow>
   );
