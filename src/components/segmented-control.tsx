@@ -1,5 +1,6 @@
 "use client";
 
+import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -16,8 +17,9 @@ type Option<T extends string> = {
 };
 
 // Filtro em pílula: trilha cinza arredondada, opção ativa preenchida em
-// magenta com texto branco. A escolha vive em quem usa (estado da tela), este
-// componente só desenha e avisa a troca.
+// magenta com texto branco. A pílula magenta é um indicador que desliza até a
+// opção escolhida (sem animação com `prefers-reduced-motion`). A escolha vive
+// em quem usa (estado da tela), este componente só desenha e avisa a troca.
 export function SegmentedControl<T extends string>({
   value,
   onChange,
@@ -37,14 +39,19 @@ export function SegmentedControl<T extends string>({
         if (option) onChange(option.value);
       }}
     >
-      <TabsList aria-label={ariaLabel} className="rounded-full">
+      <TabsList aria-label={ariaLabel} className="relative rounded-full">
+        {/* Posição e largura da opção ativa vêm da Base UI em variáveis CSS. */}
+        <TabsPrimitive.Indicator
+          renderBeforeHydration
+          className="absolute top-(--active-tab-top) left-(--active-tab-left) h-(--active-tab-height) w-(--active-tab-width) rounded-full bg-primary transition-[left,width] duration-300 ease-out motion-reduce:transition-none"
+        />
         {options.map((o) => {
           const trigger = (
             <TabsTrigger
               key={o.value}
               value={o.value}
               disabled={o.disabled}
-              className="rounded-full px-3.5 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-primary dark:data-active:text-primary-foreground"
+              className="z-10 rounded-full px-3.5 data-active:bg-transparent data-active:text-primary-foreground data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-primary-foreground"
             >
               {o.label}
             </TabsTrigger>
