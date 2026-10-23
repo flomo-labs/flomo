@@ -32,10 +32,10 @@ type Labels = {
   media: Record<MediaSegment, string>;
 };
 
-// Só o nome do serviço no título é o seletor; fica como o "Ver tudo ›"
-// (magenta, seta pequena, hover em pílula) e vira alvo de 44px no toque.
+// Só o nome do serviço no título é o seletor: botão magenta com texto branco,
+// na fonte do título (fica mais alto que a linha) e com 44px no toque.
 const providerTrigger =
-  "-my-0.5 h-auto gap-1 border-0 bg-transparent px-3 py-0.5 text-sidebar-primary hover:bg-sidebar-primary/15 data-popup-open:bg-sidebar-primary/15 pointer-coarse:-my-2.5 pointer-coarse:h-11";
+  "-my-1.5 h-auto gap-2 rounded-full border-0 bg-primary px-4 py-1 font-[inherit] text-[length:inherit] leading-[inherit] text-primary-foreground hover:bg-primary/90 data-popup-open:bg-primary/90 pointer-coarse:min-h-11 [&_svg]:size-5";
 
 // "Em alta no serviço X", com o serviço escolhido no título e o menu de tipo ao lado. O serviço aberto
 // chega com todos os tipos; os outros serviços carregam em segundo plano logo

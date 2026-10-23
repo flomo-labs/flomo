@@ -67,7 +67,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 - **Input / Textarea / Checkbox / RadioGroup / Label**: altura 32, `rounded-lg`, borda `input`, fundo `input/30`, foco com ring 3px, erro via `aria-invalid`.
 - **Tabs**: lista `bg-muted` com `p-[3px]`, altura 32 (50 no toque), gatilho ativo `bg-background` + `shadow-sm` (escuro: `input/30`); variante `line` com sublinhado.
 - **Dialog**: `rounded-xl bg-popover`, `max-w-sm`, botão de fechar fantasma redondo. `sheet` = **bottom sheet no celular** (abaixo de `sm`: colado na base, largura total, `rounded-t-2xl`, respeita a área segura, desliza de baixo) e centralizado de `sm` para cima (#115). Rodapé: botões empilhados no celular, em linha no desktop.
-- **Select** (#145): Base UI `Select`. Gatilho neutro `h-8` (44px no toque) com `chevronDown`; popup `rounded-lg bg-popover`, item `min-h-8` (44px no toque) com check no selecionado. Dentro de um título, o gatilho ganha as classes de link (ver "Descobrir").
+- **Select** (#145): Base UI `Select`. Gatilho neutro `h-8` (44px no toque) com `chevronDown`; popup `rounded-lg bg-popover`, item `min-h-8` (44px no toque) com check no selecionado. Dentro de um título, o gatilho ganha as classes de pílula magenta (ver "Descobrir").
 - **Skeleton**: bloco `animate-pulse bg-muted rounded-lg`; o formato vem do `className` (usado em `ShelfSkeleton`).
 - **DropdownMenu, Tooltip, Avatar, Progress (barra `h-1` `rounded-full`, preenchimento `primary`), Separator**.
 
@@ -104,7 +104,7 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 ## 3. Padrões de tela
 - **Filtros**: o filtro de tipo, sempre na ordem Todos, Séries, Filmes ("Todos", não "Tudo"/"Ambos"), fica na mesma linha dos outros filtros, alinhado à direita (`flex flex-wrap justify-between`), como na Biblioteca, em Seguintes e no "Em alta no serviço".
 - **Seguintes**: lista em 2 colunas (desktop), etiqueta `T2:E4` + nome do episódio, sem subtítulo.
-- **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", o serviço é um `Select` no próprio título ("Em alta na Netflix ▾", artigo conforme o gênero do serviço; só o nome é o seletor: magenta, seta pequena, hover em pílula como o "Ver tudo ›", 44px no toque, `aria-label` "Serviço de streaming") e o tipo (Todos/Séries/Filmes) é um `SegmentedControl` sozinho à direita. Abrir o `Select` pré-carrega os outros serviços.
+- **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", o serviço é um `Select` no próprio título ("Em alta na Netflix ▾", artigo conforme o gênero do serviço; só o nome é o seletor: botão em pílula magenta (`bg-primary`) com texto branco, na fonte do título, mais alto que a linha, 44px no toque, `aria-label` "Serviço de streaming") e o tipo (Todos/Séries/Filmes) é um `SegmentedControl` sozinho à direita. Abrir o `Select` pré-carrega os outros serviços.
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.
 - **Listas**: cartões `rounded-card border`, hover `bg-muted/50`.
 - **Mensagens de erro**: `role="alert"`, `text-sm text-destructive`.
