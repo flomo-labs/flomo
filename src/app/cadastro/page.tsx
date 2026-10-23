@@ -5,6 +5,7 @@ import { isProvisionalHandle } from "@/contracts/profile";
 import { safeNextPath } from "../_auth/redirect";
 import { requireUser } from "../_auth/session";
 import { chooseHandle } from "../_profile/actions";
+import { handleFormLabels } from "../_profile/form-labels";
 import { HandleForm } from "../_profile/handle-form";
 import { getOwnProfile } from "../_profile/queries";
 
@@ -39,6 +40,10 @@ async function ChooseHandle({
     redirect(next);
   }
   return (
-    <HandleForm action={chooseHandle} next={next} submitLabel="Continuar" />
+    <HandleForm
+      action={chooseHandle}
+      next={next}
+      labels={await handleFormLabels("continue")}
+    />
   );
 }
