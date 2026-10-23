@@ -77,7 +77,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `PosterCard` | cartão de grade | pôster + título 2 linhas + complemento; hover `opacity-80` |
 | `PosterRow` | linha de título | pôster 64/80px (`md`) ou 48/56px (`sm`), `rounded-card border p-3`, ação à direita (`trailing`) |
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
-| `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela |
+| `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela. Trilha `bg-muted` `rounded-full`, ativa em `bg-primary` + `text-primary-foreground` (magenta, texto branco), inativas cinza. Opção pode vir `disabled` com `hint` (tooltip). `Tabs` do shadcn continua só como base; telas usam o `SegmentedControl` (#122) |
 | `SectionHeader` | título de seção + ação ("Ver tudo") | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
 | `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, hover em pílula (`rounded-full`, fundo `bg-sidebar-primary/15`, igual ao item do cabeçalho; a cor do texto não muda), `ariaLabel` por seção |
 | `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tv`, TV fora do ar com chuvisco que pisca (`.tv-static-cell` em `globals.css`, para com `prefers-reduced-motion`); é a ilustração padrão dos estados vazios, `size-28`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
@@ -92,13 +92,13 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `following-list` (Seguintes), `library-card`, `watch-control` (check em círculo `size-11 rounded-full`), `status-control`, `rating-control`.
 
 ### Pendências do desenho (PR 3) ainda sem componente
-`ProgressBar` com rótulo (S2:E4 · 9 de 16; hoje só o cartão da Biblioteca tem barra, estreito demais para rótulo ao lado) e `StatCard` (números do perfil; o Perfil ainda não mostra números). Só nascem com o 2º uso. Visual do SegmentedControl no desenho: pílula ativa em magenta sobre trilha cinza; no código a aba ativa ainda é `bg-background` (tema da aba). Padronizar em #122.
+`ProgressBar` com rótulo (S2:E4 · 9 de 16; hoje só o cartão da Biblioteca tem barra, estreito demais para rótulo ao lado) e `StatCard` (números do perfil; o Perfil ainda não mostra números). Só nascem com o 2º uso. Visual do SegmentedControl no desenho: pílula ativa em magenta sobre trilha cinza; padronizado em #122.
 
 ### Inventário #123 (desenho PR 3 × código)
 - **Já igual**: `PosterCard` (pôster 2:3 `rounded-poster`, título 2 linhas), `PosterRow` (`rounded-card`, 12px de padding), barra `h-1` (4px) magenta, `SectionHeader` com títulos maiores no Descobrir.
 - **Ajustes de propósito que viram padrão (mantidos)**: ranking em degradê no lugar da bolinha numerada do desenho; check em círculo dos episódios; largura da página `60rem`; cantos do card de episódio; título de seção `lg` e espaço entre seções do Descobrir; peso da aba do cabeçalho (#109/#110, `nav-link-style`); cursor de mão global (#118).
 - **Alinhado ao desenho nesta rodada**: "Ver tudo ›" magenta com seta (era cinza, sem seta); `EmptyState` em cartão tracejado centralizado (era texto solto); `Skeleton` como primitivo.
-- **Fica para #122**: visual do `SegmentedControl` e a aba Fila / Em breve de `/seguintes`.
+- **Feito em #122**: visual do `SegmentedControl` e a aba Para assistir / Em breve de `/seguintes` (agora `SegmentedControl`).
 
 ## 3. Padrões de tela
 - **Seguintes**: lista em 2 colunas (desktop), etiqueta `T2:E4` + nome do episódio, sem subtítulo.
