@@ -85,7 +85,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tv`, TV fora do ar com chuvisco que pisca (`.tv-static-cell` em `globals.css`, para com `prefers-reduced-motion`); é a ilustração padrão dos estados vazios, `size-28`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
 | `StarRating` | nota em meias estrelas | tamanhos `xs/sm/md/lg`; `sm` cinza (média), `lg` para sheet; radio group acessível |
 | `RatingAverage`, `TmdbRating` | médias | apoio, sem competir com a nota do usuário |
-| `BackLink` / `BackBar` | voltar | só volta dentro do app; fallback por `href` |
+| `BackLink` | voltar (#150) | só nas telas de detalhe e de texto, colocado pela própria página como primeiro item (título e busca → `/descobrir`; configurações → perfil próprio; entrar, sobre, termos, privacidade, em breve → `/`). As telas raiz da navegação (Seguintes, Descobrir, Biblioteca, Perfil), a landing e o cadastro não têm. Volta à tela anterior só se ela for do Flomo (`navigation.canGoBack`, Navigation API); senão, ou sem a API, segue o `fallbackHref` (a tela-pai). Link de verdade, funciona sem JS |
 | `Icon` | ícones | Ionicons v8 copiados como dados; `filled` = ativo; tamanho por `size-*` |
 | `ProseBlock`, `RoadmapList`, `ContactInfo` | páginas de texto | |
 | Shell: `SiteHeader`, `NavLink`, `BottomNav`, `HeaderSearch`, `SiteFooter`, `UserMenu` | navegação | pílula magenta no ativo; barra inferior com ícone preenchido + rótulo |
