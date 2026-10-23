@@ -66,7 +66,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 - **Badge**: pílula `h-5`, variantes `default`, `secondary`, `destructive`, `outline`, `ghost`, `link`.
 - **Input / Textarea / Checkbox / RadioGroup / Label**: altura 32, `rounded-lg`, borda `input`, fundo `input/30`, foco com ring 3px, erro via `aria-invalid`.
 - **Tabs**: lista `bg-muted` com `p-[3px]`, altura 32 (50 no toque), gatilho ativo `bg-background` + `shadow-sm` (escuro: `input/30`); variante `line` com sublinhado.
-- **Dialog**: `rounded-xl bg-popover`, `max-w-sm`, botão de fechar fantasma redondo. `sheet` = **bottom sheet no celular** (abaixo de `sm`: colado na base, largura total, `rounded-t-2xl`, respeita a área segura, desliza de baixo) e centralizado de `sm` para cima (#115). Rodapé: botões empilhados no celular, em linha no desktop.
+- **Dialog**: `rounded-xl bg-popover`, `max-w-sm`, botão de fechar fantasma redondo. Todo `DialogContent` é **bottom sheet no celular** (abaixo de `sm`: colado na base, largura total, `rounded-t-2xl`, alça no topo que fecha ao arrastar para baixo, respeita a área segura, desliza de baixo) e centralizado de `sm` para cima (#115); sem prop, todos herdam. Rodapé: botões empilhados no celular, em linha no desktop.
 - **Select** (#145): Base UI `Select`. Gatilho neutro `h-8` (44px no toque) com `chevronDown`; popup `rounded-lg bg-popover`, item `min-h-8` (44px no toque) com check no selecionado. Dentro de um título, o gatilho ganha as classes de pílula magenta (ver "Descobrir").
 - **Skeleton**: bloco `animate-pulse bg-muted rounded-lg`; o formato vem do `className` (usado em `ShelfSkeleton`).
 - **DropdownMenu, Tooltip, Avatar, Progress (barra `h-1` `rounded-full`, preenchimento `primary`), Separator**.

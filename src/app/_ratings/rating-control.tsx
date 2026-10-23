@@ -105,7 +105,7 @@ export function RatingControl({
         </Button>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent sheet>
+        <DialogContent>
           <DialogHeader className="max-sm:text-center">
             <DialogTitle>{labels.stars.group}</DialogTitle>
           </DialogHeader>
