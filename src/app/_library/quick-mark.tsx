@@ -12,19 +12,21 @@ export type QuickMarkTarget =
 // Marca só este item como assistido, sem perguntar sobre episódios
 // anteriores: na fila "Seguintes" o episódio é, por definição, o seguinte ao
 // mais avançado que o usuário viu. Enquanto marca, o círculo fica magenta com
-// um indicador girando (o check, com `prefers-reduced-motion`); no sucesso, a
-// linha já volta trocada pelo próximo item (ou some), sem aviso no canto, e
-// `onMarked` deixa quem usa anunciar ao leitor de tela. Erro fica embaixo do
-// botão.
+// um indicador girando (o check, com `prefers-reduced-motion`). No sucesso,
+// sem aviso no canto: `onMarked` avisa quem usa, que segura a linha com
+// `done` (check magenta) antes de trocá-la pelo próximo item e anuncia ao
+// leitor de tela. Erro fica embaixo do botão.
 export function QuickMark({
   target,
   label,
   failed,
+  done = false,
   onMarked,
 }: {
   target: QuickMarkTarget;
   label: string;
   failed: string;
+  done?: boolean;
   onMarked?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
@@ -53,15 +55,17 @@ export function QuickMark({
     <div className="flex flex-col items-end gap-1">
       <Button
         type="button"
-        variant={pending ? "default" : "outline"}
+        variant={pending || done ? "default" : "outline"}
         className="size-11 rounded-full disabled:opacity-100"
         aria-label={label}
         aria-busy={pending}
         title={label}
-        disabled={pending}
+        disabled={pending || done}
         onClick={mark}
       >
-        {pending ? (
+        {done ? (
+          <Icon name="check" filled className="size-5" />
+        ) : pending ? (
           <>
             <span
               aria-hidden

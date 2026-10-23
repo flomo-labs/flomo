@@ -35,9 +35,21 @@ export type FollowingLabels = {
   markFailed: string;
 };
 
+// Quanto tempo a linha recém-marcada fica com o check antes de dar lugar ao
+// próximo item.
+const HOLD_MS = 600;
+
+// Linha recém-marcada: a cópia de antes de marcar e a posição em que estava.
+type Held = { row: FollowingRow; index: number };
+
 // Lista "Seguintes" com o menu Todos / Séries / Filmes, à direita das
 // seções (`sections`), como na Biblioteca. A escolha vive só na tela (fora da
 // URL, sem memória: reabrir volta para "Todos").
+//
+// Ao marcar, a resposta da ação já traz a lista nova: a série troca de
+// episódio e sobe para o topo, o filme some. Para a pessoa ver que deu certo,
+// a linha marcada fica por HOLD_MS no mesmo lugar, com o check, e só então a
+// lista segue.
 export function FollowingList({
   rows,
   labels,
@@ -51,8 +63,30 @@ export function FollowingList({
   // O que acabou de ser marcado, para o leitor de tela. Fica na lista, não no
   // botão: a linha marcada troca pelo próximo item ou some.
   const [announcement, setAnnouncement] = useState("");
+  const [held, setHeld] = useState<Held[]>([]);
 
-  const shown = rows.filter((r) => kind === "both" || r.mediaType === kind);
+  function marked(row: FollowingRow, index: number) {
+    setAnnouncement(row.markedLabel);
+    const entry = { row, index };
+    setHeld((current) => [
+      ...current.filter((h) => h.row.titleId !== row.titleId),
+      entry,
+    ]);
+    setTimeout(() => {
+      setHeld((current) => current.filter((h) => h !== entry));
+    }, HOLD_MS);
+  }
+
+  const inKind = (r: FollowingRow) => kind === "both" || r.mediaType === kind;
+  // A linha nova de um título segurado não aparece: no lugar dela, a cópia
+  // segurada, na posição em que estava.
+  const heldIds = new Set(held.map((h) => h.row.titleId));
+  const shown = rows.filter((r) => inKind(r) && !heldIds.has(r.titleId));
+  for (const h of [...held].sort((a, b) => a.index - b.index)) {
+    if (inKind(h.row)) {
+      shown.splice(Math.min(h.index, shown.length), 0, h.row);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -75,7 +109,7 @@ export function FollowingList({
         <EmptyState title={labels.emptyFilter} />
       ) : (
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
-          {shown.map((row) => (
+          {shown.map((row, index) => (
             <li key={row.titleId} className="min-w-0">
               <PosterRow
                 posterPath={row.posterPath}
@@ -87,7 +121,8 @@ export function FollowingList({
                     target={row.mark}
                     label={row.markLabel}
                     failed={labels.markFailed}
-                    onMarked={() => setAnnouncement(row.markedLabel)}
+                    done={heldIds.has(row.titleId)}
+                    onMarked={() => marked(row, index)}
                   />
                 }
               >
