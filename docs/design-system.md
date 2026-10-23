@@ -101,7 +101,7 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 - **Feito em #122**: visual do `SegmentedControl` e a aba Para assistir / Em breve de `/seguintes` (agora `SegmentedControl`).
 
 ## 3. Padrões de tela
-- **Filtros**: o filtro de tipo (Todos/Séries/Filmes) fica na mesma linha dos outros filtros, alinhado à direita (`flex flex-wrap justify-between`), como na Biblioteca, em Seguintes e no "Em alta no serviço".
+- **Filtros**: o filtro de tipo, sempre na ordem Todos, Séries, Filmes ("Todos", não "Tudo"/"Ambos"), fica na mesma linha dos outros filtros, alinhado à direita (`flex flex-wrap justify-between`), como na Biblioteca, em Seguintes e no "Em alta no serviço".
 - **Seguintes**: lista em 2 colunas (desktop), etiqueta `T2:E4` + nome do episódio, sem subtítulo.
 - **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", os serviços são chips e o tipo (Tudo/Séries/Filmes) é um `SegmentedControl`.
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.

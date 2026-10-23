@@ -44,7 +44,7 @@ async function ShelfHeading({ id }: { id: string }) {
 }
 
 // "Em alta no serviço X": serviço e tipo mudam na própria tela, sem URL nem
-// memória (ao abrir de novo, volta ao primeiro serviço e a "Tudo").
+// memória (ao abrir de novo, volta ao primeiro serviço e a "Todos").
 async function ProviderSection() {
   // Lê o catálogo a cada requisição: sem isto o Next tentaria montar a
   // prateleira no build, sem banco, e a gravaria no HTML estático.
