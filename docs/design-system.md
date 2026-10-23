@@ -107,6 +107,7 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 - **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", o serviço é um `Select` no próprio título ("Em alta na Netflix ▾", artigo conforme o gênero do serviço; só o nome é o seletor: botão em pílula magenta (`bg-primary`) com texto branco, na fonte do título, mais alto que a linha, 44px no toque, `aria-label` "Serviço de streaming") e o tipo (Todos/Séries/Filmes) é um `SegmentedControl` sozinho à direita, na mesma linha do título (`SectionHeader` com `wrap`: no celular desce para a linha de baixo). Abrir o `Select` pré-carrega os outros serviços.
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.
 - **Listas**: cartões `rounded-card border`, hover `bg-muted/50`.
+- **Texto longo** (#139): nada pode passar da tela em 320px. Texto de usuário ou do catálogo leva `break-words` (palavra única sem espaço); título de cartão usa `line-clamp-2` + `break-words`; linha única (episódio, handle, rótulo de menu) usa `truncate` com pai `min-w-0`. Em grid de coluna única, `grid-cols-[minmax(0,1fr)]` (a coluna `auto` cresce até o `nowrap`); em flex, `min-w-0` no filho. Já embutido em `PosterCard`, `PosterRow` e `LibraryRow`: reutilizar em vez de repetir classes.
 - **Mensagens de erro**: `role="alert"`, `text-sm text-destructive`.
 
 ## 4. Convenções

@@ -83,9 +83,9 @@ async function TitleContent({
           className="w-24 shrink-0 sm:w-44"
         />
         <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
-          <h1 className="text-page-title">{title.title}</h1>
+          <h1 className="text-page-title break-words">{title.title}</h1>
           {title.originalTitle !== title.title ? (
-            <p className="text-sm text-muted-foreground italic">
+            <p className="text-sm text-muted-foreground italic break-words">
               {t("Title.originalTitle", { title: title.originalTitle })}
             </p>
           ) : null}
@@ -111,7 +111,9 @@ async function TitleContent({
             <ul className="flex flex-wrap gap-2">
               {title.genres.map((genre) => (
                 <li key={genre}>
-                  <Badge variant="secondary">{genre}</Badge>
+                  <Badge variant="secondary" className="max-w-full truncate">
+                    {genre}
+                  </Badge>
                 </li>
               ))}
             </ul>
@@ -265,7 +267,7 @@ async function Episodes({
           className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-card border border-border p-4 [&>*:not(:first-child):not(button)]:mt-3"
         >
           <div className="col-span-2 flex min-w-0 flex-col gap-2">
-            <p className="font-medium">
+            <p className="font-medium break-words">
               <span className="text-muted-foreground">
                 {episode.episodeNumber}.
               </span>{" "}
@@ -273,7 +275,7 @@ async function Episodes({
                 t("unnamedEpisode", { number: episode.episodeNumber })}
             </p>
             {episode.overview ? (
-              <p className="line-clamp-3 text-sm text-muted-foreground">
+              <p className="line-clamp-3 text-sm text-muted-foreground break-words">
                 {episode.overview}
               </p>
             ) : null}

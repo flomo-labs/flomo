@@ -76,14 +76,14 @@ async function Offers({ providers }: { providers: WatchProvidersData }) {
 
 function ProviderLogo({ provider }: { provider: WatchProvider }) {
   return (
-    <li className="flex w-14 flex-col items-center gap-1 text-center">
+    <li className="flex w-14 min-w-0 flex-col items-center gap-1 text-center">
       <Poster
         path={provider.logoPath}
         size="w92"
         alt=""
         className="aspect-square w-12 rounded-xl"
       />
-      <span className="text-[0.7rem] leading-tight text-muted-foreground">
+      <span className="text-[0.7rem] leading-tight text-muted-foreground break-words">
         {provider.name}
       </span>
     </li>

@@ -65,9 +65,9 @@ export function FollowingList({
       {shown.length === 0 ? (
         <EmptyState title={labels.emptyFilter} />
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
           {shown.map((row) => (
-            <li key={row.titleId}>
+            <li key={row.titleId} className="min-w-0">
               <PosterRow
                 posterPath={row.posterPath}
                 posterAlt={row.posterAlt}

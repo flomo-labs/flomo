@@ -35,7 +35,7 @@ type Labels = {
 // Só o nome do serviço no título é o seletor: botão magenta com texto branco,
 // na fonte do título (fica mais alto que a linha) e com 44px no toque.
 const providerTrigger =
-  "-my-1.5 h-auto gap-2 rounded-full border-0 bg-primary px-4 py-1 font-[inherit] text-[length:inherit] leading-[inherit] text-primary-foreground hover:bg-primary/90 data-popup-open:bg-primary/90 pointer-coarse:min-h-11 [&_svg]:size-5";
+  "-my-1.5 h-auto max-w-full min-w-0 gap-2 rounded-full border-0 bg-primary px-4 py-1 font-[inherit] text-[length:inherit] leading-[inherit] text-primary-foreground hover:bg-primary/90 data-popup-open:bg-primary/90 pointer-coarse:min-h-11 [&_svg]:size-5";
 
 // "Em alta no serviço X", com o serviço escolhido no título e o menu de tipo ao lado. O serviço aberto
 // chega com todos os tipos; os outros serviços carregam em segundo plano logo
