@@ -1,10 +1,11 @@
 import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import type { AccountRepository } from "@/domain/account/ports";
 import type { JwtClaims } from "@/infra/db/client";
 
 // Adaptador do Supabase Auth: o único lugar que importa o SDK
-// (docs/troca-de-ferramentas.md). Só cuida da sessão; dados passam pelo
-// Drizzle com `withUser` (a Data API está desligada).
+// (docs/troca-de-ferramentas.md). Só cuida da sessão e da conta; dados passam
+// pelo Drizzle com `withUser` (a Data API está desligada).
 
 export type AuthCookies = CookieMethodsServer;
 
@@ -52,11 +53,19 @@ export function createCookieAuth(cookies: AuthCookies) {
     },
 
     // Login com Google (PKCE): devolve a URL do Google, ou null se falhar.
-    // O verificador do PKCE fica num cookie até o callback.
-    async startGoogleSignIn(redirectTo: string): Promise<string | null> {
+    // O verificador do PKCE fica num cookie até o callback. `selectAccount`
+    // faz o Google mostrar a escolha de conta mesmo com sessão aberta lá
+    // (nova entrada antes de excluir a conta).
+    async startGoogleSignIn(
+      redirectTo: string,
+      { selectAccount = false }: { selectAccount?: boolean } = {},
+    ): Promise<string | null> {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: {
+          redirectTo,
+          ...(selectAccount && { queryParams: { prompt: "select_account" } }),
+        },
       });
       return error ? null : data.url;
     },
@@ -96,4 +105,47 @@ export async function verifyAccessToken(
   }
   const { data } = await tokenClient.auth.getClaims(token);
   return toClaims(data?.claims);
+}
+
+// Hora da última entrada na conta, lida do `amr` do JWT ([{ method,
+// timestamp }], em segundos). Renovar a sessão não muda essa hora; entrar de
+// novo, sim. `null` se o token não traz a hora.
+export function signedInAt(claims: JwtClaims): Date | null {
+  const { amr } = claims;
+  if (!Array.isArray(amr)) return null;
+  const seconds = amr
+    .map((entry: unknown) =>
+      typeof entry === "object" && entry !== null && "timestamp" in entry
+        ? entry.timestamp
+        : null,
+    )
+    .filter((value): value is number => typeof value === "number");
+  return seconds.length > 0 ? new Date(Math.max(...seconds) * 1000) : null;
+}
+
+// Conta no Supabase Auth, com a chave secreta (ignora o RLS): só no
+// servidor, e só para o que a chave publishable não faz. Apagar o usuário
+// apaga em cascata tudo dele no banco (ADR-003, seção 9).
+export function createAccountRepository(): AccountRepository {
+  const { url } = supabaseConfig();
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("SUPABASE_SECRET_KEY precisa estar definida no servidor.");
+  }
+  const admin = createClient(url, secretKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  return {
+    async deleteUser(userId) {
+      const { error } = await admin.auth.admin.deleteUser(userId);
+      if (!error) return "deleted";
+      if (error.status === 404) return "not_found";
+      throw error;
+    },
+  };
 }
