@@ -10,6 +10,7 @@ Referência do visual real do app (direção A, Fase 1.8), extraída do código.
 
 - Tema único: **escuro** (`<html class="dark">`). O tema claro existe nos tokens (shadcn) mas não é usado. Estilo shadcn `base-nova`, base `neutral`, ícones próprios (ver 4).
 - Cor de acento: **magenta** (matiz ~4 em oklch), vinda do preset.
+- Ícone do app (**provisório**, até termos um desenhado pela dupla): símbolo de "próximo" dos players (play + barra), branco sobre magenta `#A3004C` (o `primary` em hex), centrado nos dois eixos. Fala do Seguintes: o que assistir em seguida. Arquivos em `src/app/` pela convenção de metadados do Next: `icon.svg` (abas, cantos `rx="7"` em 32), `favicon.ico` (16, 32 e 48 px, navegadores antigos) e `apple-icon.png` (180 px, quadrado cheio: o iOS arredonda sozinho). Trocar o ícone = trocar os três arquivos.
 
 ### Cores (tokens semânticos; usar `bg-*`, `text-*`, `border-*`)
 
