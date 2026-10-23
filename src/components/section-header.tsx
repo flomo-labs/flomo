@@ -7,7 +7,8 @@ export function SectionHeader({
   action,
   size = "default",
 }: {
-  title: string;
+  // Texto, ou um título com controle embutido (ex.: seletor de serviço).
+  title: ReactNode;
   id?: string;
   action?: ReactNode;
   // "lg" para telas feitas só de listas (Descobrir), onde o título precisa separar as seções.

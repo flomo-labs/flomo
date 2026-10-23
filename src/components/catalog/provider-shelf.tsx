@@ -11,12 +11,17 @@ import { loadProviderBundle } from "@/app/_catalog/provider-shelf-actions";
 import type { MediaSegment } from "@/app/_catalog/segments";
 import { SegmentedControl } from "@/components/segmented-control";
 import { SectionHeader } from "@/components/section-header";
-import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Listas de um serviço, já montadas pelo servidor, uma por tipo.
 export type ProviderBundle = {
   providerId: string;
-  heading: string;
   segments: MediaSegment[];
   lists: Partial<Record<MediaSegment, ReactNode>>;
 };
@@ -27,15 +32,12 @@ type Labels = {
   media: Record<MediaSegment, string>;
 };
 
-const pill = (active: boolean) =>
-  cn(
-    "inline-flex rounded-lg border px-3 py-1.5 text-sm transition-colors",
-    active
-      ? "border-primary bg-primary text-primary-foreground"
-      : "border-border hover:bg-muted",
-  );
+// Só o nome do serviço no título é o seletor; fica como o "Ver tudo ›"
+// (magenta, seta pequena, hover em pílula) e vira alvo de 44px no toque.
+const providerTrigger =
+  "-my-0.5 h-auto gap-1 border-0 bg-transparent px-3 py-0.5 text-sidebar-primary hover:bg-sidebar-primary/15 data-popup-open:bg-sidebar-primary/15 pointer-coarse:-my-2.5 pointer-coarse:h-11";
 
-// "Em alta no serviço X" com os menus de serviço e tipo. O serviço aberto
+// "Em alta no serviço X", com o serviço escolhido no título e o menu de tipo ao lado. O serviço aberto
 // chega com todos os tipos; os outros serviços carregam em segundo plano logo
 // depois do Descobrir abrir, um de cada vez. A escolha vive só nesta tela: não vai
 // para a URL nem é lembrada (volta ao padrão ao reabrir).
@@ -45,7 +47,8 @@ export function ProviderShelf({
   initial,
   footer,
 }: {
-  providers: { id: string; name: string }[];
+  // `lead` é o começo do título já concordado com o gênero do serviço ("Em alta na").
+  providers: { id: string; name: string; lead: string }[];
   labels: Labels;
   initial: ProviderBundle;
   footer: ReactNode;
@@ -120,6 +123,7 @@ export function ProviderShelf({
     });
   }
 
+  const provider = providers.find((p) => p.id === selected.providerId);
   const segment = shown.segments.includes(selected.segment)
     ? selected.segment
     : "tudo";
@@ -129,23 +133,40 @@ export function ProviderShelf({
       className="flex flex-col gap-3"
       aria-labelledby="em-alta-no-servico"
     >
-      <SectionHeader id="em-alta-no-servico" title={shown.heading} size="lg" />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <ul aria-label={labels.providerNav} className="flex flex-wrap gap-2">
-          {providers.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                aria-pressed={p.id === selected.providerId}
-                className={pill(p.id === selected.providerId)}
-                onClick={() => chooseProvider(p.id)}
-                onPointerEnter={() => void load(p.id).catch(() => {})}
+      <SectionHeader
+        id="em-alta-no-servico"
+        size="lg"
+        title={
+          <>
+            {provider?.lead}{" "}
+            <Select
+              value={selected.providerId}
+              items={providers.map((p) => ({ value: p.id, label: p.name }))}
+              onValueChange={(id) => id && chooseProvider(id)}
+              onOpenChange={(open) => {
+                if (open) {
+                  for (const p of providers) void load(p.id).catch(() => {});
+                }
+              }}
+            >
+              <SelectTrigger
+                aria-label={labels.providerNav}
+                className={providerTrigger}
               >
-                {p.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
+      <div className="flex justify-end">
         <SegmentedControl
           value={segment}
           onChange={chooseSegment}

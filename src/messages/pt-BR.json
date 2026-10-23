@@ -193,7 +193,7 @@
     "shelf": {
       "trending": "Em alta esta semana",
       "now_playing": "Nos cinemas",
-      "provider": "Em alta {gender, select, feminine {na} other {no}} {provider}"
+      "providerLead": "Em alta {gender, select, feminine {na} other {no}}"
     },
     "providerNav": "Serviço de streaming",
     "mediaNav": "Séries, filmes ou novelas",
