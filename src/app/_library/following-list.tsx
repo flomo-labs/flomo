@@ -39,17 +39,19 @@ export type FollowingLabels = {
 // próximo item.
 const HOLD_MS = 600;
 
-// Linha recém-marcada: a cópia de antes de marcar e a posição em que estava.
-type Held = { row: FollowingRow; index: number };
+// Linha sendo marcada: a cópia de antes de marcar, a posição em que estava e
+// se o carregamento já terminou (`done`: mostra o check).
+type Held = { row: FollowingRow; index: number; done: boolean };
 
 // Lista "Seguintes" com o menu Todos / Séries / Filmes, à direita das
 // seções (`sections`), como na Biblioteca. A escolha vive só na tela (fora da
 // URL, sem memória: reabrir volta para "Todos").
 //
-// Ao marcar, a resposta da ação já traz a lista nova: a série troca de
+// Ao marcar, a lista nova chega junto com a resposta: a série troca de
 // episódio e sobe para o topo, o filme some. Para a pessoa ver que deu certo,
-// a linha marcada fica por HOLD_MS no mesmo lugar, com o check, e só então a
-// lista segue.
+// a linha marcada fica no mesmo lugar desde o clique (com o indicador),
+// mostra o check por HOLD_MS quando o carregamento termina e só então a lista
+// segue.
 export function FollowingList({
   rows,
   labels,
@@ -65,16 +67,24 @@ export function FollowingList({
   const [announcement, setAnnouncement] = useState("");
   const [held, setHeld] = useState<Held[]>([]);
 
-  function marked(row: FollowingRow, index: number) {
-    setAnnouncement(row.markedLabel);
-    const entry = { row, index };
+  const release = (titleId: string) =>
+    setHeld((current) => current.filter((h) => h.row.titleId !== titleId));
+
+  function start(row: FollowingRow, index: number) {
     setHeld((current) => [
       ...current.filter((h) => h.row.titleId !== row.titleId),
-      entry,
+      { row, index, done: false },
     ]);
-    setTimeout(() => {
-      setHeld((current) => current.filter((h) => h !== entry));
-    }, HOLD_MS);
+  }
+
+  function marked(row: FollowingRow) {
+    setAnnouncement(row.markedLabel);
+    setHeld((current) =>
+      current.map((h) =>
+        h.row.titleId === row.titleId ? { ...h, done: true } : h,
+      ),
+    );
+    setTimeout(() => release(row.titleId), HOLD_MS);
   }
 
   const inKind = (r: FollowingRow) => kind === "both" || r.mediaType === kind;
@@ -121,8 +131,12 @@ export function FollowingList({
                     target={row.mark}
                     label={row.markLabel}
                     failed={labels.markFailed}
-                    done={heldIds.has(row.titleId)}
-                    onMarked={() => marked(row, index)}
+                    done={held.some(
+                      (h) => h.row.titleId === row.titleId && h.done,
+                    )}
+                    onStart={() => start(row, index)}
+                    onMarked={() => marked(row)}
+                    onFailed={() => release(row.titleId)}
                   />
                 }
               >

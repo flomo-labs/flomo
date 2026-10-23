@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { markEpisode, markMovie } from "./actions";
@@ -12,28 +12,43 @@ export type QuickMarkTarget =
 // Marca só este item como assistido, sem perguntar sobre episódios
 // anteriores: na fila "Seguintes" o episódio é, por definição, o seguinte ao
 // mais avançado que o usuário viu. Enquanto marca, o círculo fica magenta com
-// um indicador girando (o check, com `prefers-reduced-motion`). No sucesso,
-// sem aviso no canto: `onMarked` avisa quem usa, que segura a linha com
-// `done` (check magenta) antes de trocá-la pelo próximo item e anuncia ao
-// leitor de tela. Erro fica embaixo do botão.
+// um indicador (girando; parado com `prefers-reduced-motion`). Sem aviso no
+// canto: quem usa segura a linha desde `onStart` e mostra `done` (check
+// magenta) em `onMarked`, que só vem quando o carregamento terminou (a ação
+// respondeu e a lista nova já chegou). Com erro, `onFailed` solta a linha e a
+// mensagem fica embaixo do botão.
 export function QuickMark({
   target,
   label,
   failed,
   done = false,
+  onStart,
   onMarked,
+  onFailed,
 }: {
   target: QuickMarkTarget;
   label: string;
   failed: string;
   done?: boolean;
+  onStart?: () => void;
   onMarked?: () => void;
+  onFailed?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // A ação responde antes de a lista nova chegar; o carregamento só acaba
+  // quando `pending` volta a falso. Até lá, o sucesso fica guardado aqui.
+  const succeeded = useRef(false);
+  useEffect(() => {
+    if (!pending && succeeded.current) {
+      succeeded.current = false;
+      onMarked?.();
+    }
+  }, [pending, onMarked]);
 
   function mark() {
     setError(null);
+    onStart?.();
     startTransition(async () => {
       try {
         const result =
@@ -42,11 +57,13 @@ export function QuickMark({
             : await markMovie({ titleId: target.titleId });
         if (!result.ok) {
           setError(result.error.message || failed);
+          onFailed?.();
           return;
         }
-        onMarked?.();
+        succeeded.current = true;
       } catch {
         setError(failed);
+        onFailed?.();
       }
     });
   }
@@ -66,13 +83,12 @@ export function QuickMark({
         {done ? (
           <Icon name="check" filled className="size-5" />
         ) : pending ? (
-          <>
-            <span
-              aria-hidden
-              className="hidden size-5 animate-spin rounded-full border-2 border-current border-t-transparent motion-safe:block"
-            />
-            <Icon name="check" filled className="size-5 motion-safe:hidden" />
-          </>
+          // Anel aberto; gira só sem `prefers-reduced-motion`. O check fica
+          // para quando o carregamento terminar.
+          <span
+            aria-hidden
+            className="size-5 rounded-full border-2 border-current border-t-transparent motion-safe:animate-spin"
+          />
         ) : null}
       </Button>
       {error ? (
