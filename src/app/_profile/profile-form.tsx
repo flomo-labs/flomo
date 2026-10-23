@@ -30,6 +30,8 @@ export function ProfileForm({ defaults, labels }: Props) {
   const [displayName, setDisplayName] = useState(defaults.displayName);
   const [bio, setBio] = useState(defaults.bio);
   const [isPrivate, setIsPrivate] = useState(defaults.isPrivate);
+  // O que está gravado: o botão só habilita quando algo difere disso.
+  const [saved, setSaved] = useState(defaults);
   // Depois de salvar, mostra o que ficou gravado (sem os espaços das pontas).
   const [shownState, setShownState] = useState(state);
   if (state !== shownState) {
@@ -38,8 +40,14 @@ export function ProfileForm({ defaults, labels }: Props) {
       setDisplayName(state.submitted.displayName);
       setBio(state.submitted.bio);
       setIsPrivate(state.submitted.isPrivate);
+      setSaved(state.submitted);
     }
   }
+  // O servidor corta os espaços das pontas: mexer só neles não é mudança.
+  const changed =
+    displayName.trim() !== saved.displayName ||
+    bio.trim() !== saved.bio ||
+    isPrivate !== saved.isPrivate;
   const bioLength = [...bio].length;
   const errorId = "perfil-erro";
 
@@ -83,7 +91,7 @@ export function ProfileForm({ defaults, labels }: Props) {
           {state.error.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending || !changed}>
         {pending ? labels.saving : labels.submit}
       </Button>
     </form>

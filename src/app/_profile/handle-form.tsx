@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +20,22 @@ type Props = {
 };
 
 // Sucesso vira aviso no canto da tela (toast); erro fica no formulário. No
-// primeiro acesso a ação redireciona, e o aviso não aparece.
+// primeiro acesso a ação redireciona, e o aviso não aparece. O campo é
+// controlado: o React limpa o formulário ao fim da ação, e o botão só
+// habilita quando o handle difere do gravado.
 export function HandleForm({ action, defaultHandle, next, labels }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  const [handle, setHandle] = useState(defaultHandle ?? "");
+  const [saved, setSaved] = useState(defaultHandle ?? "");
+  const [shownState, setShownState] = useState(state);
+  if (state !== shownState) {
+    setShownState(state);
+    // Volta com o que foi enviado (ou, se salvou, com o handle gravado).
+    if (state.submitted !== undefined) setHandle(state.submitted);
+    if (state.savedHandle) setSaved(state.savedHandle);
+  }
+  // O servidor corta espaços e passa para minúsculas: isso não é mudança.
+  const changed = handle.trim().toLowerCase() !== saved;
   const errorId = "handle-erro";
   useEffect(() => {
     const handle = state.savedHandle;
@@ -45,7 +58,8 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
         <Input
           id="handle"
           name="handle"
-          defaultValue={state.submitted ?? defaultHandle}
+          value={handle}
+          onChange={(event) => setHandle(event.target.value)}
           required
           minLength={HANDLE_MIN_LENGTH}
           maxLength={HANDLE_MAX_LENGTH}
@@ -64,7 +78,7 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
           {state.error.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending || !changed}>
         {pending ? labels.saving : labels.submit}
       </Button>
     </form>
