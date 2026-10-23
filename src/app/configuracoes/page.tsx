@@ -7,14 +7,16 @@ import { updateHandle } from "../_profile/actions";
 import { handleFormLabels, profileFormLabels } from "../_profile/form-labels";
 import { HandleForm } from "../_profile/handle-form";
 import { ProfileForm } from "../_profile/profile-form";
-import { getOwnProfile } from "../_profile/queries";
+import { getOwnProfile, profilePath } from "../_profile/queries";
 
 export const metadata: Metadata = { title: "Configurações · Flomo" };
 
 export default function ConfiguracoesPage() {
   return (
     <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
-      <BackLink />
+      <Suspense fallback={<BackLink />}>
+        <BackToProfile />
+      </Suspense>
       <h1 className="text-2xl font-bold">Configurações</h1>
       <Suspense>
         <ChangeHandle />
@@ -27,6 +29,18 @@ export default function ConfiguracoesPage() {
       </section>
     </main>
   );
+}
+
+// Chega-se aqui pelo "Editar perfil": sem tela anterior, Voltar leva ao
+// perfil próprio (ou ao início, se o handle ainda é provisório).
+async function BackToProfile() {
+  const user = await requireUser("/configuracoes");
+  const profile = await getOwnProfile(user);
+  const href =
+    profile && !isProvisionalHandle(profile.handle)
+      ? profilePath(profile.handle)
+      : "/";
+  return <BackLink fallbackHref={href} />;
 }
 
 // Troca do handle a qualquer momento. O antigo fica livre na hora.

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/back-link";
 import { RoadmapList } from "@/components/roadmap-list";
 import { roadmap } from "@/content/roadmap";
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function EmBrevePage() {
   return (
     <>
+      <BackLink />
       <div className="flex flex-col gap-2">
         <h1 className="text-page-title">Em breve</h1>
         <p className="text-muted-foreground">

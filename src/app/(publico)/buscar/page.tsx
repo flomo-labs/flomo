@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { searchCatalog } from "@/app/_catalog/gateway";
+import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
 import { Icon } from "@/components/icon";
 import { SearchForm } from "@/components/catalog/search-form";
@@ -24,6 +25,7 @@ function firstValue(value: string | string[] | undefined): string {
 export default function BuscarPage({ searchParams }: PageProps<"/buscar">) {
   return (
     <>
+      <BackLink fallbackHref="/descobrir" />
       <SearchHeading />
       <Suspense fallback={<p className="text-muted-foreground">…</p>}>
         <SearchBody searchParams={searchParams} />
