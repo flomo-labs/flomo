@@ -162,7 +162,7 @@
     "soonHint": "Os lançamentos das suas séries ainda não estão disponíveis.",
     "filters": "Filtrar por tipo",
     "kind": {
-      "both": "Ambos",
+      "both": "Todos",
       "tv": "Séries",
       "movie": "Filmes"
     },
@@ -196,11 +196,11 @@
       "provider": "Em alta {gender, select, feminine {na} other {no}} {provider}"
     },
     "providerNav": "Serviço de streaming",
-    "mediaNav": "Filmes, séries ou novelas",
+    "mediaNav": "Séries, filmes ou novelas",
     "media": {
-      "tudo": "Tudo",
-      "filmes": "Filmes",
+      "tudo": "Todos",
       "series": "Séries",
+      "filmes": "Filmes",
       "novelas": "Novelas"
     },
     "providerNote": "Popularidade geral do TMDB entre os títulos de assinatura do serviço, não é o ranking dele. Dados de onde assistir por",

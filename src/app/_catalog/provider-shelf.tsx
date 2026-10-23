@@ -25,8 +25,8 @@ export async function buildProviderBundle(
   }).catch(() => null);
   const segments: MediaSegment[] =
     novelas?.ok && novelas.value.length > 0
-      ? ["tudo", "filmes", "series", "novelas"]
-      : ["tudo", "filmes", "series"];
+      ? ["tudo", "series", "filmes", "novelas"]
+      : ["tudo", "series", "filmes"];
   const lists: Partial<Record<MediaSegment, React.ReactNode>> = {};
   for (const segment of segments) {
     lists[segment] = (

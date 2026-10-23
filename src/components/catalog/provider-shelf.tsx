@@ -9,6 +9,7 @@ import {
 } from "react";
 import { loadProviderBundle } from "@/app/_catalog/provider-shelf-actions";
 import type { MediaSegment } from "@/app/_catalog/segments";
+import { SegmentedControl } from "@/components/segmented-control";
 import { SectionHeader } from "@/components/section-header";
 import { cn } from "@/lib/utils";
 
@@ -129,35 +130,32 @@ export function ProviderShelf({
       aria-labelledby="em-alta-no-servico"
     >
       <SectionHeader id="em-alta-no-servico" title={shown.heading} size="lg" />
-      <ul aria-label={labels.providerNav} className="flex flex-wrap gap-2">
-        {providers.map((p) => (
-          <li key={p.id}>
-            <button
-              type="button"
-              aria-pressed={p.id === selected.providerId}
-              className={pill(p.id === selected.providerId)}
-              onClick={() => chooseProvider(p.id)}
-              onPointerEnter={() => void load(p.id).catch(() => {})}
-            >
-              {p.name}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <ul aria-label={labels.mediaNav} className="flex gap-2">
-        {shown.segments.map((s) => (
-          <li key={s}>
-            <button
-              type="button"
-              aria-pressed={s === segment}
-              className={pill(s === segment)}
-              onClick={() => chooseSegment(s)}
-            >
-              {labels.media[s]}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <ul aria-label={labels.providerNav} className="flex flex-wrap gap-2">
+          {providers.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                aria-pressed={p.id === selected.providerId}
+                className={pill(p.id === selected.providerId)}
+                onClick={() => chooseProvider(p.id)}
+                onPointerEnter={() => void load(p.id).catch(() => {})}
+              >
+                {p.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <SegmentedControl
+          value={segment}
+          onChange={chooseSegment}
+          ariaLabel={labels.mediaNav}
+          options={shown.segments.map((s) => ({
+            value: s,
+            label: labels.media[s],
+          }))}
+        />
+      </div>
       <div aria-busy={pending} className={pending ? "opacity-60" : undefined}>
         {shown.lists[segment]}
       </div>
