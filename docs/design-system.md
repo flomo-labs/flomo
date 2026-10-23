@@ -47,7 +47,7 @@ Escala Tailwind (4px). Mais usados: `gap-2` (8), `gap-3` (12), `gap-1`, `gap-4`,
 
 ### Raios
 Base `--radius: 0.875rem` (14px). Escala shadcn: `sm` 0.6×, `md` 0.8×, `lg` 1×, `xl` 1.4×, `2xl` 1.8×, `4xl` 2.6×.
-Tokens do app: `rounded-poster` (12px, pôsteres) e `rounded-card` (16px, cartões e linhas). Campos `rounded-lg`, botões `rounded-full` (padrão do `Button`); diálogos `rounded-xl`; **filtros, abas e etiquetas `rounded-full`**; bottom sheet `rounded-t-2xl`. **Raios concêntricos:** o raio de um elemento dentro de outro = raio externo − espaço entre eles (ex.: chuvisco da `EmptyTv`: borda 8, traço 3, folga 2,5 → tela 4).
+Tokens do app: `rounded-poster` (12px, pôsteres) e `rounded-card` (16px, cartões e linhas). Campos `rounded-lg`, exceto os de **busca** (cabeçalho e `SearchForm` do celular), que são `rounded-full`; botões `rounded-full` (padrão do `Button`); diálogos `rounded-xl`; **filtros, abas e etiquetas `rounded-full`**; bottom sheet `rounded-t-2xl`. **Raios concêntricos:** o raio de um elemento dentro de outro = raio externo − espaço entre eles (ex.: chuvisco da `EmptyTv`: borda 8, traço 3, folga 2,5 → tela 4).
 
 ### Sombras e profundidade
 Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-foreground/10` (diálogo). Exceções: aba ativa `shadow-sm`; menu "···" da landing com sombra forte própria (`.landing-menu`). Overlay de diálogo: `bg-black/10` + `backdrop-blur-xs`.
