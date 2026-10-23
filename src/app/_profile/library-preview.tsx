@@ -4,7 +4,7 @@ import type { CurrentUser } from "@/app/_auth/session";
 import { LibraryCard } from "@/app/_library/library-card";
 import { loadLibraryPreview } from "@/app/_library/queries";
 import { EmptyState } from "@/components/empty-state";
-import { EmptyBucket } from "@/components/illustrations/empty-bucket";
+import { EmptyTv } from "@/components/illustrations/empty-tv";
 import { SectionHeader } from "@/components/section-header";
 import { SeeAllLink } from "@/components/see-all-link";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ export async function LibraryPreview({ user }: { user: CurrentUser }) {
       <EmptyState
         title={t("libraryEmptyTitle")}
         description={t("libraryEmpty")}
-        icon={<EmptyBucket className="size-24" />}
+        icon={<EmptyTv className="size-24" />}
         action={
           <Button render={<Link href="/descobrir" />} nativeButton={false}>
             {t("search")}

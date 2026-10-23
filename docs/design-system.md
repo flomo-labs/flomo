@@ -57,7 +57,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 - Breakpoints: `sm` 640, `md` 768 (corte celular/desktop do shell).
 - Cabeçalho: `h-16`, borda inferior. Barra inferior do celular: `h-16` + `safe-area-inset-bottom`, só logado; o `body` reserva o espaço (`[data-bottom-nav]`).
 - Alvos de toque: com `pointer-coarse`, botões, abas e ícones sobem para **44px** (`h-11`/`size-11`); abas, 50px de lista.
-- Movimento: respeitar `prefers-reduced-motion` (onda dos pôsteres da landing para).
+- Movimento: respeitar `prefers-reduced-motion` (onda dos pôsteres da landing e chuvisco da TV vazia param).
 
 ## 2. Componentes
 
@@ -80,7 +80,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes) | uma opção ativa; estado fica na tela |
 | `SectionHeader` | título de seção + ação ("Ver tudo") | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
 | `SeeAllLink` | "Ver tudo ›" na `action` do `SectionHeader` | magenta (`text-sidebar-primary`), seta `chevronForward`, hover `opacity-80` (como o pôster, sem sublinhado), `ariaLabel` por seção |
-| `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-bucket` balde de pipoca caído (Biblioteca, Perfil) ou `empty-tv` TV fora do ar (Seguintes), `size-24`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
+| `EmptyState` | lista vazia | cartão tracejado (`rounded-card border-dashed`) centralizado: ilustração opcional (`icon`, ex.: `illustrations/empty-tv`, TV fora do ar com chuvisco que pisca (`.tv-static-cell` em `globals.css`, para com `prefers-reduced-motion`); é a ilustração padrão dos estados vazios, `size-24`), título em negrito (`title`), descrição `muted` (`description`) e botão do próximo passo |
 | `StarRating` | nota em meias estrelas | tamanhos `xs/sm/md/lg`; `sm` cinza (média), `lg` para sheet; radio group acessível |
 | `RatingAverage`, `TmdbRating` | médias | apoio, sem competir com a nota do usuário |
 | `BackLink` / `BackBar` | voltar | só volta dentro do app; fallback por `href` |
