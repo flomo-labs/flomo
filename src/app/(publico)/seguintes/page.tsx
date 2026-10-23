@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/empty-state";
+import { EmptyTv } from "@/components/illustrations/empty-tv";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -68,7 +69,9 @@ async function Body() {
         </p>
       ) : rows.length === 0 ? (
         <EmptyState
-          message={t("empty")}
+          icon={<EmptyTv className="size-28" />}
+          title={t("emptyTitle")}
+          description={t("empty")}
           action={
             <Button render={<Link href="/descobrir" />} nativeButton={false}>
               {t("search")}

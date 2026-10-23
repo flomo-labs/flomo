@@ -14,7 +14,7 @@ export function SectionHeader({
   size?: "default" | "lg";
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex items-center justify-between gap-3">
       <h2
         id={id}
         className={
