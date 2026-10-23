@@ -40,33 +40,46 @@ async function Body() {
   await requireUser("/seguintes");
   const rows = await loadFollowing();
 
+  const sections = (
+    <FollowingSections
+      labels={{
+        sections: t("sections"),
+        queue: t("queue"),
+        soon: t("soon"),
+        soonHint: t("soonHint"),
+      }}
+    />
+  );
+
   return (
     <>
-      <FollowingSections
-        labels={{
-          sections: t("sections"),
-          queue: t("queue"),
-          soon: t("soon"),
-          soonHint: t("soonHint"),
-        }}
-      />
       {rows === null ? (
-        <p role="alert" className="text-destructive">
-          {t("unavailable")}
-        </p>
+        <>
+          {sections}
+          <p role="alert" className="text-destructive">
+            {t("unavailable")}
+          </p>
+        </>
       ) : rows.length === 0 ? (
-        <EmptyState
-          icon={<EmptyTv className="size-28" />}
-          title={t("emptyTitle")}
-          description={t("empty")}
-          action={
-            <Button render={<Link href="/descobrir" />} nativeButton={false}>
-              {t("search")}
-            </Button>
-          }
-        />
+        <>
+          {sections}
+          <EmptyState
+            icon={<EmptyTv className="size-28" />}
+            title={t("emptyTitle")}
+            description={t("empty")}
+            action={
+              <Button render={<Link href="/descobrir" />} nativeButton={false}>
+                {t("search")}
+              </Button>
+            }
+          />
+        </>
       ) : (
-        <FollowingList rows={rows} labels={await followingLabels()} />
+        <FollowingList
+          rows={rows}
+          labels={await followingLabels()}
+          sections={sections}
+        />
       )}
     </>
   );

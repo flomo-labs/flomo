@@ -89,7 +89,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | Shell: `SiteHeader`, `NavLink`, `BottomNav`, `HeaderSearch`, `SiteFooter`, `UserMenu` | navegação | pílula magenta no ativo; barra inferior com ícone preenchido + rótulo |
 | Landing: `LandingMenu`, `PosterWall` | landing do visitante | mosaico alinhado, um ponto de luz, aviso TMDB dentro do menu "···" |
 
-Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `following-list` (Seguintes), `library-card`, `watch-control` (check em círculo `size-11 rounded-full`), `status-control`, `rating-control`.
+Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `following-list` (Seguintes), `library-card`, `watch-control` e `quick-mark` (check em círculo `size-11 rounded-full`, mesmo botão em Seguintes e no episódio), `status-control`, `rating-control`.
 
 ### Pendências do desenho (PR 3) ainda sem componente
 `ProgressBar` com rótulo (S2:E4 · 9 de 16; hoje só o cartão da Biblioteca tem barra, estreito demais para rótulo ao lado) e `StatCard` (números do perfil; o Perfil ainda não mostra números). Só nascem com o 2º uso. Visual do SegmentedControl no desenho: pílula ativa em magenta sobre trilha cinza; padronizado em #122.
@@ -101,6 +101,7 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 - **Feito em #122**: visual do `SegmentedControl` e a aba Para assistir / Em breve de `/seguintes` (agora `SegmentedControl`).
 
 ## 3. Padrões de tela
+- **Filtros**: o filtro de tipo (Todos/Séries/Filmes) fica na mesma linha dos outros filtros, alinhado à direita (`flex flex-wrap justify-between`), como na Biblioteca, em Seguintes e no "Em alta no serviço".
 - **Seguintes**: lista em 2 colunas (desktop), etiqueta `T2:E4` + nome do episódio, sem subtítulo.
 - **Descobrir**: prateleiras (Em alta com ranking, Nos cinemas, Em alta no serviço) em `Shelf`. Em "Em alta no serviço", os serviços são chips e o tipo (Tudo/Séries/Filmes) é um `SegmentedControl`.
 - **Landing**: tela cheia, sem cabeçalho/rodapé do app; "Entrar" e "···" com 36px.
