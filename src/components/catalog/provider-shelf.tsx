@@ -11,12 +11,17 @@ import { loadProviderBundle } from "@/app/_catalog/provider-shelf-actions";
 import type { MediaSegment } from "@/app/_catalog/segments";
 import { SegmentedControl } from "@/components/segmented-control";
 import { SectionHeader } from "@/components/section-header";
-import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Listas de um serviço, já montadas pelo servidor, uma por tipo.
 export type ProviderBundle = {
   providerId: string;
-  heading: string;
   segments: MediaSegment[];
   lists: Partial<Record<MediaSegment, ReactNode>>;
 };
@@ -27,15 +32,12 @@ type Labels = {
   media: Record<MediaSegment, string>;
 };
 
-const pill = (active: boolean) =>
-  cn(
-    "inline-flex rounded-lg border px-3 py-1.5 text-sm transition-colors",
-    active
-      ? "border-primary bg-primary text-primary-foreground"
-      : "border-border hover:bg-muted",
-  );
+// Só o nome do serviço no título é o seletor: botão magenta com texto branco,
+// na fonte do título (fica mais alto que a linha) e com 44px no toque.
+const providerTrigger =
+  "-my-1.5 h-auto gap-2 rounded-full border-0 bg-primary px-4 py-1 font-[inherit] text-[length:inherit] leading-[inherit] text-primary-foreground hover:bg-primary/90 data-popup-open:bg-primary/90 pointer-coarse:min-h-11 [&_svg]:size-5";
 
-// "Em alta no serviço X" com os menus de serviço e tipo. O serviço aberto
+// "Em alta no serviço X", com o serviço escolhido no título e o menu de tipo ao lado. O serviço aberto
 // chega com todos os tipos; os outros serviços carregam em segundo plano logo
 // depois do Descobrir abrir, um de cada vez. A escolha vive só nesta tela: não vai
 // para a URL nem é lembrada (volta ao padrão ao reabrir).
@@ -45,7 +47,8 @@ export function ProviderShelf({
   initial,
   footer,
 }: {
-  providers: { id: string; name: string }[];
+  // `lead` é o começo do título já concordado com o gênero do serviço ("Em alta na").
+  providers: { id: string; name: string; lead: string }[];
   labels: Labels;
   initial: ProviderBundle;
   footer: ReactNode;
@@ -120,6 +123,7 @@ export function ProviderShelf({
     });
   }
 
+  const provider = providers.find((p) => p.id === selected.providerId);
   const segment = shown.segments.includes(selected.segment)
     ? selected.segment
     : "tudo";
@@ -129,33 +133,51 @@ export function ProviderShelf({
       className="flex flex-col gap-3"
       aria-labelledby="em-alta-no-servico"
     >
-      <SectionHeader id="em-alta-no-servico" title={shown.heading} size="lg" />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <ul aria-label={labels.providerNav} className="flex flex-wrap gap-2">
-          {providers.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                aria-pressed={p.id === selected.providerId}
-                className={pill(p.id === selected.providerId)}
-                onClick={() => chooseProvider(p.id)}
-                onPointerEnter={() => void load(p.id).catch(() => {})}
+      <SectionHeader
+        id="em-alta-no-servico"
+        size="lg"
+        wrap
+        action={
+          <SegmentedControl
+            value={segment}
+            onChange={chooseSegment}
+            ariaLabel={labels.mediaNav}
+            options={shown.segments.map((s) => ({
+              value: s,
+              label: labels.media[s],
+            }))}
+          />
+        }
+        title={
+          <>
+            {provider?.lead}{" "}
+            <Select
+              value={selected.providerId}
+              items={providers.map((p) => ({ value: p.id, label: p.name }))}
+              onValueChange={(id) => id && chooseProvider(id)}
+              onOpenChange={(open) => {
+                if (open) {
+                  for (const p of providers) void load(p.id).catch(() => {});
+                }
+              }}
+            >
+              <SelectTrigger
+                aria-label={labels.providerNav}
+                className={providerTrigger}
               >
-                {p.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-        <SegmentedControl
-          value={segment}
-          onChange={chooseSegment}
-          ariaLabel={labels.mediaNav}
-          options={shown.segments.map((s) => ({
-            value: s,
-            label: labels.media[s],
-          }))}
-        />
-      </div>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
       <div aria-busy={pending} className={pending ? "opacity-60" : undefined}>
         {shown.lists[segment]}
       </div>

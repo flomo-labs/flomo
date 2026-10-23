@@ -53,7 +53,13 @@ async function ProviderSection() {
   const initial = await buildProviderBundle();
   return (
     <ProviderShelf
-      providers={SHELF_PROVIDERS.map(({ id, name }) => ({ id, name }))}
+      providers={SHELF_PROVIDERS.map(({ id, name, feminine }) => ({
+        id,
+        name,
+        lead: t("shelf.providerLead", {
+          gender: feminine ? "feminine" : "masculine",
+        }),
+      }))}
       labels={{
         providerNav: t("providerNav"),
         mediaNav: t("mediaNav"),

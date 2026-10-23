@@ -44,6 +44,10 @@ const GLYPHS = {
     outline: stroke("m184 112 144 144-144 144", 48),
     filled: stroke("m184 112 144 144-144 144", 48),
   },
+  chevronDown: {
+    outline: stroke("m112 184 144 144 144-144", 48),
+    filled: stroke("m112 184 144 144 144-144", 48),
+  },
   arrowBack: {
     outline: stroke("M244 400 100 256l144-144M120 256h292", 48),
     filled: stroke("M244 400 100 256l144-144M120 256h292", 48),
