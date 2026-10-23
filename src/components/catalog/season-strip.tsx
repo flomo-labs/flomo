@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "@/components/icon";
 import { cn } from "@/lib/utils";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
@@ -47,10 +48,12 @@ export function SeasonStrip({
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent transition-opacity md:hidden",
+          "pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-end bg-gradient-to-l from-background from-35% to-transparent pr-2 text-muted-foreground transition-opacity md:hidden",
           hasMore ? "opacity-100" : "opacity-0",
         )}
-      />
+      >
+        <Icon name="chevronForward" className="size-5" />
+      </div>
     </div>
   );
 }
