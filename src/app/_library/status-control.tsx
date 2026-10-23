@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { Icon } from "@/components/icon";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ export function StatusControl({
         <Button
           type="button"
           size="sm"
-          className={STATUS_BUTTON_WIDTH}
+          className={cn("rounded-full", STATUS_BUTTON_WIDTH)}
           disabled={pending}
           onClick={() =>
             run(() => changeTitleStatus({ titleId, status: "watchlist" }))
@@ -114,7 +115,7 @@ export function StatusControl({
             type="button"
             variant="secondary"
             size="sm"
-            className={STATUS_BUTTON_WIDTH}
+            className={cn("rounded-full", STATUS_BUTTON_WIDTH)}
           />
         }
       >
@@ -132,6 +133,7 @@ export function StatusControl({
           <Button
             type="button"
             variant="outline"
+            className="rounded-full"
             disabled={pending}
             onClick={() =>
               run(() => changeTitleHidden({ titleId, hidden: !hidden }))
@@ -142,6 +144,7 @@ export function StatusControl({
           <Button
             type="button"
             variant="outline"
+            className="rounded-full"
             disabled={pending || status === "paused"}
             onClick={() => setStatus("paused")}
           >
@@ -150,6 +153,7 @@ export function StatusControl({
           <Button
             type="button"
             variant="outline"
+            className="rounded-full"
             disabled={pending || status === "dropped"}
             onClick={() => setStatus("dropped")}
           >
@@ -158,6 +162,7 @@ export function StatusControl({
           <Button
             type="button"
             variant="destructive"
+            className="rounded-full"
             disabled={pending}
             onClick={() => run(() => removeFromLibrary({ titleId }))}
           >

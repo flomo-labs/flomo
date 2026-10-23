@@ -78,6 +78,7 @@ export function RatingControl({
             type="button"
             variant="ghost"
             size="sm"
+            className="rounded-full"
             disabled={pending}
             onClick={remove}
           >
