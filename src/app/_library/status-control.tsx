@@ -171,7 +171,15 @@ export function StatusControl({
           </p>
         ) : null}
         <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>
+          <DialogClose
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+              />
+            }
+          >
             {labels.cancel}
           </DialogClose>
         </DialogFooter>
