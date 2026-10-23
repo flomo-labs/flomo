@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { markEpisode, markMovie } from "./actions";
@@ -13,24 +12,23 @@ export type QuickMarkTarget =
 // Marca só este item como assistido, sem perguntar sobre episódios
 // anteriores: na fila "Seguintes" o episódio é, por definição, o seguinte ao
 // mais avançado que o usuário viu. Enquanto marca, o círculo fica magenta com
-// um indicador girando (o check, com `prefers-reduced-motion`); no sucesso, o
-// aviso no canto confirma, porque a linha já volta trocada pelo próximo item
-// (ou some). Erro fica embaixo do botão.
+// um indicador girando (o check, com `prefers-reduced-motion`); no sucesso, a
+// linha já volta trocada pelo próximo item (ou some), sem aviso no canto, e
+// `onMarked` deixa quem usa anunciar ao leitor de tela. Erro fica embaixo do
+// botão.
 export function QuickMark({
   target,
   label,
-  marked,
   failed,
+  onMarked,
 }: {
   target: QuickMarkTarget;
   label: string;
-  marked: string;
   failed: string;
+  onMarked?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const targetId =
-    target.kind === "episode" ? target.episodeId : target.titleId;
 
   function mark() {
     setError(null);
@@ -44,8 +42,7 @@ export function QuickMark({
           setError(result.error.message || failed);
           return;
         }
-        // Um aviso por item: marcar vários em sequência empilha os avisos.
-        toast.success(marked, { id: `marcado-${targetId}` });
+        onMarked?.();
       } catch {
         setError(failed);
       }

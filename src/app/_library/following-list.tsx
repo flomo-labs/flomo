@@ -23,7 +23,8 @@ export type FollowingRow = {
   episodeName: string | null;
   mark: QuickMarkTarget;
   markLabel: string;
-  // Aviso de sucesso ("Série T2:E3 marcado como assistido.").
+  // Anúncio ao leitor de tela depois de marcar ("Série T2:E3 marcado como
+  // assistido.").
   markedLabel: string;
 };
 
@@ -47,11 +48,17 @@ export function FollowingList({
   labels: FollowingLabels;
 }) {
   const [kind, setKind] = useState<FollowingKind>("both");
+  // O que acabou de ser marcado, para o leitor de tela. Fica na lista, não no
+  // botão: a linha marcada troca pelo próximo item ou some.
+  const [announcement, setAnnouncement] = useState("");
 
   const shown = rows.filter((r) => kind === "both" || r.mediaType === kind);
 
   return (
     <div className="flex flex-col gap-3">
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         {sections}
         <SegmentedControl
@@ -79,8 +86,8 @@ export function FollowingList({
                   <QuickMark
                     target={row.mark}
                     label={row.markLabel}
-                    marked={row.markedLabel}
                     failed={labels.markFailed}
+                    onMarked={() => setAnnouncement(row.markedLabel)}
                   />
                 }
               >
