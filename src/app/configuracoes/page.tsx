@@ -4,6 +4,7 @@ import { BackLink } from "@/components/back-link";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { requireUser } from "../_auth/session";
 import { updateHandle } from "../_profile/actions";
+import { handleFormLabels, profileFormLabels } from "../_profile/form-labels";
 import { HandleForm } from "../_profile/handle-form";
 import { ProfileForm } from "../_profile/profile-form";
 import { getOwnProfile } from "../_profile/queries";
@@ -40,7 +41,7 @@ async function ChangeHandle() {
     <HandleForm
       action={updateHandle}
       defaultHandle={current}
-      submitLabel="Salvar"
+      labels={await handleFormLabels("save")}
     />
   );
 }
@@ -56,6 +57,7 @@ async function EditProfile() {
         bio: profile?.bio ?? "",
         isPrivate: profile?.isPrivate ?? false,
       }}
+      labels={await profileFormLabels()}
     />
   );
 }

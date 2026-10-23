@@ -248,5 +248,20 @@
     "search": "Descobrir",
     "notFoundTitle": "Perfil não encontrado",
     "notFound": "Este perfil não existe."
+  },
+  "ProfileEdit": {
+    "handle": "Nome de usuário",
+    "handleHint": "De {min} a {max} caracteres: letras, números, ponto ou sublinhado.",
+    "handleSaved": "Agora você é @{handle}.",
+    "displayName": "Nome de exibição",
+    "bio": "Bio",
+    "bioCounter": "{count} de {max} caracteres.",
+    "private": "Perfil privado",
+    "privateHint": "Quem não é você vê só seu nome, handle e foto; a bio e os números ficam escondidos.",
+    "save": "Salvar",
+    "saveProfile": "Salvar perfil",
+    "continue": "Continuar",
+    "saving": "Salvando...",
+    "saved": "Perfil salvo."
   }
 }
