@@ -48,6 +48,7 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/auth/callback"]
 jwt_expiry = 3600
 enable_signup = true
+enable_manual_linking = true
 
 # O E2E entra com e-mail e senha de um usuário criado pelo próprio teste; o
 # app continua oferecendo só o Google.

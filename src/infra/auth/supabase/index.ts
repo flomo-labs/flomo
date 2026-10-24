@@ -1,6 +1,10 @@
 import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import type { AccountRepository } from "@/domain/account/ports";
+import type {
+  AccountRepository,
+  SignInMethod,
+  SignInMethodsRepository,
+} from "@/domain/account/ports";
 import type { JwtClaims } from "@/infra/db/client";
 
 // Adaptador do Supabase Auth: o único lugar que importa o SDK
@@ -8,6 +12,40 @@ import type { JwtClaims } from "@/infra/db/client";
 // pelo Drizzle com `withUser` (a Data API está desligada).
 
 export type AuthCookies = CookieMethodsServer;
+
+// Falhas esperadas do e-mail e senha, já traduzidas dos códigos do Supabase.
+// A mensagem de login é a mesma para e-mail inexistente e senha errada.
+export type EmailAuthFailure =
+  | "EMAIL_TAKEN"
+  | "WEAK_PASSWORD"
+  | "INVALID_CREDENTIALS"
+  | "RATE_LIMITED"
+  | "CONFIRMATION_REQUIRED"
+  | "UNKNOWN";
+
+export type EmailAuthResult =
+  | { ok: true; claims: JwtClaims }
+  | { ok: false; code: EmailAuthFailure };
+
+function toEmailFailure(code: string | undefined): EmailAuthFailure {
+  switch (code) {
+    case "user_already_exists":
+    case "email_exists":
+      return "EMAIL_TAKEN";
+    case "weak_password":
+      return "WEAK_PASSWORD";
+    case "invalid_credentials":
+    case "email_not_confirmed":
+      return "INVALID_CREDENTIALS";
+    case "over_request_rate_limit":
+    case "over_email_send_rate_limit":
+      return "RATE_LIMITED";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+const PROVIDER_BY_METHOD = { google: "google", email: "email" } as const;
 
 function supabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,6 +114,71 @@ export function createCookieAuth(cookies: AuthCookies) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (error || !data.session) return null;
       return verifyAccessToken(data.session.access_token);
+    },
+
+    // Cadastro com e-mail e senha. Com a confirmação desligada (Fase 1.7
+    // reduzida) o Supabase já devolve a sessão e grava os cookies; sem sessão,
+    // a confirmação foi ligada no painel e o app ainda não trata esse fluxo.
+    async signUpWithEmail(
+      email: string,
+      password: string,
+    ): Promise<EmailAuthResult> {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) return { ok: false, code: toEmailFailure(error.code) };
+      if (!data.session) return { ok: false, code: "CONFIRMATION_REQUIRED" };
+      const claims = await verifyAccessToken(data.session.access_token);
+      return claims ? { ok: true, claims } : { ok: false, code: "UNKNOWN" };
+    },
+
+    async signInWithEmail(
+      email: string,
+      password: string,
+    ): Promise<EmailAuthResult> {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error || !data.session) {
+        return { ok: false, code: toEmailFailure(error?.code) };
+      }
+      const claims = await verifyAccessToken(data.session.access_token);
+      return claims ? { ok: true, claims } : { ok: false, code: "UNKNOWN" };
+    },
+
+    // Vincula o Google à conta logada (PKCE): devolve a URL do Google, ou null
+    // se falhar. Exige "manual linking" ligado no Supabase.
+    async startGoogleLink(redirectTo: string): Promise<string | null> {
+      const { data, error } = await supabase.auth.linkIdentity({
+        provider: "google",
+        options: { redirectTo },
+      });
+      return error ? null : data.url;
+    },
+
+    // Formas de entrar da pessoa logada (lidas do provedor, nunca do cache).
+    signInMethods(): SignInMethodsRepository {
+      async function identities() {
+        const { data, error } = await supabase.auth.getUserIdentities();
+        if (error) throw error;
+        return data.identities;
+      }
+      return {
+        async list() {
+          const found = await identities();
+          return (Object.keys(PROVIDER_BY_METHOD) as SignInMethod[]).filter(
+            (method) =>
+              found.some((i) => i.provider === PROVIDER_BY_METHOD[method]),
+          );
+        },
+        async unlink(method) {
+          const identity = (await identities()).find(
+            (i) => i.provider === PROVIDER_BY_METHOD[method],
+          );
+          if (!identity) return;
+          const { error } = await supabase.auth.unlinkIdentity(identity);
+          if (error) throw error;
+        },
+      };
     },
 
     // Encerra a sessão só neste dispositivo.
