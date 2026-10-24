@@ -95,9 +95,9 @@ export function WatchRecordsDialog({
                       title={labels.editRecord}
                       disabled={pending}
                       onClick={() => edit(record.eventId)}
-                      className="size-11 rounded-full"
+                      className="size-8 pointer-coarse:size-11"
                     >
-                      <Icon name="create" className="size-5" />
+                      <Icon name="create" className="size-4 pointer-coarse:size-5" />
                     </Button>
                     <Button
                       type="button"
@@ -108,9 +108,9 @@ export function WatchRecordsDialog({
                       onClick={() =>
                         setView({ name: "delete", eventId: record.eventId })
                       }
-                      className="size-11 rounded-full"
+                      className="size-8 pointer-coarse:size-11"
                     >
-                      <Icon name="trash" className="size-5" />
+                      <Icon name="trash" className="size-4 pointer-coarse:size-5" />
                     </Button>
                   </span>
                 </li>
