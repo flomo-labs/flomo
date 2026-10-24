@@ -103,8 +103,14 @@ export const SHELF_PROVIDERS = SHELF_PROVIDER_IDS.map((id) => ({
 })).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
 // "all" mistura filmes e séries na mesma prateleira, ordenados por popularidade;
-// "novelas" são as séries classificadas como novela (ver provider do TMDB).
-export const SHELF_MEDIA_TYPES = ["all", ...MEDIA_TYPES, "novelas"] as const;
+// "novelas" são as séries classificadas como novela e "animes" as séries e
+// filmes classificados como anime (ver provider do TMDB).
+export const SHELF_MEDIA_TYPES = [
+  "all",
+  ...MEDIA_TYPES,
+  "novelas",
+  "animes",
+] as const;
 
 export const shelfInputSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("trending") }),
