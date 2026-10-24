@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { GoogleButton } from "@/components/google-button";
 import { Icon } from "@/components/icon";
 import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
@@ -85,9 +86,7 @@ export function EmailAuthPanel({
       />
       <form action={signInWithGoogle}>
         <input type="hidden" name="next" value={next} />
-        <Button type="submit" variant="outline" className="w-full">
-          Entrar com Google
-        </Button>
+        <GoogleButton className="w-full">Continuar com o Google</GoogleButton>
       </form>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <Separator className="flex-1" />

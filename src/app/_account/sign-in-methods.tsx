@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
+import { GoogleButton, GoogleLogo } from "@/components/google-button";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -9,7 +10,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { SignInMethod } from "@/domain/account/ports";
-import { linkGoogle, unlinkGoogle, type UnlinkFormState } from "../_auth/actions";
+import {
+  linkGoogle,
+  unlinkGoogle,
+  type UnlinkFormState,
+} from "../_auth/actions";
 
 const UNLINK_ERRORS = {
   LAST_METHOD: "Você precisa de pelo menos uma forma de entrar.",
@@ -59,10 +64,12 @@ export function SignInMethods({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      {hasEmail ? (
-        <Row name="E-mail e senha" status="Vinculado" />
-      ) : null}
-      <Row name="Google" status={hasGoogle ? "Vinculado" : "Não vinculado"}>
+      {hasEmail ? <Row name="E-mail e senha" status="Vinculado" /> : null}
+      <Row
+        name="Google"
+        icon={<GoogleLogo />}
+        status={hasGoogle ? "Vinculado" : "Não vinculado"}
+      >
         {hasGoogle ? (
           <form action={unlinkAction}>
             {isLast ? (
@@ -80,9 +87,9 @@ export function SignInMethods({
           </form>
         ) : (
           <form action={linkGoogle}>
-            <Button type="submit" size="sm">
-              Vincular Google
-            </Button>
+            <GoogleButton className="h-8 text-xs pointer-coarse:h-11">
+              Vincular conta do Google
+            </GoogleButton>
           </form>
         )}
       </Row>
@@ -97,18 +104,23 @@ export function SignInMethods({
 
 function Row({
   name,
+  icon,
   status,
   children,
 }: {
   name: string;
+  icon?: React.ReactNode;
   status: string;
   children?: React.ReactNode;
 }) {
   return (
     <div className="flex min-h-14 items-center justify-between gap-3 rounded-card border p-3">
-      <div className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-medium">{name}</span>
-        <span className="text-xs text-muted-foreground">{status}</span>
+      <div className="flex min-w-0 items-center gap-3">
+        {icon}
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm font-medium">{name}</span>
+          <span className="text-xs text-muted-foreground">{status}</span>
+        </div>
       </div>
       {children}
     </div>
