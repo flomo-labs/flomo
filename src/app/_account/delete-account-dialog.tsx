@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { GoogleButton } from "@/components/google-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -67,14 +68,14 @@ export function DeleteAccountDialog({
             <DialogHeader>
               <DialogTitle>Entre de novo para confirmar</DialogTitle>
               <DialogDescription>
-                Por segurança, a exclusão exige uma entrada recente. Entre com
-                o Google e confirme de novo.
+                Por segurança, a exclusão exige uma entrada recente. Entre com o
+                Google e confirme de novo.
               </DialogDescription>
             </DialogHeader>
             <form action={reauthenticateWithGoogle}>
               <input type="hidden" name="next" value={returnPath} />
               <DialogFooter>
-                <Button type="submit">Entrar com Google</Button>
+                <GoogleButton>Continuar com o Google</GoogleButton>
               </DialogFooter>
             </form>
           </>

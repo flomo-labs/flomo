@@ -86,7 +86,13 @@ async function submitEmailForm(
   const result = callback
     ? await auth.signUpWithEmail(email, password, callback.toString())
     : await auth.signInWithEmail(email, password);
-  if (!result.ok) return { error: result.code };
+  // E-mail já cadastrado vira a mesma resposta do cadastro novo: a tela não
+  // revela se o e-mail tem conta.
+  if (!result.ok) {
+    return result.code === "EMAIL_TAKEN" && mode === "signUp"
+      ? { confirmationSent: true }
+      : { error: result.code };
+  }
   if ("pending" in result) return { confirmationSent: true };
 
   const user = toCurrentUser(result.claims);

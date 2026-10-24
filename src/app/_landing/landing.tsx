@@ -2,7 +2,6 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { signInWithGoogle } from "@/app/_auth/actions";
 import { listShelfCached } from "@/app/_catalog/cached-shelf";
 import { FOLLOWING_PATH } from "@/app/_profile/start-screen-path";
 import { LandingMenu } from "@/components/landing/landing-menu";
@@ -46,15 +45,17 @@ export async function Landing() {
           {t("body")}
         </p>
         <div className="mt-1 flex flex-col gap-4 md:mt-3 md:flex-row md:items-center md:gap-6">
-          <form action={signInWithGoogle}>
-            <input type="hidden" name="next" value={FOLLOWING_PATH} />
-            <Button
-              type="submit"
-              className="h-13 w-full rounded-full px-7 text-base md:w-auto"
-            >
-              {t("signIn")}
-            </Button>
-          </form>
+          <Button
+            render={
+              <Link
+                href={`/entrar?next=${encodeURIComponent(FOLLOWING_PATH)}`}
+              />
+            }
+            nativeButton={false}
+            className="h-13 w-full rounded-full px-7 text-base md:w-auto"
+          >
+            {t("signIn")}
+          </Button>
           <Link
             href="/descobrir"
             className="text-center text-muted-foreground underline underline-offset-4 hover:text-foreground"

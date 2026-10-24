@@ -5,7 +5,8 @@ import { FormSkeleton } from "@/components/loading/form-skeleton";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { DeleteAccountDialog } from "@/app/_account/delete-account-dialog";
-import { requireUser } from "@/app/_auth/session";
+import { SignInMethods } from "@/app/_account/sign-in-methods";
+import { getRequestAuth, requireUser } from "@/app/_auth/session";
 import { updateHandle } from "@/app/_profile/actions";
 import { handleFormLabels, profileFormLabels } from "@/app/_profile/form-labels";
 import { HandleForm } from "@/app/_profile/handle-form";
@@ -42,6 +43,18 @@ export default function ConfiguracoesPage({
           }
         >
           <EditProfile />
+        </Suspense>
+      </section>
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">Formas de entrar</h2>
+        <Suspense
+          fallback={
+            <LoadingRegion>
+              <FormSkeleton fields={2} />
+            </LoadingRegion>
+          }
+        >
+          <SignInMethodsSection searchParams={searchParams} />
         </Suspense>
       </section>
       <section className="flex flex-col items-start gap-2">
@@ -101,6 +114,21 @@ async function EditProfile() {
       labels={await profileFormLabels()}
     />
   );
+}
+
+// Formas de entrar lidas do provedor, nunca do cache.
+async function SignInMethodsSection({
+  searchParams,
+}: {
+  searchParams: PageProps<"/configuracoes">["searchParams"];
+}) {
+  await requireUser("/configuracoes");
+  const auth = await getRequestAuth();
+  const [methods, { erro }] = await Promise.all([
+    auth.signInMethods().list(),
+    searchParams,
+  ]);
+  return <SignInMethods methods={methods} linkError={erro === "vinculo"} />;
 }
 
 // Digitar o @handle confirma a exclusão; sem handle definido, "excluir".
