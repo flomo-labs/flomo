@@ -9,6 +9,8 @@ import { HandleReminder } from "@/app/_profile/handle-reminder";
 import { followingLabels, loadFollowing } from "@/app/_library/following";
 import { FollowingSections } from "@/app/_library/following-sections";
 import { FollowingList } from "@/app/_library/following-list";
+import { LoadingRegion } from "@/components/loading/loading-region";
+import { PosterRowSkeleton } from "@/components/loading/poster-row-skeleton";
 import { Button } from "@/components/ui/button";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,7 +25,13 @@ export default function SeguintesPage() {
       <Suspense>
         <HandleReminder />
       </Suspense>
-      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <PosterRowSkeleton className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2" />
+          </LoadingRegion>
+        }
+      >
         <Body />
       </Suspense>
     </>

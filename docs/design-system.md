@@ -70,7 +70,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 - **Dialog**: `rounded-xl bg-popover`, `max-w-sm`, botão de fechar fantasma redondo. Todo `DialogContent` é **bottom sheet no celular** (abaixo de `sm`: colado na base, largura total, `rounded-t-2xl`, alça no topo que fecha ao arrastar para baixo, respeita a área segura, desliza de baixo) e centralizado de `sm` para cima (#115); sem prop, todos herdam. Rodapé: botões empilhados no celular, em linha no desktop. **Cancelar** é sempre `Button variant="outline"` com `rounded-full` no rodapé.
 - **Select** (#145): Base UI `Select`. Gatilho neutro `h-8` (44px no toque) com `chevronDown`; popup `rounded-lg bg-popover`, item `min-h-8` (44px no toque) com check no selecionado. Dentro de um título, o gatilho ganha as classes de pílula magenta (ver "Descobrir").
 - **Toaster** (`ui/sonner.tsx`, #148): avisos rápidos do Sonner, montado uma vez no layout raiz. Canto superior direito, `4.5rem` do topo (abaixo do cabeçalho `h-16`) e 16px da borda; no celular, largura da tela menos 16px de cada lado. Fundo `primary` (magenta), texto `primary-foreground`, `rounded-card`, `shadow-lg`, ícone `check` preenchido no sucesso. O Sonner anuncia o texto ao leitor de tela e respeita `prefers-reduced-motion`. Chamar com `toast.success(texto, { id })`: o mesmo `id` substitui o aviso em vez de empilhar.
-- **Skeleton**: bloco `animate-pulse bg-muted rounded-lg`; o formato vem do `className` (usado em `ShelfSkeleton`).
+- **Skeleton**: bloco `motion-safe:animate-pulse bg-muted rounded-lg` (parado com `prefers-reduced-motion`); o formato vem do `className`. Padrão de carregamento em "Carregamento" abaixo.
 - **DropdownMenu, Tooltip, Avatar, Progress (barra `h-1` `rounded-full`, preenchimento `primary`), Separator**.
 
 ### Compartilhados (`src/components/`)
@@ -80,6 +80,9 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 | `PosterCard` | cartão de grade | pôster + título 2 linhas + complemento; hover `opacity-80` |
 | `PosterRow` | linha de título | pôster 64/80px (`md`) ou 48/56px (`sm`), `rounded-card border p-3`, ação à direita (`trailing`) |
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |
+| `LoadingRegion` (`loading/`) | envolve qualquer esqueleto | `role="status"` + `aria-busy` com "Carregando…" só para leitor de tela; os blocos ficam em `aria-hidden`. Some junto com o esqueleto, então o leitor anuncia o carregamento uma vez |
+| `PosterRowSkeleton`, `PosterGridSkeleton`, `TitleSkeleton` / `EpisodesSkeleton` / `EpisodeListSkeleton`, `ProfileSkeleton`, `FormSkeleton` (`loading/`) | esqueletos por bloco de layout | copiam borda, espaçamento e largura do componente real (`PosterRow`, grade da Biblioteca, cabeçalho do título, campos `h-8`) para não haver salto de layout; `ShelfSkeleton` segue na prateleira |
+| `RouteProgress` (`loading/`) | `loading.tsx` de `(publico)` e `configuracoes` | barra `h-1` fixa no topo (`z-50`), trecho `primary` que corre sobre trilha `primary/20`; parada e cheia com `prefers-reduced-motion` (`.route-progress-bar` em `globals.css`) |
 | `SegmentedControl` | filtro em pílula (Biblioteca, Seguintes, tipo Tudo/Séries/Filmes do "Em alta no serviço") | uma opção ativa; estado fica na tela. Trilha `bg-muted` `rounded-full`, ativa em `bg-primary` + `text-primary-foreground` (magenta, texto branco), inativas cinza. A pílula magenta é um indicador (`Tabs.Indicator` da Base UI) que desliza até a opção escolhida e acompanha a largura dela (0,3 s, `ease-out`; sem animação com `prefers-reduced-motion`). Opção pode vir `disabled` com `hint` (tooltip). `Tabs` do shadcn continua só como base; telas usam o `SegmentedControl` (#122) |
 | `SectionHeader` | título de seção + ação ("Ver tudo"; `wrap` deixa a ação descer para a linha de baixo quando não cabe) | `size` `default` (`text-section-title`) ou `lg` (`text-section-title-lg`, Descobrir) |
 | `SeasonStrip` (`catalog/`) | faixa de chips de temporadas (tela do título): no celular rola para o lado, abre com o chip ativo centralizado e mostra degradê largo (`from-background`, 96px) com seta `chevronForward` na borda direita, que some no fim; o último chip aparece cortado de propósito. Desktop quebra linha, sem degradê | `ariaLabel`; o título da seção traz a contagem em `text-muted-foreground`: "Temporadas (8)" |
@@ -121,3 +124,12 @@ Fora de `components/` mas de uso compartilhado nas telas de biblioteca: `followi
 - Cursor de mão é global (`globals.css`): botões, abas, itens de menu/opção, checkbox/radio/switch e `summary`, exceto desabilitados (`disabled`, `aria-disabled="true"`, `data-disabled`), que ficam com o cursor padrão. Itens de `dropdown-menu`/`select` e `checkbox`/`radio` trazem `cursor-pointer` no próprio componente; não repetir `cursor-pointer` nas telas.
 - Acessibilidade: foco visível (ring), `aria-current` no item ativo, `sr-only` em ícones sem texto, alvos de 44px no toque.
 - Mockups partem do app real e se comparam pixel a pixel com o aprovado; medir antes de codar.
+
+
+## Carregamento (#170)
+
+- Nada de `…` solto nem de `Suspense` sem fallback em tela: o fallback é um esqueleto dentro de `LoadingRegion`, com a altura próxima da final.
+- Dentro da tela, cada `Suspense` usa o esqueleto do seu bloco. Na navegação entre rotas, `loading.tsx` mostra `RouteProgress` + um esqueleto genérico (`(publico)`, `configuracoes`).
+- Botão de ação mantém o texto curto ("Salvando...") e o mesmo tamanho.
+- Movimento: `motion-safe:animate-pulse` no `Skeleton`; a barra do topo para com `prefers-reduced-motion`.
+- Ainda com `fallback={null}` de propósito: botões e médias pequenos do cabeçalho do título (status, nota, onde assistir), comentários e a landing, que não reservam altura relevante.

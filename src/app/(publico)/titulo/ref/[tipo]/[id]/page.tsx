@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getTitleByRef } from "@/app/_catalog/gateway";
+import { LoadingRegion } from "@/components/loading/loading-region";
+import { TitleSkeleton } from "@/components/loading/title-skeleton";
 import { Button } from "@/components/ui/button";
 import { mediaTypeFromSegment } from "@/lib/title-paths";
 
@@ -18,7 +20,13 @@ export default function TitleRefPage({
   params,
 }: PageProps<"/titulo/ref/[tipo]/[id]">) {
   return (
-    <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+    <Suspense
+      fallback={
+        <LoadingRegion>
+          <TitleSkeleton />
+        </LoadingRegion>
+      }
+    >
       <Resolve params={params} />
     </Suspense>
   );

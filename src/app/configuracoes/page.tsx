@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
+import { FormSkeleton } from "@/components/loading/form-skeleton";
+import { LoadingRegion } from "@/components/loading/loading-region";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { requireUser } from "../_auth/session";
 import { updateHandle } from "../_profile/actions";
@@ -18,12 +20,24 @@ export default function ConfiguracoesPage() {
         <BackToProfile />
       </Suspense>
       <h1 className="text-2xl font-bold">Configurações</h1>
-      <Suspense>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <FormSkeleton />
+          </LoadingRegion>
+        }
+      >
         <ChangeHandle />
       </Suspense>
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Perfil</h2>
-        <Suspense>
+        <Suspense
+          fallback={
+            <LoadingRegion>
+              <FormSkeleton fields={3} />
+            </LoadingRegion>
+          }
+        >
           <EditProfile />
         </Suspense>
       </section>

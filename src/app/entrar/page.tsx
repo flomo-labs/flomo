@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingRegion } from "@/components/loading/loading-region";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "../_auth/actions";
 import { safeNextPath } from "../_auth/redirect";
@@ -20,7 +22,13 @@ export default function EntrarPage({ searchParams }: PageProps<"/entrar">) {
     <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
       <BackLink />
       <h1 className="text-2xl font-bold">Entrar no Flomo</h1>
-      <Suspense>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <Skeleton className="h-8 w-full rounded-full" />
+          </LoadingRegion>
+        }
+      >
         <LoginForm searchParams={searchParams} />
       </Suspense>
     </main>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { FormSkeleton } from "@/components/loading/form-skeleton";
+import { LoadingRegion } from "@/components/loading/loading-region";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { safeNextPath } from "../_auth/redirect";
 import { requireUser } from "../_auth/session";
@@ -23,7 +25,13 @@ export default function CadastroPage({ searchParams }: PageProps<"/cadastro">) {
           É como as pessoas vão encontrar você no Flomo. Dá para trocar depois.
         </p>
       </div>
-      <Suspense>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <FormSkeleton />
+          </LoadingRegion>
+        }
+      >
         <ChooseHandle searchParams={searchParams} />
       </Suspense>
     </main>
