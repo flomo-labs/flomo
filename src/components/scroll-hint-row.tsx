@@ -40,8 +40,21 @@ export function ScrollHintRow({
         active.offsetLeft - (el.clientWidth - active.offsetWidth) / 2;
     }
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // O conteúdo pode crescer depois de montar (ex.: o filtro do Descobrir
+    // ganha Novelas e Animes ao trocar de serviço): mede de novo quando a
+    // faixa ou o conteúdo mudam de tamanho, não só no `resize` da janela.
+    // Filhos e netos: no filtro, o filho é o contêiner do Tabs (largura da
+    // faixa) e quem cresce é a lista de opções, um nível abaixo.
+    // `border-box`: conta também padding e borda, não só o conteúdo.
+    const observer = new ResizeObserver(update);
+    const watch = (node: Element) =>
+      observer.observe(node, { box: "border-box" });
+    watch(el);
+    for (const child of el.children) {
+      watch(child);
+      for (const grandchild of child.children) watch(grandchild);
+    }
+    return () => observer.disconnect();
   }, [update]);
 
   return (
