@@ -40,8 +40,21 @@ export function ScrollHintRow({
         active.offsetLeft - (el.clientWidth - active.offsetWidth) / 2;
     }
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // O conteúdo pode crescer depois de montar (ex.: o filtro do Descobrir
+    // ganha Novelas e Animes ao trocar de serviço): mede de novo quando a
+    // faixa ou o conteúdo mudam de tamanho, não só no `resize` da janela.
+    // Filhos e netos: no filtro, o filho é o contêiner do Tabs (largura da
+    // faixa) e quem cresce é a lista de opções, um nível abaixo.
+    // `border-box`: conta também padding e borda, não só o conteúdo.
+    const observer = new ResizeObserver(update);
+    const watch = (node: Element) =>
+      observer.observe(node, { box: "border-box" });
+    watch(el);
+    for (const child of el.children) {
+      watch(child);
+      for (const grandchild of child.children) watch(grandchild);
+    }
+    return () => observer.disconnect();
   }, [update]);
 
   return (
@@ -57,7 +70,9 @@ export function ScrollHintRow({
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-end bg-gradient-to-l from-background from-35% to-transparent pr-2 text-muted-foreground transition-opacity md:hidden",
+          // z-20: acima de conteúdo com camada própria (as opções do
+          // filtro em pílula têm z-10, por causa do indicador deslizante).
+          "pointer-events-none absolute inset-y-0 right-0 z-20 flex w-24 items-center justify-end bg-gradient-to-l from-background from-35% to-transparent pr-2 text-muted-foreground transition-opacity md:hidden",
           hasMore ? "opacity-100" : "opacity-0",
         )}
       >
