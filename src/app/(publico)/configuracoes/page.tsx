@@ -4,6 +4,7 @@ import { BackLink } from "@/components/back-link";
 import { FormSkeleton } from "@/components/loading/form-skeleton";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { isProvisionalHandle } from "@/contracts/profile";
+import { DeleteAccountDialog } from "@/app/_account/delete-account-dialog";
 import { requireUser } from "@/app/_auth/session";
 import { updateHandle } from "@/app/_profile/actions";
 import { handleFormLabels, profileFormLabels } from "@/app/_profile/form-labels";
@@ -13,7 +14,9 @@ import { getOwnProfile, profilePath } from "@/app/_profile/queries";
 
 export const metadata: Metadata = { title: "Configurações · Flomo" };
 
-export default function ConfiguracoesPage() {
+export default function ConfiguracoesPage({
+  searchParams,
+}: PageProps<"/configuracoes">) {
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
       <Suspense fallback={<BackLink />}>
@@ -39,6 +42,16 @@ export default function ConfiguracoesPage() {
           }
         >
           <EditProfile />
+        </Suspense>
+      </section>
+      <section className="flex flex-col items-start gap-2">
+        <h2 className="text-lg font-semibold">Conta</h2>
+        <p className="text-sm text-muted-foreground">
+          Apaga seu perfil, biblioteca, notas, histórico e comentários. Não tem
+          volta.
+        </p>
+        <Suspense fallback={null}>
+          <DeleteAccount searchParams={searchParams} />
         </Suspense>
       </section>
     </div>
@@ -86,6 +99,28 @@ async function EditProfile() {
         isPrivate: profile?.isPrivate ?? false,
       }}
       labels={await profileFormLabels()}
+    />
+  );
+}
+
+// Digitar o @handle confirma a exclusão; sem handle definido, "excluir".
+async function DeleteAccount({
+  searchParams,
+}: {
+  searchParams: PageProps<"/configuracoes">["searchParams"];
+}) {
+  const user = await requireUser("/configuracoes");
+  const profile = await getOwnProfile(user);
+  const confirmWord =
+    profile && !isProvisionalHandle(profile.handle)
+      ? profile.handle
+      : "excluir";
+  const { excluir } = await searchParams;
+  return (
+    <DeleteAccountDialog
+      confirmWord={confirmWord}
+      defaultOpen={excluir === "1"}
+      returnPath="/configuracoes?excluir=1"
     />
   );
 }

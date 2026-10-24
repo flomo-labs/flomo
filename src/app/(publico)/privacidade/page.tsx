@@ -110,9 +110,10 @@ export default function PrivacidadePage() {
           <p>
             Você pode pedir a confirmação de que tratamos seus dados, acesso,
             correção, portabilidade, exclusão e informações sobre o
-            compartilhamento, além de revogar um consentimento. Alguns pedidos
-            ainda são atendidos por contato direto, porque a exclusão e a
-            exportação pelo próprio app ainda estão sendo construídas.
+            compartilhamento, além de revogar um consentimento. Você exclui a
+            sua conta sozinho em Configurações. A exportação dos dados ainda
+            está sendo construída e, por enquanto, é atendida por contato
+            direto.
           </p>
           <p>
             Para exercer seus direitos ou tirar dúvidas, fale com a gente em{" "}
