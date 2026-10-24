@@ -33,6 +33,7 @@ Os previews usam o `flomo-dev` para que testar um PR nunca toque nos dados reais
 3. **C.** Google (cliente OAuth de produção)
 4. **D.** Supabase (login e URLs) e teste
 5. **E.** Publicar o app OAuth do Google
+6. **G.** Domínio próprio (`flomo.com.br`), depois que o app já funciona em `*.vercel.app`
 
 A ordem importa: a B precisa dos valores da A; a C precisa da URL da B e do ref da A; a D precisa dos valores da C.
 
@@ -216,6 +217,8 @@ Clique em **Deploy** e espere o build (1 a 3 minutos). Se falhar, abra o deploy,
 
 **Por quê o Redeploy:** variáveis `NEXT_PUBLIC_*` são embutidas no código durante o build. Mudar o valor sem refazer o deploy não tem efeito. Em Preview a variável não é definida: o app usa o endereço do próprio deploy (`src/app/_auth/site-url.ts`), porque cada preview tem uma URL diferente.
 
+Com domínio próprio, o valor de Production passa a ser `https://www.flomo.com.br` (parte G).
+
 ### B.5 Conferir
 
 - A URL abre a página inicial, e `<URL>/privacidade` e `<URL>/termos` também.
@@ -243,7 +246,7 @@ No console.cloud.google.com, no projeto do Flomo, menu **Google Auth Platform**:
    - **Política de privacidade:** `<URL>/privacidade`.
    - **Termos de serviço:** `<URL>/termos`.
    - **E-mail de suporte** e de contato do desenvolvedor.
-   - Domínio autorizado: sem domínio próprio, deixe em branco (`vercel.app` não é aceito). Para o beta isso não bloqueia o login; a verificação de marca fica para quando houver domínio.
+   - Domínio autorizado: sem domínio próprio, deixe em branco (`vercel.app` não é aceito). Para o beta isso não bloqueia o login. Com domínio próprio, preencha `flomo.com.br` e verifique a marca (G.5).
 6. **Acesso a dados:** só os escopos básicos `openid`, `.../auth/userinfo.email` e `.../auth/userinfo.profile`.
 7. **Público-alvo:** deixe **Externo**. A publicação é a parte E, depois do teste.
 
@@ -302,6 +305,52 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 2. Condição: caminho igual a `/api/sugestoes`. Limite sugerido: 100 requisições por minuto por IP. Ação: responder 429.
 3. Se o plano não permitir a regra, o freio da memória e o cache de 1 dia da resposta continuam valendo.
 
+## G. Domínio próprio (`flomo.com.br`)
+
+**Objetivo:** servir a produção em `https://www.flomo.com.br`, mantendo `*.vercel.app` ativo. Os previews continuam em `*.vercel.app` e usam o `flomo-dev`. O domínio foi registrado no Registro.br em 2026-10-23, com o DNS do próprio Registro.br (não os servidores da Vercel, que não oferecem DNSSEC). Quem é o titular e quem acessa a conta não fica neste repositório (ele é público).
+
+A ordem importa: o Site URL do Supabase só muda depois que o domínio responde em HTTPS e que a Redirect URL nova já existe.
+
+### G.1 Vercel e DNS
+
+1. Na Vercel, **Settings > Domains > Add**: adicione `flomo.com.br` e `www.flomo.com.br`. O `www` é o principal (Production); a raiz redireciona para ele (308).
+2. A Vercel mostra os registros exatos (use sempre os valores do painel; podem ser diferentes dos antigos): um **A** na raiz e um **CNAME** em `www`.
+3. No Registro.br, **DNS > Configurar zona DNS** (modo avançado), **Nova entrada**: o A com o **nome em branco** (a raiz; o campo não aceita `@`) e o CNAME com o nome `www`. Salve. Não use "Alterar servidores DNS".
+4. Domínio novo `.br`: a zona fica "em transição" por alguns minutos e a propagação pode levar de minutos a poucas horas. Confira em dnschecker.org e clique em **Refresh** na Vercel até os três domínios ficarem em **Valid Configuration**. O certificado HTTPS é emitido sozinho.
+
+### G.2 Variável de ambiente
+
+`NEXT_PUBLIC_SITE_URL` de **Production** = `https://www.flomo.com.br` (sem barra no final) e **Redeploy** (B.4).
+
+### G.3 Supabase `flomo-prod`
+
+Em **Authentication > URL Configuration**, nesta ordem:
+
+1. **Redirect URLs:** acrescente `https://www.flomo.com.br/auth/callback`, sem apagar a do `.vercel.app`.
+2. Faça o Redeploy da G.2.
+3. **Site URL:** troque para `https://www.flomo.com.br`.
+
+O `flomo-dev` e o padrão de previews (D.2) não mudam.
+
+### G.4 Google: cliente OAuth
+
+No cliente `Flomo prod`, acrescente `https://www.flomo.com.br` em **Origens JavaScript autorizadas**. A URI de redirecionamento (`https://<ref>.supabase.co/auth/v1/callback`) **não muda**.
+
+### G.5 Google: branding e verificação do domínio
+
+1. **Branding:** página inicial `https://www.flomo.com.br`, privacidade `.../privacidade`, termos `.../termos` e **domínio autorizado** `flomo.com.br`.
+2. O Google responde "o site da página inicial não está registrado para você". Prove a propriedade no **Google Search Console** (mesma conta Google dona do projeto do Google Cloud): propriedade do tipo **Domínio** `flomo.com.br`, e publique o registro **TXT** que ele mostrar na zona do Registro.br (**Nova entrada**, tipo TXT, nome em branco), sem apagar o A nem o CNAME. Clique em **Verificar**; se falhar, é propagação: espere e repita.
+3. Na tela de Branding, escolha **Corrigi os problemas** e, depois de verificada, **Publicar branding** (a verificação expira em 7 dias se não for publicada).
+
+### G.6 Depois
+
+- Teste de ponta a ponta no `www` (D.3): "Entrar com Google" volta ao `www`, e o cookie `sb-…-auth-token` fica `HttpOnly` e `Secure`. Quem estava logado em `*.vercel.app` entra de novo.
+- E-mail (envio e contato) é uma etapa à parte, quando for feita: registros SPF, DKIM e DMARC do provedor de envio e MX/TXT de encaminhamento entram na mesma zona do Registro.br. Depois, trocar `contactEmail` e os textos de `/privacidade` e `/termos`.
+- DNSSEC, monitor de disponibilidade e lembretes de renovação do domínio: ver as issues de acompanhamento do domínio.
+- Renovação: o domínio é cancelado se a manutenção não for paga, e fica livre para registro por qualquer pessoa. Mantenha lembretes e prefira pagar vários anos.
+
+---
+
 ## Armadilhas conhecidas
 
 | Sintoma                                                                                                  | Causa e solução                                                                                                                                                                     |
@@ -319,5 +368,5 @@ Enquanto o app estiver em modo **Testando**, só as contas da lista de testadore
 
 - Cada pessoa do time atualiza o próprio `.env.local` com `DATABASE_URL_TEST`, apontando para o `flomo-dev`. Sem ele, `pnpm test:integration` recusa rodar. Opcional: `FLOMO_PROD_DB_REF` com o ref do `flomo-prod`, como trava extra.
 - Tratar os alertas do Dependabot da `main` antes de divulgar a URL.
-- Trocar `contactEmail` em `src/content/legal.ts` quando houver domínio e e-mail do projeto.
+- Trocar `contactEmail` em `src/content/legal.ts` quando houver e-mail do projeto no domínio (G.6).
 - Mudar para outro host ou serviço: ver `docs/troca-de-ferramentas.md`.
