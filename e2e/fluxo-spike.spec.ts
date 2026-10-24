@@ -5,6 +5,9 @@ import { signUpAndSignIn } from "./support/auth";
 // Fluxo do spike (Plano v2, Fase 1): entrar → buscar → abrir título → marcar
 // episódio → avaliar 3,5★ → 2 comentários → /em-breve. Catálogo vem do TMDB
 // falso (e2e/tmdb-fake/); banco e login, do Supabase local.
+// Servidor de ação + revalidação em runner lento passa de 5 s.
+const SLOW = 15_000;
+
 test("fluxo do spike, do login ao /em-breve", async ({ page, context }) => {
   await signUpAndSignIn(context);
 
@@ -57,9 +60,14 @@ test("fluxo do spike, do login ao /em-breve", async ({ page, context }) => {
     "Primeiro comentário do E2E.",
     "Segundo comentário do E2E.",
   ]) {
-    await comments.getByRole("textbox", { name: "Seu comentário" }).fill(text);
+    const box = comments.getByRole("textbox", { name: "Seu comentário" });
+    // O formulário só volta a aceitar texto (habilitado e vazio) depois que a
+    // ação anterior termina; esperar isso evita o teste depender de tempo.
+    await expect(box).toBeEnabled({ timeout: SLOW });
+    await expect(box).toHaveValue("");
+    await box.fill(text);
     await comments.getByRole("button", { name: "Comentar" }).click();
-    await expect(comments.getByText(text)).toBeVisible();
+    await expect(comments.getByText(text)).toBeVisible({ timeout: SLOW });
   }
 
   // Tudo continua lá depois de recarregar (gravado no banco).
@@ -69,8 +77,12 @@ test("fluxo do spike, do login ao /em-breve", async ({ page, context }) => {
       .getByRole("radiogroup", { name: "Sua nota" })
       .getByRole("radio", { name: "3,5 de 5 estrelas" }),
   ).toBeChecked();
-  await expect(comments.getByText("Primeiro comentário do E2E.")).toBeVisible();
-  await expect(comments.getByText("Segundo comentário do E2E.")).toBeVisible();
+  await expect(comments.getByText("Primeiro comentário do E2E.")).toBeVisible({
+    timeout: SLOW,
+  });
+  await expect(comments.getByText("Segundo comentário do E2E.")).toBeVisible({
+    timeout: SLOW,
+  });
 
   // Os dois títulos aparecem na biblioteca.
   await page.goto("/biblioteca");
