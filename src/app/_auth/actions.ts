@@ -56,6 +56,8 @@ export async function signOut() {
 
 export type EmailFormState = {
   error?: EmailAuthFailure | "INVALID_INPUT";
+  // Cadastro feito: falta abrir o link enviado ao e-mail.
+  confirmationSent?: boolean;
 };
 
 async function submitEmailForm(
@@ -75,13 +77,18 @@ async function submitEmailForm(
 
   const auth = await getRequestAuth();
   const { email, password } = parsed.data;
-  const result =
-    mode === "signUp"
-      ? await auth.signUpWithEmail(email, password)
-      : await auth.signInWithEmail(email, password);
-  if (!result.ok) return { error: result.code };
-
   const next = safeNextPath(formData.get("next"));
+  let callback: URL | null = null;
+  if (mode === "signUp") {
+    callback = new URL("/auth/callback", await siteUrl());
+    callback.searchParams.set("next", next);
+  }
+  const result = callback
+    ? await auth.signUpWithEmail(email, password, callback.toString())
+    : await auth.signInWithEmail(email, password);
+  if (!result.ok) return { error: result.code };
+  if ("pending" in result) return { confirmationSent: true };
+
   const user = toCurrentUser(result.claims);
   redirect(user ? await destinationAfterLogin(user, next) : next);
 }

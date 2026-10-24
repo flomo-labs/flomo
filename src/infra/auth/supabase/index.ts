@@ -20,12 +20,15 @@ export type EmailAuthFailure =
   | "WEAK_PASSWORD"
   | "INVALID_CREDENTIALS"
   | "RATE_LIMITED"
-  | "CONFIRMATION_REQUIRED"
   | "UNKNOWN";
 
 export type EmailAuthResult =
   | { ok: true; claims: JwtClaims }
   | { ok: false; code: EmailAuthFailure };
+
+// No cadastro, "pending" é o e-mail de confirmação enviado: a sessão só
+// nasce quando a pessoa abre o link (volta em /auth/callback).
+export type EmailSignUpResult = EmailAuthResult | { ok: true; pending: true };
 
 function toEmailFailure(code: string | undefined): EmailAuthFailure {
   switch (code) {
@@ -116,16 +119,22 @@ export function createCookieAuth(cookies: AuthCookies) {
       return verifyAccessToken(data.session.access_token);
     },
 
-    // Cadastro com e-mail e senha. Com a confirmação desligada (Fase 1.7
-    // reduzida) o Supabase já devolve a sessão e grava os cookies; sem sessão,
-    // a confirmação foi ligada no painel e o app ainda não trata esse fluxo.
+    // Cadastro com e-mail e senha. Com a confirmação ligada (padrão em
+    // produção) não há sessão até a pessoa abrir o link do e-mail, e um
+    // e-mail já cadastrado também devolve "pending", sem revelar que a conta
+    // existe. Sem confirmação (Supabase local, E2E), a sessão já vem.
     async signUpWithEmail(
       email: string,
       password: string,
-    ): Promise<EmailAuthResult> {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      emailRedirectTo: string,
+    ): Promise<EmailSignUpResult> {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo },
+      });
       if (error) return { ok: false, code: toEmailFailure(error.code) };
-      if (!data.session) return { ok: false, code: "CONFIRMATION_REQUIRED" };
+      if (!data.session) return { ok: true, pending: true };
       const claims = await verifyAccessToken(data.session.access_token);
       return claims ? { ok: true, claims } : { ok: false, code: "UNKNOWN" };
     },
