@@ -621,6 +621,42 @@ describe("marcar como assistido no banco", () => {
       expect(await queue()).toEqual([]);
     }));
 
+  it("seguintes: começa no S1E1, especial não conta e episódio sem data conta como lançado", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      const next = async () => {
+        const r = await run(tx, user, (deps, u) => listFollowing(deps, u));
+        return r.ok ? r.value.map((i) => i.next?.episodeId ?? null) : null;
+      };
+      await run(tx, user, (deps, u) =>
+        setTitleStatus(deps, u, { titleId: c.seriesId, status: "watchlist" }),
+      );
+
+      // Nada visto: o primeiro episódio regular, não o especial (S0E1).
+      expect(await next()).toEqual([c.ep.S1E1]);
+
+      // Ver o especial não conta como progresso.
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, { episodeId: c.ep.S0E1 }),
+      );
+      expect(await next()).toEqual([c.ep.S1E1]);
+
+      // Episódio sem data no catálogo conta como lançado.
+      await run(tx, user, (deps, u) =>
+        markEpisodeWatched(deps, u, {
+          episodeId: c.ep.S2E2,
+          includePrevious: true,
+        }),
+      );
+      expect(await next()).toEqual([]);
+      await tx
+        .update(episodes)
+        .set({ airDate: null })
+        .where(eq(episodes.id, c.ep.S2E3));
+      expect(await next()).toEqual([c.ep.S2E3]);
+    }));
+
   it("desmarcar apaga progresso e histórico do episódio", () =>
     inRollback(async (tx) => {
       const user = await createUser(tx);
