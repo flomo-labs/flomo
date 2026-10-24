@@ -1,12 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { FOOTER_LINKS } from "@/components/site-footer";
+import { SiteInfoMenuItems } from "@/components/site-info-menu-items";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -32,23 +29,7 @@ export function LandingMenu({
         sideOffset={8}
         className="landing-menu w-62 p-1.5"
       >
-        {FOOTER_LINKS.map((link) => (
-          <DropdownMenuItem
-            key={link.href}
-            render={<Link href={link.href} />}
-            className="px-3 py-2"
-          >
-            {link.label}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          render={<Link href="/sobre" />}
-          className="flex-col items-start gap-1 px-3 py-2 text-xs leading-snug text-muted-foreground"
-        >
-          <span className="font-semibold text-tmdb">TMDB</span>
-          {tmdbNotice}
-        </DropdownMenuItem>
+        <SiteInfoMenuItems tmdbNotice={tmdbNotice} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

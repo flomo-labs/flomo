@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getProfilePage, updateProfile, watchedHours } from "./profile-page";
+import { getProfilePage, updateProfile, watchedTime } from "./profile-page";
 import type { ProfileRepository, ProfileStats, ProfileView } from "./ports";
 
 const OWNER = "11111111-1111-4111-8111-111111111111";
@@ -161,11 +161,12 @@ describe("updateProfile", () => {
   });
 });
 
-describe("watchedHours", () => {
-  it("arredonda para baixo", () => {
-    expect(watchedHours(0)).toBe(0);
-    expect(watchedHours(59)).toBe(0);
-    expect(watchedHours(60)).toBe(1);
-    expect(watchedHours(610)).toBe(10);
+describe("watchedTime", () => {
+  it("separa horas inteiras e minutos", () => {
+    expect(watchedTime(0)).toEqual({ hours: 0, minutes: 0 });
+    expect(watchedTime(59)).toEqual({ hours: 0, minutes: 59 });
+    expect(watchedTime(60)).toEqual({ hours: 1, minutes: 0 });
+    expect(watchedTime(750)).toEqual({ hours: 12, minutes: 30 });
+    expect(watchedTime(-5)).toEqual({ hours: 0, minutes: 0 });
   });
 });

@@ -4,18 +4,18 @@ import { BackLink } from "@/components/back-link";
 import { FormSkeleton } from "@/components/loading/form-skeleton";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { isProvisionalHandle } from "@/contracts/profile";
-import { requireUser } from "../_auth/session";
-import { updateHandle } from "../_profile/actions";
-import { handleFormLabels, profileFormLabels } from "../_profile/form-labels";
-import { HandleForm } from "../_profile/handle-form";
-import { ProfileForm } from "../_profile/profile-form";
-import { getOwnProfile, profilePath } from "../_profile/queries";
+import { requireUser } from "@/app/_auth/session";
+import { updateHandle } from "@/app/_profile/actions";
+import { handleFormLabels, profileFormLabels } from "@/app/_profile/form-labels";
+import { HandleForm } from "@/app/_profile/handle-form";
+import { ProfileForm } from "@/app/_profile/profile-form";
+import { getOwnProfile, profilePath } from "@/app/_profile/queries";
 
 export const metadata: Metadata = { title: "Configurações · Flomo" };
 
 export default function ConfiguracoesPage() {
   return (
-    <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
       <Suspense fallback={<BackLink />}>
         <BackToProfile />
       </Suspense>
@@ -41,7 +41,7 @@ export default function ConfiguracoesPage() {
           <EditProfile />
         </Suspense>
       </section>
-    </main>
+    </div>
   );
 }
 

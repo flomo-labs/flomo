@@ -120,29 +120,34 @@ export function FollowingList({
       ) : (
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
           {shown.map((row, index) => (
-            <li key={row.titleId} className="min-w-0">
+            <li
+              key={row.titleId}
+              className="relative min-w-0 rounded-card transition-colors hover:bg-muted/50"
+            >
               <PosterRow
                 posterPath={row.posterPath}
                 posterAlt={row.posterAlt}
                 size="sm"
                 centered
                 trailing={
-                  <QuickMark
-                    target={row.mark}
-                    label={row.markLabel}
-                    failed={labels.markFailed}
-                    done={held.some(
-                      (h) => h.row.titleId === row.titleId && h.done,
-                    )}
-                    onStart={() => start(row, index)}
-                    onMarked={() => marked(row)}
-                    onFailed={() => release(row.titleId)}
-                  />
+                  <div className="relative z-10">
+                    <QuickMark
+                      target={row.mark}
+                      label={row.markLabel}
+                      failed={labels.markFailed}
+                      done={held.some(
+                        (h) => h.row.titleId === row.titleId && h.done,
+                      )}
+                      onStart={() => start(row, index)}
+                      onMarked={() => marked(row)}
+                      onFailed={() => release(row.titleId)}
+                    />
+                  </div>
                 }
               >
                 <Link
                   href={row.href}
-                  className="truncate font-semibold hover:underline"
+                  className="truncate font-semibold hover:underline after:absolute after:inset-0 after:rounded-card"
                 >
                   {row.title}
                 </Link>

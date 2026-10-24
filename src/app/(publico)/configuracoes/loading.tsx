@@ -8,7 +8,7 @@ export default function SettingsLoading() {
   return (
     <>
       <RouteProgress />
-      <LoadingRegion className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 p-6">
+      <LoadingRegion className="mx-auto flex w-full max-w-sm flex-col gap-6">
         <Skeleton className="h-8 w-48" />
         <FormSkeleton />
         <FormSkeleton fields={3} />

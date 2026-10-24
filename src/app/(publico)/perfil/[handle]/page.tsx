@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { ScrollHintRow } from "@/components/scroll-hint-row";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
 import { ProfileSkeleton } from "@/components/loading/profile-skeleton";
@@ -13,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ProfileStats } from "@/domain/profile/ports";
-import { watchedHours } from "@/domain/profile/profile-page";
+import { watchedTime } from "@/domain/profile/profile-page";
 
 // O título não cita o nome: o perfil pode ser privado, e o metadata sai antes
 // da checagem de visibilidade.
@@ -110,32 +111,66 @@ async function ProfileContent({
   );
 }
 
-async function StatsList({ stats, label }: { stats: ProfileStats; label: string }) {
+async function StatsList({
+  stats,
+  label,
+}: {
+  stats: ProfileStats;
+  label: string;
+}) {
   const t = await getTranslations("Profile");
-  const hours = watchedHours(stats.minutesWatched);
-  const items = [
-    { key: "series", count: stats.seriesCount },
-    { key: "movies", count: stats.moviesCount },
-    { key: "episodes", count: stats.episodesCount },
-    { key: "hours", count: hours },
-    { key: "ratings", count: stats.ratingsCount },
-  ] as const;
   const format = new Intl.NumberFormat("pt-BR");
+  const time = watchedTime(stats.minutesWatched);
+  const timeValue =
+    time.hours === 0
+      ? t("timeMinutesOnly", { minutes: time.minutes })
+      : time.minutes === 0
+        ? t("timeHoursOnly", { hours: time.hours })
+        : t("timeValue", time);
+  const items = [
+    {
+      key: "series",
+      name: t("series", { count: stats.seriesCount }),
+      value: format.format(stats.seriesCount),
+    },
+    {
+      key: "movies",
+      name: t("movies", { count: stats.moviesCount }),
+      value: format.format(stats.moviesCount),
+    },
+    {
+      key: "episodes",
+      name: t("episodes", { count: stats.episodesCount }),
+      value: format.format(stats.episodesCount),
+    },
+    { key: "time", name: t("time"), value: timeValue },
+    {
+      key: "ratings",
+      name: t("ratings", { count: stats.ratingsCount }),
+      value: format.format(stats.ratingsCount),
+    },
+  ];
+  // No celular os números rolam para o lado (com a dica de rolagem das
+  // temporadas); a partir de md ocupam a linha toda em 5 colunas.
   return (
     <section aria-label={label}>
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {items.map(({ key, count }) => (
-          <div
-            key={key}
-            className="flex flex-col-reverse rounded-card border border-border p-3"
-          >
-            <dt className="text-sm text-muted-foreground">{t(key, { count })}</dt>
-            <dd className="text-2xl font-semibold tabular-nums">
-              {format.format(count)}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <ScrollHintRow>
+        <dl className="flex gap-3 md:grid md:grid-cols-5">
+          {items.map(({ key, name, value }) => (
+            <div
+              key={key}
+              className="flex min-w-32 shrink-0 flex-col-reverse rounded-card border border-border p-3 md:min-w-0"
+            >
+              <dt className="text-sm whitespace-nowrap text-muted-foreground">
+                {name}
+              </dt>
+              <dd className="text-2xl font-semibold whitespace-nowrap tabular-nums">
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </ScrollHintRow>
     </section>
   );
 }

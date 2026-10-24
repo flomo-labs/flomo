@@ -210,6 +210,13 @@
   }
 }
 
+/* No celular logado os links do rodapé e o aviso do TMDB ficam no menu da foto. */
+@media (max-width: 47.99rem) {
+  body:has([data-bottom-nav]) > footer {
+    display: none;
+  }
+}
+
 /* A landing tem tela cheia e o aviso do TMDB no menu "···": sem o rodapé do app. */
 body:has([data-landing]) > footer {
   display: none;

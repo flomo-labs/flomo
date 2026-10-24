@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export function SiteHeader() {
           >
             <Icon name="search" className="size-5" />
           </Link>
-          <Suspense fallback={<div className="size-8" />}>
+          <Suspense fallback={<div className="size-11 md:size-8" />}>
             <Account />
           </Suspense>
         </div>
@@ -122,6 +123,7 @@ async function Account() {
     );
   }
 
+  const t = await getTranslations("Landing");
   const profile = await getOwnProfile(user).catch(() => null);
   const handle =
     profile && !isProvisionalHandle(profile.handle) ? profile.handle : null;
@@ -131,6 +133,7 @@ async function Account() {
       initials={handle ? handle.slice(0, 2).toUpperCase() : "?"}
       needsHandle={!handle}
       profileHref={handle ? profilePath(handle) : null}
+      tmdbNotice={t("tmdbNotice")}
       signOut={signOut}
     />
   );
