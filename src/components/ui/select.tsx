@@ -17,16 +17,66 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "inline-flex h-8 items-center justify-between gap-1.5 rounded-lg border border-input bg-input/30 px-2.5 text-sm whitespace-nowrap outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:h-11",
+        "group/select inline-flex h-8 items-center justify-between gap-1.5 rounded-lg border border-input bg-input/30 px-2.5 text-sm whitespace-nowrap outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:h-11",
         className,
       )}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon data-slot="select-icon" className="flex">
-        <Icon name="chevronDown" className="size-3.5" />
+        <SelectChevron />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
+  );
+}
+
+// Seta do gatilho: dois traços que se encontram no centro. Com o menu aberto
+// (`data-popup-open` no gatilho), cada traço gira 90° em volta do centro e a
+// seta passa de "v" a "—" e a "^", sem mudar a espessura; o grupo sobe junto
+// para a seta ficar centrada nos três estados. Sem animação com
+// `prefers-reduced-motion`.
+const CHEVRON_MOTION =
+  "origin-[8px_8px] transition-[rotate,translate] duration-400 ease-in-out motion-reduce:transition-none";
+
+function SelectChevron() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="size-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <g
+        className={cn(
+          CHEVRON_MOTION,
+          "translate-y-[2.1px] group-data-popup-open/select:-translate-y-[2.1px]",
+        )}
+      >
+        <line
+          x1="8"
+          y1="8"
+          x2="2"
+          y2="8"
+          className={cn(
+            CHEVRON_MOTION,
+            "rotate-45 group-data-popup-open/select:-rotate-45",
+          )}
+        />
+        <line
+          x1="8"
+          y1="8"
+          x2="14"
+          y2="8"
+          className={cn(
+            CHEVRON_MOTION,
+            "-rotate-45 group-data-popup-open/select:rotate-45",
+          )}
+        />
+      </g>
+    </svg>
   );
 }
 
@@ -53,7 +103,7 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           className={cn(
-            "z-50 max-h-(--available-height) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "z-50 max-h-(--available-height) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none duration-200 ease-out data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-top-2 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:slide-out-to-top-2 motion-reduce:animate-none",
             className,
           )}
           {...props}
