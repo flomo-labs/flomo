@@ -40,6 +40,7 @@ export function LibraryFilters<V extends string, T extends string>({
           options={views.map((v) => ({ value: v, label: labels.view[v] }))}
         />
         <SegmentedControl
+          compactOnMobile
           value={type}
           onChange={(next) => {
             setType(next);
