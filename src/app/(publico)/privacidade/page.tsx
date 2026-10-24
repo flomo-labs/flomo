@@ -81,6 +81,10 @@ export default function PrivacidadePage() {
             </li>
             <li>uma plataforma de hospedagem, para servir o site;</li>
             <li>
+              Apple (iCloud), para receber as mensagens que você enviar ao nosso
+              e-mail de contato;
+            </li>
+            <li>
               Sentry (servidores na União Europeia), para registrar erros do
               servidor (mensagem do erro e o endereço da página; sem endereço IP
               nem cookies).
