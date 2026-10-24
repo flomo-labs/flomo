@@ -20,6 +20,13 @@ export const ROADMAP_STATUS_LABEL: Record<RoadmapStatus, string> = {
 
 export const roadmap: readonly RoadmapItem[] = [
   {
+    id: "recuperar-senha",
+    title: "Recuperar senha",
+    description:
+      "Redefina a senha da sua conta por e-mail, caso tenha esquecido.",
+    status: "planned",
+  },
+  {
     id: "comentarios-e-curtidas",
     title: "Comentários e curtidas",
     description:
