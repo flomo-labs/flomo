@@ -15,9 +15,8 @@ export function SectionHeader({
   action?: ReactNode;
   // "lg" para telas feitas só de listas (Descobrir), onde o título precisa separar as seções.
   size?: "default" | "lg";
-  // No celular, a ação fica sempre na linha de baixo, à esquerda (como os
-  // filtros da Biblioteca e do Seguintes); no desktop, ao lado do título, à
-  // direita, e desce (ainda à direita) só quando não cabe.
+  // A ação fica ao lado do título, à direita, e desce (ainda à direita) só
+  // quando não cabe na linha.
   wrap?: boolean;
 }) {
   return (
@@ -38,7 +37,7 @@ export function SectionHeader({
       {wrap && action ? (
         // `min-w-0`: sem ele o item de flex cresce até a largura da ação, e
         // uma ação que rola (ScrollHintRow) passaria da tela em vez de rolar.
-        <div className="min-w-0 max-md:basis-full md:ml-auto">{action}</div>
+        <div className="ml-auto min-w-0">{action}</div>
       ) : (
         action
       )}

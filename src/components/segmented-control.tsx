@@ -3,6 +3,13 @@
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -20,19 +27,24 @@ type Option<T extends string> = {
 // magenta com texto branco. A pílula magenta é um indicador que desliza até a
 // opção escolhida (sem animação com `prefers-reduced-motion`). A escolha vive
 // em quem usa (estado da tela), este componente só desenha e avisa a troca.
+// Com `compactOnMobile`, abaixo de `md` vira um `Select` com as mesmas opções
+// (para filtros com muitas opções, que não cabem na largura do celular).
 export function SegmentedControl<T extends string>({
   value,
   onChange,
   options,
   ariaLabel,
+  compactOnMobile = false,
 }: {
   value: T;
   onChange: (value: T) => void;
   options: readonly Option<T>[];
   ariaLabel: string;
+  compactOnMobile?: boolean;
 }) {
-  return (
+  const pills = (
     <Tabs
+      className={compactOnMobile ? "max-md:hidden" : undefined}
       value={value}
       onValueChange={(next) => {
         const option = options.find((o) => o.value === next);
@@ -71,5 +83,35 @@ export function SegmentedControl<T extends string>({
         })}
       </TabsList>
     </Tabs>
+  );
+
+  if (!compactOnMobile) return pills;
+
+  return (
+    <>
+      <Select
+        value={value}
+        items={options.map((o) => ({ value: o.value, label: o.label }))}
+        onValueChange={(next) => {
+          const option = options.find((o) => o.value === next);
+          if (option) onChange(option.value);
+        }}
+      >
+        <SelectTrigger
+          aria-label={ariaLabel}
+          className="h-9 gap-2 rounded-full border-0 bg-muted px-4 text-sm font-medium md:hidden"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent align="end">
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {pills}
+    </>
   );
 }
