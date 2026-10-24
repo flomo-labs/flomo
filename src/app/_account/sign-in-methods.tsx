@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { GoogleButton, GoogleLogo } from "@/components/google-button";
+import { GoogleButton } from "@/components/google-button";
+import { GoogleLogo } from "@/components/google-logo";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,

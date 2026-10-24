@@ -1,35 +1,14 @@
 import type { ComponentProps } from "react";
+import { GoogleLogo } from "@/components/google-logo";
 import { cn } from "@/lib/utils";
 
-// "G" oficial do Google, sem alteração (diretrizes do Fazer login com o
-// Google). Não recolorir nem trocar a proporção.
-export function GoogleLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" aria-hidden className={cn("size-5", className)}>
-      <path
-        fill="#EA4335"
-        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-      />
-      <path
-        fill="#4285F4"
-        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-      />
-      <path
-        fill="#34A853"
-        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-      />
-    </svg>
-  );
-}
-
-// Botão do Google com as cores do tema escuro do Google (o app é sempre
-// escuro): fundo #131314, traço de 1px #8E918F, texto #E3E3E3 em Roboto
-// Medium 14/20, logo de 20px com 12px de respiro. As cores são da marca, não
-// dos tokens do Flomo. Pílula como os demais botões; 40px (44px no toque).
+// Botão do Google seguindo o HTML e o CSS das diretrizes de marca (classes
+// `gsi-material-button`), no tema escuro porque o app é sempre escuro: fundo
+// #131314, traço de 1px #8E918F, texto #E3E3E3 em Roboto Medium 14px com
+// letter-spacing de 0,25px, logo de 20px com 10px à direita, 12px de padding
+// lateral, 40px de altura (44px no toque, padrão do app) e a camada de estado
+// (branca, hover 8%, foco/clique 12%). As cores são da marca, não dos tokens do Flomo.
+// Formato pílula (`border-radius: 20px` do CSS aprovado).
 export function GoogleButton({
   className,
   children,
@@ -39,13 +18,20 @@ export function GoogleButton({
     <button
       type="submit"
       className={cn(
-        "inline-flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#8E918F] bg-[#131314] px-3 font-(family-name:--font-roboto) text-sm/5 font-medium whitespace-nowrap text-[#E3E3E3] transition-colors hover:bg-[#1f1f20] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60 pointer-coarse:h-11",
+        "group relative h-10 w-auto max-w-[400px] min-w-min overflow-hidden rounded-[20px] border border-[#8E918F] bg-[#131314] px-3 text-center align-middle font-(family-name:--font-roboto) text-sm tracking-[0.25px] whitespace-nowrap text-[#E3E3E3] transition-[background-color,border-color,box-shadow] duration-[218ms] outline-none select-none pointer-coarse:h-11 enabled:hover:shadow-[0_1px_2px_0_rgba(60,64,67,.30),0_1px_3px_1px_rgba(60,64,67,.15)] disabled:cursor-default disabled:border-[#8E918F1F] disabled:bg-[#13131461]",
         className,
       )}
       {...props}
     >
-      <GoogleLogo />
-      {children}
+      <div className="absolute inset-0 bg-white opacity-0 transition-opacity duration-[218ms] group-enabled:group-hover:opacity-[8%] group-enabled:group-focus:opacity-[12%] group-enabled:group-active:opacity-[12%]" />
+      <div className="relative flex h-full w-full flex-row flex-nowrap items-center justify-between">
+        <div className="mr-2.5 h-5 w-5 min-w-5 group-disabled:opacity-[38%]">
+          <GoogleLogo className="block size-5" />
+        </div>
+        <span className="grow overflow-hidden align-top font-medium text-ellipsis group-disabled:opacity-[38%]">
+          {children}
+        </span>
+      </div>
     </button>
   );
 }
