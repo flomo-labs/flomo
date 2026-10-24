@@ -70,7 +70,9 @@ export function ScrollHintRow({
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-end bg-gradient-to-l from-background from-35% to-transparent pr-2 text-muted-foreground transition-opacity md:hidden",
+          // z-20: acima de conteúdo com camada própria (as opções do
+          // filtro em pílula têm z-10, por causa do indicador deslizante).
+          "pointer-events-none absolute inset-y-0 right-0 z-20 flex w-24 items-center justify-end bg-gradient-to-l from-background from-35% to-transparent pr-2 text-muted-foreground transition-opacity md:hidden",
           hasMore ? "opacity-100" : "opacity-0",
         )}
       >
