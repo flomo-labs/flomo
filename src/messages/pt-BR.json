@@ -176,6 +176,7 @@
     "markedEpisode": "{title} T{season}:E{episode} marcado como assistido.",
     "markedMovie": "{title} marcado como assistido.",
     "emptyFilter": "Nada por aqui neste tipo",
+    "seeMore": "Ver mais",
     "emptyTitle": "Sua fila está vazia",
     "empty": "Adicione séries e filmes à biblioteca para ver o que vem a seguir.",
     "search": "Descobrir",
