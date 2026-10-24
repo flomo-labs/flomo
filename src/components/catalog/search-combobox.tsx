@@ -17,6 +17,8 @@ const DEBOUNCE_MS = 300;
 
 export type SearchComboboxLabels = {
   placeholder: string;
+  // Botão "x" que apaga o que foi digitado.
+  clear: string;
   // Nome da lista de sugestões para leitores de tela.
   suggestions: string;
   // "Ver todos os resultados para “{query}”"
@@ -28,7 +30,9 @@ export type SearchComboboxLabels = {
 // Campo de busca com sugestões: depois de 2 letras e uma pausa, mostra até 5
 // títulos (GET /api/sugestoes). Enter sem escolher uma sugestão, ou "Ver
 // todos", abre /buscar; sem JavaScript o formulário que o contém envia a busca
-// do mesmo jeito. Usado no cabeçalho e na tela de busca.
+// do mesmo jeito. Usado no cabeçalho e na tela de busca. Com texto no campo,
+// um "x" à direita apaga tudo e devolve o foco ao campo (o "x" nativo do
+// `type="search"` fica escondido).
 export function SearchCombobox({
   id,
   defaultValue = "",
@@ -51,6 +55,7 @@ export function SearchCombobox({
   const router = useRouter();
   const listId = useId();
   const root = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(defaultValue);
   const [fetched, setFetched] = useState<{
     query: string;
@@ -97,6 +102,13 @@ export function SearchCombobox({
       controller.abort();
     };
   }, [query, typed]);
+
+  function clear() {
+    setValue("");
+    setOpen(false);
+    setActive(-1);
+    input.current?.focus();
+  }
 
   function openSearch() {
     setOpen(false);
@@ -147,6 +159,7 @@ export function SearchCombobox({
         />
       ) : null}
       <Input
+        ref={input}
         id={id}
         name="q"
         type="search"
@@ -170,8 +183,23 @@ export function SearchCombobox({
         maxLength={SEARCH_QUERY_MAX_LENGTH}
         autoComplete="off"
         required={required}
-        className={className}
+        className={cn(
+          "[&::-webkit-search-cancel-button]:appearance-none",
+          value && "pr-10",
+          className,
+        )}
       />
+      {value ? (
+        <button
+          type="button"
+          aria-label={labels.clear}
+          title={labels.clear}
+          onClick={clear}
+          className="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:size-10"
+        >
+          <Icon name="close" className="size-4" />
+        </button>
+      ) : null}
       <ul
         id={listId}
         role="listbox"

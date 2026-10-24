@@ -15,6 +15,7 @@ export async function HeaderSearch() {
         ariaLabel={t("Search.headerLabel")}
         labels={{
           placeholder: t("Search.headerPlaceholder"),
+          clear: t("Search.clear"),
           suggestions: t("Search.suggestions"),
           seeAll: t.raw("Search.seeAll"),
           movie: t("MediaType.movie"),
