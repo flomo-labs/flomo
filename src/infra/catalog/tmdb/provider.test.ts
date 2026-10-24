@@ -542,6 +542,57 @@ describe("fetchShelf", () => {
     ).rejects.toThrow(CatalogUnavailableError);
   });
 
+  it("animes no serviço: séries e filmes de Animação do Japão, por popularidade", async () => {
+    const get = vi.fn(async (path: string) => ({
+      ...results,
+      results:
+        path === "discover/movie"
+          ? [
+              { id: 1, title: "F1", original_title: "M1", poster_path: "/m1.jpg", popularity: 40 },
+            ]
+          : [
+              { id: 7, name: "S7", original_name: "T7", poster_path: "/t7.jpg", popularity: 90 },
+              { id: 8, name: "S8", original_name: "T8", poster_path: "/t8.jpg", popularity: 10 },
+            ],
+    }));
+    const provider = createTmdbProvider({ get });
+    const items = await provider.fetchShelf(
+      { kind: "provider", mediaType: "animes", providerId: "8" },
+      "BR",
+      "pt-BR",
+      10,
+    );
+    expect(items.map((i) => `${i.ref.mediaType}${i.ref.externalId}`)).toEqual([
+      "tv7",
+      "movie1",
+      "tv8",
+    ]);
+    for (const path of ["discover/movie", "discover/tv"]) {
+      expect(get).toHaveBeenCalledWith(path, {
+        language: "pt-BR",
+        include_adult: false,
+        watch_region: "BR",
+        with_watch_providers: "8",
+        with_watch_monetization_types: "flatrate",
+        sort_by: "popularity.desc",
+        with_genres: 16,
+        with_origin_country: "JP",
+      });
+    }
+  });
+
+  it("animes: falha se o TMDB não responde", async () => {
+    const provider = createTmdbProvider({ get: vi.fn(async () => null) });
+    await expect(
+      provider.fetchShelf(
+        { kind: "provider", mediaType: "animes", providerId: "8" },
+        "BR",
+        "pt-BR",
+        10,
+      ),
+    ).rejects.toThrow(CatalogUnavailableError);
+  });
+
   it("serviço com filmes e séries (all) ordena pela popularidade do TMDB", async () => {
     const movie = (id: number, popularity: number) => ({
       id,

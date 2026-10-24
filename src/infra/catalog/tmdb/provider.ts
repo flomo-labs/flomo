@@ -245,6 +245,12 @@ const NOVELA_COUNTRIES = [
   "ES",
 ] as const;
 
+// Animes: séries e filmes com o gênero Animação (o mesmo id nos dois tipos)
+// e origem no Japão. Animação de outros países (desenhos ocidentais, donghua,
+// animação coreana) fica de fora até a classificação ser medida.
+const TMDB_GENRE_ANIMATION = 16;
+const ANIME_COUNTRY = "JP";
+
 // Prateleira: `trending/all` traz `media_type` em cada item; `now_playing` e
 // `discover` não, e o tipo vem da própria consulta. Fica de fora o conteúdo
 // adulto (mesmo com `include_adult=false`, o `trending` pode trazê-lo) e o que
@@ -568,16 +574,28 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
           .map(({ item }) => item)
           .slice(0, limit);
       }
-      if (query.mediaType !== "all") {
+      if (query.mediaType === "movie" || query.mediaType === "tv") {
         const { path, extra, mediaType } = discoverParams(query.mediaType);
         return fetchList(path, extra, mediaType);
       }
-      // Filmes e séries juntos: ordena pela popularidade do TMDB, que vem no
-      // mesmo campo nos dois tipos.
+      // Filmes e séries juntos ("all", e "animes" com o filtro de anime):
+      // ordena pela popularidade do TMDB, que vem no mesmo campo nos dois
+      // tipos.
+      const filter: Record<string, string | number> =
+        query.mediaType === "animes"
+          ? {
+              with_genres: TMDB_GENRE_ANIMATION,
+              with_origin_country: ANIME_COUNTRY,
+            }
+          : {};
       const lists = await Promise.all(
         (["movie", "tv"] as const).map(async (type) => {
           const { path, extra, mediaType } = discoverParams(type);
-          const data = await client.get(path, { ...params, ...extra });
+          const data = await client.get(path, {
+            ...params,
+            ...extra,
+            ...filter,
+          });
           if (data === null) {
             throw new CatalogUnavailableError(
               "Prateleira do TMDB indisponível.",

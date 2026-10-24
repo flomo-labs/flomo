@@ -4,5 +4,6 @@ export const MEDIA_SEGMENTS = {
   series: "tv",
   filmes: "movie",
   novelas: "novelas",
+  animes: "animes",
 } as const;
 export type MediaSegment = keyof typeof MEDIA_SEGMENTS;

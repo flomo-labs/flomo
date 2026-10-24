@@ -68,6 +68,7 @@ async function ProviderSection() {
           filmes: t("media.filmes"),
           series: t("media.series"),
           novelas: t("media.novelas"),
+          animes: t("media.animes"),
         },
       }}
       initial={initial}
