@@ -57,8 +57,12 @@ export async function updateProfile(
   return ok(parsed.data);
 }
 
-// Horas inteiras assistidas, para o número do perfil (arredonda para baixo:
-// 59 minutos ainda são 0 horas).
-export function watchedHours(minutes: number): number {
-  return Math.floor(Math.max(0, minutes) / 60);
+// Tempo assistido em horas inteiras e minutos restantes, para o número do
+// perfil ("12 h 30 min").
+export function watchedTime(minutes: number): {
+  hours: number;
+  minutes: number;
+} {
+  const total = Math.floor(Math.max(0, minutes));
+  return { hours: Math.floor(total / 60), minutes: total % 60 };
 }
