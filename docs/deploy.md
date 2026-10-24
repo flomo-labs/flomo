@@ -34,6 +34,7 @@ Os previews usam o `flomo-dev` para que testar um PR nunca toque nos dados reais
 4. **D.** Supabase (login e URLs) e teste
 5. **E.** Publicar o app OAuth do Google
 6. **G.** Domínio próprio (`flomo.com.br`), depois que o app já funciona em `*.vercel.app`
+7. **H.** E-mail no domínio (envio pela Resend e contato no iCloud+), depois da G
 
 A ordem importa: a B precisa dos valores da A; a C precisa da URL da B e do ref da A; a D precisa dos valores da C.
 
@@ -345,9 +346,40 @@ No cliente `Flomo prod`, acrescente `https://www.flomo.com.br` em **Origens Java
 ### G.6 Depois
 
 - Teste de ponta a ponta no `www` (D.3): "Entrar com Google" volta ao `www`, e o cookie `sb-…-auth-token` fica `HttpOnly` e `Secure`. Quem estava logado em `*.vercel.app` entra de novo.
-- E-mail (envio e contato) é uma etapa à parte, quando for feita: registros SPF, DKIM e DMARC do provedor de envio e MX/TXT de encaminhamento entram na mesma zona do Registro.br. Depois, trocar `contactEmail` e os textos de `/privacidade` e `/termos`.
+- E-mail (envio e contato): parte H. Depois dele, trocar `contactEmail` e os textos de `/privacidade` e `/termos`.
 - DNSSEC, monitor de disponibilidade e lembretes de renovação do domínio: ver as issues de acompanhamento do domínio.
 - Renovação: o domínio é cancelado se a manutenção não for paga, e fica livre para registro por qualquer pessoa. Mantenha lembretes e prefira pagar vários anos.
+
+---
+
+## H. E-mail no domínio
+
+**Objetivo:** enviar e-mail do app (confirmação de conta e recuperação de senha, Fase 1.7) como `no-reply@flomo.com.br` e ter uma caixa de contato `contato@flomo.com.br`. Os dois usam a mesma zona DNS do Registro.br e **não conflitam**: o envio fica no subdomínio `send`, e o contato, na raiz.
+
+### H.1 Envio: Resend + SMTP do Supabase
+
+1. Em resend.com, crie a conta e adicione o domínio `flomo.com.br`, com a região **São Paulo** (`sa-east-1`). Deixe o **Tracking Subdomain** vazio e os rastreios de clique e de abertura desligados (e-mails de login não devem ter link reescrito) e o **Enable Receiving** desligado.
+2. A Resend mostra os registros a criar. Use sempre os valores do painel; no momento da configuração eram quatro: **TXT** `resend._domainkey` (DKIM), **CNAME** `rsend`, **CNAME** `send` e **TXT** `_dmarc` com `v=DMARC1; p=none;`. No Registro.br (**Configurar zona DNS > Nova entrada**), o nome é só a parte antes de `.flomo.com.br`.
+3. Na Resend, clique em **I've added the records**; o status vira **Verified** em minutos a poucas horas.
+4. **API Keys > Create API Key**, permissão **Sending access**, nome `supabase-flomo-prod`. A chave `re_...` só aparece uma vez: guarde no gerenciador de senhas, nunca no repositório, em issue, PR ou chat.
+5. Supabase `flomo-prod`, **Authentication > Emails > SMTP Settings**: ative **Custom SMTP** e preencha remetente `no-reply@flomo.com.br`, nome `Flomo`, host `smtp.resend.com`, porta `465`, usuário `resend` e senha a chave `re_...`. Se a 465 falhar, use `587`.
+6. O provedor de e-mail em **Sign In / Providers** continua desligado até a Fase 1.7. Enquanto estiver desligado, o Supabase recusa o envio com "Email logins are disabled": o erro é esperado, não é falha do SMTP.
+7. Para testar sem ligar nada em produção, repita o SMTP no `flomo-dev` (com outra chave, `supabase-flomo-dev`) e use **Send password recovery** num usuário de teste. A Resend mostra o e-mail como **Delivered**, e no Gmail (**Mostrar original**) SPF, DKIM e DMARC devem estar `PASS`.
+8. Os templates de e-mail do Supabase ainda estão em inglês; traduzir faz parte da Fase 1.7.
+
+### H.2 Contato: iCloud+ (Domínio de e-mail personalizado)
+
+1. Em iCloud.com > configurações da conta > **Domínio de e-mail personalizado** (ou nos Ajustes do iPhone), adicione `flomo.com.br`, escolha **Nenhum endereço de e-mail** (o domínio não tinha caixa) e crie só `contato`.
+2. A Apple mostra os registros da **raiz**. No Registro.br, o campo **Nome** fica em branco no lugar de `@`: dois **MX** (`mx01.mail.icloud.com` e `mx02.mail.icloud.com`, prioridade 10), um **TXT** `apple-domain=...` (copie do iCloud, é um valor por conta), um **TXT** `v=spf1 include:icloud.com ~all` e um **CNAME** `sig1._domainkey` apontando para `sig1.dkim.flomo.com.br.at.icloudmailadmin.com`. Se um valor recusar o ponto final ou as aspas que a Apple mostra, tire-os.
+3. Só pode haver **um SPF** na raiz. O da Resend fica em `send`, e os dois convivem.
+4. No iCloud, **Verificar**. Teste receber (de outra conta) e responder como `contato@flomo.com.br`, conferindo SPF, DKIM e DMARC.
+5. A caixa pertence à conta Apple de quem a criou. Quem mais precisar ler o contato precisa de outro caminho (por exemplo, encaminhar uma cópia ou migrar para um serviço de encaminhamento, mudando só os MX).
+
+### H.3 Depois
+
+- DMARC começa em `p=none`; endurecer (`quarantine`, depois `reject`) só depois de acompanhar os relatórios.
+- A Resend e o iCloud passam a ser operadores de dados: a política de privacidade deve citá-los (issue de textos legais).
+- Troque `contactEmail` em `src/content/legal.ts` quando esta parte estiver pronta.
 
 ---
 
