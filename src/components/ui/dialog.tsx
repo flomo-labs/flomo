@@ -88,8 +88,9 @@ function DialogContent({
         className={cn(
           // Celular (abaixo de sm): bottom sheet colado na base, largura
           // total, topo arredondado e área segura do iPhone. De sm para cima:
-          // centralizado (#115).
-          "fixed z-50 grid w-full gap-4 bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none max-sm:bottom-0 max-sm:left-0 max-sm:rounded-t-2xl max-sm:pt-6 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))] max-sm:data-open:animate-in max-sm:data-open:slide-in-from-bottom-full max-sm:data-closed:animate-out max-sm:data-closed:slide-out-to-bottom-full sm:top-1/2 sm:left-1/2 sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:data-open:animate-in sm:data-open:fade-in-0 sm:data-open:zoom-in-95 sm:data-closed:animate-out sm:data-closed:fade-out-0 sm:data-closed:zoom-out-95",
+          // centralizado (#115). Altura limitada a `dvh` e rolagem própria, para
+          // caber com o teclado aberto e no zoom de 200%.
+          "fixed z-50 grid w-full gap-4 overflow-y-auto overscroll-contain bg-popover p-4 max-sm:max-h-[90dvh] sm:max-h-[calc(100dvh-2rem)] text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none max-sm:bottom-0 max-sm:left-0 max-sm:rounded-t-2xl max-sm:pt-6 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))] max-sm:data-open:animate-in max-sm:data-open:slide-in-from-bottom-full max-sm:data-closed:animate-out max-sm:data-closed:slide-out-to-bottom-full sm:top-1/2 sm:left-1/2 sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:data-open:animate-in sm:data-open:fade-in-0 sm:data-open:zoom-in-95 sm:data-closed:animate-out sm:data-closed:fade-out-0 sm:data-closed:zoom-out-95",
           className,
         )}
         {...props}

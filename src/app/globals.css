@@ -71,6 +71,13 @@
   @media (min-width: 48rem) {
     padding-inline: 2rem;
   }
+  /* Celular deitado com entalhe (viewport-fit=cover): o conteúdo não fica sob ele. */
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  @media (min-width: 48rem) {
+    padding-left: max(2rem, env(safe-area-inset-left));
+    padding-right: max(2rem, env(safe-area-inset-right));
+  }
 }
 
 /* Escala de títulos: página (24px no celular, 30px no desktop) e seção. */
@@ -368,5 +375,19 @@ body:has([data-landing]) > footer {
   .route-progress-bar {
     animation: none;
     width: 100%;
+  }
+}
+
+/* "Reduzir movimento": o que o tw-animate-css e as transições do Tailwind
+   animam (diálogos, menus, dicas) passa a ser instantâneo. As animações
+   próprias acima já têm a regra delas. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
