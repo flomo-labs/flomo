@@ -5,6 +5,8 @@ import { type ReactNode, useState } from "react";
 import { PosterRow } from "@/components/catalog/poster-row";
 import { EmptyState } from "@/components/empty-state";
 import { SegmentedControl } from "@/components/segmented-control";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { QuickMark, type QuickMarkTarget } from "./quick-mark";
 
 export const FOLLOWING_KINDS = ["both", "tv", "movie"] as const;
@@ -33,7 +35,14 @@ export type FollowingLabels = {
   kinds: Record<FollowingKind, string>;
   emptyFilter: string;
   markFailed: string;
+  seeMore: string;
 };
+
+// Itens por "página": 5 no celular (uma coluna) e 10 no desktop (duas colunas
+// de 5). Além deles aparece a linha seguinte esmaecida, com "Ver mais" por
+// cima: 1 item no celular, 2 no desktop.
+const MOBILE_PAGE = 5;
+const DESKTOP_PAGE = 10;
 
 // Quanto tempo a linha recém-marcada fica com o check antes de dar lugar ao
 // próximo item.
@@ -52,6 +61,10 @@ type Held = { row: FollowingRow; index: number; done: boolean };
 // a linha marcada fica no mesmo lugar desde o clique (com o indicador),
 // mostra o check por HOLD_MS quando o carregamento termina e só então a lista
 // segue.
+//
+// A lista mostra uma página por vez (MOBILE_PAGE / DESKTOP_PAGE) e "Ver mais"
+// acrescenta outra. Celular e desktop se resolvem só com CSS (`max-md:` /
+// `md:`), sem detectar a tela por JavaScript: nada pisca ao carregar.
 export function FollowingList({
   rows,
   labels,
@@ -62,6 +75,7 @@ export function FollowingList({
   labels: FollowingLabels;
 }) {
   const [kind, setKind] = useState<FollowingKind>("both");
+  const [pages, setPages] = useState(1);
   // O que acabou de ser marcado, para o leitor de tela. Fica na lista, não no
   // botão: a linha marcada troca pelo próximo item ou some.
   const [announcement, setAnnouncement] = useState("");
@@ -97,6 +111,12 @@ export function FollowingList({
       shown.splice(Math.min(h.index, shown.length), 0, h.row);
     }
   }
+  // Até onde vai cada tela; o item seguinte (celular) ou a linha seguinte
+  // (desktop) aparece esmaecida, com "Ver mais".
+  const mobileEnd = MOBILE_PAGE * pages;
+  const desktopEnd = DESKTOP_PAGE * pages;
+  const rendered = shown.slice(0, desktopEnd + 2);
+  const showMore = () => setPages((current) => current + 1);
 
   return (
     <div className="flex flex-col gap-3">
@@ -107,7 +127,10 @@ export function FollowingList({
         {sections}
         <SegmentedControl
           value={kind}
-          onChange={setKind}
+          onChange={(next) => {
+            setKind(next);
+            setPages(1);
+          }}
           ariaLabel={labels.filters}
           options={FOLLOWING_KINDS.map((k) => ({
             value: k,
@@ -119,53 +142,96 @@ export function FollowingList({
         <EmptyState title={labels.emptyFilter} />
       ) : (
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
-          {shown.map((row, index) => (
-            <li
-              key={row.titleId}
-              className="relative min-w-0 rounded-card transition-colors hover:bg-muted/50"
-            >
-              <PosterRow
-                posterPath={row.posterPath}
-                posterAlt={row.posterAlt}
-                size="sm"
-                centered
-                trailing={
-                  <div className="relative z-10">
-                    <QuickMark
-                      target={row.mark}
-                      label={row.markLabel}
-                      failed={labels.markFailed}
-                      done={held.some(
-                        (h) => h.row.titleId === row.titleId && h.done,
-                      )}
-                      onStart={() => start(row, index)}
-                      onMarked={() => marked(row)}
-                      onFailed={() => release(row.titleId)}
-                    />
-                  </div>
-                }
+          {rendered.map((row, index) => {
+            // Item esmaecido sob o "Ver mais": o seguinte no celular, os da
+            // linha seguinte no desktop. Não recebe clique nem hover.
+            const mobilePreview = index === mobileEnd;
+            const desktopPreview = index >= desktopEnd;
+            return (
+              <li
+                key={row.titleId}
+                className={cn(
+                  "relative min-w-0 rounded-card transition-colors hover:bg-muted/50",
+                  index > mobileEnd && "max-md:hidden",
+                  // Sem fundo de hover: o "Ver mais" fica dentro do item, e
+                  // passar o mouse nele acenderia o cartão esmaecido.
+                  mobilePreview &&
+                    "max-md:pointer-events-none max-md:hover:bg-transparent",
+                  desktopPreview &&
+                    "md:pointer-events-none md:hover:bg-transparent",
+                )}
               >
-                <Link
-                  href={row.href}
-                  className="truncate font-semibold hover:underline after:absolute after:inset-0 after:rounded-card"
+                <div
+                  className={cn(
+                    mobilePreview && "max-md:opacity-40",
+                    desktopPreview && "md:opacity-40",
+                  )}
                 >
-                  {row.title}
-                </Link>
-                {row.position ? (
-                  <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-                    <span className="shrink-0 rounded-full bg-primary/25 px-2 py-0.5 text-xs font-bold text-primary-foreground">
-                      {row.position}
-                    </span>
-                    {row.episodeName ? (
-                      <span className="truncate">{row.episodeName}</span>
+                  <PosterRow
+                    posterPath={row.posterPath}
+                    posterAlt={row.posterAlt}
+                    size="sm"
+                    centered
+                    trailing={
+                      <div className="relative z-10">
+                        <QuickMark
+                          target={row.mark}
+                          label={row.markLabel}
+                          failed={labels.markFailed}
+                          done={held.some(
+                            (h) => h.row.titleId === row.titleId && h.done,
+                          )}
+                          onStart={() => start(row, index)}
+                          onMarked={() => marked(row)}
+                          onFailed={() => release(row.titleId)}
+                        />
+                      </div>
+                    }
+                  >
+                    <Link
+                      href={row.href}
+                      className="truncate font-semibold hover:underline after:absolute after:inset-0 after:rounded-card"
+                    >
+                      {row.title}
+                    </Link>
+                    {row.position ? (
+                      <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                        <span className="shrink-0 rounded-full bg-primary/25 px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                          {row.position}
+                        </span>
+                        {row.episodeName ? (
+                          <span className="truncate">{row.episodeName}</span>
+                        ) : null}
+                      </div>
                     ) : null}
+                  </PosterRow>
+                </div>
+                {mobilePreview ? (
+                  <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center md:hidden">
+                    <SeeMore label={labels.seeMore} onClick={showMore} />
                   </div>
                 ) : null}
-              </PosterRow>
-            </li>
-          ))}
+                {index === desktopEnd ? (
+                  // Centrado na linha, entre as duas colunas (gap-3: 6px de
+                  // cada lado do vão).
+                  <div className="pointer-events-auto absolute top-1/2 -right-1.5 z-20 hidden translate-x-1/2 -translate-y-1/2 md:block">
+                    <SeeMore label={labels.seeMore} onClick={showMore} />
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
+  );
+}
+
+// "Ver mais" em magenta, por cima da linha esmaecida.
+function SeeMore({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Button type="button" className="rounded-full px-5 shadow-lg" onClick={onClick}>
+      {label}
+    </Button>
   );
 }

@@ -25,6 +25,7 @@ export async function SearchForm({ query = "" }: { query?: string }) {
         className="h-11 rounded-full pl-9 text-base"
         labels={{
           placeholder: t("placeholder"),
+          clear: t("clear"),
           suggestions: t("suggestions"),
           seeAll: t.raw("seeAll"),
           movie: tm("movie"),

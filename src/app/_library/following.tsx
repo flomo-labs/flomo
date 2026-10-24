@@ -88,5 +88,6 @@ export async function followingLabels(): Promise<FollowingLabels> {
     kinds: { both: t("kind.both"), tv: t("kind.tv"), movie: t("kind.movie") },
     emptyFilter: t("emptyFilter"),
     markFailed: t("markFailed"),
+    seeMore: t("seeMore"),
   };
 }
