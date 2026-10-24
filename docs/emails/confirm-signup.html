@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Falta só um passo para ativar sua conta no Flomo.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0a0a0a;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+    <tr><td style="padding:0 4px 20px 4px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:24px;font-weight:700;color:#fafafa;">
+      <span style="color:#f0408a;">&#9654;</span>&nbsp;Flomo
+    </td></tr>
+    <tr><td style="background-color:#171717;border:1px solid #2a2a2a;border-radius:16px;padding:32px 28px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <h1 style="margin:0 0 12px 0;font-size:24px;line-height:29px;font-weight:700;color:#fafafa;">Confirme seu e-mail</h1>
+      <p style="margin:0 0 24px 0;font-size:14px;line-height:22px;color:#a3a3a3;">Bem-vindo ao Flomo! Falta só um passo para ativar sua conta e começar a acompanhar suas séries e filmes.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+        <tr><td align="center" bgcolor="#a3004c" style="background-color:#a3004c;border-radius:999px;">
+          <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 28px;font-size:14px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">Confirmar e-mail</a>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 8px 0;font-size:12px;line-height:18px;color:#a3a3a3;">Abra o link no mesmo navegador em que você criou a conta.</p>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#a3a3a3;">O botão não funciona? Copie este endereço e cole no navegador:<br><a href="{{ .ConfirmationURL }}" style="color:#f0408a;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+    </td></tr>
+    <tr><td style="padding:20px 4px 0 4px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#737373;">
+      Se você não criou uma conta no Flomo, ignore esta mensagem.<br>
+      Flomo &middot; <a href="https://www.flomo.com.br" style="color:#737373;">www.flomo.com.br</a>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>

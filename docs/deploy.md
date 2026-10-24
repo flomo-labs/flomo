@@ -263,7 +263,7 @@ No console.cloud.google.com, no projeto do Flomo, menu **Google Auth Platform**:
 2. **Authentication > URL Configuration:**
    - **Site URL:** a URL de produção.
    - **Redirect URLs:** acrescente `<URL de produção>/auth/callback`.
-3. Em Sign In / Providers, deixe desligados telefone e anônimo. O provedor **Email** fica desligado até o merge da Fase 1.7 (conta por e-mail) e a Resend na `/privacidade` publicada; então ligue-o com **Confirm email LIGADO** (sem ela, alguém cadastra o e-mail alheio com senha própria e, quando a vítima entra com Google, a conta é ligada à do atacante) e, em **Authentication > Sign In / Providers**, ative **Allow manual linking** (vínculo do Google). Traduza antes os templates de e-mail, em especial **Confirm signup** (H.1, passo 8), e confira que o link de confirmação volta para `/auth/callback` (Redirect URLs).
+3. Em Sign In / Providers, deixe desligados telefone e anônimo. O provedor **Email** está **ligado** em produção (Fase 1.7), com **Confirm email LIGADO** (sem ela, alguém cadastra o e-mail alheio com senha própria e, quando a vítima entra com Google, a conta é ligada à do atacante) e **Allow manual linking** ativo (vínculo do Google), ambos em **Authentication > Sign In / Providers** (a tela **User Signups** reúne os dois). O template **Confirm signup** está em pt-BR (H.1, passo 8) e o link de confirmação volta para `/auth/callback` (Redirect URLs).
 
 ### D.2 No `flomo-dev` (para o login funcionar nos previews)
 
@@ -363,9 +363,10 @@ No cliente `Flomo prod`, acrescente `https://www.flomo.com.br` em **Origens Java
 3. Na Resend, clique em **I've added the records**; o status vira **Verified** em minutos a poucas horas.
 4. **API Keys > Create API Key**, permissão **Sending access**, nome `supabase-flomo-prod`. A chave `re_...` só aparece uma vez: guarde no gerenciador de senhas, nunca no repositório, em issue, PR ou chat.
 5. Supabase `flomo-prod`, **Authentication > Emails > SMTP Settings**: ative **Custom SMTP** e preencha remetente `no-reply@flomo.com.br`, nome `Flomo`, host `smtp.resend.com`, porta `465`, usuário `resend` e senha a chave `re_...`. Se a 465 falhar, use `587`.
-6. O provedor de e-mail em **Sign In / Providers** continua desligado até a Fase 1.7. Enquanto estiver desligado, o Supabase recusa o envio com "Email logins are disabled": o erro é esperado, não é falha do SMTP.
+6. O provedor de e-mail em **Sign In / Providers** está ligado em produção (D.1, passo 3). Com ele desligado, o Supabase recusa o envio com "Email logins are disabled": esse erro não é falha do SMTP, é o provedor desligado.
 7. Para testar sem ligar nada em produção, repita o SMTP no `flomo-dev` (com outra chave, `supabase-flomo-dev`) e use **Send password recovery** num usuário de teste. A Resend mostra o e-mail como **Delivered**, e no Gmail (**Mostrar original**) SPF, DKIM e DMARC devem estar `PASS`.
-8. Os templates de e-mail do Supabase ainda estão em inglês; traduzir faz parte da Fase 1.7.
+8. Template **Confirm signup** (**Authentication > Emails > Templates**): assunto `Confirme seu e-mail no Flomo` e corpo igual a [`docs/emails/confirm-signup.html`](emails/confirm-signup.html), com o visual do app (tema escuro, botão magenta) e a variável `{{ .ConfirmationURL }}`. Ao mudar o arquivo, cole o novo HTML no painel do `flomo-prod`. Os demais templates do Supabase (recuperação de senha, mudança de e-mail etc.) seguem em inglês até serem necessários.
+9. Teste de fumaça em produção (aba anônima): cadastre um e-mail de teste em `/entrar`, abra o e-mail recebido, confirme no mesmo navegador (o link usa PKCE), escolha o nome de usuário, vincule e desvincule o Google em `/configuracoes` e exclua a conta de teste.
 
 ### H.2 Contato: iCloud+ (Domínio de e-mail personalizado)
 
