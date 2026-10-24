@@ -45,10 +45,10 @@ export function UserMenu({
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-72 max-w-[calc(100vw-1rem)] max-md:p-0 md:w-auto md:min-w-44"
+        className="w-72 max-w-[calc(100vw-1rem)] bg-popover before:hidden max-md:p-0 md:w-auto md:min-w-44"
       >
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="max-w-64 truncate">
+          <DropdownMenuLabel className="max-w-64 truncate max-md:px-4 max-md:pt-3 max-md:pb-2">
             {label}
           </DropdownMenuLabel>
         </DropdownMenuGroup>
@@ -78,7 +78,7 @@ export function UserMenu({
           <DropdownMenuItem
             nativeButton
             render={<button type="submit" />}
-            className={ITEM}
+            className={`${ITEM} w-full text-left text-destructive focus:text-destructive data-highlighted:text-destructive`}
           >
             Sair
           </DropdownMenuItem>

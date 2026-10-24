@@ -41,7 +41,7 @@ export function SiteInfoMenuItems({
       <DropdownMenuItem
         render={<Link href="/sobre" />}
         className={cn(
-          "flex-col items-start gap-1 px-3 py-2 text-[11px] leading-snug text-muted-foreground max-md:rounded-none max-md:px-4",
+          "flex-col items-start gap-1 px-3 py-2 text-[11px] leading-snug text-muted-foreground max-md:rounded-none max-md:px-4 max-md:pt-3 max-md:pb-4",
           className,
         )}
       >
