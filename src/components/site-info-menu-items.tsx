@@ -29,7 +29,10 @@ export function SiteInfoMenuItems({
         <DropdownMenuItem
           key={link.href}
           render={<Link href={link.href} />}
-          className={cn("px-3 py-2", className)}
+          className={cn(
+            "px-3 py-2 max-md:min-h-11 max-md:rounded-none max-md:px-4",
+            className,
+          )}
         >
           {link.label}
         </DropdownMenuItem>
@@ -38,7 +41,7 @@ export function SiteInfoMenuItems({
       <DropdownMenuItem
         render={<Link href="/sobre" />}
         className={cn(
-          "flex-col items-start gap-1 px-3 py-2 text-xs leading-snug text-muted-foreground",
+          "flex-col items-start gap-1 px-3 py-2 text-[11px] leading-snug text-muted-foreground max-md:rounded-none max-md:px-4",
           className,
         )}
       >

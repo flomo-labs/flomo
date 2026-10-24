@@ -12,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Itens com 44px de altura no celular (toque).
-const ITEM = "max-md:min-h-11 max-md:px-3";
+// Itens com 44px de altura no celular (toque), a linha inteira clicável: o
+// menu não tem folga nas bordas e os itens não têm cantos.
+const ITEM = "max-md:min-h-11 max-md:rounded-none max-md:px-4";
 
 // `signOut` é a Server Action de `app/_auth/actions`, passada pelo servidor.
 export function UserMenu({
@@ -44,7 +45,7 @@ export function UserMenu({
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-auto min-w-56 md:min-w-44"
+        className="w-72 max-w-[calc(100vw-1rem)] max-md:p-0 md:w-auto md:min-w-44"
       >
         <DropdownMenuGroup>
           <DropdownMenuLabel className="max-w-64 truncate">
