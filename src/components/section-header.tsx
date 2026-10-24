@@ -36,7 +36,9 @@ export function SectionHeader({
         {title}
       </h2>
       {wrap && action ? (
-        <div className="max-md:basis-full md:ml-auto">{action}</div>
+        // `min-w-0`: sem ele o item de flex cresce até a largura da ação, e
+        // uma ação que rola (ScrollHintRow) passaria da tela em vez de rolar.
+        <div className="min-w-0 max-md:basis-full md:ml-auto">{action}</div>
       ) : (
         action
       )}
