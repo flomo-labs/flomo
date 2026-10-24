@@ -153,8 +153,12 @@ export function FollowingList({
                 className={cn(
                   "relative min-w-0 rounded-card transition-colors hover:bg-muted/50",
                   index > mobileEnd && "max-md:hidden",
-                  mobilePreview && "max-md:pointer-events-none",
-                  desktopPreview && "md:pointer-events-none",
+                  // Sem fundo de hover: o "Ver mais" fica dentro do item, e
+                  // passar o mouse nele acenderia o cartão esmaecido.
+                  mobilePreview &&
+                    "max-md:pointer-events-none max-md:hover:bg-transparent",
+                  desktopPreview &&
+                    "md:pointer-events-none md:hover:bg-transparent",
                 )}
               >
                 <div
