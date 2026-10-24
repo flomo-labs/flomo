@@ -162,11 +162,36 @@ describe("updateProfile", () => {
 });
 
 describe("watchedTime", () => {
-  it("separa horas inteiras e minutos", () => {
-    expect(watchedTime(0)).toEqual({ hours: 0, minutes: 0 });
-    expect(watchedTime(59)).toEqual({ hours: 0, minutes: 59 });
-    expect(watchedTime(60)).toEqual({ hours: 1, minutes: 0 });
-    expect(watchedTime(750)).toEqual({ hours: 12, minutes: 30 });
-    expect(watchedTime(-5)).toEqual({ hours: 0, minutes: 0 });
+  const p = (unit: string, value: number) => ({ unit, value });
+
+  it("usa minutos e horas até um dia", () => {
+    expect(watchedTime(0)).toEqual({ primary: p("minutes", 0) });
+    expect(watchedTime(-5)).toEqual({ primary: p("minutes", 0) });
+    expect(watchedTime(59)).toEqual({ primary: p("minutes", 59) });
+    expect(watchedTime(60)).toEqual({ primary: p("hours", 1) });
+    expect(watchedTime(750)).toEqual({
+      primary: p("hours", 12),
+      secondary: p("minutes", 30),
+    });
+  });
+
+  it("passa para dias, meses e anos quando as horas ficam grandes", () => {
+    expect(watchedTime(24 * 60)).toEqual({ primary: p("days", 1) });
+    expect(watchedTime(1084 * 60 + 20)).toEqual({
+      primary: p("months", 1),
+      secondary: p("days", 15),
+    });
+    expect(watchedTime(100 * 24 * 60 + 5 * 60)).toEqual({
+      primary: p("months", 3),
+      secondary: p("days", 10),
+    });
+    expect(watchedTime(400 * 24 * 60)).toEqual({
+      primary: p("years", 1),
+      secondary: p("months", 1),
+    });
+    expect(watchedTime(23 * 24 * 60 + 5 * 60)).toEqual({
+      primary: p("days", 23),
+      secondary: p("hours", 5),
+    });
   });
 });
