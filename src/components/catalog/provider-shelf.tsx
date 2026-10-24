@@ -9,6 +9,7 @@ import {
 } from "react";
 import { loadProviderBundle } from "@/app/_catalog/provider-shelf-actions";
 import type { MediaSegment } from "@/app/_catalog/segments";
+import { ScrollHintRow } from "@/components/scroll-hint-row";
 import { SegmentedControl } from "@/components/segmented-control";
 import { SectionHeader } from "@/components/section-header";
 import {
@@ -138,15 +139,19 @@ export function ProviderShelf({
         size="lg"
         wrap
         action={
-          <SegmentedControl
-            value={segment}
-            onChange={chooseSegment}
-            ariaLabel={labels.mediaNav}
-            options={shown.segments.map((s) => ({
-              value: s,
-              label: labels.media[s],
-            }))}
-          />
+          // Com Novelas e Animes o filtro passa da largura do celular: rola
+          // para o lado, com a dica na borda (como os números do perfil).
+          <ScrollHintRow>
+            <SegmentedControl
+              value={segment}
+              onChange={chooseSegment}
+              ariaLabel={labels.mediaNav}
+              options={shown.segments.map((s) => ({
+                value: s,
+                label: labels.media[s],
+              }))}
+            />
+          </ScrollHintRow>
         }
         title={
           <>
