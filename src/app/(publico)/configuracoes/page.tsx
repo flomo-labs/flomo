@@ -143,9 +143,14 @@ async function DeleteAccount({
     profile && !isProvisionalHandle(profile.handle)
       ? profile.handle
       : "excluir";
-  const { excluir } = await searchParams;
+  const auth = await getRequestAuth();
+  const [methods, { excluir }] = await Promise.all([
+    auth.signInMethods().list(),
+    searchParams,
+  ]);
   return (
     <DeleteAccountDialog
+      methods={methods}
       confirmWord={confirmWord}
       defaultOpen={excluir === "1"}
       returnPath="/configuracoes?excluir=1"
