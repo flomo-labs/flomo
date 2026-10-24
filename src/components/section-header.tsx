@@ -15,7 +15,9 @@ export function SectionHeader({
   action?: ReactNode;
   // "lg" para telas feitas só de listas (Descobrir), onde o título precisa separar as seções.
   size?: "default" | "lg";
-  // A ação desce para a linha de baixo, à direita, quando não cabe ao lado do título.
+  // No celular, a ação fica sempre na linha de baixo, à esquerda (como os
+  // filtros da Biblioteca e do Seguintes); no desktop, ao lado do título, à
+  // direita, e desce (ainda à direita) só quando não cabe.
   wrap?: boolean;
 }) {
   return (
@@ -33,7 +35,11 @@ export function SectionHeader({
       >
         {title}
       </h2>
-      {wrap && action ? <div className="ml-auto">{action}</div> : action}
+      {wrap && action ? (
+        <div className="max-md:basis-full md:ml-auto">{action}</div>
+      ) : (
+        action
+      )}
     </div>
   );
 }
