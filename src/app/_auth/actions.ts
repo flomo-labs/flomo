@@ -8,7 +8,12 @@ import type { EmailAuthFailure } from "@/infra/auth/supabase";
 import { destinationAfterLogin } from "../_profile/queries";
 import { safeNextPath } from "./redirect";
 import { resolveSiteUrl } from "./site-url";
-import { getRequestAuth, requireUser, toCurrentUser } from "./session";
+import {
+  getCurrentUser,
+  getRequestAuth,
+  requireUser,
+  toCurrentUser,
+} from "./session";
 
 async function siteUrl() {
   const requestHeaders = await headers();
@@ -46,6 +51,36 @@ export async function signInWithGoogle(formData: FormData) {
 // conta): o Google mostra a escolha de conta, e a volta segue para `next`.
 export async function reauthenticateWithGoogle(formData: FormData) {
   await startGoogleSignIn(formData, { selectAccount: true });
+}
+
+export type PasswordReauthState = {
+  error?: "INVALID_PASSWORD" | "RATE_LIMITED" | "UNAUTHENTICATED" | "UNKNOWN";
+};
+
+// Nova entrada com senha de quem já está logado, antes de excluir a conta. O
+// e-mail vem sempre da sessão, nunca do formulário: a ação só confirma a
+// senha de quem está logado e não revela nada sobre outros e-mails.
+export async function reauthenticateWithPassword(
+  password: string,
+): Promise<PasswordReauthState> {
+  const user = await getCurrentUser();
+  const email = user?.claims.email;
+  if (typeof email !== "string") return { error: "UNAUTHENTICATED" };
+  if (typeof password !== "string" || password.length === 0) {
+    return { error: "INVALID_PASSWORD" };
+  }
+
+  const auth = await getRequestAuth();
+  const result = await auth.signInWithEmail(email, password);
+  if (result.ok) return {};
+  switch (result.code) {
+    case "INVALID_CREDENTIALS":
+      return { error: "INVALID_PASSWORD" };
+    case "RATE_LIMITED":
+      return { error: "RATE_LIMITED" };
+    default:
+      return { error: "UNKNOWN" };
+  }
 }
 
 export async function signOut() {
