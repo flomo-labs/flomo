@@ -153,6 +153,9 @@
     "search": "Descobrir",
     "unavailable": "Não foi possível carregar a sua biblioteca agora. Tente de novo em instantes."
   },
+  "Loading": {
+    "status": "Carregando…"
+  },
   "Following": {
     "title": "Seguintes",
     "description": "O que assistir em seguida: o próximo episódio das suas séries e os filmes que você quer ver.",

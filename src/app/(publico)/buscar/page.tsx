@@ -6,6 +6,8 @@ import { Suspense } from "react";
 import { searchCatalog } from "@/app/_catalog/gateway";
 import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
+import { LoadingRegion } from "@/components/loading/loading-region";
+import { PosterRowSkeleton } from "@/components/loading/poster-row-skeleton";
 import { Icon } from "@/components/icon";
 import { SearchForm } from "@/components/catalog/search-form";
 import { Button } from "@/components/ui/button";
@@ -27,7 +29,13 @@ export default function BuscarPage({ searchParams }: PageProps<"/buscar">) {
     <>
       <BackLink fallbackHref="/descobrir" />
       <SearchHeading />
-      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <PosterRowSkeleton className="flex max-w-reading flex-col gap-3" />
+          </LoadingRegion>
+        }
+      >
         <SearchBody searchParams={searchParams} />
       </Suspense>
     </>

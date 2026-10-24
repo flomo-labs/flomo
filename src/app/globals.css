@@ -348,3 +348,25 @@ body:has([data-landing]) > footer {
     animation: none;
   }
 }
+
+/* Barra de progresso do topo (RouteProgress): trecho que corre e recomeça.
+   Com "reduzir movimento" fica parada, cobrindo a largura toda. */
+@keyframes route-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.route-progress-bar {
+  animation: route-progress 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-progress-bar {
+    animation: none;
+    width: 100%;
+  }
+}

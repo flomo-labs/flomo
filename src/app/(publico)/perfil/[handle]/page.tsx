@@ -6,6 +6,9 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { LoadingRegion } from "@/components/loading/loading-region";
+import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
+import { ProfileSkeleton } from "@/components/loading/profile-skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +26,13 @@ export const metadata: Metadata = {
 // entrou; de perfil privado de outra pessoa, só nome, handle e foto.
 export default function ProfilePage({ params }: PageProps<"/perfil/[handle]">) {
   return (
-    <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+    <Suspense
+      fallback={
+        <LoadingRegion>
+          <ProfileSkeleton />
+        </LoadingRegion>
+      }
+    >
       <ProfileContent params={params} />
     </Suspense>
   );
@@ -87,7 +96,13 @@ async function ProfileContent({
         <p className="text-muted-foreground">{t("privateLocked")}</p>
       )}
       {isOwn ? (
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <LoadingRegion>
+              <PosterGridSkeleton count={5} />
+            </LoadingRegion>
+          }
+        >
           <LibraryPreview user={user} />
         </Suspense>
       ) : null}

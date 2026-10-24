@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { LoadingRegion } from "@/components/loading/loading-region";
+import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LibraryViews } from "./library-list";
 import { LIBRARY_TYPE_PATH, type LibraryType } from "./library-view";
 
@@ -16,7 +19,14 @@ export function LibraryPage({ type }: { type: LibraryType }) {
   return (
     <>
       <Heading />
-      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+      <Suspense
+        fallback={
+          <LoadingRegion className="flex flex-col gap-6">
+            <Skeleton className="h-9 w-64 rounded-full" />
+            <PosterGridSkeleton />
+          </LoadingRegion>
+        }
+      >
         <Body type={type} />
       </Suspense>
     </>

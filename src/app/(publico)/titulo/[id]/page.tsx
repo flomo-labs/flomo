@@ -17,6 +17,11 @@ import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
 import { SeasonStrip } from "@/components/catalog/season-strip";
 import { WatchProviders } from "@/components/catalog/watch-providers";
+import { LoadingRegion } from "@/components/loading/loading-region";
+import {
+  EpisodeListSkeleton,
+  TitleSkeleton,
+} from "@/components/loading/title-skeleton";
 import { RatingAverage } from "@/components/rating-average";
 import { TmdbRating } from "@/components/tmdb-rating";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +52,13 @@ export default function TitlePage({
   return (
     <>
       <BackLink fallbackHref="/descobrir" />
-      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <TitleSkeleton />
+          </LoadingRegion>
+        }
+      >
         <TitleContent params={params} searchParams={searchParams} />
       </Suspense>
     </>
@@ -252,7 +263,13 @@ async function Seasons({
       <Suspense fallback={null}>
         <SeasonAverage titleId={title.id} seasonNumber={current.seasonNumber} />
       </Suspense>
-      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
+      <Suspense
+        fallback={
+          <LoadingRegion>
+            <EpisodeListSkeleton />
+          </LoadingRegion>
+        }
+      >
         <Episodes titleId={title.id} seasonNumber={current.seasonNumber} />
       </Suspense>
     </section>
