@@ -263,7 +263,7 @@ No console.cloud.google.com, no projeto do Flomo, menu **Google Auth Platform**:
 2. **Authentication > URL Configuration:**
    - **Site URL:** a URL de produção.
    - **Redirect URLs:** acrescente `<URL de produção>/auth/callback`.
-3. Em Sign In / Providers, deixe desligados e-mail, telefone e anônimo, até a Fase 1.7 (conta por e-mail).
+3. Em Sign In / Providers, deixe desligados telefone e anônimo. O provedor **Email** fica desligado até o merge da Fase 1.7 (conta por e-mail) e a Resend na `/privacidade` publicada; então ligue-o com **Confirm email LIGADO** (sem ela, alguém cadastra o e-mail alheio com senha própria e, quando a vítima entra com Google, a conta é ligada à do atacante) e, em **Authentication > Sign In / Providers**, ative **Allow manual linking** (vínculo do Google). Traduza antes os templates de e-mail, em especial **Confirm signup** (H.1, passo 8), e confira que o link de confirmação volta para `/auth/callback` (Redirect URLs).
 
 ### D.2 No `flomo-dev` (para o login funcionar nos previews)
 

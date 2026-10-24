@@ -37,6 +37,11 @@ export default function PrivacidadePage() {
               exibido a outros usuários.
             </li>
             <li>
+              <strong>Do cadastro por e-mail</strong>, se você preferir: o
+              e-mail e a senha. A senha é guardada de forma protegida (hash) e
+              nem nós a conseguimos ler.
+            </li>
+            <li>
               <strong>Do seu perfil</strong>: nome de usuário (@handle), nome de
               exibição, país, fuso horário, idioma e se o perfil é público ou
               privado.
@@ -80,6 +85,10 @@ export default function PrivacidadePage() {
               Supabase, para o banco de dados e a autenticação (região do Brasil);
             </li>
             <li>uma plataforma de hospedagem, para servir o site;</li>
+            <li>
+              Resend (envio de e-mails do serviço, como avisos da conta; recebe
+              o seu endereço de e-mail);
+            </li>
             <li>
               Apple (iCloud), para receber as mensagens que você enviar ao nosso
               e-mail de contato;

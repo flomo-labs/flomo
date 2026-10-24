@@ -2,9 +2,13 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { emailCredentialsSchema } from "@/contracts/credentials";
+import { unlinkSignInMethod } from "@/domain/account/unlink-sign-in-method";
+import type { EmailAuthFailure } from "@/infra/auth/supabase";
+import { destinationAfterLogin } from "../_profile/queries";
 import { safeNextPath } from "./redirect";
 import { resolveSiteUrl } from "./site-url";
-import { getRequestAuth } from "./session";
+import { getRequestAuth, requireUser, toCurrentUser } from "./session";
 
 async function siteUrl() {
   const requestHeaders = await headers();
@@ -48,4 +52,84 @@ export async function signOut() {
   const auth = await getRequestAuth();
   await auth.signOut();
   redirect("/");
+}
+
+export type EmailFormState = {
+  error?: EmailAuthFailure | "INVALID_INPUT";
+  // Cadastro feito: falta abrir o link enviado ao e-mail.
+  confirmationSent?: boolean;
+};
+
+async function submitEmailForm(
+  formData: FormData,
+  mode: "signUp" | "signIn",
+): Promise<EmailFormState> {
+  const parsed = emailCredentialsSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  // No login, uma senha fora das regras de cadastro só pode estar errada.
+  if (!parsed.success) {
+    return {
+      error: mode === "signIn" ? "INVALID_CREDENTIALS" : "INVALID_INPUT",
+    };
+  }
+
+  const auth = await getRequestAuth();
+  const { email, password } = parsed.data;
+  const next = safeNextPath(formData.get("next"));
+  let callback: URL | null = null;
+  if (mode === "signUp") {
+    callback = new URL("/auth/callback", await siteUrl());
+    callback.searchParams.set("next", next);
+  }
+  const result = callback
+    ? await auth.signUpWithEmail(email, password, callback.toString())
+    : await auth.signInWithEmail(email, password);
+  if (!result.ok) return { error: result.code };
+  if ("pending" in result) return { confirmationSent: true };
+
+  const user = toCurrentUser(result.claims);
+  redirect(user ? await destinationAfterLogin(user, next) : next);
+}
+
+// Cadastro com e-mail e senha. Formato de `useActionState`.
+export async function signUpWithEmail(
+  _previous: EmailFormState,
+  formData: FormData,
+): Promise<EmailFormState> {
+  return submitEmailForm(formData, "signUp");
+}
+
+export async function signInWithEmail(
+  _previous: EmailFormState,
+  formData: FormData,
+): Promise<EmailFormState> {
+  return submitEmailForm(formData, "signIn");
+}
+
+// Vincula o Google a uma conta que entrou por e-mail. A volta é em
+// /auth/callback, que troca o código como num login comum.
+export async function linkGoogle() {
+  await requireUser("/configuracoes");
+  const callback = new URL("/auth/callback", await siteUrl());
+  callback.searchParams.set("next", "/configuracoes");
+
+  const auth = await getRequestAuth();
+  const googleUrl = await auth.startGoogleLink(callback.toString());
+  redirect(googleUrl ?? "/configuracoes?erro=vinculo");
+}
+
+export type UnlinkFormState = { error?: "NOT_LINKED" | "LAST_METHOD" };
+
+// Desvincula o Google. A regra de ouro (nunca ficar sem forma de entrar)
+// fica no caso de uso.
+export async function unlinkGoogle(): Promise<UnlinkFormState> {
+  await requireUser("/configuracoes");
+  const auth = await getRequestAuth();
+  const result = await unlinkSignInMethod(
+    { methods: auth.signInMethods() },
+    "google",
+  );
+  return result.ok ? {} : { error: result.error.code };
 }

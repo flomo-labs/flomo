@@ -48,9 +48,11 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/auth/callback"]
 jwt_expiry = 3600
 enable_signup = true
+enable_manual_linking = true
 
-# O E2E entra com e-mail e senha de um usuário criado pelo próprio teste; o
-# app continua oferecendo só o Google.
+# O E2E entra com e-mail e senha de um usuário criado pelo próprio teste, por
+# isso a confirmação fica desligada só aqui. Em dev e prod ela é ligada no
+# painel (docs/deploy.md, D.1).
 [auth.email]
 enable_signup = true
 enable_confirmations = false
