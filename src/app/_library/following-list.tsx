@@ -163,8 +163,10 @@ export function FollowingList({
               >
                 <div
                   className={cn(
-                    mobilePreview && "max-md:opacity-40",
-                    desktopPreview && "md:opacity-40",
+                    // Esmaecido e desfocado; o "Ver mais" fica fora deste
+                    // bloco e continua nítido.
+                    mobilePreview && "max-md:opacity-40 max-md:blur-xs",
+                    desktopPreview && "md:opacity-40 md:blur-xs",
                   )}
                 >
                   <PosterRow

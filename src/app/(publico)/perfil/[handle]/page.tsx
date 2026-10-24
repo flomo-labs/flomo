@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ProfileStats } from "@/domain/profile/ports";
-import { watchedTime } from "@/domain/profile/profile-page";
+import { watchedTime, type WatchedTimePart } from "@/domain/profile/profile-page";
 
 // O título não cita o nome: o perfil pode ser privado, e o metadata sai antes
 // da checagem de visibilidade.
@@ -121,33 +121,44 @@ async function StatsList({
   const t = await getTranslations("Profile");
   const format = new Intl.NumberFormat("pt-BR");
   const time = watchedTime(stats.minutesWatched);
-  const timeValue =
-    time.hours === 0
-      ? t("timeMinutesOnly", { minutes: time.minutes })
-      : time.minutes === 0
-        ? t("timeHoursOnly", { hours: time.hours })
-        : t("timeValue", time);
-  const items = [
+  // O número fica grande e a unidade pequena ao lado ("1 mês 15 dias"), para
+  // totais enormes caberem no cartão sem passar para o vizinho.
+  const unitLabel = (part: WatchedTimePart) =>
+    t("timeUnit", part);
+  const timeValue = {
+    number: format.format(time.primary.value),
+    unit: [
+      unitLabel(time.primary),
+      ...(time.secondary
+        ? [format.format(time.secondary.value), unitLabel(time.secondary)]
+        : []),
+    ].join(" "),
+  };
+  const items: {
+    key: string;
+    name: string;
+    value: { number: string; unit?: string };
+  }[] = [
     {
       key: "series",
       name: t("series", { count: stats.seriesCount }),
-      value: format.format(stats.seriesCount),
+      value: { number: format.format(stats.seriesCount) },
     },
     {
       key: "movies",
       name: t("movies", { count: stats.moviesCount }),
-      value: format.format(stats.moviesCount),
+      value: { number: format.format(stats.moviesCount) },
     },
     {
       key: "episodes",
       name: t("episodes", { count: stats.episodesCount }),
-      value: format.format(stats.episodesCount),
+      value: { number: format.format(stats.episodesCount) },
     },
     { key: "time", name: t("time"), value: timeValue },
     {
       key: "ratings",
       name: t("ratings", { count: stats.ratingsCount }),
-      value: format.format(stats.ratingsCount),
+      value: { number: format.format(stats.ratingsCount) },
     },
   ];
   // No celular os números rolam para o lado (com a dica de rolagem das
@@ -165,7 +176,12 @@ async function StatsList({
                 {name}
               </dt>
               <dd className="text-2xl font-semibold whitespace-nowrap tabular-nums">
-                {value}
+                {value.number}
+                {value.unit && (
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">
+                    {value.unit}
+                  </span>
+                )}
               </dd>
             </div>
           ))}

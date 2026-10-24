@@ -57,12 +57,35 @@ export async function updateProfile(
   return ok(parsed.data);
 }
 
-// Tempo assistido em horas inteiras e minutos restantes, para o número do
-// perfil ("12 h 30 min").
+export type WatchedTimeUnit = "minutes" | "hours" | "days" | "months" | "years";
+
+export type WatchedTimePart = { unit: WatchedTimeUnit; value: number };
+
+// Da maior para a menor unidade, em minutos. Mês = 30 dias e ano = 365 dias:
+// é só para o número do perfil caber e ler bem, não um calendário.
+const UNIT_MINUTES: readonly [WatchedTimeUnit, number][] = [
+  ["years", 365 * 24 * 60],
+  ["months", 30 * 24 * 60],
+  ["days", 24 * 60],
+  ["hours", 60],
+  ["minutes", 1],
+];
+
+// Tempo assistido na maior unidade que cabe mais a unidade logo abaixo, se
+// sobrar algo ("1 ano 2 meses", "45 dias 20 h", "12 h 30 min", "45 min").
 export function watchedTime(minutes: number): {
-  hours: number;
-  minutes: number;
+  primary: WatchedTimePart;
+  secondary?: WatchedTimePart;
 } {
   const total = Math.floor(Math.max(0, minutes));
-  return { hours: Math.floor(total / 60), minutes: total % 60 };
+  const found = UNIT_MINUTES.findIndex(([, size]) => total >= size);
+  const index = found === -1 ? UNIT_MINUTES.length - 1 : found;
+  const [unit, size] = UNIT_MINUTES[index];
+  const primary = { unit, value: Math.floor(total / size) };
+  const next = UNIT_MINUTES[index + 1];
+  if (!next) return { primary };
+  const rest = Math.floor((total % size) / next[1]);
+  return rest > 0
+    ? { primary, secondary: { unit: next[0], value: rest } }
+    : { primary };
 }
