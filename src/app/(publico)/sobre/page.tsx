@@ -24,7 +24,7 @@ export default function SobrePage() {
           <p>
             Hoje o projeto está em fase de testes, é de uso não comercial e é
             aberto apenas a maiores de 18 anos. Veja o que vem pela frente em{" "}
-            <Link href="/em-breve">Em breve</Link>.
+            <Link href="/em-breve">Em breve no Flomo</Link>.
           </p>
         </div>
         <ProseSection title="Créditos">
