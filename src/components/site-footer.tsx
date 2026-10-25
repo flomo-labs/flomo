@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const FOOTER_LINKS = [
   { href: "/sobre", label: "Sobre" },
-  { href: "/em-breve", label: "Em breve" },
+  { href: "/em-breve", label: "Em breve no Flomo" },
   { href: "/privacidade", label: "Privacidade" },
   { href: "/termos", label: "Termos de uso" },
 ] as const;
