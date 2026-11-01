@@ -25,6 +25,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Flomo",
   description: "Acompanhe filmes e séries, avalie e compartilhe com amigos.",
+  // Ícone da aba por tema do navegador/dispositivo. O favicon.ico e o
+  // apple-icon.png (src/app/) ficam como reserva, na versão do modo claro.
+  icons: {
+    icon: [
+      { url: "/icon-claro.svg", type: "image/svg+xml", media: "(prefers-color-scheme: light)" },
+      { url: "/icon-escuro.svg", type: "image/svg+xml", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 // Deixa a barra inferior usar a área segura do iPhone (env(safe-area-inset-bottom)).
