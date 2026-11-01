@@ -32,6 +32,9 @@ export const metadata: Metadata = {
       { url: "/icon-claro.svg", type: "image/svg+xml", media: "(prefers-color-scheme: light)" },
       { url: "/icon-escuro.svg", type: "image/svg+xml", media: "(prefers-color-scheme: dark)" },
     ],
+    // Declarado aqui porque `icons` na metadata faz o Next ignorar o
+    // apple-icon.png da convenção de arquivos: sem isto, o iPhone perde o ícone.
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
