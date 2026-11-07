@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   markEpisodeWatched,
   markMovieWatched,
+  markSeasonWatched,
+  unmarkEpisodesWatched,
   rewatchEpisode,
   deleteWatchRecord,
   rewatchMovie,
@@ -562,5 +564,285 @@ describe("todayIn", () => {
   it("usa o fuso do Brasil", () => {
     // 01:00 UTC ainda é o dia anterior em São Paulo.
     expect(todayIn("BR", new Date("2026-10-17T01:00:00Z"))).toBe("2026-10-16");
+  });
+});
+
+describe("marcar no dia da exibição", () => {
+  it("episódio: usa o airDate do catálogo, com precisão de dia, como retroativo", async () => {
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv" },
+      episodes: [
+        ep(1, 1, "2024-03-05"),
+        ep(1, 2, null),
+        ep(1, 3, "2026-10-17"),
+      ],
+    });
+    const [e1, e2, e3] = [ep(1, 1).id, ep(1, 2).id, ep(1, 3).id];
+
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: e1,
+      when: { kind: "airDate" },
+    });
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: e2,
+      when: { kind: "airDate" },
+    });
+    const future = await markEpisodeWatched(lib.deps, USER, {
+      episodeId: e3,
+      when: { kind: "airDate" },
+    });
+
+    expect(lib.events).toMatchObject([
+      {
+        episodeId: e1,
+        watchedAt: new Date("2024-03-05T12:00:00Z"),
+        precision: "day",
+        source: "backfill",
+      },
+      { episodeId: e2, watchedAt: null, precision: "unknown" },
+    ]);
+    expect(future).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_DATE" },
+    });
+  });
+
+  it("filme: usa a data de lançamento; sem data, fica sem data; futuro é recusado", async () => {
+    const lib = createFakeLibrary({
+      titles: { [MOVIE]: "movie" },
+      releaseDates: { [MOVIE]: "2019-07-01" },
+    });
+    await markMovieWatched(lib.deps, USER, {
+      titleId: MOVIE,
+      when: { kind: "airDate" },
+    });
+    expect(lib.events).toMatchObject([
+      { watchedAt: new Date("2019-07-01T12:00:00Z"), precision: "day" },
+    ]);
+
+    const noDate = createFakeLibrary({ titles: { [MOVIE]: "movie" } });
+    await markMovieWatched(noDate.deps, USER, {
+      titleId: MOVIE,
+      when: { kind: "airDate" },
+    });
+    expect(noDate.events).toMatchObject([
+      { watchedAt: null, precision: "unknown" },
+    ]);
+
+    const future = createFakeLibrary({
+      titles: { [MOVIE]: "movie" },
+      releaseDates: { [MOVIE]: "2026-12-25" },
+    });
+    expect(
+      await markMovieWatched(future.deps, USER, {
+        titleId: MOVIE,
+        when: { kind: "airDate" },
+      }),
+    ).toMatchObject({ ok: false, error: { code: "INVALID_DATE" } });
+    expect(future.events).toHaveLength(0);
+  });
+});
+
+describe("markSeasonWatched", () => {
+  const season = (when: unknown, seasonNumber = 2) => ({
+    titleId: SERIES,
+    seasonNumber,
+    when,
+  });
+
+  it("marca os episódios lançados da temporada, sem o futuro, e põe a série em Assistindo", async () => {
+    const lib = setup();
+    const result = await markSeasonWatched(
+      lib.deps,
+      USER,
+      season({ kind: "now" }),
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        marked: 2,
+        alreadyMarked: 0,
+        markedEpisodeIds: [S2E1.id, S2E2.id],
+      },
+    });
+    expect(lib.watched().sort()).toEqual([S2E1.id, S2E2.id]);
+    expect(lib.status(SERIES)).toBe("watching");
+    expect(lib.events).toMatchObject([
+      { watchedAt: NOW, precision: "exact", source: "live" },
+      { watchedAt: NOW, precision: "exact", source: "live" },
+    ]);
+  });
+
+  it("sem data, data escolhida e data de exibição de cada episódio", async () => {
+    const unknown = setup();
+    await markSeasonWatched(unknown.deps, USER, season({ kind: "unknown" }));
+    expect(unknown.events).toMatchObject([
+      { watchedAt: null, precision: "unknown", source: "backfill" },
+      { watchedAt: null, precision: "unknown", source: "backfill" },
+    ]);
+
+    const chosen = setup();
+    await markSeasonWatched(
+      chosen.deps,
+      USER,
+      season({ kind: "date", precision: "month", value: "2022-05" }),
+    );
+    expect(chosen.events).toMatchObject([
+      { precision: "month", watchedAt: new Date("2022-05-01T12:00:00Z") },
+      { precision: "month", watchedAt: new Date("2022-05-01T12:00:00Z") },
+    ]);
+
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv" },
+      episodes: [
+        ep(1, 1, "2024-01-10"),
+        ep(1, 2, "2024-01-17"),
+        ep(1, 3, null),
+      ],
+    });
+    await markSeasonWatched(lib.deps, USER, season({ kind: "airDate" }, 1));
+    expect(lib.events).toMatchObject([
+      { watchedAt: new Date("2024-01-10T12:00:00Z"), precision: "day" },
+      { watchedAt: new Date("2024-01-17T12:00:00Z"), precision: "day" },
+      { watchedAt: null, precision: "unknown" },
+    ]);
+  });
+
+  it("recusa data futura ou inválida sem gravar nada", async () => {
+    const lib = setup();
+    const result = await markSeasonWatched(
+      lib.deps,
+      USER,
+      season({ kind: "date", precision: "day", value: "2026-10-17" }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_DATE" },
+    });
+    expect(lib.events).toHaveLength(0);
+    expect(lib.status(SERIES)).toBeUndefined();
+  });
+
+  it("é idempotente: o que já estava visto não muda nem duplica", async () => {
+    const lib = setup();
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: S2E1.id,
+      when: { kind: "unknown" },
+    });
+    const result = await markSeasonWatched(
+      lib.deps,
+      USER,
+      season({ kind: "now" }),
+    );
+    expect(result).toEqual({
+      ok: true,
+      value: { marked: 1, alreadyMarked: 1, markedEpisodeIds: [S2E2.id] },
+    });
+    expect(lib.progress(S2E1.id)).toBeNull();
+
+    const again = await markSeasonWatched(
+      lib.deps,
+      USER,
+      season({ kind: "now" }),
+    );
+    expect(again).toEqual({
+      ok: true,
+      value: { marked: 0, alreadyMarked: 2, markedEpisodeIds: [] },
+    });
+    expect(lib.events).toHaveLength(2);
+  });
+
+  it("não deixa especiais, filme, título ou temporada inexistentes passarem", async () => {
+    const lib = setup();
+    for (const [input, code] of [
+      [season({ kind: "now" }, 0), "INVALID_INPUT"],
+      [season({ kind: "now" }, 9), "SEASON_NOT_FOUND"],
+      [{ ...season({ kind: "now" }), titleId: MOVIE }, "NOT_A_SERIES"],
+      [
+        { ...season({ kind: "now" }), titleId: OTHER_USER.id },
+        "TITLE_NOT_FOUND",
+      ],
+    ] as const) {
+      expect(await markSeasonWatched(lib.deps, USER, input)).toMatchObject({
+        ok: false,
+        error: { code },
+      });
+    }
+    expect(lib.events).toHaveLength(0);
+  });
+
+  it("série encerrada com tudo visto vira Assistido; desfazer devolve a Assistindo", async () => {
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv" },
+      episodes: [ep(1, 1), ep(1, 2)],
+      titleStatus: { [SERIES]: "ended" },
+    });
+    const done = await markSeasonWatched(
+      lib.deps,
+      USER,
+      season({ kind: "now" }, 1),
+    );
+    expect(lib.status(SERIES)).toBe("watched");
+
+    if (!done.ok) throw new Error("esperava ok");
+    const undone = await unmarkEpisodesWatched(lib.deps, USER, {
+      episodeIds: done.value.markedEpisodeIds,
+    });
+    expect(undone).toEqual({ ok: true, value: { removed: 2 } });
+    expect(lib.watched()).toEqual([]);
+    expect(lib.events).toHaveLength(0);
+    expect(lib.status(SERIES)).toBe("watchlist");
+  });
+});
+
+describe("data de exibição nos anteriores e na troca de data", () => {
+  it("marcar anteriores com airDate dá a cada anterior a própria data de exibição", async () => {
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv" },
+      episodes: [
+        ep(1, 1, "2024-01-10"),
+        ep(1, 2, null),
+        ep(1, 3, "2024-01-24"),
+      ],
+    });
+    await markEpisodeWatched(lib.deps, USER, {
+      episodeId: ep(1, 3).id,
+      when: { kind: "airDate" },
+      includePrevious: true,
+    });
+    expect(lib.events).toMatchObject([
+      { episodeId: ep(1, 3).id, watchedAt: new Date("2024-01-24T12:00:00Z") },
+      { episodeId: ep(1, 1).id, watchedAt: new Date("2024-01-10T12:00:00Z") },
+      { episodeId: ep(1, 2).id, watchedAt: null, precision: "unknown" },
+    ]);
+  });
+
+  it("trocar a data de um registro para a data de exibição; outra pessoa não acha", async () => {
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv" },
+      episodes: [ep(1, 1, "2024-01-10")],
+    });
+    await markEpisodeWatched(lib.deps, USER, { episodeId: ep(1, 1).id });
+    const eventId = lib.events[0].id;
+
+    expect(
+      await setWatchDate(lib.deps, OTHER_USER, {
+        eventId,
+        when: { kind: "airDate" },
+      }),
+    ).toMatchObject({ ok: false, error: { code: "EVENT_NOT_FOUND" } });
+    expect(
+      await setWatchDate(lib.deps, USER, {
+        eventId,
+        when: { kind: "airDate" },
+      }),
+    ).toEqual({ ok: true, value: { eventId } });
+    expect(lib.events[0]).toMatchObject({
+      watchedAt: new Date("2024-01-10T12:00:00Z"),
+      precision: "day",
+      source: "backfill",
+    });
+    expect(lib.progress(ep(1, 1).id)).toEqual(new Date("2024-01-10T12:00:00Z"));
   });
 });

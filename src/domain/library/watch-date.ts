@@ -1,4 +1,4 @@
-import type { WatchDateInput } from "@/contracts/library";
+import type { MarkWatchDateInput, WatchDateInput } from "@/contracts/library";
 import { CATALOG_COUNTRY } from "../catalog/types";
 import type { WatchedAtPrecision, WatchEventSource } from "./values";
 
@@ -59,12 +59,24 @@ function startOfPeriod(
 // Converte a escolha do usuário (ou o padrão da situação) no que é gravado.
 // Só "agora" conta como `live`; sem data ou com data informada é registro
 // retroativo (`backfill`), que não gera atividade no feed.
+// `kind: "airDate"` usa `catalogDate` (AAAA-MM-DD, a exibição do episódio ou
+// o lançamento do filme): vira data do dia; sem data no catálogo, fica sem
+// data. Data do catálogo futura é recusada como qualquer outra.
 // `null` quando a data informada não existe, é futura ou muito antiga.
 export function resolveWatchDate(
-  input: WatchDateInput,
+  input: MarkWatchDateInput,
   now: Date,
   today: string = todayIn(CATALOG_COUNTRY, now),
+  catalogDate: string | null = null,
 ): ResolvedWatchDate | null {
+  if (input.kind === "airDate") {
+    if (!catalogDate) return resolveWatchDate({ kind: "unknown" }, now, today);
+    return resolveWatchDate(
+      { kind: "date", precision: "day", value: catalogDate },
+      now,
+      today,
+    );
+  }
   switch (input.kind) {
     case "now":
       return { watchedAt: now, precision: "exact", source: "live" };

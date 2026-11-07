@@ -10,6 +10,8 @@ import {
   deleteWatchRecord,
   markEpisodeWatched,
   markMovieWatched,
+  markSeasonWatched,
+  unmarkEpisodesWatched,
   rewatchEpisode,
   rewatchMovie,
   setWatchDate,
@@ -726,5 +728,114 @@ describe("marcar como assistido no banco", () => {
         .from(userEpisodeProgress)
         .where(eq(userEpisodeProgress.userId, user));
       expect(cleared.watchedAt).toBeNull();
+    }));
+
+  it("temporada inteira: data de exibição de cada episódio, idempotente, só a biblioteca do próprio usuário, desfazer", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const other = await createUser(tx);
+      const c = await createCatalog(tx);
+      await tx
+        .update(episodes)
+        .set({ airDate: "2024-02-01" })
+        .where(eq(episodes.id, c.ep.S2E1));
+      await tx
+        .update(episodes)
+        .set({ airDate: null })
+        .where(eq(episodes.id, c.ep.S2E2));
+
+      const marked = await run(tx, user, (deps, u) =>
+        markSeasonWatched(deps, u, {
+          titleId: c.seriesId,
+          seasonNumber: 2,
+          when: { kind: "airDate" },
+        }),
+      );
+      // O S2E3 ainda não foi lançado e fica de fora.
+      expect(marked).toEqual({
+        ok: true,
+        value: {
+          marked: 2,
+          alreadyMarked: 0,
+          markedEpisodeIds: [c.ep.S2E1, c.ep.S2E2],
+        },
+      });
+      const events = await tx
+        .select()
+        .from(watchEvents)
+        .where(eq(watchEvents.userId, user));
+      const byEpisode = new Map(events.map((e) => [e.episodeId, e]));
+      expect(byEpisode.get(c.ep.S2E1)).toMatchObject({
+        watchedAt: new Date("2024-02-01T12:00:00Z"),
+        watchedAtPrecision: "day",
+        source: "backfill",
+      });
+      expect(byEpisode.get(c.ep.S2E2)).toMatchObject({
+        watchedAt: null,
+        watchedAtPrecision: "unknown",
+      });
+      expect(events).toHaveLength(2);
+
+      // Outro usuário não ganha nada, e marcar de novo não duplica.
+      expect(
+        await tx
+          .select()
+          .from(watchEvents)
+          .where(eq(watchEvents.userId, other)),
+      ).toHaveLength(0);
+      expect(
+        await run(tx, user, (deps, u) =>
+          markSeasonWatched(deps, u, {
+            titleId: c.seriesId,
+            seasonNumber: 2,
+            when: { kind: "now" },
+          }),
+        ),
+      ).toEqual({
+        ok: true,
+        value: { marked: 0, alreadyMarked: 2, markedEpisodeIds: [] },
+      });
+      expect(
+        await tx.select().from(watchEvents).where(eq(watchEvents.userId, user)),
+      ).toHaveLength(2);
+
+      expect(
+        await run(tx, user, (deps, u) =>
+          unmarkEpisodesWatched(deps, u, {
+            episodeIds: [c.ep.S2E1, c.ep.S2E2],
+          }),
+        ),
+      ).toEqual({ ok: true, value: { removed: 2 } });
+      expect(
+        await tx
+          .select()
+          .from(userEpisodeProgress)
+          .where(eq(userEpisodeProgress.userId, user)),
+      ).toHaveLength(0);
+    }));
+
+  it("filme: marcar no dia do lançamento usa a data do catálogo", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      await tx
+        .update(titles)
+        .set({ releaseDate: "2019-07-01" })
+        .where(eq(titles.id, c.movieId));
+      await run(tx, user, (deps, u) =>
+        markMovieWatched(deps, u, {
+          titleId: c.movieId,
+          when: { kind: "airDate" },
+        }),
+      );
+      const [event] = await tx
+        .select()
+        .from(watchEvents)
+        .where(eq(watchEvents.userId, user));
+      expect(event).toMatchObject({
+        watchedAt: new Date("2019-07-01T12:00:00Z"),
+        watchedAtPrecision: "day",
+        source: "backfill",
+      });
     }));
 });

@@ -5,9 +5,12 @@ import {
   deleteWatchRecord,
   markEpisodeWatched,
   markMovieWatched,
+  markSeasonWatched,
+  type MarkSeasonResult,
   rewatchEpisode,
   rewatchMovie,
   setWatchDate,
+  unmarkEpisodesWatched,
   unmarkEpisodeWatched,
   unmarkMovieWatched,
   type MarkWatchedErrorCode,
@@ -42,10 +45,14 @@ type UseCase = (
   input: unknown,
 ) => Promise<Result<unknown, MarkWatchedErrorCode | SetStatusErrorCode>>;
 
-async function run(
-  useCase: UseCase,
+async function runWithValue<T>(
+  useCase: (
+    ...args: Parameters<UseCase>
+  ) => Promise<Result<T, MarkWatchedErrorCode | SetStatusErrorCode>>,
   input: unknown,
-): Promise<LibraryActionResult> {
+): Promise<
+  Result<T, MarkWatchedErrorCode | SetStatusErrorCode | "UNAUTHENTICATED">
+> {
   const user = await getCurrentUser();
   if (!user) {
     return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
@@ -64,7 +71,32 @@ async function run(
   // Telas que mostram o progresso: Seguintes e biblioteca.
   revalidatePath("/seguintes");
   revalidatePath("/biblioteca");
-  return { ok: true, value: {} };
+  return result;
+}
+
+async function run(
+  useCase: UseCase,
+  input: unknown,
+): Promise<LibraryActionResult> {
+  const result = await runWithValue(useCase, input);
+  return result.ok ? { ok: true, value: {} } : result;
+}
+
+// A tela da temporada mostra quantos episódios foram marcados e quantos já
+// estavam, e usa os ids para o "desfazer".
+export async function markSeason(
+  input: unknown,
+): Promise<
+  Result<
+    MarkSeasonResult,
+    MarkWatchedErrorCode | SetStatusErrorCode | "UNAUTHENTICATED"
+  >
+> {
+  return runWithValue(markSeasonWatched, input);
+}
+
+export async function unmarkEpisodes(input: unknown) {
+  return run(unmarkEpisodesWatched, input);
 }
 
 export async function markEpisode(input: unknown) {

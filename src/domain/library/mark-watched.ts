@@ -2,9 +2,11 @@ import {
   deleteWatchRecordInputSchema,
   markEpisodeWatchedInputSchema,
   markMovieWatchedInputSchema,
+  markSeasonWatchedInputSchema,
   rewatchEpisodeInputSchema,
   rewatchMovieInputSchema,
   setWatchDateInputSchema,
+  unmarkEpisodesWatchedInputSchema,
   unmarkEpisodeWatchedInputSchema,
   unmarkMovieWatchedInputSchema,
 } from "@/contracts/library";
@@ -32,6 +34,8 @@ export type MarkWatchedErrorCode =
   | "EPISODE_NOT_FOUND"
   | "TITLE_NOT_FOUND"
   | "NOT_A_MOVIE"
+  | "NOT_A_SERIES"
+  | "SEASON_NOT_FOUND"
   | "EVENT_NOT_FOUND"
   | "NOT_WATCHED";
 
@@ -123,11 +127,16 @@ export async function markEpisodeWatched(
   const { episodeId, when, includePrevious } = parsed.data;
 
   const now = deps.now();
-  const date = resolveWatchDate(when ?? DEFAULT_WATCH_DATE.single, now);
-  if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
-
   const episode = await deps.library.findEpisode(episodeId);
   if (!episode) return fail("EPISODE_NOT_FOUND", "Episódio não encontrado.");
+
+  const date = resolveWatchDate(
+    when ?? DEFAULT_WATCH_DATE.single,
+    now,
+    undefined,
+    episode.airDate,
+  );
+  if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
 
   // Primeiro, porque trava a linha do título: dois cliques simultâneos na
   // mesma série esperam um pelo outro.
@@ -155,29 +164,44 @@ export async function markEpisodeWatched(
 
   let previousMarked = 0;
   if (includePrevious) {
-    const previousDate = resolveWatchDate(DEFAULT_WATCH_DATE.previous, now);
-    if (!previousDate) throw new Error("Data padrão de anteriores inválida.");
-    const previousIds = await deps.library.listPreviousUnwatched(
+    // Sem escolha de data de exibição, os anteriores ficam sem data. Com ela,
+    // cada anterior recebe a própria data de exibição.
+    const today = todayIn(CATALOG_COUNTRY, now);
+    const previous = await deps.library.listPreviousUnwatched(
       user.id,
       episode,
-      todayIn(CATALOG_COUNTRY, now),
+      today,
     );
-    const inserted = await deps.library.insertProgress(
-      user.id,
-      episode.titleId,
-      previousIds.map((id) => ({
-        episodeId: id,
-        watchedAt: progressDate(previousDate),
-      })),
+    const dated = previous.map((p) => {
+      const d = resolveWatchDate(
+        when?.kind === "airDate" ? when : DEFAULT_WATCH_DATE.previous,
+        now,
+        today,
+        p.airDate,
+      );
+      // Anterior já lançado nunca tem data de exibição no futuro.
+      if (!d) throw new Error("Data de anterior inválida.");
+      return { episodeId: p.id, date: d };
+    });
+    const insertedIds = new Set(
+      await deps.library.insertProgress(
+        user.id,
+        episode.titleId,
+        dated.map((d) => ({
+          episodeId: d.episodeId,
+          watchedAt: progressDate(d.date),
+        })),
+      ),
     );
+    const inserted = dated.filter((d) => insertedIds.has(d.episodeId));
     await deps.library.insertEvents(
       user.id,
-      inserted.map((id) => ({
+      inserted.map((d) => ({
         titleId: episode.titleId,
-        episodeId: id,
-        watchedAt: previousDate.watchedAt,
-        precision: previousDate.precision,
-        source: previousDate.source,
+        episodeId: d.episodeId,
+        watchedAt: d.date.watchedAt,
+        precision: d.date.precision,
+        source: d.date.source,
       })),
     );
     previousMarked = inserted.length;
@@ -200,14 +224,21 @@ export async function markMovieWatched(
   if (!parsed.success) return invalidInput(parsed.error.issues);
   const { titleId, when } = parsed.data;
 
-  const date = resolveWatchDate(when ?? DEFAULT_WATCH_DATE.single, deps.now());
-  if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
-
   const mediaType = await deps.library.findTitleMediaType(titleId);
   if (!mediaType) return fail("TITLE_NOT_FOUND", "Título não encontrado.");
   if (mediaType !== "movie") {
     return fail("NOT_A_MOVIE", "Séries são marcadas por episódio.");
   }
+
+  const date = resolveWatchDate(
+    when ?? DEFAULT_WATCH_DATE.single,
+    deps.now(),
+    undefined,
+    when?.kind === "airDate"
+      ? await deps.library.findTitleReleaseDate(titleId)
+      : null,
+  );
+  if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
 
   // A trava do título vem antes da checagem, para dois cliques simultâneos
   // não gravarem o filme duas vezes.
@@ -232,6 +263,105 @@ export async function markMovieWatched(
   // Atividade nova traz o título de volta à lista.
   await deps.library.setTitleHidden(user.id, titleId, false);
   return ok({ marked: true });
+}
+
+export type MarkSeasonResult = {
+  // Episódios marcados agora (os que ainda não estavam vistos).
+  marked: number;
+  // Episódios lançados da temporada que já estavam vistos e não mudaram.
+  alreadyMarked: number;
+  // Quais foram marcados agora, para desfazer (`unmarkEpisodesWatched`).
+  markedEpisodeIds: string[];
+};
+
+// Marca a temporada regular inteira: os episódios lançados (ou sem data no
+// catálogo) que o usuário ainda não viu, todos com a mesma escolha de data.
+// Com `airDate`, cada episódio recebe a própria data de exibição. Episódio
+// ainda não lançado fica de fora, como em "marcar anteriores". Idempotente:
+// o que já estava visto não é gravado de novo nem muda de data.
+export async function markSeasonWatched(
+  deps: LibraryDeps,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<MarkSeasonResult, MarkWatchedErrorCode>> {
+  const parsed = markSeasonWatchedInputSchema.safeParse(input);
+  if (!parsed.success) return invalidInput(parsed.error.issues);
+  const { titleId, seasonNumber, when } = parsed.data;
+
+  const now = deps.now();
+  const today = todayIn(CATALOG_COUNTRY, now);
+  // A escolha de data vale para a temporada toda: uma data informada inválida
+  // ou futura é recusada antes de gravar qualquer coisa.
+  if (when.kind !== "airDate" && !resolveWatchDate(when, now, today)) {
+    return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
+  }
+
+  const mediaType = await deps.library.findTitleMediaType(titleId);
+  if (!mediaType) return fail("TITLE_NOT_FOUND", "Título não encontrado.");
+  if (mediaType !== "tv") {
+    return fail("NOT_A_SERIES", "Só séries têm temporadas.");
+  }
+  const season = await deps.library.listSeasonEpisodes(
+    user.id,
+    titleId,
+    seasonNumber,
+  );
+  if (season.length === 0) {
+    return fail("SEASON_NOT_FOUND", "Temporada não encontrada.");
+  }
+
+  const released = season.filter((e) => !e.airDate || e.airDate <= today);
+  const toMark = released.filter((e) => !e.watched);
+  const alreadyMarked = released.length - toMark.length;
+  if (toMark.length === 0) {
+    return ok({ marked: 0, alreadyMarked, markedEpisodeIds: [] });
+  }
+
+  // Primeiro, porque trava a linha do título (ver `markEpisodeWatched`).
+  await deps.library.upsertTitleStatus(
+    user.id,
+    titleId,
+    "watching",
+    EPISODE_REPLACES,
+  );
+
+  const dated = toMark.map((e) => {
+    const date = resolveWatchDate(when, now, today, e.airDate);
+    if (!date)
+      throw new Error("Data de exibição de episódio lançado inválida.");
+    return { episodeId: e.id, date };
+  });
+  const insertedIds = await deps.library.insertProgress(
+    user.id,
+    titleId,
+    dated.map((d) => ({
+      episodeId: d.episodeId,
+      watchedAt: progressDate(d.date),
+    })),
+  );
+  // A PK decide em caso de corrida: só quem entrou agora ganha registro.
+  const inserted = new Set(insertedIds);
+  const events = dated.filter((d) => inserted.has(d.episodeId));
+  await deps.library.insertEvents(
+    user.id,
+    events.map((d) => ({
+      titleId,
+      episodeId: d.episodeId,
+      watchedAt: d.date.watchedAt,
+      precision: d.date.precision,
+      source: d.date.source,
+    })),
+  );
+
+  if (events.length > 0) {
+    await syncSeriesStatus(deps, user.id, titleId, false);
+    await deps.library.setTitleHidden(user.id, titleId, false);
+  }
+  return ok({
+    marked: events.length,
+    alreadyMarked: alreadyMarked + (toMark.length - events.length),
+    markedEpisodeIds: events.map((d) => d.episodeId),
+  });
 }
 
 // Apaga um registro do histórico. Se era o último do episódio, o episódio
@@ -286,6 +416,25 @@ export async function unmarkEpisodeWatched(
   });
 }
 
+// Desfaz a marcação de vários episódios de uma vez (o "desfazer" da
+// temporada): tira o registro mais recente de cada um.
+export async function unmarkEpisodesWatched(
+  deps: LibraryDeps,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ removed: number }, MarkWatchedErrorCode>> {
+  const parsed = unmarkEpisodesWatchedInputSchema.safeParse(input);
+  if (!parsed.success) return invalidInput(parsed.error.issues);
+  let removed = 0;
+  for (const episodeId of new Set(parsed.data.episodeIds)) {
+    const eventId = await deps.library.findLatestEventId(user.id, {
+      episodeId,
+    });
+    if (eventId && (await removeRecord(deps, user, eventId))) removed++;
+  }
+  return ok({ removed });
+}
+
 export async function unmarkMovieWatched(
   deps: LibraryDeps,
   user: AuthenticatedUser,
@@ -326,7 +475,14 @@ export async function setWatchDate(
   if (!parsed.success) return invalidInput(parsed.error.issues);
   const { eventId, when } = parsed.data;
 
-  const date = resolveWatchDate(when, deps.now());
+  const target = await deps.library.findEventCatalogDate(user.id, eventId);
+  if (!target) return fail("EVENT_NOT_FOUND", "Registro não encontrado.");
+  const date = resolveWatchDate(
+    when,
+    deps.now(),
+    undefined,
+    target.catalogDate,
+  );
   if (!date) return fail("INVALID_DATE", INVALID_DATE_MESSAGE);
 
   const updated = await deps.library.updateEventDate(
