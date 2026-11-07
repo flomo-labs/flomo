@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Marcar a temporada inteira como assistida e marcar no dia da exibição/lançamento, no back (#245).
 - Tag "beta" ao lado da logo e versão do Flomo no rodapé de Configurações (#258).
 
 ### Alterado

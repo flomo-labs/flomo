@@ -15,7 +15,7 @@ import { type LibraryStatus, PROGRESS_PRECISIONS } from "./values";
 export const NOW = new Date("2026-10-16T15:00:00Z");
 export const USER = { id: "11111111-1111-4111-8111-111111111111" };
 
-export type FakeEpisode = LibraryEpisode & { airDate: string | null };
+export type FakeEpisode = LibraryEpisode;
 type StoredEvent = NewWatchEvent & { id: string; userId: string };
 
 export function createFakeLibrary(catalog: {
@@ -23,6 +23,8 @@ export function createFakeLibrary(catalog: {
   episodes?: FakeEpisode[];
   // Situação de cada série no catálogo (padrão: "unknown").
   titleStatus?: Record<string, TitleStatus>;
+  // Data de lançamento de cada filme no catálogo (padrão: sem data).
+  releaseDates?: Record<string, string>;
 }) {
   const titles = catalog.titles ?? {};
   const episodes = catalog.episodes ?? [];
@@ -43,11 +45,25 @@ export function createFakeLibrary(catalog: {
             titleId: e.titleId,
             seasonNumber: e.seasonNumber,
             episodeNumber: e.episodeNumber,
+            airDate: e.airDate,
           }
         : null;
     },
     async findTitleMediaType(titleId) {
       return titles[titleId] ?? null;
+    },
+    async findTitleReleaseDate(titleId) {
+      return catalog.releaseDates?.[titleId] ?? null;
+    },
+    async listSeasonEpisodes(userId, titleId, seasonNumber) {
+      return episodes
+        .filter((e) => e.titleId === titleId && e.seasonNumber === seasonNumber)
+        .sort((a, b) => a.episodeNumber - b.episodeNumber)
+        .map((e) => ({
+          id: e.id,
+          airDate: e.airDate,
+          watched: progress.has(key(userId, e.id)),
+        }));
     },
     async listLibrary(
       userId,
@@ -207,7 +223,7 @@ export function createFakeLibrary(catalog: {
             a.seasonNumber - b.seasonNumber ||
             a.episodeNumber - b.episodeNumber,
         )
-        .map((e) => e.id);
+        .map((e) => ({ id: e.id, airDate: e.airDate }));
     },
     async listUnwatchedReleased(userId, titleId, today) {
       return episodes
@@ -288,6 +304,16 @@ export function createFakeLibrary(catalog: {
     },
     async deleteEpisodeProgress(userId, episodeId) {
       progress.delete(key(userId, episodeId));
+    },
+    async findEventCatalogDate(userId, eventId) {
+      const e = events.find((x) => x.userId === userId && x.id === eventId);
+      if (!e) return undefined;
+      const episode = episodes.find((x) => x.id === e.episodeId);
+      return {
+        catalogDate: episode
+          ? episode.airDate
+          : (catalog.releaseDates?.[e.titleId] ?? null),
+      };
     },
     async updateEventDate(userId, eventId, watchedAt, precision, source) {
       const e = events.find((x) => x.userId === userId && x.id === eventId);

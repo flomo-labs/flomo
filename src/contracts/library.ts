@@ -30,16 +30,40 @@ export const watchDateInputSchema = z.discriminatedUnion("kind", [
 
 export type WatchDateInput = z.infer<typeof watchDateInputSchema>;
 
+// Ao marcar, também vale "no dia da exibição/lançamento": a data vem do
+// catálogo (`airDate` do episódio, data de lançamento do filme), uma para
+// cada item. Sem data no catálogo, o registro fica sem data. Vale ao
+// marcar e ao trocar a data de um registro; "rever" usa `watchDateInputSchema`.
+export const markWatchDateInputSchema = z.discriminatedUnion("kind", [
+  ...watchDateInputSchema.options,
+  z.object({ kind: z.literal("airDate") }),
+]);
+
+export type MarkWatchDateInput = z.infer<typeof markWatchDateInputSchema>;
+
 export const markEpisodeWatchedInputSchema = z.object({
   episodeId: z.uuid(),
-  when: watchDateInputSchema.optional(),
+  when: markWatchDateInputSchema.optional(),
   // Marca também os episódios anteriores ainda não vistos.
   includePrevious: z.boolean().default(false),
 });
 
 export const markMovieWatchedInputSchema = z.object({
   titleId: z.uuid(),
-  when: watchDateInputSchema.optional(),
+  when: markWatchDateInputSchema.optional(),
+});
+
+// Marcar a temporada inteira (regular, sem especiais). A data é obrigatória:
+// a tela sempre pergunta, para não inflar as estatísticas de hoje sem querer.
+export const markSeasonWatchedInputSchema = z.object({
+  titleId: z.uuid(),
+  seasonNumber: z.number().int().min(1).max(1000),
+  when: markWatchDateInputSchema,
+});
+
+// Desfazer a marcação da temporada: os episódios que ela marcou.
+export const unmarkEpisodesWatchedInputSchema = z.object({
+  episodeIds: z.array(z.uuid()).min(1).max(1000),
 });
 
 export const unmarkEpisodeWatchedInputSchema = z.object({
@@ -52,7 +76,7 @@ export const unmarkMovieWatchedInputSchema = z.object({
 
 export const setWatchDateInputSchema = z.object({
   eventId: z.uuid(),
-  when: watchDateInputSchema,
+  when: markWatchDateInputSchema,
 });
 
 export const titleLibraryStateInputSchema = z.object({

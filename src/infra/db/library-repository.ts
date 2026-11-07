@@ -91,11 +91,50 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
           titleId: seasons.titleId,
           seasonNumber: seasons.seasonNumber,
           episodeNumber: episodes.episodeNumber,
+          airDate: episodes.airDate,
         })
         .from(episodes)
         .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
         .where(eq(episodes.id, episodeId));
       return row ?? null;
+    },
+
+    async findTitleReleaseDate(titleId) {
+      const [row] = await tx
+        .select({ releaseDate: titles.releaseDate })
+        .from(titles)
+        .where(eq(titles.id, titleId));
+      return row?.releaseDate ?? null;
+    },
+
+    async listSeasonEpisodes(userId, titleId, seasonNumber) {
+      const rows = await tx
+        .select({
+          id: episodes.id,
+          airDate: episodes.airDate,
+          progressEpisodeId: userEpisodeProgress.episodeId,
+        })
+        .from(episodes)
+        .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+        .leftJoin(
+          userEpisodeProgress,
+          and(
+            eq(userEpisodeProgress.episodeId, episodes.id),
+            eq(userEpisodeProgress.userId, userId),
+          ),
+        )
+        .where(
+          and(
+            eq(seasons.titleId, titleId),
+            eq(seasons.seasonNumber, seasonNumber),
+          ),
+        )
+        .orderBy(asc(episodes.episodeNumber));
+      return rows.map((r) => ({
+        id: r.id,
+        airDate: r.airDate,
+        watched: r.progressEpisodeId !== null,
+      }));
     },
 
     async findTitleMediaType(titleId) {
@@ -410,7 +449,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
 
     async listPreviousUnwatched(userId, episode, today) {
       const rows = await tx
-        .select({ id: episodes.id })
+        .select({ id: episodes.id, airDate: episodes.airDate })
         .from(episodes)
         .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
         .leftJoin(
@@ -439,7 +478,7 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
           ),
         )
         .orderBy(asc(seasons.seasonNumber), asc(episodes.episodeNumber));
-      return rows.map((r) => r.id);
+      return rows;
     },
 
     async insertProgress(userId, titleId, rows) {
@@ -586,6 +625,22 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
             eq(userEpisodeProgress.episodeId, episodeId),
           ),
         );
+    },
+
+    async findEventCatalogDate(userId, eventId) {
+      const [row] = await tx
+        .select({
+          episodeAirDate: episodes.airDate,
+          releaseDate: titles.releaseDate,
+        })
+        .from(watchEvents)
+        .innerJoin(titles, eq(titles.id, watchEvents.titleId))
+        .leftJoin(episodes, eq(episodes.id, watchEvents.episodeId))
+        .where(
+          and(eq(watchEvents.userId, userId), eq(watchEvents.id, eventId)),
+        );
+      if (!row) return undefined;
+      return { catalogDate: row.episodeAirDate ?? row.releaseDate ?? null };
     },
 
     async updateEventDate(userId, eventId, watchedAt, precision, source) {
