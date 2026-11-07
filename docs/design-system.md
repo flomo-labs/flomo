@@ -42,7 +42,7 @@ Padrões de uso de cor:
 - Fonte: **Inter** (`--font-sans`, também `--font-heading`); mono: Geist Mono (`--font-mono`).
 - Utilitários: `text-page-title` (24px celular / 30px desktop, 700), `text-section-title` (20px, 600), `text-section-title-lg` (24px, 700; telas só de listas, como o Descobrir).
 - Corpo `text-sm` (14px) é o padrão da interface (64 usos); `text-xs` (12px) para etiquetas e metadados; `text-base` só em campos (evita zoom no iOS; `md:text-sm`).
-- Título de cartão: `text-sm font-medium leading-tight line-clamp-2`. Logo: `text-lg font-bold`. Rótulo da barra inferior: `0.625rem`.
+- Título de cartão: `text-sm font-medium leading-tight line-clamp-2`. Logo: `text-lg font-bold`, com a tag "beta" ao lado (`Badge variant="outline"` em `text-muted-foreground`, `gap-1.5`, fora do link; #232). Rótulo da barra inferior: `0.625rem`.
 
 ### Espaçamento
 Escala Tailwind (4px). Mais usados: `gap-2` (8), `gap-3` (12), `gap-1`, `gap-4`, `gap-6` (entre blocos da página); entre seções de listas do Descobrir, `gap-10` (celular) / `gap-12` (`md+`). Grades de pôster: `gap-3`. Sem espaçamentos arbitrários.

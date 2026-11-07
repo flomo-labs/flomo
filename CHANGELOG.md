@@ -8,7 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
-- Versão do Flomo exibida no rodapé de Configurações (#232).
+- Tag "beta" ao lado da logo e versão do Flomo no rodapé de Configurações (#258).
 
 ### Alterado
 
