@@ -9,6 +9,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 ### Adicionado
 
 - Marcar a temporada inteira como assistida e marcar no dia da exibição/lançamento, no back (#245).
+- Botão "Marcar temporada como vista" na página do título, com progresso, diálogo de data (Hoje, Na data de exibição de cada episódio, Sem data, Escolher data) e "Desfazer"; "No dia em que foi ao ar" e "No dia do lançamento" ao editar a data de episódio e filme (#248).
 - Tag "beta" ao lado da logo e versão do Flomo no rodapé de Configurações (#258).
 
 ### Alterado

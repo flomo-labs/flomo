@@ -11,7 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { WatchDateInput } from "@/contracts/library";
+import type { MarkWatchDateInput } from "@/contracts/library";
+import {
+  toWatchDateInput,
+  WatchDateChoice,
+  type WatchDateChoiceKind,
+} from "./watch-date-choice";
 import type { WatchControlLabels } from "./watch-control";
 
 type WatchRecord = { eventId: string; dateLabel: string };
@@ -19,8 +24,6 @@ type View =
   | { name: "list" }
   | { name: "edit"; eventId: string }
   | { name: "delete"; eventId: string };
-// O que o formulário de edição vai gravar: agora, sem data ou um dia.
-type Choice = { kind: "now" } | { kind: "unknown" } | { kind: "day" };
 
 // Todos os registros de um episódio ou filme visto, do mais recente ao mais
 // antigo. No mesmo diálogo, o conteúdo troca para editar a data de um
@@ -41,26 +44,21 @@ export function WatchRecordsDialog({
   today: string;
   pending: boolean;
   labels: WatchControlLabels;
-  onSetDate: (eventId: string, when: WatchDateInput) => void;
+  onSetDate: (eventId: string, when: MarkWatchDateInput) => void;
   onDelete: (eventId: string) => void;
 }) {
   const [view, setView] = useState<View>({ name: "list" });
-  const [choice, setChoice] = useState<Choice>({ kind: "day" });
+  const [choice, setChoice] = useState<WatchDateChoiceKind>("day");
   const [day, setDay] = useState(today);
 
   const back = () => setView({ name: "list" });
   const edit = (eventId: string) => {
-    setChoice({ kind: "day" });
+    setChoice("day");
     setDay(today);
     setView({ name: "edit", eventId });
   };
   const finish = (eventId: string) => {
-    onSetDate(
-      eventId,
-      choice.kind === "day"
-        ? { kind: "date", precision: "day", value: day }
-        : { kind: choice.kind },
-    );
+    onSetDate(eventId, toWatchDateInput(choice, day));
     back();
   };
 
@@ -97,7 +95,10 @@ export function WatchRecordsDialog({
                       onClick={() => edit(record.eventId)}
                       className="size-8 pointer-coarse:size-11"
                     >
-                      <Icon name="create" className="size-4 pointer-coarse:size-5" />
+                      <Icon
+                        name="create"
+                        className="size-4 pointer-coarse:size-5"
+                      />
                     </Button>
                     <Button
                       type="button"
@@ -110,7 +111,10 @@ export function WatchRecordsDialog({
                       }
                       className="size-8 pointer-coarse:size-11"
                     >
-                      <Icon name="trash" className="size-4 pointer-coarse:size-5" />
+                      <Icon
+                        name="trash"
+                        className="size-4 pointer-coarse:size-5"
+                      />
                     </Button>
                   </span>
                 </li>
@@ -122,40 +126,14 @@ export function WatchRecordsDialog({
             <DialogHeader>
               <DialogTitle>{labels.editRecord}</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant={choice.kind === "now" ? "default" : "outline"}
-                aria-pressed={choice.kind === "now"}
-                className="rounded-full"
-                onClick={() => setChoice({ kind: "now" })}
-              >
-                {labels.today}
-              </Button>
-              <Button
-                type="button"
-                variant={choice.kind === "unknown" ? "default" : "outline"}
-                aria-pressed={choice.kind === "unknown"}
-                className="rounded-full"
-                onClick={() => setChoice({ kind: "unknown" })}
-              >
-                {labels.noDate}
-              </Button>
-              <label className="flex flex-col gap-1">
-                <span className="text-muted-foreground">{labels.pickDate}</span>
-                <input
-                  type="date"
-                  value={day}
-                  max={today}
-                  min="1900-01-01"
-                  onChange={(e) => {
-                    setDay(e.target.value);
-                    setChoice({ kind: "day" });
-                  }}
-                  className="h-11 rounded-full border border-border bg-background px-4 text-base"
-                />
-              </label>
-            </div>
+            <WatchDateChoice
+              kind={choice}
+              day={day}
+              today={today}
+              labels={labels}
+              onKindChange={setChoice}
+              onDayChange={setDay}
+            />
             <DialogFooter>
               <Button
                 type="button"
@@ -168,7 +146,7 @@ export function WatchRecordsDialog({
               <Button
                 type="button"
                 className="rounded-full"
-                disabled={pending || (choice.kind === "day" && !day)}
+                disabled={pending || (choice === "day" && !day)}
                 onClick={() => finish(view.eventId)}
               >
                 {labels.done}
