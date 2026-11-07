@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { version } from "./package.json";
 import { securityHeaders } from "./src/lib/security-headers";
 
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Fonte única da versão do produto: o campo "version" do package.json.
+  env: { NEXT_PUBLIC_APP_VERSION: version },
   async headers() {
     return [
       {

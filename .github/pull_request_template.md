@@ -22,6 +22,7 @@
 - [ ] Sem OFFSET profundo nem cálculo pesado no request path
 - [ ] Regra de negócio nova ou alterada avaliada e registrada em `docs/regras-de-negocio.md`, se aplicável
 - [ ] `/em-breve` (`src/content/roadmap.ts`) atualizado, se a mudança entrega ou planeja uma funcionalidade
+- [ ] `CHANGELOG.md` (`Não lançado`) atualizado, ou "sem mudança no changelog" justificado na descrição
 - [ ] Docs/ADR atualizados, se aplicável
 
 ## Screenshots (se houver UI)

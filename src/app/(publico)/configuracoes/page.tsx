@@ -67,6 +67,9 @@ export default function ConfiguracoesPage({
           <DeleteAccount searchParams={searchParams} />
         </Suspense>
       </section>
+      <p className="text-xs text-muted-foreground">
+        Flomo {process.env.NEXT_PUBLIC_APP_VERSION} beta
+      </p>
     </div>
   );
 }

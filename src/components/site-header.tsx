@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { signOut } from "@/app/_auth/actions";
@@ -54,9 +55,14 @@ export function SiteHeader() {
 
 function Logo({ href }: { href: string }) {
   return (
-    <Link href={href} className="text-lg font-bold">
-      Flomo
-    </Link>
+    <div className="flex items-center gap-1.5">
+      <Link href={href} className="text-lg font-bold">
+        Flomo
+      </Link>
+      <Badge variant="outline" className="text-muted-foreground">
+        beta
+      </Badge>
+    </div>
   );
 }
 
