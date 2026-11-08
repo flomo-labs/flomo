@@ -16,6 +16,7 @@ import { RatingSlot } from "@/app/_ratings/rating-slot";
 import { getRatingSummary } from "@/app/_ratings/state";
 import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
+import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { SeasonAccordionItem } from "@/components/catalog/season-accordion-item";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { LoadingRegion } from "@/components/loading/loading-region";
@@ -347,6 +348,7 @@ async function Seasons({
           );
         })}
       </div>
+      <ScrollToTopButton label={t("backToTop")} />
     </section>
   );
 }

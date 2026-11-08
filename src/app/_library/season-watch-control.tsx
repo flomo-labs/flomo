@@ -26,6 +26,7 @@ export type SeasonWatchLabels = {
   markSeason: string;
   markSeasonFull: string;
   seasonWatched: string;
+  seasonWatchedFull: string;
   seasonWatchedUndo: string;
   // Menu do cabeçalho.
   menu: string;
@@ -65,7 +66,7 @@ type Mode = "single" | "through";
 // série) e menu "⋮" com "só esta", "até esta" e "desfazer". Depois de marcar,
 // o aviso verde e o botão trazem "Desfazer", que tira só os episódios
 // marcados agora (os ids ficam aqui, na tela; ao recarregar a página o botão
-// apenas mostra "Temporada vista", que pede confirmação e desmarca todos os vistos, como "Desfazer temporada" do menu).
+// apenas mostra "Vista", que pede confirmação e desmarca todos os vistos, como "Desfazer temporada" do menu).
 export function SeasonWatchControl({
   seasonNumber,
   titleId,
@@ -146,12 +147,12 @@ export function SeasonWatchControl({
   }
 
   return (
-    <div className="flex shrink-0 flex-col items-end gap-1">
+    <div className="flex shrink-0 flex-col items-end justify-center gap-1">
       <div className="flex items-center gap-1">
         {complete && undoIds ? (
           <Button
             type="button"
-            variant="outline"
+            variant="default"
             disabled={pending}
             onClick={() => undo(undoIds)}
             className={buttonClass}
@@ -162,8 +163,9 @@ export function SeasonWatchControl({
         ) : complete ? (
           <Button
             type="button"
-            variant="outline"
+            variant="default"
             disabled={pending || watchedIds.length === 0}
+            aria-label={labels.seasonWatchedFull}
             onClick={() => setUnmarkOpen(true)}
             className={buttonClass}
           >
@@ -173,7 +175,7 @@ export function SeasonWatchControl({
         ) : (
           <Button
             type="button"
-            variant="outline"
+            variant="default"
             disabled={pending}
             aria-label={labels.markSeasonFull}
             onClick={() => setMode("single")}

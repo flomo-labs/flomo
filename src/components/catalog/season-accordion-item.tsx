@@ -31,7 +31,14 @@ export function SeasonAccordionItem({
   const panelId = `${id}-painel`;
   return (
     <div className="rounded-card border border-border">
-      <div className="flex items-start gap-2 p-2 pr-3">
+      <div
+        className={cn(
+          "flex items-center gap-2 p-2 pr-3",
+          // Aberta, o cabeçalho acompanha a rolagem enquanto a lista de
+          // episódios da temporada passa: o botão de marcar e o menu ficam à mão.
+          open && "sticky top-0 z-20 rounded-t-card bg-background",
+        )}
+      >
         <div className="flex min-w-0 flex-1 flex-col">
           <h3 className="m-0 text-base font-medium">
             <SeasonAccordionToggle
@@ -48,14 +55,14 @@ export function SeasonAccordionItem({
               value={progress.watched}
               max={progress.total}
               aria-valuetext={progress.label}
-              className="-mt-1 flex-nowrap items-center gap-2 pl-9 [&_[data-slot=progress-track]]:w-28"
+              className="-mt-1 flex-nowrap items-center gap-2 pl-8 [&_[data-slot=progress-track]]:w-28"
             >
               <span className="order-last text-xs text-muted-foreground tabular-nums">
                 {progress.label}
               </span>
             </Progress>
           ) : summary ? (
-            <p className="-mt-1 pl-9 text-xs text-muted-foreground">
+            <p className="-mt-1 pl-8 text-xs text-muted-foreground">
               {summary}
             </p>
           ) : null}
