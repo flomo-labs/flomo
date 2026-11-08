@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SettingsSection } from "@/components/settings-section";
+import { Separator } from "@/components/ui/separator";
 import { BackLink } from "@/components/back-link";
 import { FormSkeleton } from "@/components/loading/form-skeleton";
 import { LoadingRegion } from "@/components/loading/loading-region";
@@ -8,8 +10,15 @@ import { DeleteAccountDialog } from "@/app/_account/delete-account-dialog";
 import { SignInMethods } from "@/app/_account/sign-in-methods";
 import { getRequestAuth, requireUser } from "@/app/_auth/session";
 import { updateHandle } from "@/app/_profile/actions";
-import { handleFormLabels, profileFormLabels } from "@/app/_profile/form-labels";
+import {
+  handleFormLabels,
+  profileFormLabels,
+} from "@/app/_profile/form-labels";
 import { HandleForm } from "@/app/_profile/handle-form";
+import {
+  IdentityPreviewCard,
+  IdentityPreviewProvider,
+} from "@/app/_profile/identity-preview";
 import { ProfileForm } from "@/app/_profile/profile-form";
 import { getOwnProfile, profilePath } from "@/app/_profile/queries";
 
@@ -19,34 +28,26 @@ export default function ConfiguracoesPage({
   searchParams,
 }: PageProps<"/configuracoes">) {
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
       <Suspense fallback={<BackLink />}>
         <BackToProfile />
       </Suspense>
       <h1 className="text-2xl font-bold">Configurações</h1>
       <Suspense
         fallback={
-          <LoadingRegion>
-            <FormSkeleton />
-          </LoadingRegion>
-        }
-      >
-        <ChangeHandle />
-      </Suspense>
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Perfil</h2>
-        <Suspense
-          fallback={
+          <SettingsSection title="Perfil">
             <LoadingRegion>
               <FormSkeleton fields={3} />
             </LoadingRegion>
-          }
-        >
-          <EditProfile />
-        </Suspense>
-      </section>
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Formas de entrar</h2>
+          </SettingsSection>
+        }
+      >
+        <Identity />
+      </Suspense>
+      <SettingsSection
+        title="Formas de entrar"
+        description="Como você acessa o Flomo."
+      >
         <Suspense
           fallback={
             <LoadingRegion>
@@ -56,17 +57,17 @@ export default function ConfiguracoesPage({
         >
           <SignInMethodsSection searchParams={searchParams} />
         </Suspense>
-      </section>
-      <section className="flex flex-col items-start gap-2">
-        <h2 className="text-lg font-semibold">Conta</h2>
-        <p className="text-sm text-muted-foreground">
-          Apaga seu perfil, biblioteca, notas, histórico e comentários. Não tem
-          volta.
-        </p>
+      </SettingsSection>
+      <SettingsSection
+        title="Conta"
+        description="Apaga seu perfil, biblioteca, notas, histórico e comentários. Não tem volta."
+        destructive
+        className="items-start"
+      >
         <Suspense fallback={null}>
           <DeleteAccount searchParams={searchParams} />
         </Suspense>
-      </section>
+      </SettingsSection>
       <p className="text-xs text-muted-foreground">
         Flomo {process.env.NEXT_PUBLIC_APP_VERSION} beta
       </p>
@@ -86,36 +87,47 @@ async function BackToProfile() {
   return <BackLink fallbackHref={href} />;
 }
 
-// Troca do handle a qualquer momento. O antigo fica livre na hora.
-async function ChangeHandle() {
+// Cartão "Assim você aparece" no topo, nome exibido (com bio e perfil privado)
+// e @usuário. O cartão acompanha o que se digita nos dois campos. Troca do
+// @usuário a qualquer momento: o antigo fica livre na hora e os links antigos
+// param de funcionar. A foto continua a do Google.
+async function Identity() {
   const user = await requireUser("/configuracoes");
   const profile = await getOwnProfile(user);
-  const current =
-    profile && !isProvisionalHandle(profile.handle)
-      ? profile.handle
-      : undefined;
+  const handle =
+    profile && !isProvisionalHandle(profile.handle) ? profile.handle : "";
+  const displayName = profile?.displayName ?? "";
+  const [profileLabels, handleLabels] = await Promise.all([
+    profileFormLabels(),
+    handleFormLabels("changeHandle"),
+  ]);
   return (
-    <HandleForm
-      action={updateHandle}
-      defaultHandle={current}
-      labels={await handleFormLabels("save")}
-    />
-  );
-}
-
-// Nome de exibição, bio e perfil privado; a foto continua a do Google.
-async function EditProfile() {
-  const user = await requireUser("/configuracoes");
-  const profile = await getOwnProfile(user);
-  return (
-    <ProfileForm
-      defaults={{
-        displayName: profile?.displayName ?? "",
-        bio: profile?.bio ?? "",
-        isPrivate: profile?.isPrivate ?? false,
-      }}
-      labels={await profileFormLabels()}
-    />
+    <IdentityPreviewProvider initial={{ displayName, handle }}>
+      <SettingsSection
+        title="Perfil"
+        description="Como outras pessoas veem e encontram você."
+      >
+        <IdentityPreviewCard label={profileLabels.previewTitle} />
+        <ProfileForm
+          defaults={{
+            displayName,
+            bio: profile?.bio ?? "",
+            isPrivate: profile?.isPrivate ?? false,
+          }}
+          labels={profileLabels}
+        />
+        <Separator />
+        <div className="flex flex-col gap-2">
+          <h3 className="text-base font-semibold">{handleLabels.label}</h3>
+          <HandleForm
+            action={updateHandle}
+            defaultHandle={handle || undefined}
+            labels={handleLabels}
+            submitVariant="outline"
+          />
+        </div>
+      </SettingsSection>
+    </IdentityPreviewProvider>
   );
 }
 

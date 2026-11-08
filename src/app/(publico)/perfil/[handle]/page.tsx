@@ -12,6 +12,7 @@ import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
 import { ProfileSkeleton } from "@/components/loading/profile-skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { profileInitials } from "@/app/_profile/initials";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ProfileStats } from "@/domain/profile/ports";
@@ -61,7 +62,7 @@ async function ProfileContent({
       <header className="flex items-start gap-4">
         <Avatar size="lg" className="size-16">
           <AvatarFallback className="text-lg">
-            {profile.handle.slice(0, 2).toUpperCase()}
+            {profileInitials(profile.displayName, profile.handle)}
           </AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
