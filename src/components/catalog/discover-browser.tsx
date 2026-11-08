@@ -33,7 +33,7 @@ type Labels = {
 };
 
 // Descobrir: o serviço é um seletor no próprio título de "Em alta" ("Em alta
-// esta semana em Todos", "Em alta no Netflix") e o tipo (Todos, Séries,
+// esta semana em Todos", "Em alta no Netflix") e o tipo (Tudo, Séries,
 // Filmes) fica à direita do título; os dois valem para todas as listas. Sem
 // serviço ("Todos"): "Em alta" e "Nos cinemas" (esta só tem filmes, então some
 // com "Séries"). Com serviço: só "Em alta no serviço X". As listas chegam prontas do
@@ -113,7 +113,7 @@ export function DiscoverBrowser({
   }
 
   const provider = providers.find((p) => p.id === shown?.providerId);
-  // Sem serviço só há Todos, Séries e Filmes; com serviço, também Novelas e
+  // Sem serviço só há Tudo, Séries e Filmes; com serviço, também Novelas e
   // Animes quando ele tiver títulos. Tipo que deixou de existir volta a Todos.
   const segments: MediaSegment[] = shown?.segments ?? [...BASE_SEGMENTS];
   const current = segments.includes(segment) ? segment : "tudo";
@@ -136,8 +136,10 @@ export function DiscoverBrowser({
         />
       }
       title={
-        <>
-          {lead}{" "}
+        // Texto e seletor em linha que quebra com espaço entre elas: no celular
+        // o seletor desce para a linha de baixo sem encostar no texto.
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-2">
+          <span>{lead}</span>
           <ProviderSelect
             providers={providers}
             value={providerId}
@@ -148,7 +150,7 @@ export function DiscoverBrowser({
             allLabel={labels.allProviders}
             ariaLabel={labels.providerNav}
           />
-        </>
+        </span>
       }
     />
   );
