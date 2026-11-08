@@ -214,16 +214,17 @@
   "Landing": {
     "headline": "O próximo episódio, sempre à mão.",
     "body": "Marque o que você já viu, saiba o que assistir em seguida e conte o que achou para os amigos.",
-    "signIn": "Entrar ou criar conta",
+    "createAccount": "Criar conta",
+    "haveAccount": "Já tenho conta · Entrar",
     "enter": "Entrar",
     "menu": "Mais opções",
     "tmdbNotice": "This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.",
     "seeTrending": "Ver o que está em alta →",
-    "consent": "Ao entrar, você declara ter 18 anos ou mais e concorda com os <terms>Termos de uso</terms> e com a <privacy>Política de privacidade</privacy>."
+    "consent": "Ao entrar ou criar sua conta, você declara ter 18 anos ou mais e concorda com os <terms>Termos de uso</terms> e com a <privacy>Política de privacidade</privacy>."
   },
   "Discover": {
-  "title": "Descobrir",
-  "description": "Em alta, nos cinemas e nos serviços de streaming.",
+    "title": "Descobrir",
+    "description": "Em alta, nos cinemas e nos serviços de streaming.",
     "shelf": {
       "trending": "Em alta esta semana",
       "now_playing": "Nos cinemas",
