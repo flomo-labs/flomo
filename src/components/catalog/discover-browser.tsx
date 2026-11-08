@@ -118,12 +118,25 @@ export function DiscoverBrowser({
   const segments: MediaSegment[] = shown?.segments ?? [...BASE_SEGMENTS];
   const current = segments.includes(segment) ? segment : "tudo";
 
+  // Texto do título, seletor de serviço e filtro de tipo numa linha que quebra:
+  // no celular o texto fica sozinho em cima e o seletor e o filtro dividem a
+  // linha de baixo, o filtro sempre à direita.
   const header = (id: string, lead: string) => (
-    <SectionHeader
-      id={id}
-      size="lg"
-      wrap
-      action={
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
+      <h2 id={id} className="text-section-title-lg">
+        {lead}
+      </h2>
+      <ProviderSelect
+        providers={providers}
+        value={providerId}
+        onChange={chooseProvider}
+        onOpen={() => {
+          for (const p of providers) void load(p.id).catch(() => {});
+        }}
+        allLabel={labels.allProviders}
+        ariaLabel={labels.providerNav}
+      />
+      <div className="ml-auto min-w-0">
         <SegmentedControl
           compactOnMobile
           value={current}
@@ -134,25 +147,8 @@ export function DiscoverBrowser({
             label: labels.media[s],
           }))}
         />
-      }
-      title={
-        // Texto e seletor em linha que quebra com espaço entre elas: no celular
-        // o seletor desce para a linha de baixo sem encostar no texto.
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-2">
-          <span>{lead}</span>
-          <ProviderSelect
-            providers={providers}
-            value={providerId}
-            onChange={chooseProvider}
-            onOpen={() => {
-              for (const p of providers) void load(p.id).catch(() => {});
-            }}
-            allLabel={labels.allProviders}
-            ariaLabel={labels.providerNav}
-          />
-        </span>
-      }
-    />
+      </div>
+    </div>
   );
 
   return (
