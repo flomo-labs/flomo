@@ -9,8 +9,8 @@ function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
-// Cartão flutuante no visual do menu (`rounded-lg bg-popover`, mesma
-// animação de 200ms do `Select`).
+// Cartão flutuante no visual do menu (`rounded-lg bg-popover`, animação
+// rápida de 100ms).
 function PopoverContent({
   className,
   align = "end",
@@ -29,7 +29,7 @@ function PopoverContent({
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(
-            "z-50 origin-(--transform-origin) rounded-lg bg-popover p-2 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none duration-200 ease-out data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 motion-reduce:animate-none",
+            "z-50 origin-(--transform-origin) rounded-lg bg-popover p-2 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none duration-100 ease-out data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 motion-reduce:animate-none",
             className,
           )}
           {...props}

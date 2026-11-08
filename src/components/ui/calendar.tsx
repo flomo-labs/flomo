@@ -55,7 +55,7 @@ function CalendarDropdown({
       <SelectTrigger aria-label={ariaLabel} className="capitalize">
         {selected?.label}
       </SelectTrigger>
-      <SelectContent className="max-h-60">
+      <SelectContent className="max-h-60 duration-100">
         {options?.map((option) => (
           <SelectItem
             key={option.value}
@@ -80,7 +80,7 @@ function Calendar({
   showOutsideDays = false,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
-  const day = "size-9 p-0 text-center text-sm";
+  const day = "size-9 p-0 text-center text-sm pointer-coarse:size-10";
   return (
     <DayPicker
       locale={ptBR}
@@ -107,12 +107,13 @@ function Calendar({
         ),
         month_grid: "border-collapse",
         weekdays: "flex",
-        weekday: "size-9 text-xs font-normal text-muted-foreground",
+        weekday:
+          "size-9 pointer-coarse:size-10 text-xs font-normal text-muted-foreground",
         weeks: "flex flex-col gap-1",
         week: "flex",
         day,
         day_button: cn(
-          "size-9 cursor-pointer rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default disabled:hover:bg-transparent",
+          "size-9 pointer-coarse:size-10 cursor-pointer rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default disabled:hover:bg-transparent",
         ),
         selected:
           "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button:hover]:bg-primary/80",

@@ -9,6 +9,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  isoToMasked,
+  maskDateInput,
+  parseMaskedDate,
+} from "@/lib/watch-date-shortcuts";
 import { cn } from "cn";
 
 // AAAA-MM-DD ↔ Date local ao meio-dia, para o fuso não mudar o dia.
@@ -23,10 +28,12 @@ function formatDay(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-// Campo de data. Com toque (celular, tablet) usa o seletor nativo do
-// sistema, que no iOS e no Android já é bom; com mouse mostra o calendário
-// do shadcn (`Calendar`), porque o seletor nativo do desktop destoa do app.
-// Os dois valem para o mesmo estado e respeitam `min` e `max` (AAAA-MM-DD).
+// Campo de data igual no celular e no desktop: texto digitável no formato
+// dd/mm/aaaa (teclado numérico, barras automáticas) e, à direita, o ícone de
+// calendário que abre o `Calendar` do shadcn num `Popover`, só quando a
+// pessoa clica. O seletor nativo não é usado: no desktop destoa do app e no
+// iOS não deixa digitar. `value`, `min` e `max` são AAAA-MM-DD; `value` vira
+// "" enquanto o texto está incompleto ou fora de `min`/`max`.
 export function DateField({
   value,
   onChange,
@@ -34,6 +41,7 @@ export function DateField({
   max,
   "aria-label": ariaLabel,
   calendarLabel = "Abrir calendário",
+  placeholder = "dd/mm/aaaa",
   className,
 }: {
   value: string;
@@ -41,76 +49,90 @@ export function DateField({
   min?: string;
   max?: string;
   "aria-label"?: string;
-  // Rótulo do botão que abre o calendário (desktop).
+  // Rótulo do botão que abre o calendário.
   calendarLabel?: string;
+  placeholder?: string;
   className?: string;
 }) {
   const selected = parseDay(value);
   const maxDate = max ? parseDay(max) : undefined;
   const minDate = min ? parseDay(min) : undefined;
-  // Mês exibido no calendário; acompanha o valor quando ele muda de fora
-  // (atalhos "Ontem", "Há 1 semana").
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState(isoToMasked(value));
+  // Mês exibido no calendário; acompanha o valor.
   const [month, setMonth] = useState<Date | undefined>(selected ?? maxDate);
-  const [lastValue, setLastValue] = useState(value);
-  if (value !== lastValue) {
-    setLastValue(value);
+
+  // Valor trocado de fora (atalhos "Ontem", "Há 1 semana"): o texto segue.
+  if (value !== "" && value !== parseMaskedDate(text)) {
+    setText(isoToMasked(value));
     if (selected) setMonth(selected);
   }
 
-  const [open, setOpen] = useState(false);
+  const parsed = parseMaskedDate(text);
+  const outOfRange =
+    parsed !== "" && ((max && parsed > max) || (min && parsed < min));
+  const invalid = text.length === 10 && (parsed === "" || Boolean(outOfRange));
 
   return (
     <div className={cn("relative min-w-0 max-w-full", className)}>
       <input
-        type="date"
-        value={value}
-        min={min}
-        max={max}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        maxLength={10}
+        value={text}
+        placeholder={placeholder}
         aria-label={ariaLabel}
-        onChange={(e) => onChange(e.target.value)}
-        className="block h-11 w-full min-w-0 max-w-full appearance-none rounded-full border border-border bg-background px-4 py-0 text-base leading-[2.6rem] [&::-webkit-date-and-time-value]:m-0 [&::-webkit-date-and-time-value]:flex [&::-webkit-date-and-time-value]:h-full [&::-webkit-date-and-time-value]:min-h-6 [&::-webkit-date-and-time-value]:items-center [&::-webkit-date-and-time-value]:justify-start [&::-webkit-date-and-time-value]:text-left [color-scheme:dark] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 pointer-fine:pr-12 pointer-fine:[&::-webkit-calendar-picker-indicator]:hidden"
+        aria-invalid={invalid || undefined}
+        onChange={(e) => {
+          const next = maskDateInput(e.target.value);
+          setText(next);
+          const iso = parseMaskedDate(next);
+          onChange(
+            iso && (!max || iso <= max) && (!min || iso >= min) ? iso : "",
+          );
+        }}
+        className="block h-11 w-full min-w-0 max-w-full rounded-full border border-border bg-background pl-4 pr-12 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
       />
-      {/* Só com mouse: o campo continua digitável e o calendário só abre
-          quando a pessoa clica no ícone. Com toque, o seletor nativo. */}
-      <div className="hidden pointer-fine:block">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={calendarLabel}
-                title={calendarLabel}
-                className="absolute right-1 top-1/2 -translate-y-1/2"
-              />
-            }
-          >
-            <Icon name="calendar" className="size-5" />
-          </PopoverTrigger>
-          <PopoverContent>
-            <Calendar
-              mode="single"
-              required
-              selected={selected}
-              onSelect={(date) => {
-                if (date) {
-                  onChange(formatDay(date));
-                  setOpen(false);
-                }
-              }}
-              month={month}
-              onMonthChange={setMonth}
-              startMonth={minDate}
-              endMonth={maxDate}
-              disabled={[
-                ...(maxDate ? [{ after: maxDate }] : []),
-                ...(minDate ? [{ before: minDate }] : []),
-              ]}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={calendarLabel}
+              title={calendarLabel}
+              className="absolute right-1 top-1/2 -translate-y-1/2"
             />
-          </PopoverContent>
-        </Popover>
-      </div>
+          }
+        >
+          <Icon name="calendar" className="size-5" />
+        </PopoverTrigger>
+        <PopoverContent>
+          <Calendar
+            mode="single"
+            required
+            selected={selected}
+            onSelect={(date) => {
+              if (date) {
+                const iso = formatDay(date);
+                setText(isoToMasked(iso));
+                onChange(iso);
+                setOpen(false);
+              }
+            }}
+            month={month}
+            onMonthChange={setMonth}
+            startMonth={minDate}
+            endMonth={maxDate}
+            disabled={[
+              ...(maxDate ? [{ after: maxDate }] : []),
+              ...(minDate ? [{ before: minDate }] : []),
+            ]}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

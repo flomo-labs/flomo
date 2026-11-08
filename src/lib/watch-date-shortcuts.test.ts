@@ -3,6 +3,9 @@ import {
   daysAgo,
   formatDayValue,
   isBeforeRelease,
+  isoToMasked,
+  maskDateInput,
+  parseMaskedDate,
 } from "./watch-date-shortcuts";
 
 describe("daysAgo", () => {
@@ -35,5 +38,24 @@ describe("formatDayValue", () => {
   it("formata dia e ano", () => {
     expect(formatDayValue("2026-11-07")).toBe("07/11/2026");
     expect(formatDayValue("2026")).toBe("2026");
+  });
+});
+
+describe("campo de data digitado", () => {
+  it("coloca as barras sozinho e ignora o que não é dígito", () => {
+    expect(maskDateInput("0711")).toBe("07/11");
+    expect(maskDateInput("07112026")).toBe("07/11/2026");
+    expect(maskDateInput("07/11/20269")).toBe("07/11/2026");
+    expect(maskDateInput("ab1")).toBe("1");
+  });
+  it("converte para AAAA-MM-DD só se o dia existe", () => {
+    expect(parseMaskedDate("07/11/2026")).toBe("2026-11-07");
+    expect(parseMaskedDate("29/02/2024")).toBe("2024-02-29");
+    expect(parseMaskedDate("30/02/2024")).toBe("");
+    expect(parseMaskedDate("07/11")).toBe("");
+  });
+  it("volta de AAAA-MM-DD para dd/mm/aaaa", () => {
+    expect(isoToMasked("2026-11-07")).toBe("07/11/2026");
+    expect(isoToMasked("")).toBe("");
   });
 });

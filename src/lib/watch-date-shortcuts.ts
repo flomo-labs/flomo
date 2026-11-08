@@ -25,3 +25,34 @@ export function formatDayValue(value: string): string {
   const [year, month, day] = value.split("-");
   return day && month ? `${day}/${month}/${year}` : value;
 }
+
+// Campo de data digitado, no formato brasileiro dd/mm/aaaa.
+
+// Só dígitos, com as barras entrando sozinhas: "0711" → "07/11".
+export function maskDateInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)];
+  return parts.filter(Boolean).join("/");
+}
+
+// "07/11/2026" → "2026-11-07"; "" se incompleto ou se o dia não existe.
+export function parseMaskedDate(text: string): string {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  if (!match) return "";
+  const [day, month, year] = [match[1], match[2], match[3]].map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return "";
+  }
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
+// "2026-11-07" → "07/11/2026".
+export function isoToMasked(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return year && month && day ? `${day}/${month}/${year}` : "";
+}
