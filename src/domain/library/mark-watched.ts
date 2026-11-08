@@ -13,7 +13,7 @@ import {
 import { CATALOG_COUNTRY, type TitleStatus } from "../catalog/types";
 import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
-import type { LibraryRepository } from "./ports";
+import type { LibraryRepository, SeasonEpisode } from "./ports";
 import { type LibraryStatus, PROGRESS_PRECISIONS } from "./values";
 import {
   DEFAULT_WATCH_DATE,
@@ -278,7 +278,8 @@ export type MarkSeasonResult = {
 // catálogo) que o usuário ainda não viu, todos com a mesma escolha de data.
 // Com `airDate`, cada episódio recebe a própria data de exibição. Episódio
 // ainda não lançado fica de fora, como em "marcar anteriores". Idempotente:
-// o que já estava visto não é gravado de novo nem muda de data.
+// o que já estava visto não é gravado de novo nem muda de data. Com
+// `throughSeason`, vale para as temporadas de 1 até `seasonNumber`.
 export async function markSeasonWatched(
   deps: LibraryDeps,
   user: AuthenticatedUser,
@@ -286,7 +287,7 @@ export async function markSeasonWatched(
 ): Promise<Result<MarkSeasonResult, MarkWatchedErrorCode>> {
   const parsed = markSeasonWatchedInputSchema.safeParse(input);
   if (!parsed.success) return invalidInput(parsed.error.issues);
-  const { titleId, seasonNumber, when } = parsed.data;
+  const { titleId, seasonNumber, when, throughSeason } = parsed.data;
 
   const now = deps.now();
   const today = todayIn(CATALOG_COUNTRY, now);
@@ -301,12 +302,15 @@ export async function markSeasonWatched(
   if (mediaType !== "tv") {
     return fail("NOT_A_SERIES", "Só séries têm temporadas.");
   }
-  const season = await deps.library.listSeasonEpisodes(
-    user.id,
-    titleId,
-    seasonNumber,
-  );
-  if (season.length === 0) {
+  // "Até esta temporada" junta as temporadas regulares de 1 a N; a pedida
+  // precisa existir, as do meio que o catálogo não tem são ignoradas.
+  const season: SeasonEpisode[] = [];
+  let requested: SeasonEpisode[] = [];
+  for (let n = throughSeason ? 1 : seasonNumber; n <= seasonNumber; n++) {
+    requested = await deps.library.listSeasonEpisodes(user.id, titleId, n);
+    season.push(...requested);
+  }
+  if (requested.length === 0) {
     return fail("SEASON_NOT_FOUND", "Temporada não encontrada.");
   }
 

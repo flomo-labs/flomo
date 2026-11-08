@@ -709,6 +709,36 @@ describe("markSeasonWatched", () => {
     ]);
   });
 
+  it("com throughSeason marca da temporada 1 até a pedida, sem os especiais", async () => {
+    const lib = setup();
+    const result = await markSeasonWatched(lib.deps, USER, {
+      ...season({ kind: "now" }, 2),
+      throughSeason: true,
+    });
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        marked: 5,
+        alreadyMarked: 0,
+        markedEpisodeIds: [S1E1.id, S1E2.id, S1E3.id, S2E1.id, S2E2.id],
+      },
+    });
+    expect(lib.watched()).not.toContain(S0E1.id);
+  });
+
+  it("com throughSeason numa temporada que não existe falha sem gravar", async () => {
+    const lib = setup();
+    const result = await markSeasonWatched(lib.deps, USER, {
+      ...season({ kind: "now" }, 9),
+      throughSeason: true,
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "SEASON_NOT_FOUND" },
+    });
+    expect(lib.events).toHaveLength(0);
+  });
+
   it("recusa data futura ou inválida sem gravar nada", async () => {
     const lib = setup();
     const result = await markSeasonWatched(
