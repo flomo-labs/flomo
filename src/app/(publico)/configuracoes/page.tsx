@@ -28,7 +28,7 @@ export default function ConfiguracoesPage({
   searchParams,
 }: PageProps<"/configuracoes">) {
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
       <Suspense fallback={<BackLink />}>
         <BackToProfile />
       </Suspense>
