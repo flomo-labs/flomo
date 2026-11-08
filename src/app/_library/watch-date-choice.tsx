@@ -11,7 +11,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { MarkWatchDateInput } from "@/contracts/library";
-import { daysAgo, isBeforeRelease } from "@/lib/watch-date-shortcuts";
+import {
+  daysAgo,
+  isBeforeRelease,
+  isYearOnly,
+} from "@/lib/watch-date-shortcuts";
 
 export type WatchDateChoiceLabels = {
   today: string;
@@ -65,8 +69,6 @@ export function WatchDateChoice({
 }) {
   const [view, setView] = useState<"options" | "day">("options");
   const [day, setDay] = useState(today);
-  // "Este ano" grava só o ano (precisão de ano), não 01/01.
-  const [yearOnly, setYearOnly] = useState(false);
   const thisYear = today.slice(0, 4);
 
   if (view === "day") {
@@ -80,10 +82,7 @@ export function WatchDateChoice({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => {
-              setDay(daysAgo(today, 1));
-              setYearOnly(false);
-            }}
+            onClick={() => setDay(daysAgo(today, 1))}
           >
             {labels.yesterday}
           </Button>
@@ -91,19 +90,16 @@ export function WatchDateChoice({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => {
-              setDay(daysAgo(today, 7));
-              setYearOnly(false);
-            }}
+            onClick={() => setDay(daysAgo(today, 7))}
           >
             {labels.weekAgo}
           </Button>
           <Button
             type="button"
             size="sm"
-            variant={yearOnly ? "default" : "outline"}
-            aria-pressed={yearOnly}
-            onClick={() => setYearOnly(true)}
+            variant="outline"
+            // Preenche o campo só com o ano ("2026"): precisão de ano.
+            onClick={() => setDay(thisYear)}
           >
             {labels.thisYear}
           </Button>
@@ -113,12 +109,9 @@ export function WatchDateChoice({
           max={today}
           min="1900-01-01"
           aria-label={labels.pickDate}
-          onChange={(value) => {
-            setDay(value);
-            setYearOnly(false);
-          }}
+          onChange={setDay}
         />
-        {isBeforeRelease(yearOnly ? thisYear : day, releaseDate) ? (
+        {isBeforeRelease(day, releaseDate) ? (
           <p role="status" className="text-sm text-muted-foreground">
             {labels.beforeRelease}
           </p>
@@ -135,13 +128,13 @@ export function WatchDateChoice({
           <Button
             type="button"
             className="rounded-full"
-            disabled={pending || (!yearOnly && !day)}
+            disabled={pending || !day}
             onClick={() =>
-              onChoose(
-                yearOnly
-                  ? { kind: "date", precision: "year", value: thisYear }
-                  : { kind: "date", precision: "day", value: day },
-              )
+              onChoose({
+                kind: "date",
+                precision: isYearOnly(day) ? "year" : "day",
+                value: day,
+              })
             }
           >
             {labels.done}

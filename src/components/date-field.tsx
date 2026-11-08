@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover";
 import {
   isoToMasked,
+  isYearOnly,
   maskDateInput,
   parseMaskedDate,
 } from "@/lib/watch-date-shortcuts";
@@ -30,10 +31,12 @@ function formatDay(date: Date): string {
 
 // Campo de data igual no celular e no desktop: texto digitável no formato
 // dd/mm/aaaa (teclado numérico, barras automáticas) e, à direita, o ícone de
-// calendário que abre o `Calendar` do shadcn num `Popover`, só quando a
-// pessoa clica. O seletor nativo não é usado: no desktop destoa do app e no
-// iOS não deixa digitar. `value`, `min` e `max` são AAAA-MM-DD; `value` vira
-// "" enquanto o texto está incompleto ou fora de `min`/`max`.
+// calendário: com mouse abre o `Calendar` do shadcn num `Popover`, só quando
+// a pessoa clica (o seletor nativo do desktop destoa do app); com toque abre o
+// seletor nativo do sistema. O texto nunca é o seletor nativo, porque no iOS
+// ele não deixa digitar. `value`, `min` e `max` são AAAA-MM-DD; `value` vira
+// "" enquanto o texto está incompleto ou fora de `min`/`max`. Um `value` só com
+// o ano ("2026") aparece como "2026" e vale como data com precisão de ano.
 export function DateField({
   value,
   onChange,
@@ -63,7 +66,8 @@ export function DateField({
   const [month, setMonth] = useState<Date | undefined>(selected ?? maxDate);
 
   // Valor trocado de fora (atalhos "Ontem", "Há 1 semana"): o texto segue.
-  if (value !== "" && value !== parseMaskedDate(text)) {
+  const current = isYearOnly(text) ? text : parseMaskedDate(text);
+  if (value !== "" && value !== current) {
     setText(isoToMasked(value));
     if (selected) setMonth(selected);
   }
@@ -85,7 +89,10 @@ export function DateField({
         aria-label={ariaLabel}
         aria-invalid={invalid || undefined}
         onChange={(e) => {
-          const next = maskDateInput(e.target.value);
+          // Texto só com o ano ("Este ano"): ao editar, recomeça do zero.
+          const raw = e.target.value;
+          const next =
+            isYearOnly(text) && raw.length < 4 ? "" : maskDateInput(raw);
           setText(next);
           const iso = parseMaskedDate(next);
           onChange(
@@ -93,6 +100,30 @@ export function DateField({
           );
         }}
         className="block h-11 w-full min-w-0 max-w-full rounded-full border border-border bg-background pl-4 pr-12 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
+      />
+      {/* Com toque (`pointer-coarse`), o ícone é só o desenho: um
+          `input type="date"` invisível por cima dele abre o seletor nativo do
+          sistema ao toque, que é bom no iOS e no Android. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute right-1 top-1/2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full pointer-coarse:flex"
+      >
+        <Icon name="calendar" className="size-5" />
+      </span>
+      <input
+        type="date"
+        tabIndex={-1}
+        aria-label={calendarLabel}
+        value={isYearOnly(value) ? "" : value}
+        min={min}
+        max={max}
+        onChange={(e) => {
+          const iso = e.target.value;
+          if (!iso) return;
+          setText(isoToMasked(iso));
+          onChange(iso);
+        }}
+        className="absolute right-1 top-1/2 hidden size-11 -translate-y-1/2 appearance-none opacity-0 pointer-coarse:block"
       />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
@@ -103,7 +134,7 @@ export function DateField({
               size="icon"
               aria-label={calendarLabel}
               title={calendarLabel}
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              className="absolute right-1 top-1/2 -translate-y-1/2 pointer-coarse:hidden"
             />
           }
         >

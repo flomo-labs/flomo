@@ -4,6 +4,7 @@ import {
   formatDayValue,
   isBeforeRelease,
   isoToMasked,
+  isYearOnly,
   maskDateInput,
   parseMaskedDate,
 } from "./watch-date-shortcuts";
@@ -57,5 +58,14 @@ describe("campo de data digitado", () => {
   it("volta de AAAA-MM-DD para dd/mm/aaaa", () => {
     expect(isoToMasked("2026-11-07")).toBe("07/11/2026");
     expect(isoToMasked("")).toBe("");
+    expect(isoToMasked("2026")).toBe("2026");
+  });
+});
+
+describe("isYearOnly", () => {
+  it("reconhece só o ano", () => {
+    expect(isYearOnly("2026")).toBe(true);
+    expect(isYearOnly("2026-11-07")).toBe(false);
+    expect(isYearOnly("20/26")).toBe(false);
   });
 });

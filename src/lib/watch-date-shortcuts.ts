@@ -51,8 +51,14 @@ export function parseMaskedDate(text: string): string {
   return `${match[3]}-${match[2]}-${match[1]}`;
 }
 
-// "2026-11-07" → "07/11/2026".
+// Só o ano ("2026"): data com precisão de ano, que o campo mostra como está.
+export function isYearOnly(text: string): boolean {
+  return /^\d{4}$/.test(text);
+}
+
+// "2026-11-07" → "07/11/2026"; "2026" (só o ano) fica "2026".
 export function isoToMasked(iso: string): string {
+  if (isYearOnly(iso)) return iso;
   const [year, month, day] = iso.split("-");
   return year && month && day ? `${day}/${month}/${year}` : "";
 }
