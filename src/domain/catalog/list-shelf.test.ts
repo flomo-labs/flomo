@@ -16,6 +16,8 @@ describe("listShelf", () => {
       { kind: "provider", mediaType: "person", providerId: "8" },
       { kind: "provider", mediaType: "", providerId: "8" },
       { kind: "provider", mediaType: "tv", providerId: "8&with_genres=1" },
+      { kind: "trending", mediaType: "novelas" },
+      { kind: "now_playing", mediaType: "person" },
       null,
     ]) {
       expect(await listShelf(deps, input)).toMatchObject({
@@ -50,6 +52,31 @@ describe("listShelf", () => {
     expect([...memory.shelves.keys()]).toEqual([
       "shelf:pt-BR:BR:provider:all:8",
     ]);
+  });
+
+  it("em alta por tipo: chave própria; sem tipo mantém a chave anterior", async () => {
+    const { deps, memory } = fakeDeps();
+    await listShelf(deps, TRENDING);
+    await listShelf(deps, { kind: "trending", mediaType: "all" });
+    await listShelf(deps, { kind: "trending", mediaType: "movie" });
+    await listShelf(deps, { kind: "trending", mediaType: "tv" });
+    expect([...memory.shelves.keys()].sort()).toEqual([
+      "shelf:pt-BR:BR:trending",
+      "shelf:pt-BR:BR:trending:movie",
+      "shelf:pt-BR:BR:trending:tv",
+    ]);
+  });
+
+  it("nos cinemas: filmes e todos dividem a lista; séries devolvem vazio sem consultar", async () => {
+    const { deps, provider, memory } = fakeDeps();
+    await listShelf(deps, { kind: "now_playing", mediaType: "movie" });
+    await listShelf(deps, { kind: "now_playing" });
+    expect(provider.fetchShelf).toHaveBeenCalledTimes(1);
+    expect([...memory.shelves.keys()]).toEqual(["shelf:pt-BR:BR:now_playing"]);
+    expect(
+      await listShelf(deps, { kind: "now_playing", mediaType: "tv" }),
+    ).toEqual({ ok: true, value: [] });
+    expect(provider.fetchShelf).toHaveBeenCalledTimes(1);
   });
 
   it("lista vazia não vai para o cache", async () => {
