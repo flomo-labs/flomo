@@ -25,6 +25,7 @@ export function StarRating({
   labels,
   className,
   size = "md",
+  starClassName,
 }: {
   value: number | null;
   onChange?: (halfStars: number) => void;
@@ -36,6 +37,9 @@ export function StarRating({
   // toque maiores, para a nota num bottom sheet. "xs": estrelas coloridas
   // um pouco menores, para caber dentro de um botão em pílula.
   size?: "sm" | "xs" | "md" | "lg";
+  // Cor das estrelas preenchidas, no lugar da cor de destaque (`size` "sm"
+  // continua cinza). Usado no cartão da média do título.
+  starClassName?: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
@@ -64,7 +68,9 @@ export function StarRating({
             filled
             className={cn(
               box,
-              size === "sm" ? "text-muted-foreground" : "text-primary",
+              size === "sm"
+                ? "text-muted-foreground"
+                : (starClassName ?? "text-primary"),
             )}
           />
         </span>
