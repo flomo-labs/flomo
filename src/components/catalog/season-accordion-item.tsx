@@ -30,7 +30,7 @@ export function SeasonAccordionItem({
 }) {
   const panelId = `${id}-painel`;
   return (
-    <li className="rounded-card border border-border">
+    <div className="rounded-card border border-border">
       <div className="flex items-start gap-2 p-2 pr-3">
         <div className="flex min-w-0 flex-1 flex-col">
           <h3 className="m-0 text-base font-medium">
@@ -72,6 +72,6 @@ export function SeasonAccordionItem({
           {children}
         </div>
       ) : null}
-    </li>
+    </div>
   );
 }

@@ -280,7 +280,8 @@ async function Seasons({
           </>
         }
       />
-      <ul
+      <div
+        role="group"
         className="flex max-w-reading flex-col gap-2"
         aria-label={t("seasonsNav")}
       >
@@ -345,7 +346,7 @@ async function Seasons({
             </SeasonAccordionItem>
           );
         })}
-      </ul>
+      </div>
     </section>
   );
 }
