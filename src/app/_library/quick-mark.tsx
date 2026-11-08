@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { markEpisode, markMovie } from "./actions";
 
 export type QuickMarkTarget =
@@ -83,12 +84,7 @@ export function QuickMark({
         {done ? (
           <Icon name="check" filled className="size-5" />
         ) : pending ? (
-          // Anel aberto; gira só sem `prefers-reduced-motion`. O check fica
-          // para quando o carregamento terminar.
-          <span
-            aria-hidden
-            className="size-5 rounded-full border-2 border-current border-t-transparent motion-safe:animate-spin"
-          />
+          <Spinner className="size-5" />
         ) : null}
       </Button>
       {error ? (

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { addTitleByRef, removeFromLibrary } from "@/app/_library/actions";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import type { CatalogRef } from "@/domain/catalog/types";
 import { cn } from "@/lib/utils";
 
@@ -110,17 +111,41 @@ export function QuickAddButton({
     });
   }
 
-  const name = fill(done ? labels.inLibrary : labels.add, title);
   const showText = variant === "labeled";
+  // Já na biblioteca: só um sinal (check magenta, sem contorno e sem fundo),
+  // não um botão, porque aqui não há ação (desfazer é pelo aviso).
+  if (done) {
+    const label = fill(labels.inLibrary, title);
+    return (
+      <span
+        role="img"
+        aria-label={label}
+        title={label}
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center gap-1.5 text-sm font-medium text-sidebar-primary",
+          showText ? "size-9 sm:w-auto sm:px-3.5" : "size-9",
+          "pointer-coarse:size-11",
+          className,
+        )}
+      >
+        <Icon name="check" className="size-5" />
+        {showText ? (
+          <span className="hidden sm:inline">{labels.inLibraryShort}</span>
+        ) : null}
+      </span>
+    );
+  }
+
+  const name = fill(labels.add, title);
   return (
     <>
       <Button
         type="button"
-        variant={done ? "default" : "outline"}
+        variant="outline"
         aria-label={name}
         aria-busy={pending}
         title={name}
-        disabled={pending || done}
+        disabled={pending}
         // Dentro de uma linha clicável (sugestão, resultado): o clique é só
         // do botão.
         onClick={(event) => {
@@ -128,8 +153,7 @@ export function QuickAddButton({
           add();
         }}
         className={cn(
-          // Alvo de 44px no celular; na lista de sugestões o `icon` tem 32px
-          // no desktop.
+          // Alvo de 44px no celular.
           "size-9 pointer-coarse:size-11 disabled:opacity-100",
           showText &&
             "sm:h-9 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:pointer-coarse:h-11",
@@ -137,17 +161,12 @@ export function QuickAddButton({
         )}
       >
         {pending ? (
-          <span
-            aria-hidden
-            className="size-4 rounded-full border-2 border-current border-t-transparent motion-safe:animate-spin"
-          />
+          <Spinner className="size-5 sm:size-4" />
         ) : (
-          <Icon name={done ? "check" : "add"} className="size-5 sm:size-4" />
+          <Icon name="add" className="size-5 sm:size-4" />
         )}
         {showText ? (
-          <span className="hidden sm:inline">
-            {done ? labels.inLibraryShort : labels.addShort}
-          </span>
+          <span className="hidden sm:inline">{labels.addShort}</span>
         ) : null}
       </Button>
       {error ? (
