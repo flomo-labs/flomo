@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icon";
 import { SeeAllLink } from "@/components/see-all-link";
 import { ROADMAP_PATH, ROADMAP_TITLE } from "@/content/roadmap-link";
 
@@ -7,9 +8,15 @@ export function RoadmapTeaser() {
   return (
     <section
       aria-label={ROADMAP_TITLE}
-      className="flex items-center justify-between gap-3 rounded-card border border-dashed border-border py-3 pr-6 pl-4"
+      className="flex items-center gap-3 rounded-card border border-dashed border-border py-3 pr-6 pl-4"
     >
-      <p className="font-medium">{ROADMAP_TITLE}</p>
+      <Icon name="sparkles" className="size-5 shrink-0 text-sidebar-primary" />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <p className="font-medium">{ROADMAP_TITLE}</p>
+        <p className="text-sm text-muted-foreground">
+          Veja o que estamos preparando e o que já está pronto.
+        </p>
+      </div>
       <SeeAllLink
         href={ROADMAP_PATH}
         label="Ver tudo"

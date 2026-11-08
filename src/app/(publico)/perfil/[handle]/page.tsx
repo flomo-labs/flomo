@@ -6,6 +6,9 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { ListLinkCard } from "@/components/list-link-card";
+import { RoadmapNewBadge } from "@/components/roadmap-new-badge";
+import { ROADMAP_PATH, ROADMAP_TITLE } from "@/content/roadmap-link";
 import { ScrollHintRow } from "@/components/scroll-hint-row";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
@@ -14,7 +17,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ProfileStats } from "@/domain/profile/ports";
-import { watchedTime, type WatchedTimePart } from "@/domain/profile/profile-page";
+import {
+  watchedTime,
+  type WatchedTimePart,
+} from "@/domain/profile/profile-page";
 
 // O título não cita o nome: o perfil pode ser privado, e o metadata sai antes
 // da checagem de visibilidade.
@@ -107,6 +113,24 @@ async function ProfileContent({
           <LibraryPreview user={user} />
         </Suspense>
       ) : null}
+      {isOwn ? (
+        // No celular, o menu da foto some do caminho: estes dois atalhos ficam
+        // na própria tela (#250). No desktop vêm do menu da foto.
+        <nav aria-label="Mais opções" className="flex flex-col gap-3 md:hidden">
+          <ListLinkCard
+            href="/configuracoes"
+            icon="informationCircle"
+            title="Configurações"
+          />
+          <ListLinkCard
+            href={ROADMAP_PATH}
+            icon="sparkles"
+            title={ROADMAP_TITLE}
+            description="Novidades e funcionalidades planejadas"
+            trailing={<RoadmapNewBadge />}
+          />
+        </nav>
+      ) : null}
     </article>
   );
 }
@@ -123,8 +147,7 @@ async function StatsList({
   const time = watchedTime(stats.minutesWatched);
   // O número fica grande e a unidade pequena ao lado ("1 mês 15 dias"), para
   // totais enormes caberem no cartão sem passar para o vizinho.
-  const unitLabel = (part: WatchedTimePart) =>
-    t("timeUnit", part);
+  const unitLabel = (part: WatchedTimePart) => t("timeUnit", part);
   const timeValue = {
     number: format.format(time.primary.value),
     unit: [
