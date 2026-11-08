@@ -9,12 +9,19 @@ import type { RatingAverage as Average } from "@/domain/rating/summary";
 export async function RatingAverage({
   average,
   compact = false,
+  card = false,
 }: {
-  average: Average;
+  // Na versão `card`, sem notas ainda (`null`) mostra "Sem notas ainda".
+  average: Average | null;
   // Versão pequena e cinza, para ficar ao lado de outros metadados.
   compact?: boolean;
+  // Cartão em destaque da ficha do título: número grande, estrelas na cor de
+  // destaque e a contagem de notas.
+  card?: boolean;
 }) {
   const t = await getTranslations("Rating");
+  if (card) return <AverageCard average={average} t={t} />;
+  if (!average) return null;
   const stars = formatAverageStars(average.average);
   const text = t("average", { average: stars, count: average.count });
   return (
@@ -34,5 +41,47 @@ export async function RatingAverage({
       />
       <span>{text}</span>
     </p>
+  );
+}
+
+type Translator = Awaited<ReturnType<typeof getTranslations<"Rating">>>;
+
+// Cartão da média do Flomo na ficha do título. As estrelas leem a média e a
+// contagem (`averageAria`); o número e o texto visíveis ficam escondidos do
+// leitor de tela para não repetir.
+async function AverageCard({
+  average,
+  t,
+}: {
+  average: Average | null;
+  t: Translator;
+}) {
+  if (!average) {
+    return (
+      <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card border border-border px-3 py-2">
+        <p className="text-sm text-muted-foreground">{t("noRatings")}</p>
+        <p className="text-xs text-muted-foreground">{t("flomoLabel")}</p>
+      </div>
+    );
+  }
+  const stars = formatAverageStars(average.average);
+  return (
+    <div className="flex min-w-0 flex-col gap-1 rounded-card border border-border px-3 py-2">
+      <div className="flex items-center gap-2">
+        <span aria-hidden="true" className="text-3xl leading-none font-bold">
+          {stars}
+        </span>
+        <StarRating
+          size="md"
+          value={average.average}
+          labels={await getStarLabels(
+            t("averageAria", { average: stars, count: average.count }),
+          )}
+        />
+      </div>
+      <p aria-hidden="true" className="text-xs text-muted-foreground">
+        {t("countInFlomo", { count: average.count })}
+      </p>
+    </div>
   );
 }
