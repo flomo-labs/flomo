@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { RoadmapTeaser } from "@/components/roadmap-teaser";
 import { ScrollHintRow } from "@/components/scroll-hint-row";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
@@ -14,7 +15,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ProfileStats } from "@/domain/profile/ports";
-import { watchedTime, type WatchedTimePart } from "@/domain/profile/profile-page";
+import {
+  watchedTime,
+  type WatchedTimePart,
+} from "@/domain/profile/profile-page";
 
 // O título não cita o nome: o perfil pode ser privado, e o metadata sai antes
 // da checagem de visibilidade.
@@ -107,6 +111,13 @@ async function ProfileContent({
           <LibraryPreview user={user} />
         </Suspense>
       ) : null}
+      {isOwn ? (
+        // No celular o roadmap fica na própria tela (#250); no desktop vem do
+        // menu da foto.
+        <div className="md:hidden">
+          <RoadmapTeaser />
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -123,8 +134,7 @@ async function StatsList({
   const time = watchedTime(stats.minutesWatched);
   // O número fica grande e a unidade pequena ao lado ("1 mês 15 dias"), para
   // totais enormes caberem no cartão sem passar para o vizinho.
-  const unitLabel = (part: WatchedTimePart) =>
-    t("timeUnit", part);
+  const unitLabel = (part: WatchedTimePart) => t("timeUnit", part);
   const timeValue = {
     number: format.format(time.primary.value),
     unit: [

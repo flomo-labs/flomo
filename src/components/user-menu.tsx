@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { ROADMAP_PATH } from "@/content/roadmap-link";
+import { RoadmapMenuItem } from "@/components/roadmap-menu-item";
 import { SiteInfoMenuItems } from "@/components/site-info-menu-items";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -74,6 +76,7 @@ export function UserMenu({
         >
           Configurações
         </DropdownMenuItem>
+        <RoadmapMenuItem className={ITEM} />
         <form action={signOut}>
           <DropdownMenuItem
             nativeButton
@@ -87,6 +90,7 @@ export function UserMenu({
         <SiteInfoMenuItems
           tmdbNotice={tmdbNotice}
           className="md:hidden"
+          omitHref={ROADMAP_PATH}
           leadingSeparator
         />
       </DropdownMenuContent>

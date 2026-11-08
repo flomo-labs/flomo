@@ -18,6 +18,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
+- A página "Em breve no Flomo" agora se chama "O que vem por aí no Flomo" e ganhou um item no menu da foto (com selo "Novo" enquanto há novidade) e um cartão no fim de Descobrir (#250).
 - Novo ícone do Flomo em tema claro e escuro, também ao salvar na tela de início do iPhone (#219, #220).
 
 ## [0.9.0] - 2026-10-24

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BackLink } from "@/components/back-link";
 import { Prose, ProseSection } from "@/components/prose";
+import { ROADMAP_PATH, ROADMAP_TITLE } from "@/content/roadmap-link";
 
 export const metadata: Metadata = {
   title: "Sobre · Flomo",
@@ -24,7 +25,7 @@ export default function SobrePage() {
           <p>
             Hoje o projeto está em fase de testes, é de uso não comercial e é
             aberto apenas a maiores de 18 anos. Veja o que vem pela frente em{" "}
-            <Link href="/em-breve">Em breve no Flomo</Link>.
+            <Link href={ROADMAP_PATH}>{ROADMAP_TITLE}</Link>.
           </p>
         </div>
         <ProseSection title="Créditos">
