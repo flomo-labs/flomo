@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
 import { SearchCombobox } from "@/components/catalog/search-combobox";
 import { Label } from "@/components/ui/label";
 
@@ -30,6 +31,7 @@ export async function SearchForm({ query = "" }: { query?: string }) {
           seeAll: t.raw("seeAll"),
           movie: tm("movie"),
           tv: tm("tv"),
+          quickAdd: await getQuickAddLabels(),
         }}
       />
     </form>

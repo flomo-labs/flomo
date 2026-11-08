@@ -16,6 +16,8 @@ import {
   unmarkMovieWatched,
   type MarkWatchedErrorCode,
 } from "@/domain/library/mark-watched";
+import { listRefsInLibrary } from "@/domain/library/get-title-state";
+import type { CatalogRef } from "@/domain/catalog/types";
 import {
   addTitleToLibraryByRef,
   type AddByRefErrorCode,
@@ -32,6 +34,7 @@ import { allowProviderFetch, createCatalogDeps } from "@/infra/catalog";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
 import { getCurrentUser } from "../_auth/session";
+import { libraryRefsDeps } from "./library-refs-deps";
 
 // Camada fina (ADR-004): resolve o usuário, chama o caso de uso dentro do
 // `withUser` (RLS) e atualiza as páginas de título. A regra fica em
@@ -185,4 +188,27 @@ export async function addTitleByRef(
   revalidatePath("/seguintes");
   revalidatePath("/biblioteca");
   return result;
+}
+
+// Quais resultados de busca já estão na biblioteca (sugestões do campo de
+// busca). Leitura, sem revalidar nada; sem login, o atalho convida a entrar.
+export async function refsInLibrary(
+  input: unknown,
+): Promise<
+  Result<CatalogRef[], "INVALID_INPUT" | "UNAUTHENTICATED" | "UNAVAILABLE">
+> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  try {
+    return await listRefsInLibrary(
+      libraryRefsDeps(user),
+      { id: user.id },
+      input,
+    );
+  } catch (error) {
+    console.error("Falha ao ler a biblioteca:", error);
+    return fail("UNAVAILABLE", "Não foi possível ler a biblioteca.");
+  }
 }

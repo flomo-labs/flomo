@@ -207,6 +207,9 @@ export function createFakeLibrary(catalog: {
       else hiddenTitles.delete(key(userId, titleId));
       return true;
     },
+    async findTitleIdsInLibrary(userId, titleIds) {
+      return titleIds.filter((id) => statuses.has(key(userId, id)));
+    },
     async removeTitle(userId, titleId) {
       statuses.delete(key(userId, titleId));
       hiddenTitles.delete(key(userId, titleId));

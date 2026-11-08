@@ -151,6 +151,34 @@ export function createCatalogStore(
       await upsertPayload(db, key, providers, expiresAt);
     },
 
+    async findTitlesByRefs(refs) {
+      if (refs.length === 0) return [];
+      const wanted = sql.join(
+        refs.map((r) => sql`(${r.mediaType}, ${r.externalId})`),
+        sql`, `,
+      );
+      const rows = await db
+        .select({
+          mediaType: externalIds.entityType,
+          externalId: externalIds.externalId,
+          id: externalIds.entityId,
+        })
+        .from(externalIds)
+        .where(
+          and(
+            eq(externalIds.provider, provider),
+            sql`(${externalIds.entityType}, ${externalIds.externalId}) in (${wanted})`,
+          ),
+        );
+      return rows.map((r) => ({
+        ref: {
+          mediaType: r.mediaType as CatalogRef["mediaType"],
+          externalId: r.externalId,
+        },
+        id: r.id,
+      }));
+    },
+
     async findTitleByRef(ref) {
       const [row] = await db
         .select({ id: externalIds.entityId })

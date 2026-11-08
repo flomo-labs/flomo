@@ -19,6 +19,17 @@
     "headerLabel": "Buscar títulos",
     "headerPlaceholder": "Buscar títulos"
   },
+  "QuickAdd": {
+    "add": "Adicionar {title} à biblioteca",
+    "inLibrary": "{title} está na biblioteca",
+    "addShort": "Quero ver",
+    "inLibraryShort": "Na biblioteca",
+    "added": "{title} guardado em “Quero ver”",
+    "alreadyIn": "{title} já está na sua biblioteca",
+    "undo": "Desfazer",
+    "undone": "{title} saiu da biblioteca",
+    "failed": "Não foi possível adicionar. Tente de novo."
+  },
   "MediaType": {
     "movie": "Filme",
     "tv": "Série"

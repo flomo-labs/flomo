@@ -2,10 +2,12 @@ import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { addTitleToLibraryByRef } from "@/domain/library/add-title-by-ref";
 import type { CatalogProvider } from "@/domain/catalog/ports";
+import type { CatalogRef } from "@/domain/catalog/types";
 import { providerTitle } from "@/domain/catalog/test-fakes";
 import { listFollowing } from "@/domain/library/following";
 import {
   getTitleLibraryState,
+  listRefsInLibrary,
   listUnwatchedEpisodes,
 } from "@/domain/library/get-title-state";
 import { listLibrary } from "@/domain/library/list-library";
@@ -934,5 +936,37 @@ describe("adicionar à biblioteca um título fora do catálogo", () => {
         .from(userTitles)
         .where(eq(userTitles.userId, user));
       expect(rows).toEqual([{ status: "watching" }]);
+    }));
+
+  it("informa quais referências já estão na biblioteca, numa consulta só", () =>
+    inRollback(async (tx) => {
+      const a = await createUser(tx);
+      const b = await createUser(tx);
+      const { deps } = setupAdd(tx, a);
+      await addTitleToLibraryByRef(deps, { id: a }, ref);
+      const wanted: CatalogRef[] = [
+        { mediaType: "tv", externalId: ref.externalId },
+        { mediaType: "movie", externalId: ref.externalId },
+        { mediaType: "tv", externalId: "111" },
+      ];
+      // O catálogo é lido fora da transação do usuário (RLS de `external_ids`).
+      const listFor = (user: string) =>
+        listRefsInLibrary(
+          {
+            catalog: { store: createCatalogStore(tx, "teste") },
+            inLibrary: (run) =>
+              asUser(tx, user, (utx) =>
+                run({ library: createLibraryRepository(utx) }),
+              ),
+          },
+          { id: user },
+          { refs: wanted },
+        );
+      expect(await listFor(a)).toEqual({
+        ok: true,
+        value: [{ mediaType: "tv", externalId: ref.externalId }],
+      });
+      // Outra pessoa não vê o que não guardou.
+      expect(await listFor(b)).toEqual({ ok: true, value: [] });
     }));
 });

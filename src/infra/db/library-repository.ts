@@ -423,6 +423,20 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
       return Boolean(exists);
     },
 
+    async findTitleIdsInLibrary(userId, titleIds) {
+      if (titleIds.length === 0) return [];
+      const rows = await tx
+        .select({ titleId: userTitles.titleId })
+        .from(userTitles)
+        .where(
+          and(
+            eq(userTitles.userId, userId),
+            inArray(userTitles.titleId, [...titleIds]),
+          ),
+        );
+      return rows.map((r) => r.titleId);
+    },
+
     async removeTitle(userId, titleId) {
       await tx
         .delete(userTitles)

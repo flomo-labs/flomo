@@ -4,11 +4,17 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { searchCatalog } from "@/app/_catalog/gateway";
+import { getCurrentUser } from "@/app/_auth/session";
+import { loadRefsInLibrary } from "@/app/_library/queries";
+import {
+  QuickAddButton,
+  type QuickAddLabels,
+} from "@/components/catalog/quick-add-button";
+import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
 import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterRowSkeleton } from "@/components/loading/poster-row-skeleton";
-import { Icon } from "@/components/icon";
 import { SearchForm } from "@/components/catalog/search-form";
 import { Button } from "@/components/ui/button";
 import { SEARCH_MAX_PAGE } from "@/contracts/catalog";
@@ -85,6 +91,17 @@ async function Results({ query, page }: { query: string; page: number }) {
     return <p className="text-muted-foreground">{t("empty", { query })}</p>;
   }
 
+  // Quais resultados já estão na biblioteca: uma consulta para a página toda.
+  const user = await getCurrentUser();
+  const owned = user
+    ? ((await loadRefsInLibrary(
+        user,
+        items.map((item) => item.ref),
+      )) ?? [])
+    : [];
+  const inLibrary = new Set(owned.map((r) => `${r.mediaType}-${r.externalId}`));
+  const quickAdd = await getQuickAddLabels();
+
   return (
     <section aria-label={t("title")} className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
@@ -93,7 +110,13 @@ async function Results({ query, page }: { query: string; page: number }) {
       <ul className="flex max-w-reading flex-col gap-3">
         {items.map((item) => (
           <li key={`${item.ref.mediaType}-${item.ref.externalId}`}>
-            <ResultCard item={item} />
+            <ResultCard
+              item={item}
+              inLibrary={inLibrary.has(
+                `${item.ref.mediaType}-${item.ref.externalId}`,
+              )}
+              quickAdd={quickAdd}
+            />
           </li>
         ))}
       </ul>
@@ -106,15 +129,22 @@ async function Results({ query, page }: { query: string; page: number }) {
   );
 }
 
-async function ResultCard({ item }: { item: SearchItem }) {
+async function ResultCard({
+  item,
+  inLibrary,
+  quickAdd,
+}: {
+  item: SearchItem;
+  inLibrary: boolean;
+  quickAdd: QuickAddLabels;
+}) {
   const t = await getTranslations();
   const year = item.releaseDate?.slice(0, 4) ?? t("Search.unknownYear");
   const facts = [t(`MediaType.${item.ref.mediaType}`), year];
+  // O card inteiro leva ao título (link estendido por `after:inset-0`) e o
+  // botão de adicionar fica por cima, sem aninhar interativos.
   return (
-    <Link
-      href={titleRefPath(item.ref)}
-      className="flex min-h-11 items-center gap-4 rounded-card border border-border p-2.5 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50"
-    >
+    <div className="relative flex min-h-11 items-center gap-4 rounded-card border border-border p-2.5 transition-colors focus-within:bg-muted/50 hover:bg-muted/50">
       <Poster
         path={item.posterPath}
         size="w185"
@@ -122,7 +152,14 @@ async function ResultCard({ item }: { item: SearchItem }) {
         className="w-14 shrink-0"
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h2 className="font-semibold break-words">{item.title}</h2>
+        <h2 className="font-semibold break-words">
+          <Link
+            href={titleRefPath(item.ref)}
+            className="outline-none after:absolute after:inset-0 after:rounded-card focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+          >
+            {item.title}
+          </Link>
+        </h2>
         <p className="text-sm text-muted-foreground break-words">
           {facts.join(" · ")}
           {item.originalTitle !== item.title ? (
@@ -133,11 +170,15 @@ async function ResultCard({ item }: { item: SearchItem }) {
           {item.overview ?? t("Search.noOverview")}
         </p>
       </div>
-      <Icon
-        name="chevronForward"
-        className="size-4 shrink-0 text-muted-foreground"
+      <QuickAddButton
+        target={item.ref}
+        title={item.title}
+        inLibrary={inLibrary}
+        variant="labeled"
+        labels={quickAdd}
+        className="relative z-10 shrink-0"
       />
-    </Link>
+    </div>
   );
 }
 
