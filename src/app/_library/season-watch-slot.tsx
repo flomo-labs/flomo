@@ -68,6 +68,9 @@ export async function SeasonWatchSlot({
       watched={watched}
       total={episodes.length}
       missing={missing}
+      watchedEpisodeIds={episodes
+        .filter((e) => watchedIds.has(e.id))
+        .map((e) => e.id)}
       today={today}
       labels={{
         summary,
@@ -87,6 +90,12 @@ export async function SeasonWatchSlot({
         undone: t("seasonUndone", { number: seasonNumber }),
         undo: t("undo"),
         failed: t("failed"),
+        unmarkDialog: {
+          title: t("seasonUnmarkTitle", { number: seasonNumber }),
+          description: t("seasonUnmarkDescription", { count: watched }),
+          confirm: t("seasonUnmarkConfirm"),
+          cancel: t("cancel"),
+        },
         dialog: {
           title: t("seasonDialogTitle", { number: seasonNumber }),
           description: t("seasonDialogDescription", {
@@ -96,6 +105,10 @@ export async function SeasonWatchSlot({
           cancel: t("cancel"),
           back: t("back"),
           done: t("done"),
+          yesterday: t("yesterday"),
+          weekAgo: t("weekAgo"),
+          thisYear: t("thisYear"),
+          beforeRelease: t("beforeRelease"),
           today: t("seasonToday"),
           noDate: t("seasonNoDate"),
           pickDate: t("seasonPickDate"),

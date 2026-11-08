@@ -27,6 +27,7 @@
     "next-intl": "^4.14.9",
     "postgres": "^3.4.9",
     "react": "19.3.1",
+    "react-day-picker": "^10.0.2",
     "react-dom": "19.3.1",
     "server-only": "^0.0.1",
     "shadcn": "^4.22.0",
