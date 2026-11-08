@@ -46,6 +46,7 @@ export async function DiscoverShelves() {
         mediaNav: t("mediaNav"),
         allProviders: t("allProviders"),
         trending: t("shelf.trending"),
+        trendingLead: t("shelf.trendingLead"),
         nowPlaying: t("shelf.now_playing"),
         media: {
           tudo: t("media.tudo"),
