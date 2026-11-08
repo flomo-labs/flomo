@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+// Na landing os dois caminhos são links com papel de botão (`Button render=Link`).
 // Landing com dois caminhos, abas de /entrar por situação e confirmação de
 // senha (#251). Não cria conta: o envio com senhas diferentes é barrado antes
 // de chamar o servidor.
@@ -8,7 +9,7 @@ test("landing: Criar conta abre /entrar na aba de criar conta", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Criar conta" }).click();
+  await page.getByRole("button", { name: "Criar conta", exact: true }).click();
   await expect(page).toHaveURL(/\/entrar\?modo=criar/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Criar sua conta" }),
@@ -22,7 +23,7 @@ test("landing: Já tenho conta abre /entrar na aba de entrar", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Já tenho conta · Entrar" }).click();
+  await page.getByRole("button", { name: "Já tenho conta · Entrar" }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: "Entrar na sua conta" }),
   ).toBeVisible();
@@ -30,6 +31,21 @@ test("landing: Já tenho conta abre /entrar na aba de entrar", async ({
     page.getByRole("button", { name: "Entrar com o Google" }),
   ).toBeVisible();
   await expect(page.getByLabel("Confirmar senha")).toHaveCount(0);
+});
+
+test("voltar à landing e escolher o outro botão abre a aba certa", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Já tenho conta · Entrar" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Entrar na sua conta" }),
+  ).toBeVisible();
+  await page.goBack();
+  await page.getByRole("button", { name: "Criar conta", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Criar sua conta" }),
+  ).toBeVisible();
 });
 
 test("criar conta com senhas diferentes mostra o erro e não envia", async ({

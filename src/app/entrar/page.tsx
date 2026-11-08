@@ -48,7 +48,10 @@ async function LoginForm({
 
   return (
     <div className="flex flex-col gap-3">
+      {/* `key`: ao voltar à landing e escolher o outro botão, a tela de entrar
+          reaproveita o estado da visita anterior; a chave força a aba certa. */}
       <EmailAuthPanel
+        key={authModeFromParam(params.modo)}
         next={next}
         googleError={error}
         initialMode={authModeFromParam(params.modo)}
