@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingRegion } from "@/components/loading/loading-region";
+import { authModeFromParam } from "../_auth/auth-mode";
 import { EmailAuthPanel } from "../_auth/email-auth-panel";
 import { safeNextPath } from "../_auth/redirect";
 import { getCurrentUser } from "../_auth/session";
@@ -20,11 +21,10 @@ export default function EntrarPage({ searchParams }: PageProps<"/entrar">) {
   return (
     <main className="mx-auto flex flex-1 w-full max-w-sm flex-col justify-center gap-6 p-6">
       <BackLink />
-      <h1 className="text-2xl font-bold">Entrar no Flomo</h1>
       <Suspense
         fallback={
           <LoadingRegion>
-            <Skeleton className="h-8 w-full rounded-full" />
+            <Skeleton className="h-8 w-2/3" />
           </LoadingRegion>
         }
       >
@@ -48,9 +48,14 @@ async function LoginForm({
 
   return (
     <div className="flex flex-col gap-3">
-      <EmailAuthPanel next={next} googleError={error} />
+      <EmailAuthPanel
+        next={next}
+        googleError={error}
+        initialMode={authModeFromParam(params.modo)}
+      />
       <p className="text-xs text-muted-foreground">
-        Ao entrar, você declara ter 18 anos ou mais e concorda com os{" "}
+        Ao entrar ou criar sua conta, você declara ter 18 anos ou mais e
+        concorda com os{" "}
         <Link href="/termos" className="underline underline-offset-4">
           Termos de uso
         </Link>{" "}

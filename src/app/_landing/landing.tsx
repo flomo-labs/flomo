@@ -10,15 +10,22 @@ import { Button } from "@/components/ui/button";
 
 const WALL_SIZE = 25;
 
+// Os dois botões grandes; mais baixos em telas curtas para caber sem rolar.
+const ctaClass =
+  "h-13 w-full rounded-full px-7 text-base max-md:[@media(max-height:40rem)]:h-11 md:w-auto";
+
 // Raiz do site para quem não entrou, em tela cheia (sem o cabeçalho e o rodapé
-// do app): os pôsteres mais populares da semana, a chamada, o botão de entrar e
-// o menu "···" com os links do rodapé e o aviso do TMDB.
+// do app): os pôsteres mais populares da semana, a chamada, os dois caminhos
+// ("Criar conta" e "Já tenho conta · Entrar", que abrem /entrar na aba certa) e
+// o menu "···" com os links do rodapé e o aviso do TMDB. No celular a página
+// ocupa a altura da tela e não rola: o mosaico cede espaço e, em telas baixas,
+// o texto de apoio some.
 export async function Landing() {
   const t = await getTranslations("Landing");
   return (
     <div
       data-landing
-      className="relative isolate flex min-h-dvh flex-col overflow-hidden"
+      className="relative isolate flex h-dvh flex-col overflow-hidden pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] md:h-auto md:min-h-dvh md:p-0"
     >
       <header className="relative z-10 flex h-15 items-center justify-between px-5 md:h-18 md:px-12">
         <span className="text-lg font-bold md:text-xl">Flomo</span>
@@ -37,35 +44,47 @@ export async function Landing() {
       <Suspense fallback={null}>
         <Wall />
       </Suspense>
-      <main className="relative z-10 flex flex-col gap-5 px-5 pt-6 md:flex-1 md:justify-center md:gap-6 md:px-12 md:pt-0">
-        <h1 className="text-4xl leading-[1.05] font-extrabold tracking-tight md:max-w-[38rem] md:text-[3.625rem]">
+      <main className="relative z-10 flex flex-col gap-4 px-5 pt-4 md:flex-1 md:justify-center md:gap-6 md:px-12 md:pt-0">
+        <h1 className="text-4xl leading-[1.05] max-md:[@media(max-height:40rem)]:text-3xl font-extrabold tracking-tight md:max-w-[38rem] md:text-[3.625rem]">
           {t("headline")}
         </h1>
-        <p className="max-w-md text-[1.0625rem] leading-relaxed text-muted-foreground md:text-[1.1875rem] md:leading-normal">
+        <p className="max-w-md text-[1.0625rem] max-md:[@media(max-height:40rem)]:hidden leading-relaxed text-muted-foreground md:text-[1.1875rem] md:leading-normal">
           {t("body")}
         </p>
-        <div className="mt-1 flex flex-col gap-4 md:mt-3 md:flex-row md:items-center md:gap-6">
+        <div className="mt-1 flex flex-col gap-3 md:mt-3 md:flex-row md:items-center md:gap-4">
           <Button
+            render={
+              <Link
+                href={`/entrar?modo=criar&next=${encodeURIComponent(FOLLOWING_PATH)}`}
+              />
+            }
+            nativeButton={false}
+            className={ctaClass}
+          >
+            {t("createAccount")}
+          </Button>
+          <Button
+            variant="outline"
             render={
               <Link
                 href={`/entrar?next=${encodeURIComponent(FOLLOWING_PATH)}`}
               />
             }
             nativeButton={false}
-            className="h-13 w-full rounded-full px-7 text-base md:w-auto"
+            className={ctaClass}
           >
-            {t("signIn")}
+            {t("haveAccount")}
           </Button>
           <Link
             href="/descobrir"
-            className="text-center text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            className="py-1 text-center text-muted-foreground underline underline-offset-4 hover:text-foreground md:ml-2"
           >
             {t("seeTrending")}
           </Link>
         </div>
       </main>
       {/* Exigido para quem entra direto pela landing (ver /entrar). */}
-      <p className="relative z-10 mt-auto px-5 pt-8 pb-6 text-xs text-muted-foreground md:max-w-[45%] md:px-12 md:pt-0 md:pb-8">
+      <p className="relative z-10 mt-auto px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:max-w-[45%] md:px-12 md:pt-0 md:pb-8">
         {t.rich("consent", {
           terms: (chunks) => (
             <Link href="/termos" className="underline underline-offset-4">
@@ -106,7 +125,7 @@ async function Wall() {
   return (
     <PosterWall
       posters={posters}
-      className="relative -mt-15 h-[26rem] shrink-0 md:absolute md:mt-0 md:inset-0 md:-z-10 md:h-auto"
+      className="relative -mt-15 max-h-[26rem] min-h-0 flex-1 md:absolute md:mt-0 md:inset-0 md:-z-10 md:h-auto md:max-h-none"
     />
   );
 }
