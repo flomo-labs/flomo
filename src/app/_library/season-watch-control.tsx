@@ -8,6 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import type { MarkWatchDateInput } from "@/contracts/library";
 import { markSeason, unmarkEpisodes } from "./actions";
 import {
+  SeasonUnmarkDialog,
+  type SeasonUnmarkDialogLabels,
+} from "./season-unmark-dialog";
+import {
   SeasonMarkDialog,
   type SeasonMarkDialogLabels,
 } from "./season-mark-dialog";
@@ -27,6 +31,7 @@ export type SeasonWatchLabels = {
   undo: string;
   failed: string;
   dialog: SeasonMarkDialogLabels;
+  unmarkDialog: SeasonUnmarkDialogLabels;
 };
 
 type Props = {
@@ -37,6 +42,8 @@ type Props = {
   total: number;
   // Lançados que ainda faltam marcar. Zero = a temporada já está vista.
   missing: number;
+  // Episódios da temporada já vistos, para desmarcar depois de recarregar.
+  watchedEpisodeIds: string[];
   today: string;
   labels: SeasonWatchLabels;
 };
@@ -45,19 +52,22 @@ type Props = {
 // e a barra de progresso (só com ao menos um episódio visto). O botão é
 // secundário (contorno) para não competir com a situação da série. Depois de
 // marcar, o aviso verde e o botão trazem "Desfazer", que tira só os
-// episódios marcados agora (os ids ficam aqui, na tela; ao recarregar a
-// página o botão apenas mostra "Temporada vista").
+// episódios marcados agora (os ids ficam aqui, na tela). Ao recarregar, o
+// botão "Temporada vista" continua ativo: pede confirmação e desmarca todos os
+// episódios vistos da temporada.
 export function SeasonWatchControl({
   seasonNumber,
   titleId,
   watched,
   total,
   missing,
+  watchedEpisodeIds,
   today,
   labels,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const [unmarkOpen, setUnmarkOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Episódios marcados agora, para desfazer.
   const [undoIds, setUndoIds] = useState<string[] | null>(null);
@@ -79,6 +89,11 @@ export function SeasonWatchControl({
         setError(labels.failed);
       }
     });
+  }
+
+  function confirmUnmark() {
+    setUnmarkOpen(false);
+    undo(watchedEpisodeIds);
   }
 
   function confirm(when: MarkWatchDateInput) {
@@ -128,7 +143,8 @@ export function SeasonWatchControl({
           <Button
             type="button"
             variant="outline"
-            disabled
+            disabled={pending || watchedEpisodeIds.length === 0}
+            onClick={() => setUnmarkOpen(true)}
             className="h-auto min-h-8 max-w-full rounded-full py-1.5 whitespace-normal pointer-coarse:min-h-11"
           >
             <Icon name="checkmarkDone" />
@@ -164,6 +180,13 @@ export function SeasonWatchControl({
           {error}
         </p>
       ) : null}
+      <SeasonUnmarkDialog
+        open={unmarkOpen}
+        onOpenChange={setUnmarkOpen}
+        pending={pending}
+        labels={labels.unmarkDialog}
+        onConfirm={confirmUnmark}
+      />
       <SeasonMarkDialog
         open={open}
         onOpenChange={setOpen}
