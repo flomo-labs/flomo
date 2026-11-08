@@ -175,7 +175,7 @@ export function SeasonWatchControl({
         ) : (
           <Button
             type="button"
-            variant="default"
+            variant="outline"
             disabled={pending}
             aria-label={labels.markSeasonFull}
             onClick={() => setMode("single")}

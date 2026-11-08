@@ -283,7 +283,7 @@ async function Seasons({
       />
       <div
         role="group"
-        className="flex max-w-reading flex-col gap-2"
+        className="flex flex-col gap-2"
         aria-label={t("seasonsNav")}
       >
         {title.seasons.map((season) => {
@@ -366,7 +366,7 @@ async function Episodes({
     return <p className="text-muted-foreground">{t("noEpisodes")}</p>;
   }
   return (
-    <ol className="flex max-w-reading flex-col gap-2">
+    <ol className="flex flex-col gap-2">
       {result.value.map((episode) => (
         <li
           key={episode.id}

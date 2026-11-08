@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { type ReactNode, useTransition } from "react";
-import { cn } from "cn";
-import { Icon } from "@/components/icon";
 
 // Botão do cabeçalho da sanfona: `aria-expanded`/`aria-controls`, Enter e
 // Espaço pelo botão nativo. Abre e fecha trocando o `?temporada=` da URL
@@ -33,15 +31,8 @@ export function SeasonAccordionToggle({
       onClick={() =>
         startTransition(() => router.replace(href, { scroll: false }))
       }
-      className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="rounded-lg text-left outline-none before:absolute before:inset-0 before:rounded-lg focus-visible:before:ring-3 focus-visible:before:ring-ring/50"
     >
-      <Icon
-        name="chevronForward"
-        className={cn(
-          "size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none",
-          open && "rotate-90",
-        )}
-      />
       {children}
     </button>
   );

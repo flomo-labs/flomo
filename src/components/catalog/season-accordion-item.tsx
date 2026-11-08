@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "cn";
+import { Icon } from "@/components/icon";
 import { Progress } from "@/components/ui/progress";
 import { SeasonAccordionToggle } from "./season-accordion-toggle";
 
@@ -39,33 +40,44 @@ export function SeasonAccordionItem({
           open && "sticky top-0 z-20 rounded-t-card bg-background",
         )}
       >
-        <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="m-0 text-base font-medium">
-            <SeasonAccordionToggle
-              id={id}
-              panelId={panelId}
-              open={open}
-              href={toggleHref}
-            >
-              {title}
-            </SeasonAccordionToggle>
-          </h3>
-          {progress ? (
-            <Progress
-              value={progress.watched}
-              max={progress.total}
-              aria-valuetext={progress.label}
-              className="-mt-1 flex-nowrap items-center gap-2 pl-8 [&_[data-slot=progress-track]]:w-28"
-            >
-              <span className="order-last text-xs text-muted-foreground tabular-nums">
-                {progress.label}
-              </span>
-            </Progress>
-          ) : summary ? (
-            <p className="-mt-1 pl-8 text-xs text-muted-foreground">
-              {summary}
-            </p>
-          ) : null}
+        {/* Chevron no meio da altura do cabeçalho (como no mockup); o botão
+            do título se estica por cima de toda esta área (`before:inset-0`),
+            então o toque pega o chevron, o título e a barra. */}
+        <div className="relative flex min-h-11 min-w-0 flex-1 items-center gap-3 pl-2">
+          <Icon
+            name="chevronForward"
+            aria-hidden
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none",
+              open && "rotate-90",
+            )}
+          />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h3 className="m-0 text-base font-semibold">
+              <SeasonAccordionToggle
+                id={id}
+                panelId={panelId}
+                open={open}
+                href={toggleHref}
+              >
+                {title}
+              </SeasonAccordionToggle>
+            </h3>
+            {progress ? (
+              <Progress
+                value={progress.watched}
+                max={progress.total}
+                aria-valuetext={progress.label}
+                className="flex-nowrap items-center gap-2 [&_[data-slot=progress-track]]:w-28"
+              >
+                <span className="order-last text-xs text-muted-foreground tabular-nums">
+                  {progress.label}
+                </span>
+              </Progress>
+            ) : summary ? (
+              <p className="text-xs text-muted-foreground">{summary}</p>
+            ) : null}
+          </div>
         </div>
         {actions}
       </div>
