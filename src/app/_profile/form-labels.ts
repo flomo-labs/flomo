@@ -8,6 +8,9 @@ import { HANDLE_MAX_LENGTH, HANDLE_MIN_LENGTH } from "@/contracts/profile";
 
 export type HandleFormLabels = {
   label: string;
+  // Ajuda de uma linha acima do campo (só em Configurações); `{handle}` vai
+  // cru e o formulário troca pelo valor digitado.
+  help?: string;
   hint: string;
   submit: string;
   saving: string;
@@ -15,11 +18,13 @@ export type HandleFormLabels = {
 };
 
 export async function handleFormLabels(
-  submit: "save" | "continue",
+  submit: "save" | "continue" | "changeHandle",
 ): Promise<HandleFormLabels> {
   const t = await getTranslations("ProfileEdit");
+  const settings = submit === "changeHandle";
   return {
-    label: t("handle"),
+    label: settings ? t("handleTitle") : t("handle"),
+    help: settings ? (t.raw("handleHelp") as string) : undefined,
     hint: t("handleHint", { min: HANDLE_MIN_LENGTH, max: HANDLE_MAX_LENGTH }),
     submit: t(submit),
     saving: t("saving"),
@@ -29,6 +34,8 @@ export async function handleFormLabels(
 
 export type ProfileFormLabels = {
   displayName: string;
+  displayNameHint: string;
+  previewTitle: string;
   bio: string;
   bioCounter: string;
   private: string;
@@ -42,6 +49,8 @@ export async function profileFormLabels(): Promise<ProfileFormLabels> {
   const t = await getTranslations("ProfileEdit");
   return {
     displayName: t("displayName"),
+    displayNameHint: t("displayNameHint"),
+    previewTitle: t("previewTitle"),
     bio: t("bio"),
     bioCounter: t.raw("bioCounter") as string,
     private: t("private"),

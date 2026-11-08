@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { HANDLE_MAX_LENGTH, HANDLE_MIN_LENGTH } from "@/contracts/profile";
 import type { HandleFormState } from "./actions";
 import type { HandleFormLabels } from "./form-labels";
+import { useIdentityPreview } from "./identity-preview";
 
 type Props = {
   action: (
@@ -17,13 +18,23 @@ type Props = {
   defaultHandle?: string;
   next?: string;
   labels: HandleFormLabels;
+  // Em Configurações o botão é de contorno ("Alterar @usuário"); no primeiro
+  // acesso, o principal ("Continuar").
+  submitVariant?: "default" | "outline";
 };
 
 // Sucesso vira aviso no canto da tela (toast); erro fica no formulário. No
 // primeiro acesso a ação redireciona, e o aviso não aparece. O campo é
 // controlado: o React limpa o formulário ao fim da ação, e o botão só
 // habilita quando o handle difere do gravado.
-export function HandleForm({ action, defaultHandle, next, labels }: Props) {
+export function HandleForm({
+  action,
+  defaultHandle,
+  next,
+  labels,
+  submitVariant = "default",
+}: Props) {
+  const preview = useIdentityPreview();
   const [state, formAction, pending] = useActionState(action, {});
   const [handle, setHandle] = useState(defaultHandle ?? "");
   const [saved, setSaved] = useState(defaultHandle ?? "");
@@ -31,7 +42,10 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
   if (state !== shownState) {
     setShownState(state);
     // Volta com o que foi enviado (ou, se salvou, com o handle gravado).
-    if (state.submitted !== undefined) setHandle(state.submitted);
+    if (state.submitted !== undefined) {
+      setHandle(state.submitted);
+      preview?.setHandle(state.submitted);
+    }
     if (state.savedHandle) setSaved(state.savedHandle);
   }
   // O servidor corta espaços e passa para minúsculas: isso não é mudança.
@@ -50,7 +64,17 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
   return (
     <form action={formAction} className="flex w-full flex-col gap-3">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <Label htmlFor="handle">{labels.label}</Label>
+      {labels.help ? (
+        <p id="handle-ajuda" className="text-sm text-muted-foreground">
+          {labels.help.replace(
+            "{handle}",
+            () => handle.trim().toLowerCase() || "…",
+          )}
+        </p>
+      ) : null}
+      <Label htmlFor="handle" className={labels.help ? "sr-only" : undefined}>
+        {labels.label}
+      </Label>
       <div className="relative">
         <span
           aria-hidden
@@ -63,7 +87,10 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
           name="handle"
           className="pl-7"
           value={handle}
-          onChange={(event) => setHandle(event.target.value)}
+          onChange={(event) => {
+            setHandle(event.target.value);
+            preview?.setHandle(event.target.value);
+          }}
           required
           minLength={HANDLE_MIN_LENGTH}
           maxLength={HANDLE_MAX_LENGTH}
@@ -71,7 +98,12 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
           autoCapitalize="none"
           spellCheck={false}
           aria-invalid={state.error ? true : undefined}
-          aria-describedby={state.error ? errorId : "handle-dica"}
+          aria-describedby={[
+            state.error ? errorId : "handle-dica",
+            labels.help && "handle-ajuda",
+          ]
+            .filter(Boolean)
+            .join(" ")}
         />
       </div>
       <p id="handle-dica" className="text-xs text-muted-foreground">
@@ -82,7 +114,11 @@ export function HandleForm({ action, defaultHandle, next, labels }: Props) {
           {state.error.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending || !changed}>
+      <Button
+        type="submit"
+        variant={submitVariant}
+        disabled={pending || !changed}
+      >
         {pending ? labels.saving : labels.submit}
       </Button>
     </form>

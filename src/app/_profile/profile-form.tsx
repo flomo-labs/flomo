@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BIO_MAX_LENGTH } from "@/contracts/profile";
 import { saveProfile } from "./actions";
 import type { ProfileFormLabels } from "./form-labels";
+import { useIdentityPreview } from "./identity-preview";
 
 type Props = {
   defaults: { displayName: string; bio: string; isPrivate: boolean };
@@ -22,6 +23,7 @@ type Props = {
 // limite conta caracteres; quem barra é o servidor, e o contador avisa.
 // Sucesso vira aviso no canto da tela (toast); erro fica no formulário.
 export function ProfileForm({ defaults, labels }: Props) {
+  const preview = useIdentityPreview();
   const [state, formAction, pending] = useActionState(saveProfile, {});
   useEffect(() => {
     // Mesmo id: salvar de novo substitui o aviso em vez de empilhar.
@@ -38,6 +40,7 @@ export function ProfileForm({ defaults, labels }: Props) {
     setShownState(state);
     if (state.saved && state.submitted) {
       setDisplayName(state.submitted.displayName);
+      preview?.setDisplayName(state.submitted.displayName);
       setBio(state.submitted.bio);
       setIsPrivate(state.submitted.isPrivate);
       setSaved(state.submitted);
@@ -53,15 +56,24 @@ export function ProfileForm({ defaults, labels }: Props) {
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-3">
-      <Label htmlFor="displayName">{labels.displayName}</Label>
+      <h3 className="text-base font-semibold">{labels.displayName}</h3>
+      <p id="nome-ajuda" className="text-sm text-muted-foreground">
+        {labels.displayNameHint}
+      </p>
+      <Label htmlFor="displayName" className="sr-only">
+        {labels.displayName}
+      </Label>
       <Input
         id="displayName"
         name="displayName"
         value={displayName}
-        onChange={(event) => setDisplayName(event.target.value)}
+        onChange={(event) => {
+          setDisplayName(event.target.value);
+          preview?.setDisplayName(event.target.value);
+        }}
         autoComplete="name"
         aria-invalid={state.error ? true : undefined}
-        aria-describedby={state.error ? errorId : undefined}
+        aria-describedby={state.error ? `${errorId} nome-ajuda` : "nome-ajuda"}
       />
       <Label htmlFor="bio">{labels.bio}</Label>
       <Textarea
@@ -70,7 +82,9 @@ export function ProfileForm({ defaults, labels }: Props) {
         value={bio}
         onChange={(event) => setBio(event.target.value)}
         aria-invalid={state.error ? true : undefined}
-        aria-describedby={state.error ? `${errorId} bio-contador` : "bio-contador"}
+        aria-describedby={
+          state.error ? `${errorId} bio-contador` : "bio-contador"
+        }
       />
       <p id="bio-contador" className="text-xs text-muted-foreground">
         {labels.bioCounter
