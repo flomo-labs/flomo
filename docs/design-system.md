@@ -57,7 +57,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 ### Layout
 - `page-container`: coluna centrada, máx. `--container-page` (**60rem**), margem lateral 16px (celular) e 32px (≥768px). Textos longos: `max-w-reading` (**48rem**).
 - Breakpoints: `sm` 640, `md` 768 (corte celular/desktop do shell).
-- Cabeçalho: `h-16`, borda inferior. Barra inferior do celular: `h-16` + `safe-area-inset-bottom`, só logado; o `body` reserva o espaço (`[data-bottom-nav]`).
+- Cabeçalho: `h-16`, borda inferior. Barra inferior do celular: `h-16` + `safe-area-inset-bottom`, só logado, com quatro itens (Seguintes, Descobrir, Biblioteca, Perfil; ícone preenchido e rótulo `0.625rem` no ativo, cabe em 320px; #253); o `body` reserva o espaço (`[data-bottom-nav]`).
 - Alvos de toque: com `pointer-coarse`, botões, abas e ícones sobem para **44px** (`h-11`/`size-11`); abas, 50px de lista.
 - Movimento: respeitar `prefers-reduced-motion` (onda dos pôsteres da landing e chuvisco da TV vazia param). Regra global em `globals.css`: com "reduzir movimento", toda animação e transição (diálogos, menus, dicas, hover) vira instantânea; não precisa de `motion-safe:` em componente novo.
 - Celular deitado/entalhe: `viewport-fit=cover` + `page-container` com `padding-left/right: max(margem, env(safe-area-inset-*))`. Altura de camadas sobrepostas em `dvh`, nunca `vh`.

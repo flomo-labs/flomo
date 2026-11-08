@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Biblioteca como quarto item da barra inferior do celular (Seguintes, Descobrir, Biblioteca, Perfil), ativa em `/biblioteca` e nas subtelas (#253).
 - Marcar a temporada inteira como assistida e marcar no dia da exibição/lançamento, no back (#245).
 - Botão "Marcar temporada como vista" na página do título, com progresso, diálogo de data (Hoje, Na data de exibição de cada episódio, Sem data, Escolher data) e "Desfazer"; "No dia em que foi ao ar" e "No dia do lançamento" ao editar a data de episódio e filme (#248).
 - Guardar em "Quero ver" um título que ainda não está no catálogo local, a partir de um resultado de busca, numa única operação, no back (#246).

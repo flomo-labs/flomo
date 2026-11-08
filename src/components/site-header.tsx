@@ -113,6 +113,7 @@ export async function MobileNav() {
       items={[
         FOLLOWING_ITEM,
         DISCOVER_ITEM,
+        LIBRARY_ITEM,
         profileItem(handle ? profilePath(handle) : "/cadastro"),
       ]}
     />
