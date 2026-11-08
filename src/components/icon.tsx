@@ -56,9 +56,22 @@ const GLYPHS = {
     outline: stroke("m112 184 144 144 144-144", 48),
     filled: stroke("m112 184 144 144 144-144", 48),
   },
+  // Três pontos cheios (círculos): traço de comprimento quase zero some no Safari.
   ellipsisVertical: {
-    outline: stroke("M256 112h.01M256 256h.01M256 400h.01", 72),
-    filled: stroke("M256 112h.01M256 256h.01M256 400h.01", 72),
+    outline: (
+      <>
+        <circle cx="256" cy="108" r="40" fill="currentColor" />
+        <circle cx="256" cy="256" r="40" fill="currentColor" />
+        <circle cx="256" cy="404" r="40" fill="currentColor" />
+      </>
+    ),
+    filled: (
+      <>
+        <circle cx="256" cy="108" r="40" fill="currentColor" />
+        <circle cx="256" cy="256" r="40" fill="currentColor" />
+        <circle cx="256" cy="404" r="40" fill="currentColor" />
+      </>
+    ),
   },
   arrowUp: {
     outline: stroke("M112 244 256 100l144 144M256 120v292", 48),

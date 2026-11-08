@@ -37,7 +37,10 @@ export function SeasonAccordionItem({
           "flex items-center gap-2 p-2 pr-3",
           // Aberta, o cabeçalho acompanha a rolagem enquanto a lista de
           // episódios da temporada passa: o botão de marcar e o menu ficam à mão.
-          open && "sticky top-0 z-20 rounded-t-card bg-background",
+          // Raio = o do cartão menos a borda de 1px, para não esconder a borda
+          // nos cantos, e arredondado embaixo também (ele encosta nos episódios).
+          open &&
+            "sticky top-0 z-20 rounded-[calc(var(--radius-card)-1px)] bg-background",
         )}
       >
         {/* Chevron no meio da altura do cabeçalho (como no mockup); o botão
