@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { catalogRefSchema } from "./catalog";
 
 // Entradas dos casos de uso da biblioteca (Fase 1.3). Valem para a web e,
 // depois, para a API e o app.
@@ -132,6 +133,10 @@ export const setTitleStatusInputSchema = z.object({
   titleId: z.uuid(),
   status: z.enum(MANUAL_LIBRARY_STATUSES),
 });
+
+// Guardar na biblioteca (em "Quero ver") um título que ainda pode não estar no
+// catálogo local: a entrada é a referência do provedor, como na busca.
+export const addTitleByRefInputSchema = catalogRefSchema;
 
 export const setTitleHiddenInputSchema = z.object({
   titleId: z.uuid(),

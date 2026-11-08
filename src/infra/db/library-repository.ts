@@ -379,6 +379,15 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
         });
     },
 
+    async addTitleIfAbsent(userId, titleId, status) {
+      const rows = await tx
+        .insert(userTitles)
+        .values({ userId, titleId, status })
+        .onConflictDoNothing()
+        .returning({ titleId: userTitles.titleId });
+      return rows.length > 0;
+    },
+
     async setTitleStatus(userId, titleId, status) {
       await tx
         .insert(userTitles)

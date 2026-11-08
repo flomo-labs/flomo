@@ -10,6 +10,7 @@ import {
   localTmdbBaseUrl,
   type TmdbClient,
 } from "./tmdb/client";
+import { createRateLimit, type RateLimit } from "./rate-limit";
 import { createTmdbProvider, TMDB_PROVIDER } from "./tmdb/provider";
 
 // Um cliente por instância do servidor: o limite de concorrência só vale se
@@ -57,4 +58,18 @@ export function createCatalogDeps(
     now: () => new Date(),
     background,
   };
+}
+
+// Títulos novos que um usuário pode trazer do provedor ao guardá-los na
+// biblioteca pelo atalho da busca. Um limite por instância do servidor.
+const globalForAddLimit = globalThis as unknown as {
+  flomoAddTitleLimit?: RateLimit;
+};
+
+export function allowProviderFetch(userId: string): boolean {
+  globalForAddLimit.flomoAddTitleLimit ??= createRateLimit({
+    max: 30,
+    windowMs: 60_000,
+  });
+  return globalForAddLimit.flomoAddTitleLimit.allow(userId);
 }

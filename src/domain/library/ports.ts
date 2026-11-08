@@ -192,6 +192,15 @@ export interface LibraryRepository {
   countEpisodeEvents(userId: string, episodeId: string): Promise<number>;
   deleteEpisodeProgress(userId: string, episodeId: string): Promise<void>;
 
+  // Põe o título na biblioteca com `status` só se ele ainda não estiver nela.
+  // Devolve `true` quando adicionou agora e `false` quando já estava (a
+  // situação atual não muda). A PK decide em caso de corrida.
+  addTitleIfAbsent(
+    userId: string,
+    titleId: string,
+    status: LibraryStatus,
+  ): Promise<boolean>;
+
   // Põe o título na biblioteca com `status` ou troca a situação atual, seja
   // qual for. Não mexe no progresso nem no histórico.
   setTitleStatus(
