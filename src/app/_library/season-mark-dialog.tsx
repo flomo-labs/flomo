@@ -1,20 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { MarkWatchDateInput } from "@/contracts/library";
 import {
-  toWatchDateInput,
   WatchDateChoice,
-  type WatchDateChoiceKind,
   type WatchDateChoiceLabels,
 } from "./watch-date-choice";
 
@@ -22,13 +11,11 @@ export type SeasonMarkDialogLabels = WatchDateChoiceLabels & {
   title: string;
   // Quantos episódios faltam e quantos já estavam marcados, já escritos.
   description: string;
-  back: string;
-  done: string;
+  cancel: string;
 };
 
-// Confirmação de "marcar a temporada inteira": mesmas opções de data do
-// diálogo de editar o registro (`WatchDateChoice`). "Hoje" já vem escolhida;
-// "Concluir" marca, "Voltar" fecha sem marcar.
+// Confirmação de "marcar a temporada inteira": o próprio diálogo é a
+// confirmação, e cada opção de data (`WatchDateChoice`) já marca ao tocar.
 export function SeasonMarkDialog({
   open,
   onOpenChange,
@@ -44,51 +31,19 @@ export function SeasonMarkDialog({
   labels: SeasonMarkDialogLabels;
   onConfirm: (when: MarkWatchDateInput) => void;
 }) {
-  const [kind, setKind] = useState<WatchDateChoiceKind>("now");
-  const [day, setDay] = useState(today);
-
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next);
-        if (!next) {
-          setKind("now");
-          setDay(today);
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{labels.title}</DialogTitle>
-          <DialogDescription>{labels.description}</DialogDescription>
-        </DialogHeader>
         <WatchDateChoice
-          kind={kind}
-          day={day}
+          title={labels.title}
+          description={labels.description}
           today={today}
+          pending={pending}
           labels={labels}
-          onKindChange={setKind}
-          onDayChange={setDay}
+          cancelLabel={labels.cancel}
+          onCancel={() => onOpenChange(false)}
+          onChoose={onConfirm}
         />
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full"
-            onClick={() => onOpenChange(false)}
-          >
-            {labels.back}
-          </Button>
-          <Button
-            type="button"
-            className="rounded-full"
-            disabled={pending || (kind === "day" && !day)}
-            onClick={() => onConfirm(toWatchDateInput(kind, day))}
-          >
-            {labels.done}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

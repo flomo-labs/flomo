@@ -56,7 +56,15 @@ function Toaster(props: ToasterProps) {
           "--border-radius": "var(--radius-card)",
         } as CSSProperties
       }
-      toastOptions={{ classNames: { toast: "font-sans text-sm shadow-lg" } }}
+      toastOptions={{
+        classNames: {
+          toast: "font-sans text-sm shadow-lg",
+          // "Desfazer" e afins: pílula translúcida branca sobre o verde (ou
+          // o magenta) do aviso, em vez do botão escuro padrão do Sonner.
+          actionButton:
+            "rounded-full! bg-white/20! px-3! font-medium! text-white! hover:bg-white/30!",
+        },
+      }}
       {...props}
     />
   );

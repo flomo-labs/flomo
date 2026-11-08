@@ -93,11 +93,12 @@ export async function SeasonWatchSlot({
             missing,
             already: watchedReleased,
           }),
+          cancel: t("cancel"),
           back: t("back"),
           done: t("done"),
-          today: t("today"),
-          noDate: t("noDate"),
-          pickDate: t("pickDate"),
+          today: t("seasonToday"),
+          noDate: t("seasonNoDate"),
+          pickDate: t("seasonPickDate"),
           airDate: episodes.some((e) => e.airDate)
             ? t("seasonAirDate")
             : undefined,

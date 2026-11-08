@@ -12,11 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { MarkWatchDateInput } from "@/contracts/library";
-import {
-  toWatchDateInput,
-  WatchDateChoice,
-  type WatchDateChoiceKind,
-} from "./watch-date-choice";
+import { WatchDateChoice } from "./watch-date-choice";
 import type { WatchControlLabels } from "./watch-control";
 
 type WatchRecord = { eventId: string; dateLabel: string };
@@ -48,18 +44,10 @@ export function WatchRecordsDialog({
   onDelete: (eventId: string) => void;
 }) {
   const [view, setView] = useState<View>({ name: "list" });
-  const [choice, setChoice] = useState<WatchDateChoiceKind>("day");
-  const [day, setDay] = useState(today);
 
   const back = () => setView({ name: "list" });
   const edit = (eventId: string) => {
-    setChoice("day");
-    setDay(today);
     setView({ name: "edit", eventId });
-  };
-  const finish = (eventId: string) => {
-    onSetDate(eventId, toWatchDateInput(choice, day));
-    back();
   };
 
   return (
@@ -122,37 +110,18 @@ export function WatchRecordsDialog({
             </ul>
           </>
         ) : view.name === "edit" ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>{labels.editRecord}</DialogTitle>
-            </DialogHeader>
-            <WatchDateChoice
-              kind={choice}
-              day={day}
-              today={today}
-              labels={labels}
-              onKindChange={setChoice}
-              onDayChange={setDay}
-            />
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-full"
-                onClick={back}
-              >
-                {labels.back}
-              </Button>
-              <Button
-                type="button"
-                className="rounded-full"
-                disabled={pending || (choice === "day" && !day)}
-                onClick={() => finish(view.eventId)}
-              >
-                {labels.done}
-              </Button>
-            </DialogFooter>
-          </>
+          <WatchDateChoice
+            title={labels.editRecord}
+            today={today}
+            pending={pending}
+            labels={labels}
+            cancelLabel={labels.back}
+            onCancel={back}
+            onChoose={(when) => {
+              onSetDate(view.eventId, when);
+              back();
+            }}
+          />
         ) : (
           <>
             <DialogHeader>
