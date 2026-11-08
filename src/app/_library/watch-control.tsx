@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
-import type { WatchDateInput } from "@/contracts/library";
+import type { MarkWatchDateInput } from "@/contracts/library";
 import {
   Dialog,
   DialogClose,
@@ -50,6 +50,9 @@ export type WatchControlLabels = {
   today: string;
   noDate: string;
   pickDate: string;
+  // "No dia em que foi ao ar" (episódio) ou "No dia do lançamento" (filme).
+  // Ausente = o catálogo não tem a data e a opção não aparece.
+  airDate?: string;
   failed: string;
 };
 
@@ -141,7 +144,7 @@ export function WatchControl({
         ? unmarkEpisode({ episodeId: targetId })
         : unmarkMovie({ titleId: targetId }),
     );
-  const setDate = (eventId: string, when: WatchDateInput) =>
+  const setDate = (eventId: string, when: MarkWatchDateInput) =>
     run(() => changeWatchDate({ eventId, when }));
 
   const isEpisode = kind === "episode";

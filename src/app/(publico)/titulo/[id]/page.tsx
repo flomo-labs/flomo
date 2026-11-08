@@ -6,8 +6,9 @@ import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 import {
   getTitle as getTitleUncached,
-  listSeasonEpisodes,
+  listSeasonEpisodes as listSeasonEpisodesUncached,
 } from "@/app/_catalog/gateway";
+import { SeasonWatchSlot } from "@/app/_library/season-watch-slot";
 import { StatusSlot } from "@/app/_library/status-slot";
 import { WatchSlot } from "@/app/_library/watch-slot";
 import { CommentSection } from "@/app/_comments/comment-section";
@@ -30,6 +31,8 @@ import { cn } from "@/lib/utils";
 
 // Metadados e página leem o mesmo título: uma consulta por requisição.
 const getTitle = cache(getTitleUncached);
+// O botão da temporada e a lista de episódios leem os mesmos episódios.
+const listSeasonEpisodes = cache(listSeasonEpisodesUncached);
 
 export async function generateMetadata({
   params,
@@ -118,6 +121,7 @@ async function TitleContent({
               <WatchSlot
                 kind="movie"
                 titleId={title.id}
+                hasAirDate={Boolean(title.releaseDate)}
                 loginHref={loginHref(`/titulo/${title.id}`)}
               />
               <RatingSlot titleId={title.id} />
@@ -256,10 +260,13 @@ async function Seasons({
           })}
         </ul>
       </SeasonStrip>
-      <p className="text-sm text-muted-foreground">
-        {label(current.seasonNumber)} ·{" "}
-        {t("episodeCount", { count: current.episodeCount })}
-      </p>
+      <SeasonSummary
+        titleId={title.id}
+        seasonNumber={current.seasonNumber}
+        summary={`${label(current.seasonNumber)} · ${t("episodeCount", {
+          count: current.episodeCount,
+        })}`}
+      />
       <Suspense fallback={null}>
         <SeasonAverage titleId={title.id} seasonNumber={current.seasonNumber} />
       </Suspense>
@@ -273,6 +280,54 @@ async function Seasons({
         <Episodes titleId={title.id} seasonNumber={current.seasonNumber} />
       </Suspense>
     </section>
+  );
+}
+
+// "Temporada N · X episódios". Nas temporadas regulares, ao lado vai o botão
+// de marcar a temporada inteira (os especiais, temporada 0, ficam só com o texto).
+async function SeasonSummary({
+  titleId,
+  seasonNumber,
+  summary,
+}: {
+  titleId: string;
+  seasonNumber: number;
+  summary: string;
+}) {
+  const text = <p className="text-sm text-muted-foreground">{summary}</p>;
+  if (seasonNumber < 1) return text;
+  return (
+    <Suspense fallback={text}>
+      <SeasonSummaryWithMark
+        titleId={titleId}
+        seasonNumber={seasonNumber}
+        summary={summary}
+      />
+    </Suspense>
+  );
+}
+
+async function SeasonSummaryWithMark({
+  titleId,
+  seasonNumber,
+  summary,
+}: {
+  titleId: string;
+  seasonNumber: number;
+  summary: string;
+}) {
+  const result = await listSeasonEpisodes(titleId, seasonNumber);
+  if (!result.ok || result.value.length === 0) {
+    return <p className="text-sm text-muted-foreground">{summary}</p>;
+  }
+  return (
+    <SeasonWatchSlot
+      titleId={titleId}
+      seasonNumber={seasonNumber}
+      summary={summary}
+      episodes={result.value.map((e) => ({ id: e.id, airDate: e.airDate }))}
+      loginHref={loginHref(`/titulo/${titleId}?temporada=${seasonNumber}`)}
+    />
   );
 }
 
@@ -331,6 +386,7 @@ async function Episodes({
                 seasonNumber,
                 episodeNumber: episode.episodeNumber,
               }}
+              hasAirDate={Boolean(episode.airDate)}
               loginHref={loginHref(
                 `/titulo/${titleId}?temporada=${seasonNumber}`,
               )}

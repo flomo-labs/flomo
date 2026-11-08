@@ -13,6 +13,7 @@ export async function WatchSlot({
   titleId,
   episodeId,
   position,
+  hasAirDate = false,
   loginHref,
 }: {
   kind: "episode" | "movie";
@@ -20,6 +21,9 @@ export async function WatchSlot({
   episodeId?: string;
   // Posição do episódio, para contar os anteriores não vistos.
   position?: { seasonNumber: number; episodeNumber: number };
+  // O catálogo tem a data de exibição do episódio ou de lançamento do filme:
+  // só então "No dia em que foi ao ar/do lançamento" aparece ao editar a data.
+  hasAirDate?: boolean;
   loginHref: string;
 }) {
   const t = await getTranslations("Library");
@@ -94,6 +98,9 @@ export async function WatchSlot({
         today: t("today"),
         noDate: t("noDate"),
         pickDate: t("pickDate"),
+        airDate: hasAirDate
+          ? t(kind === "movie" ? "onReleaseDate" : "onAirDate")
+          : undefined,
         failed: t("failed"),
       }}
     />

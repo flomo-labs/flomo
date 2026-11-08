@@ -40,6 +40,10 @@ const GLYPHS = {
     outline: stroke("M416 128 192 384l-96-96"),
     filled: stroke("M416 128 192 384l-96-96"),
   },
+  checkmarkDone: {
+    outline: stroke("M48 288l96 96L320 128M256 352l32 32L464 128"),
+    filled: stroke("M48 288l96 96L320 128M256 352l32 32L464 128"),
+  },
   chevronForward: {
     outline: stroke("m184 112 144 144-144 144", 48),
     filled: stroke("m184 112 144 144-144 144", 48),
