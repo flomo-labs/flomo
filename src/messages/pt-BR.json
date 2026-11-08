@@ -231,6 +231,7 @@
     },
     "providerNav": "Serviço de streaming",
     "mediaNav": "Séries, filmes, novelas ou animes",
+    "allProviders": "Todos",
     "media": {
       "tudo": "Todos",
       "series": "Séries",

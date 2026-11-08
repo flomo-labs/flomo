@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import type { ProviderBundle } from "@/components/catalog/provider-shelf";
+import type { ProviderBundle } from "@/components/catalog/discover-browser";
 import { ShelfSkeleton } from "@/components/catalog/shelf";
 import { SHELF_PROVIDERS } from "@/contracts/catalog";
 import { listShelfCached } from "./cached-shelf";
-import { MEDIA_SEGMENTS, type MediaSegment } from "./segments";
+import { BASE_SEGMENTS, MEDIA_SEGMENTS, type MediaSegment } from "./segments";
 import { ShelfItems } from "./shelf-items";
 
 // Monta "Em alta no serviço X" com as listas de todos os tipos do serviço, de
@@ -14,9 +14,8 @@ export async function buildProviderBundle(
 ): Promise<ProviderBundle> {
   const provider =
     SHELF_PROVIDERS.find((p) => p.id === providerId) ?? SHELF_PROVIDERS[0];
-  // Os filtros Novelas e Animes só aparecem se o serviço tiver algum título
-  // daquele tipo (a consulta é a mesma da prateleira, então vem do cache de 6
-  // horas quando há).
+  // Novelas e Animes só aparecem se o serviço tiver algum título daquele tipo
+  // (a consulta é a mesma da prateleira, então vem do cache quando há).
   const optional = (["novelas", "animes"] as const).map(async (segment) => {
     const result = await listShelfCached({
       kind: "provider",
@@ -26,9 +25,7 @@ export async function buildProviderBundle(
     return result?.ok && result.value.length > 0 ? segment : null;
   });
   const segments: MediaSegment[] = [
-    "tudo",
-    "series",
-    "filmes",
+    ...BASE_SEGMENTS,
     ...(await Promise.all(optional)).filter((s) => s !== null),
   ];
   const lists: Partial<Record<MediaSegment, React.ReactNode>> = {};
@@ -45,9 +42,5 @@ export async function buildProviderBundle(
       </Suspense>
     );
   }
-  return {
-    providerId: provider.id,
-    segments,
-    lists,
-  };
+  return { providerId: provider.id, segments, lists };
 }
