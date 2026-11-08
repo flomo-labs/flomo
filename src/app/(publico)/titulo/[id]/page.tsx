@@ -123,6 +123,7 @@ async function TitleContent({
                 titleId={title.id}
                 hasAirDate={Boolean(title.releaseDate)}
                 loginHref={loginHref(`/titulo/${title.id}`)}
+                releaseDate={title.releaseDate}
               />
               <RatingSlot titleId={title.id} />
             </Suspense>
@@ -382,6 +383,7 @@ async function Episodes({
               kind="episode"
               titleId={titleId}
               episodeId={episode.id}
+              releaseDate={episode.airDate}
               position={{
                 seasonNumber,
                 episodeNumber: episode.episodeNumber,

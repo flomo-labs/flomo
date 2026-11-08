@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import type { MarkWatchDateInput } from "@/contracts/library";
@@ -24,6 +25,7 @@ import {
   unmarkMovie,
   type LibraryActionResult,
 } from "./actions";
+import { formatDayValue } from "@/lib/watch-date-shortcuts";
 import { WatchRecordsDialog } from "./watch-records-dialog";
 
 export type WatchControlLabels = {
@@ -53,6 +55,13 @@ export type WatchControlLabels = {
   // "No dia em que foi ao ar" (episódio) ou "No dia do lançamento" (filme).
   // Ausente = o catálogo não tem a data e a opção não aparece.
   airDate?: string;
+  yesterday: string;
+  weekAgo: string;
+  thisYear: string;
+  beforeRelease: string;
+  // "Data registrada: {date}": o "{date}" é trocado no cliente pela data.
+  dateSaved: string;
+  dateRemoved: string;
   failed: string;
 };
 
@@ -71,6 +80,9 @@ type Props = {
   previousUnwatched?: number;
   // AAAA-MM-DD de hoje, limite do seletor de data.
   today: string;
+  // AAAA-MM-DD de lançamento (filme) ou exibição (episódio), para avisar de
+  // data anterior.
+  releaseDate?: string | null;
   labels: WatchControlLabels;
 };
 
@@ -84,6 +96,7 @@ export function WatchControl({
   watched,
   previousUnwatched = 0,
   today,
+  releaseDate,
   labels,
 }: Props) {
   const [pending, startTransition] = useTransition();
@@ -97,12 +110,16 @@ export function WatchControl({
   // Desmarcar o filme apaga dados: pede confirmação num diálogo.
   const [confirmingUnmark, setConfirmingUnmark] = useState(false);
 
-  function run(action: () => Promise<LibraryActionResult>) {
+  function run(
+    action: () => Promise<LibraryActionResult>,
+    onSuccess?: () => void,
+  ) {
     setError(null);
     startTransition(async () => {
       try {
         const result = await action();
         if (!result.ok) setError(result.error.message || labels.failed);
+        else onSuccess?.();
       } catch {
         setError(labels.failed);
       }
@@ -144,8 +161,26 @@ export function WatchControl({
         ? unmarkEpisode({ episodeId: targetId })
         : unmarkMovie({ titleId: targetId }),
     );
+  // Depois de salvar, o aviso verde diz qual data ficou registrada.
   const setDate = (eventId: string, when: MarkWatchDateInput) =>
-    run(() => changeWatchDate({ eventId, when }));
+    run(
+      () => changeWatchDate({ eventId, when }),
+      () => {
+        const day =
+          when.kind === "now"
+            ? today
+            : when.kind === "airDate"
+              ? releaseDate
+              : when.kind === "date"
+                ? when.value
+                : null;
+        toast.success(
+          day
+            ? labels.dateSaved.replace("{date}", formatDayValue(day))
+            : labels.dateRemoved,
+        );
+      },
+    );
 
   const isEpisode = kind === "episode";
   const showBody = !isEpisode || watched !== undefined || error !== null;
@@ -228,6 +263,7 @@ export function WatchControl({
           onOpenChange={setRecordsOpen}
           records={watched.records}
           today={today}
+          releaseDate={releaseDate}
           pending={pending}
           labels={labels}
           onSetDate={setDate}
