@@ -6,9 +6,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
-import { ListLinkCard } from "@/components/list-link-card";
-import { RoadmapNewBadge } from "@/components/roadmap-new-badge";
-import { ROADMAP_PATH, ROADMAP_TITLE } from "@/content/roadmap-link";
+import { RoadmapTeaser } from "@/components/roadmap-teaser";
 import { ScrollHintRow } from "@/components/scroll-hint-row";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterGridSkeleton } from "@/components/loading/poster-grid-skeleton";
@@ -114,22 +112,11 @@ async function ProfileContent({
         </Suspense>
       ) : null}
       {isOwn ? (
-        // No celular, o menu da foto some do caminho: estes dois atalhos ficam
-        // na própria tela (#250). No desktop vêm do menu da foto.
-        <nav aria-label="Mais opções" className="flex flex-col gap-3 md:hidden">
-          <ListLinkCard
-            href="/configuracoes"
-            icon="informationCircle"
-            title="Configurações"
-          />
-          <ListLinkCard
-            href={ROADMAP_PATH}
-            icon="sparkles"
-            title={ROADMAP_TITLE}
-            description="Novidades e funcionalidades planejadas"
-            trailing={<RoadmapNewBadge />}
-          />
-        </nav>
+        // No celular o roadmap fica na própria tela (#250); no desktop vem do
+        // menu da foto.
+        <div className="md:hidden">
+          <RoadmapTeaser />
+        </div>
       ) : null}
     </article>
   );
