@@ -172,7 +172,7 @@
     },
     "types": "Tipo de título",
     "type": {
-      "all": "Todos"
+      "all": "Tudo"
     },
     "series": "Séries",
     "movies": "Filmes",
@@ -214,7 +214,7 @@
     "soonHint": "Os lançamentos das suas séries ainda não estão disponíveis.",
     "filters": "Filtrar por tipo",
     "kind": {
-      "both": "Todos",
+      "both": "Tudo",
       "tv": "Séries",
       "movie": "Filmes"
     },
@@ -256,7 +256,7 @@
     "mediaNav": "Séries, filmes, novelas ou animes",
     "allProviders": "Todos",
     "media": {
-      "tudo": "Todos",
+      "tudo": "Tudo",
       "series": "Séries",
       "filmes": "Filmes",
       "novelas": "Novelas",
