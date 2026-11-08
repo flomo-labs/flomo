@@ -19,6 +19,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
+- Na página do título, a média das notas do Flomo e a nota do TMDB viraram dois cartões em destaque (número grande, estrelas na cor de destaque e "N notas no Flomo"), com "Sem notas ainda" quando não há notas, e "Sua nota" logo abaixo no filme (#254).
 - "Temporada vista" volta a poder ser desmarcada depois de recarregar a página: o botão abre uma confirmação e tira todos os episódios vistos da temporada (#276).
 - Landing com dois caminhos, "Criar conta" e "Já tenho conta · Entrar", que abrem a tela de entrar na aba certa; no celular a landing cabe na tela, sem rolagem. Na tela de entrar, o título, o botão do Google e as abas ("Já tenho conta" / "Sou novo aqui") mudam conforme a situação, com atalho de troca, e criar conta pede "Confirmar senha" (#251).
 - A página "Em breve no Flomo" agora se chama "O que vem por aí no Flomo" e ganhou um item no menu da foto (com selo "Novo" enquanto há novidade) e um cartão no fim de Descobrir (#250).

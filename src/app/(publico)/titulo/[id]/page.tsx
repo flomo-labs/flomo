@@ -109,10 +109,17 @@ async function TitleContent({
             </p>
           ) : null}
           <p className="text-sm text-muted-foreground">{facts.join(" · ")}</p>
-          <Suspense fallback={null}>
-            <TitleAverage titleId={title.id} />
-          </Suspense>
-          {title.tmdbRating ? <TmdbRating rating={title.tmdbRating} /> : null}
+          <div className="flex w-full flex-wrap gap-3">
+            <Suspense fallback={null}>
+              <TitleAverage titleId={title.id} />
+            </Suspense>
+            {title.tmdbRating ? <TmdbRating rating={title.tmdbRating} /> : null}
+          </div>
+          {title.mediaType === "movie" ? (
+            <Suspense fallback={null}>
+              <RatingSlot titleId={title.id} showLabel />
+            </Suspense>
+          ) : null}
           <Suspense fallback={null}>
             <StatusSlot titleId={title.id} />
           </Suspense>
@@ -125,7 +132,6 @@ async function TitleContent({
                 loginHref={loginHref(`/titulo/${title.id}`)}
                 releaseDate={title.releaseDate}
               />
-              <RatingSlot titleId={title.id} />
             </Suspense>
           ) : null}
           {title.genres.length > 0 ? (
@@ -168,11 +174,10 @@ async function TitleContent({
 }
 
 // Média das notas de todos os usuários: do filme ou, na série, de todos os
-// episódios. Sem nota nenhuma, nada aparece.
+// episódios, em cartão. Sem nota nenhuma, o cartão diz "Sem notas ainda".
 async function TitleAverage({ titleId }: { titleId: string }) {
   const summary = await getRatingSummary(titleId);
-  if (!summary?.overall) return null;
-  return <RatingAverage average={summary.overall} />;
+  return <RatingAverage average={summary?.overall ?? null} card />;
 }
 
 async function SeasonAverage({

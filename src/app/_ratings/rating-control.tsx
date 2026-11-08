@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Icon } from "@/components/icon";
 import { StarRating, type StarRatingLabels } from "@/components/star-rating";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,15 +75,19 @@ export function RatingControl({
           labels={labels.stars}
         />
         {value !== null ? (
+          // Só o ícone, para ocupar pouco espaço; o nome vem do aria-label e
+          // do title (dica ao passar o mouse).
           <Button
             type="button"
             variant="ghost"
-            size="sm"
-            className="rounded-full"
+            size="icon-sm"
+            className="rounded-full text-muted-foreground"
+            aria-label={labels.remove}
+            title={labels.remove}
             disabled={pending}
             onClick={remove}
           >
-            {labels.remove}
+            <Icon name="trash" />
           </Button>
         ) : null}
       </div>
