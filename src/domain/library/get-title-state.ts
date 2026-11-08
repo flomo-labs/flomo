@@ -1,7 +1,10 @@
-import { titleLibraryStateInputSchema } from "@/contracts/library";
+import {
+  refsInLibraryInputSchema,
+  titleLibraryStateInputSchema,
+} from "@/contracts/library";
 import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
-import { CATALOG_COUNTRY } from "../catalog/types";
+import { CATALOG_COUNTRY, type CatalogRef } from "../catalog/types";
 import type { LibraryDeps } from "./mark-watched";
 import type { TitleLibraryState } from "./ports";
 import { todayIn } from "./watch-date";
@@ -36,4 +39,16 @@ export async function listUnwatchedEpisodes(
       todayIn(CATALOG_COUNTRY, deps.now()),
     ),
   );
+}
+
+// Quais das referências (resultados de busca) já estão na biblioteca do
+// usuário, para o atalho de adicionar mostrar o estado certo.
+export async function listRefsInLibrary(
+  deps: Pick<LibraryDeps, "library">,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<CatalogRef[], "INVALID_INPUT">> {
+  const parsed = refsInLibraryInputSchema.safeParse(input);
+  if (!parsed.success) return fail("INVALID_INPUT", "Dados inválidos.");
+  return ok(await deps.library.findRefsInLibrary(user.id, parsed.data.refs));
 }

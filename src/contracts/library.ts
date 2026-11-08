@@ -138,6 +138,13 @@ export const setTitleStatusInputSchema = z.object({
 // catálogo local: a entrada é a referência do provedor, como na busca.
 export const addTitleByRefInputSchema = catalogRefSchema;
 
+// Quais títulos de uma lista de resultados já estão na biblioteca. Uma
+// consulta para a lista inteira (sugestões da busca e resultados).
+export const MAX_REFS_IN_LIBRARY = 50;
+export const refsInLibraryInputSchema = z.object({
+  refs: z.array(catalogRefSchema).max(MAX_REFS_IN_LIBRARY),
+});
+
 export const setTitleHiddenInputSchema = z.object({
   titleId: z.uuid(),
   hidden: z.boolean(),

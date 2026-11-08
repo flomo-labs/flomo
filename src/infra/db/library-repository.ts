@@ -13,7 +13,8 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import type { TitleStatus } from "@/domain/catalog/types";
+import type { CatalogRef, TitleStatus } from "@/domain/catalog/types";
+import { TMDB_PROVIDER } from "@/infra/catalog/tmdb/provider";
 import type {
   FollowingItem,
   LibraryItem,
@@ -28,6 +29,7 @@ import {
 import type { Tx } from "./client";
 import {
   episodes,
+  externalIds,
   seasons,
   titles,
   titleTranslations,
@@ -82,7 +84,12 @@ async function seriesProgressByTitle(
 
 // Recebe a transação do `withUser`, nunca o cliente direto (ADR-003): o RLS
 // limita tudo às linhas do próprio usuário.
-export function createLibraryRepository(tx: Tx): LibraryRepository {
+// `provider` é o provedor do catálogo cujas referências `findRefsInLibrary`
+// reconhece (o TMDB, salvo nos testes).
+export function createLibraryRepository(
+  tx: Tx,
+  provider: string = TMDB_PROVIDER,
+): LibraryRepository {
   return {
     async findEpisode(episodeId) {
       const [row] = await tx
@@ -421,6 +428,33 @@ export function createLibraryRepository(tx: Tx): LibraryRepository {
           and(eq(userTitles.userId, userId), eq(userTitles.titleId, titleId)),
         );
       return Boolean(exists);
+    },
+
+    async findRefsInLibrary(userId, refs) {
+      if (refs.length === 0) return [];
+      // Uma consulta para a lista inteira: `(tipo, id)` das referências pedidas.
+      const wanted = sql.join(
+        refs.map((r) => sql`(${r.mediaType}, ${r.externalId})`),
+        sql`, `,
+      );
+      const rows = await tx
+        .select({
+          mediaType: externalIds.entityType,
+          externalId: externalIds.externalId,
+        })
+        .from(userTitles)
+        .innerJoin(externalIds, eq(externalIds.entityId, userTitles.titleId))
+        .where(
+          and(
+            eq(userTitles.userId, userId),
+            eq(externalIds.provider, provider),
+            sql`(${externalIds.entityType}, ${externalIds.externalId}) in (${wanted})`,
+          ),
+        );
+      return rows.map((r) => ({
+        mediaType: r.mediaType as CatalogRef["mediaType"],
+        externalId: r.externalId,
+      }));
     },
 
     async removeTitle(userId, titleId) {

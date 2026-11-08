@@ -1,4 +1,4 @@
-import type { MediaType, TitleStatus } from "../catalog/types";
+import type { CatalogRef, MediaType, TitleStatus } from "../catalog/types";
 import type {
   LibraryStatus,
   WatchedAtPrecision,
@@ -215,6 +215,13 @@ export interface LibraryRepository {
     titleId: string,
     hidden: boolean,
   ): Promise<boolean>;
+  // Dentre as referências do provedor, as que o usuário já tem na biblioteca
+  // (qualquer situação, ocultas inclusive). Título fora do catálogo local não
+  // está na biblioteca. Uma consulta para a lista inteira.
+  findRefsInLibrary(
+    userId: string,
+    refs: readonly CatalogRef[],
+  ): Promise<CatalogRef[]>;
   // Tira o título da biblioteca. O progresso e o histórico ficam guardados
   // (marcar de novo traz o título de volta com eles).
   removeTitle(userId: string, titleId: string): Promise<void>;

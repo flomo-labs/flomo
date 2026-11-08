@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { addTitleToLibraryByRef } from "@/domain/library/add-title-by-ref";
 import type { CatalogProvider } from "@/domain/catalog/ports";
+import type { CatalogRef } from "@/domain/catalog/types";
 import { providerTitle } from "@/domain/catalog/test-fakes";
 import { listFollowing } from "@/domain/library/following";
 import {
@@ -934,5 +935,28 @@ describe("adicionar à biblioteca um título fora do catálogo", () => {
         .from(userTitles)
         .where(eq(userTitles.userId, user));
       expect(rows).toEqual([{ status: "watching" }]);
+    }));
+
+  it("informa quais referências já estão na biblioteca, numa consulta só", () =>
+    inRollback(async (tx) => {
+      const a = await createUser(tx);
+      const b = await createUser(tx);
+      const { deps } = setupAdd(tx, a);
+      await addTitleToLibraryByRef(deps, { id: a }, ref);
+      const wanted: CatalogRef[] = [
+        { mediaType: "tv", externalId: ref.externalId },
+        { mediaType: "movie", externalId: ref.externalId },
+        { mediaType: "tv", externalId: "111" },
+      ];
+      const inLibraryOf = (user: string) =>
+        asUser(tx, user, (utx) =>
+          createLibraryRepository(utx, "teste").findRefsInLibrary(user, wanted),
+        );
+      expect(await inLibraryOf(a)).toEqual([ref]);
+      // Outra pessoa não vê o que não guardou, e lista vazia não consulta.
+      expect(await inLibraryOf(b)).toEqual([]);
+      expect(
+        await createLibraryRepository(tx, "teste").findRefsInLibrary(a, []),
+      ).toEqual([]);
     }));
 });

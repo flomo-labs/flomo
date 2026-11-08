@@ -16,6 +16,8 @@ import {
   unmarkMovieWatched,
   type MarkWatchedErrorCode,
 } from "@/domain/library/mark-watched";
+import { listRefsInLibrary } from "@/domain/library/get-title-state";
+import type { CatalogRef } from "@/domain/catalog/types";
 import {
   addTitleToLibraryByRef,
   type AddByRefErrorCode,
@@ -185,4 +187,29 @@ export async function addTitleByRef(
   revalidatePath("/seguintes");
   revalidatePath("/biblioteca");
   return result;
+}
+
+// Quais resultados de busca já estão na biblioteca (sugestões do campo de
+// busca). Leitura, sem revalidar nada; sem login, o atalho convida a entrar.
+export async function refsInLibrary(
+  input: unknown,
+): Promise<
+  Result<CatalogRef[], "INVALID_INPUT" | "UNAUTHENTICATED" | "UNAVAILABLE">
+> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  try {
+    return await withUser(user.claims, (tx) =>
+      listRefsInLibrary(
+        { library: createLibraryRepository(tx) },
+        { id: user.id },
+        input,
+      ),
+    );
+  } catch (error) {
+    console.error("Falha ao ler a biblioteca:", error);
+    return fail("UNAVAILABLE", "Não foi possível ler a biblioteca.");
+  }
 }

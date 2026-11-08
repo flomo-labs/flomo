@@ -1,4 +1,4 @@
-import type { MediaType, TitleStatus } from "../catalog/types";
+import type { CatalogRef, MediaType, TitleStatus } from "../catalog/types";
 import type {
   LibraryEpisode,
   FollowingItem,
@@ -25,6 +25,8 @@ export function createFakeLibrary(catalog: {
   titleStatus?: Record<string, TitleStatus>;
   // Data de lançamento de cada filme no catálogo (padrão: sem data).
   releaseDates?: Record<string, string>;
+  // Referência do provedor de cada título (para `findRefsInLibrary`).
+  refs?: Record<string, CatalogRef>;
 }) {
   const titles = catalog.titles ?? {};
   const episodes = catalog.episodes ?? [];
@@ -206,6 +208,17 @@ export function createFakeLibrary(catalog: {
       if (hidden) hiddenTitles.add(key(userId, titleId));
       else hiddenTitles.delete(key(userId, titleId));
       return true;
+    },
+    async findRefsInLibrary(userId, wanted) {
+      return Object.entries(catalog.refs ?? {})
+        .filter(([titleId]) => statuses.has(key(userId, titleId)))
+        .map(([, ref]) => ref)
+        .filter((ref) =>
+          wanted.some(
+            (w) =>
+              w.mediaType === ref.mediaType && w.externalId === ref.externalId,
+          ),
+        );
     },
     async removeTitle(userId, titleId) {
       statuses.delete(key(userId, titleId));

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
 import { HeaderSearchField } from "./header-search-field";
 
 // Campo do cabeçalho do desktop: sugestões enquanto digita e, ao enviar,
@@ -20,6 +21,7 @@ export async function HeaderSearch() {
           seeAll: t.raw("Search.seeAll"),
           movie: t("MediaType.movie"),
           tv: t("MediaType.tv"),
+          quickAdd: await getQuickAddLabels(),
         }}
       />
     </form>

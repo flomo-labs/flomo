@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getTitleLibraryState, listUnwatchedEpisodes } from "./get-title-state";
+import {
+  getTitleLibraryState,
+  listRefsInLibrary,
+  listUnwatchedEpisodes,
+} from "./get-title-state";
 import { markEpisodeWatched, markMovieWatched } from "./mark-watched";
 import { createFakeLibrary, type FakeEpisode, NOW, USER } from "./test-fakes";
 
@@ -95,5 +99,47 @@ describe("listUnwatchedEpisodes", () => {
     expect(
       await listUnwatchedEpisodes(lib.deps, USER, { titleId: "x" }),
     ).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } });
+  });
+});
+
+describe("listRefsInLibrary", () => {
+  const setupRefs = () =>
+    createFakeLibrary({
+      titles: { [SERIES]: "tv", [MOVIE]: "movie" },
+      refs: {
+        [SERIES]: { mediaType: "tv", externalId: "100" },
+        [MOVIE]: { mediaType: "movie", externalId: "100" },
+      },
+    });
+  const refs = [
+    { mediaType: "tv", externalId: "100" },
+    { mediaType: "movie", externalId: "100" },
+    { mediaType: "tv", externalId: "999" },
+  ];
+
+  it("devolve só as referências que estão na biblioteca", async () => {
+    const lib = setupRefs();
+    await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
+    expect(await listRefsInLibrary(lib.deps, USER, { refs })).toEqual({
+      ok: true,
+      value: [{ mediaType: "movie", externalId: "100" }],
+    });
+  });
+
+  it("filme e série com o mesmo id externo são títulos diferentes", async () => {
+    const lib = setupRefs();
+    await lib.deps.library.addTitleIfAbsent(USER.id, SERIES, "watchlist");
+    expect(await listRefsInLibrary(lib.deps, USER, { refs })).toEqual({
+      ok: true,
+      value: [{ mediaType: "tv", externalId: "100" }],
+    });
+  });
+
+  it("recusa entrada inválida", async () => {
+    const lib = setupRefs();
+    const result = await listRefsInLibrary(lib.deps, USER, {
+      refs: [{ mediaType: "tv", externalId: "abc" }],
+    });
+    expect(result).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } });
   });
 });

@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { refsInLibrary } from "@/app/_library/actions";
 import { Poster } from "@/components/catalog/poster";
+import {
+  QuickAddButton,
+  type QuickAddLabels,
+} from "@/components/catalog/quick-add-button";
 import { Icon } from "@/components/icon";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +30,8 @@ export type SearchComboboxLabels = {
   seeAll: string;
   movie: string;
   tv: string;
+  // Botão "+" de cada sugestão (guardar em "Quero ver").
+  quickAdd: QuickAddLabels;
 };
 
 // Campo de busca com sugestões: depois de 2 letras e uma pausa, mostra até 5
@@ -66,6 +73,9 @@ export function SearchCombobox({
   // vem preenchido e a lista não deve abrir sozinha por cima dos resultados.
   const [typed, setTyped] = useState(false);
   const [active, setActive] = useState(-1);
+  // Sugestões que já estão na biblioteca ("mediaType-externalId"). Vem de uma
+  // consulta para a lista toda, depois das sugestões; sem login fica vazio.
+  const [inLibrary, setInLibrary] = useState<ReadonlySet<string>>(new Set());
 
   const query = value.trim();
   // A resposta guardada só vale enquanto a pessoa continua na mesma busca
@@ -93,6 +103,17 @@ export function SearchCombobox({
         setFetched({ query: query.toLowerCase(), items: body.items });
         setActive(-1);
         setOpen(true);
+        const owned = await refsInLibrary({
+          refs: body.items.map((i) => ({
+            mediaType: i.mediaType,
+            externalId: i.externalId,
+          })),
+        });
+        if (owned.ok && !controller.signal.aborted) {
+          setInLibrary(
+            new Set(owned.value.map((r) => `${r.mediaType}-${r.externalId}`)),
+          );
+        }
       } catch {
         // Cancelada ou sem rede: sem sugestões, a busca normal continua.
       }
@@ -231,7 +252,7 @@ export function SearchCombobox({
               alt=""
               className="w-8 shrink-0 sm:w-10"
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="line-clamp-1 text-sm font-semibold break-words">
                 {item.title}
               </div>
@@ -240,6 +261,16 @@ export function SearchCombobox({
                 {item.year ? ` · ${item.year}` : ""}
               </div>
             </div>
+            <QuickAddButton
+              target={{
+                mediaType: item.mediaType,
+                externalId: item.externalId,
+              }}
+              title={item.title}
+              inLibrary={inLibrary.has(`${item.mediaType}-${item.externalId}`)}
+              labels={labels.quickAdd}
+              className="mr-1 shrink-0"
+            />
           </li>
         ))}
         <li role="presentation" className="my-1 h-px bg-border" />
