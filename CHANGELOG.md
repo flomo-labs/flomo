@@ -15,6 +15,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 - Botão "+" nas sugestões da busca e "+ Quero ver" nos resultados para guardar o título na biblioteca sem abrir a página dele, com "✓ Na biblioteca" para o que já foi guardado e "Desfazer" no aviso (#234).
 - Listas "Em alta" por tipo (todos, séries, filmes) e "Nos cinemas" sem séries, no back (#247).
 - Faixa de serviços de streaming e filtro Todos/Séries/Filmes no topo do Descobrir, valendo para as listas; escolher um serviço mostra só "Em alta no serviço" (#252).
+- Sanfona por temporada na página do título, com barra de progresso, botão "Marcar" e menu "Marcar só esta temporada", "Marcar até esta temporada (1 a N)" e "Desfazer temporada"; no back, `markSeasonWatched` aceita `throughSeason` (#255).
 - Tag "beta" ao lado da logo e versão do Flomo no rodapé de Configurações (#258).
 
 ### Alterado
