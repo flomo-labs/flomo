@@ -112,7 +112,6 @@ export function WatchDateChoice({
           value={day}
           max={today}
           min="1900-01-01"
-          active={!yearOnly}
           aria-label={labels.pickDate}
           onChange={(value) => {
             setDay(value);
