@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,6 @@ export type SeasonWatchLabels = {
   markSeasonFull: string;
   seasonWatched: string;
   seasonWatchedFull: string;
-  seasonWatchedUndo: string;
   // Menu do cabeçalho.
   menu: string;
   menuOnly: string;
@@ -62,11 +62,11 @@ type Props = {
 type Mode = "single" | "through";
 
 // Ações do cabeçalho de uma temporada na sanfona: botão de marcar a temporada
-// inteira (secundário, de contorno, para não competir com a situação da
-// série) e menu "⋮" com "só esta", "até esta" e "desfazer". Depois de marcar,
-// o aviso verde e o botão trazem "Desfazer", que tira só os episódios
-// marcados agora (os ids ficam aqui, na tela; ao recarregar a página o botão
-// apenas mostra "Vista", que pede confirmação e desmarca todos os vistos, como "Desfazer temporada" do menu).
+// inteira (de contorno, para não competir com a situação da série) e menu "⋮"
+// com "só esta", "até esta" e "desfazer". Depois de marcar, o aviso verde traz
+// "Desfazer" (só o que foi marcado agora) e o botão passa a "Vista", igual às
+// temporadas já vistas: tocar nele pede confirmação e desmarca todos os vistos.
+// Enquanto grava, o botão mostra um `Spinner` no lugar do ícone.
 export function SeasonWatchControl({
   seasonNumber,
   titleId,
@@ -80,8 +80,6 @@ export function SeasonWatchControl({
   const [mode, setMode] = useState<Mode | null>(null);
   const [unmarkOpen, setUnmarkOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Episódios marcados agora, para desfazer.
-  const [undoIds, setUndoIds] = useState<string[] | null>(null);
 
   const complete = missing === 0;
   const toastId = `temporada-${seasonNumber}`;
@@ -97,7 +95,6 @@ export function SeasonWatchControl({
           setError(result.error.message || labels.failed);
           return;
         }
-        setUndoIds(null);
         toast.success(labels.undone, { id: toastId });
       } catch {
         setError(labels.failed);
@@ -127,7 +124,6 @@ export function SeasonWatchControl({
           return;
         }
         const ids = result.value.markedEpisodeIds;
-        setUndoIds(ids.length > 0 ? ids : null);
         if (ids.length > 0) {
           const count = () => String(ids.length);
           const message = through
@@ -149,18 +145,7 @@ export function SeasonWatchControl({
   return (
     <div className="flex shrink-0 flex-col items-end justify-center gap-1">
       <div className="flex items-center gap-1">
-        {complete && undoIds ? (
-          <Button
-            type="button"
-            variant="default"
-            disabled={pending}
-            onClick={() => undo(undoIds)}
-            className={buttonClass}
-          >
-            <Icon name="checkmarkDone" />
-            {labels.seasonWatchedUndo}
-          </Button>
-        ) : complete ? (
+        {complete ? (
           <Button
             type="button"
             variant="default"
@@ -169,7 +154,7 @@ export function SeasonWatchControl({
             onClick={() => setUnmarkOpen(true)}
             className={buttonClass}
           >
-            <Icon name="checkmarkDone" />
+            {pending ? <Spinner /> : <Icon name="checkmarkDone" />}
             {labels.seasonWatched}
           </Button>
         ) : (
@@ -181,7 +166,7 @@ export function SeasonWatchControl({
             onClick={() => setMode("single")}
             className={buttonClass}
           >
-            <Icon name="checkmarkDone" />
+            {pending ? <Spinner /> : <Icon name="checkmarkDone" />}
             {labels.markSeason}
           </Button>
         )}

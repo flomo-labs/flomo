@@ -77,7 +77,6 @@ export async function SeasonWatchSlot({
         markSeasonFull: t("markSeason"),
         seasonWatched: t("seasonWatched"),
         seasonWatchedFull: t("seasonWatchedFull"),
-        seasonWatchedUndo: t("seasonWatchedUndo"),
         menu: t("seasonMenu", { number: seasonNumber }),
         menuOnly: t("seasonMenuOnly"),
         menuThrough: t("seasonMenuThrough", { number: seasonNumber }),

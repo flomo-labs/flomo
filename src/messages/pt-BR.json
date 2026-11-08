@@ -124,7 +124,6 @@
     "markSeason": "Marcar temporada como vista",
     "seasonWatched": "Vista",
     "seasonWatchedFull": "Temporada vista (desmarcar)",
-    "seasonWatchedUndo": "Vista · Desfazer",
     "markSeasonShort": "Marcar",
     "seasonProgress": "{watched} de {total}",
     "seasonMenu": "Mais ações da Temporada {number}",
