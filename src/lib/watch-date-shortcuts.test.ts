@@ -1,0 +1,39 @@
+import { describe, expect, it } from "vitest";
+import {
+  daysAgo,
+  formatDayValue,
+  isBeforeRelease,
+} from "./watch-date-shortcuts";
+
+describe("daysAgo", () => {
+  it("volta um dia e uma semana", () => {
+    expect(daysAgo("2026-11-07", 1)).toBe("2026-11-06");
+    expect(daysAgo("2026-11-07", 7)).toBe("2026-10-31");
+  });
+  it("atravessa mês e ano", () => {
+    expect(daysAgo("2026-01-03", 7)).toBe("2025-12-27");
+    expect(daysAgo("2024-03-01", 1)).toBe("2024-02-29");
+  });
+});
+
+describe("isBeforeRelease", () => {
+  it("avisa quando o dia é anterior ao lançamento", () => {
+    expect(isBeforeRelease("2020-05-01", "2020-06-10")).toBe(true);
+    expect(isBeforeRelease("2020-06-10", "2020-06-10")).toBe(false);
+  });
+  it("compara só a precisão informada", () => {
+    expect(isBeforeRelease("2020", "2020-06-10")).toBe(false);
+    expect(isBeforeRelease("2019", "2020-06-10")).toBe(true);
+  });
+  it("não avisa sem data ou sem lançamento", () => {
+    expect(isBeforeRelease("", "2020-06-10")).toBe(false);
+    expect(isBeforeRelease("2020-01-01", null)).toBe(false);
+  });
+});
+
+describe("formatDayValue", () => {
+  it("formata dia e ano", () => {
+    expect(formatDayValue("2026-11-07")).toBe("07/11/2026");
+    expect(formatDayValue("2026")).toBe("2026");
+  });
+});

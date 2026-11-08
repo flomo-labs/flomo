@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { DateField } from "@/components/date-field";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { MarkWatchDateInput } from "@/contracts/library";
+import { daysAgo, isBeforeRelease } from "@/lib/watch-date-shortcuts";
 
 export type WatchDateChoiceLabels = {
   today: string;
@@ -22,6 +24,11 @@ export type WatchDateChoiceLabels = {
   // Rodapé: "Voltar" da tela do seletor e "Concluir" que grava o dia.
   back: string;
   done: string;
+  // Atalhos e aviso da tela do seletor de dia.
+  yesterday: string;
+  weekAgo: string;
+  thisYear: string;
+  beforeRelease: string;
 };
 
 // Conteúdo de um diálogo que pergunta "quando foi?". Duas telas no mesmo
@@ -36,6 +43,7 @@ export function WatchDateChoice({
   title,
   description,
   today,
+  releaseDate,
   pending,
   labels,
   cancelLabel,
@@ -46,6 +54,8 @@ export function WatchDateChoice({
   description?: ReactNode;
   // AAAA-MM-DD de hoje, limite do seletor.
   today: string;
+  // AAAA-MM-DD de lançamento ou exibição: data anterior gera aviso.
+  releaseDate?: string | null;
   pending: boolean;
   labels: WatchDateChoiceLabels;
   // Botão de sair das opções ("Voltar" ou "Cancelar").
@@ -55,6 +65,9 @@ export function WatchDateChoice({
 }) {
   const [view, setView] = useState<"options" | "day">("options");
   const [day, setDay] = useState(today);
+  // "Este ano" grava só o ano (precisão de ano), não 01/01.
+  const [yearOnly, setYearOnly] = useState(false);
+  const thisYear = today.slice(0, 4);
 
   if (view === "day") {
     return (
@@ -62,15 +75,55 @@ export function WatchDateChoice({
         <DialogHeader>
           <DialogTitle>{labels.pickDate}</DialogTitle>
         </DialogHeader>
-        <input
-          type="date"
-          aria-label={labels.pickDate}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setDay(daysAgo(today, 1));
+              setYearOnly(false);
+            }}
+          >
+            {labels.yesterday}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setDay(daysAgo(today, 7));
+              setYearOnly(false);
+            }}
+          >
+            {labels.weekAgo}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={yearOnly ? "default" : "outline"}
+            aria-pressed={yearOnly}
+            onClick={() => setYearOnly(true)}
+          >
+            {labels.thisYear}
+          </Button>
+        </div>
+        <DateField
           value={day}
           max={today}
           min="1900-01-01"
-          onChange={(e) => setDay(e.target.value)}
-          className="h-11 rounded-full border border-border bg-background px-4 text-base"
+          active={!yearOnly}
+          aria-label={labels.pickDate}
+          onChange={(value) => {
+            setDay(value);
+            setYearOnly(false);
+          }}
         />
+        {isBeforeRelease(yearOnly ? thisYear : day, releaseDate) ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            {labels.beforeRelease}
+          </p>
+        ) : null}
         <DialogFooter>
           <Button
             type="button"
@@ -83,9 +136,13 @@ export function WatchDateChoice({
           <Button
             type="button"
             className="rounded-full"
-            disabled={pending || !day}
+            disabled={pending || (!yearOnly && !day)}
             onClick={() =>
-              onChoose({ kind: "date", precision: "day", value: day })
+              onChoose(
+                yearOnly
+                  ? { kind: "date", precision: "year", value: thisYear }
+                  : { kind: "date", precision: "day", value: day },
+              )
             }
           >
             {labels.done}

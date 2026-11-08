@@ -29,6 +29,7 @@ export function WatchRecordsDialog({
   onOpenChange,
   records,
   today,
+  releaseDate,
   pending,
   labels,
   onSetDate,
@@ -38,6 +39,8 @@ export function WatchRecordsDialog({
   onOpenChange: (open: boolean) => void;
   records: WatchRecord[];
   today: string;
+  // AAAA-MM-DD de lançamento ou exibição, para avisar de data anterior.
+  releaseDate?: string | null;
   pending: boolean;
   labels: WatchControlLabels;
   onSetDate: (eventId: string, when: MarkWatchDateInput) => void;
@@ -113,6 +116,7 @@ export function WatchRecordsDialog({
           <WatchDateChoice
             title={labels.editRecord}
             today={today}
+            releaseDate={releaseDate}
             pending={pending}
             labels={labels}
             cancelLabel={labels.back}

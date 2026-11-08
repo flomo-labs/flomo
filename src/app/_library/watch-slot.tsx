@@ -14,6 +14,7 @@ export async function WatchSlot({
   episodeId,
   position,
   hasAirDate = false,
+  releaseDate,
   loginHref,
 }: {
   kind: "episode" | "movie";
@@ -24,6 +25,9 @@ export async function WatchSlot({
   // O catálogo tem a data de exibição do episódio ou de lançamento do filme:
   // só então "No dia em que foi ao ar/do lançamento" aparece ao editar a data.
   hasAirDate?: boolean;
+  // AAAA-MM-DD de lançamento (filme) ou exibição (episódio), para avisar de
+  // data anterior.
+  releaseDate?: string | null;
   loginHref: string;
 }) {
   const t = await getTranslations("Library");
@@ -73,6 +77,7 @@ export async function WatchSlot({
           : undefined
       }
       today={todayIn(CATALOG_COUNTRY, new Date())}
+      releaseDate={releaseDate}
       labels={{
         markWatched: t("markWatched"),
         markOnlyThis: t("markOnlyThis"),
@@ -98,6 +103,12 @@ export async function WatchSlot({
         today: t("today"),
         noDate: t("noDate"),
         pickDate: t("pickDate"),
+        yesterday: t("yesterday"),
+        weekAgo: t("weekAgo"),
+        thisYear: t("thisYear"),
+        beforeRelease: t("beforeRelease"),
+        dateSaved: t("dateSaved", { date: "{date}" }),
+        dateRemoved: t("dateRemoved"),
         airDate: hasAirDate
           ? t(kind === "movie" ? "onReleaseDate" : "onAirDate")
           : undefined,
