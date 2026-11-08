@@ -18,7 +18,7 @@ export async function TmdbRating({
   // Contagem curta ("9,8 mil") para o cartão caber em telas estreitas.
   const votes = format.number(rating.count, { notation: "compact" });
   return (
-    <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card bg-muted px-3 py-2">
+    <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card border border-input bg-muted px-3 py-2">
       <p aria-hidden="true" className="flex flex-col gap-0.5">
         <span className="text-xl leading-none font-semibold">{average}</span>
         <span className="text-xs text-muted-foreground">

@@ -58,7 +58,7 @@ async function AverageCard({
 }) {
   if (!average) {
     return (
-      <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card bg-muted px-3 py-2">
+      <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card border border-input bg-muted px-3 py-2">
         <p className="text-sm text-muted-foreground">{t("noRatings")}</p>
         <p className="text-xs text-muted-foreground">{t("flomoLabel")}</p>
       </div>
@@ -66,7 +66,7 @@ async function AverageCard({
   }
   const stars = formatAverageStars(average.average);
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-card bg-muted px-3 py-2">
+    <div className="flex min-w-0 items-center gap-3 rounded-card border border-input bg-muted px-3 py-2">
       <span aria-hidden="true" className="text-3xl leading-none font-bold">
         {stars}
       </span>
