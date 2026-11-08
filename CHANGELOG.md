@@ -20,6 +20,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
+- No Descobrir, a faixa de chips de serviços saiu: o serviço agora é um seletor no próprio título de "Em alta" ("Em alta esta semana em Todos", "Em alta no Netflix", "Em alta na Globoplay"), com o filtro Tudo/Séries/Filmes à direita do título. Em todas as telas, a primeira opção do filtro de tipo (Biblioteca, Seguintes e Descobrir) passa de "Todos" para "Tudo", para não repetir "Todos" do seletor de serviço (#283).
 - Em Configurações, "Nome exibido" e "@usuário" agora se distinguem: cartão "Assim você aparece" (iniciais, nome e @usuário) que muda enquanto se digita, ajuda de uma linha em cada bloco e botão "Alterar @usuário" em contorno. Configurações ganhou grupos em cartões (Perfil com @usuário, Formas de entrar e Conta, esta com borda de alerta) e mais espaço entre eles. As iniciais do avatar (perfil e menu) passam a vir do nome exibido (#256).
 - Na página do título, a média das notas do Flomo e a nota do TMDB viraram dois cartões em destaque (número grande, estrelas na cor de destaque e "N notas no Flomo"), com "Sem notas ainda" quando não há notas, e "Sua nota" logo abaixo no filme (#254).
 - "Temporada vista" volta a poder ser desmarcada depois de recarregar a página: o botão abre uma confirmação e tira todos os episódios vistos da temporada (#276).

@@ -10,7 +10,7 @@ import {
 import { loadProviderBundle } from "@/app/_catalog/provider-shelf-actions";
 import { BASE_SEGMENTS, type MediaSegment } from "@/app/_catalog/segments";
 import { ProviderShelf } from "@/components/catalog/provider-shelf";
-import { ProviderStrip } from "@/components/catalog/provider-strip";
+import { ProviderSelect } from "@/components/catalog/provider-select";
 import { SectionHeader } from "@/components/section-header";
 import { SegmentedControl } from "@/components/segmented-control";
 
@@ -26,14 +26,17 @@ type Labels = {
   mediaNav: string;
   allProviders: string;
   trending: string;
+  // Começo do título de "Em alta" sem serviço ("Em alta esta semana em").
+  trendingLead: string;
   nowPlaying: string;
   media: Record<MediaSegment, string>;
 };
 
-// Controles no topo do Descobrir: serviço (faixa de chips) e tipo (Todos,
-// Séries, Filmes), que valem para todas as listas. Sem serviço ("Todos"):
-// "Em alta" e "Nos cinemas" (esta só tem filmes, então some com "Séries").
-// Com serviço: só "Em alta no serviço X". As listas chegam prontas do
+// Descobrir: o serviço é um seletor no próprio título de "Em alta" ("Em alta
+// esta semana em Todos", "Em alta no Netflix") e o tipo (Tudo, Séries,
+// Filmes) fica à direita do título; os dois valem para todas as listas. Sem
+// serviço ("Todos"): "Em alta" e "Nos cinemas" (esta só tem filmes, então some
+// com "Séries"). Com serviço: só "Em alta no serviço X". As listas chegam prontas do
 // servidor; as dos serviços carregam em segundo plano logo depois de abrir, um
 // de cada vez. A escolha vive só nesta tela: não vai para a URL nem é lembrada.
 export function DiscoverBrowser({
@@ -110,37 +113,49 @@ export function DiscoverBrowser({
   }
 
   const provider = providers.find((p) => p.id === shown?.providerId);
-  // Sem serviço só há Todos, Séries e Filmes; com serviço, também Novelas e
+  // Sem serviço só há Tudo, Séries e Filmes; com serviço, também Novelas e
   // Animes quando ele tiver títulos. Tipo que deixou de existir volta a Todos.
   const segments: MediaSegment[] = shown?.segments ?? [...BASE_SEGMENTS];
   const current = segments.includes(segment) ? segment : "tudo";
 
+  // Texto do título, seletor de serviço e filtro de tipo numa linha que quebra:
+  // no celular o texto fica sozinho em cima e o seletor e o filtro dividem a
+  // linha de baixo, o filtro sempre à direita.
+  const header = (id: string, lead: string) => (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
+      <h2 id={id} className="text-section-title-lg">
+        {lead}
+      </h2>
+      <ProviderSelect
+        providers={providers}
+        value={providerId}
+        onChange={chooseProvider}
+        onOpen={() => {
+          for (const p of providers) void load(p.id).catch(() => {});
+        }}
+        allLabel={labels.allProviders}
+        ariaLabel={labels.providerNav}
+      />
+      <div className="ml-auto min-w-0">
+        <SegmentedControl
+          compactOnMobile
+          value={current}
+          onChange={setSegment}
+          ariaLabel={labels.mediaNav}
+          options={segments.map((s) => ({
+            value: s,
+            label: labels.media[s],
+          }))}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-10 md:gap-12">
-      <div className="flex flex-col gap-4">
-        <ProviderStrip
-          providers={providers}
-          value={providerId}
-          onChange={chooseProvider}
-          allLabel={labels.allProviders}
-          ariaLabel={labels.providerNav}
-        />
-        <div>
-          <SegmentedControl
-            compactOnMobile={segments.length > 3}
-            value={current}
-            onChange={setSegment}
-            ariaLabel={labels.mediaNav}
-            options={segments.map((s) => ({
-              value: s,
-              label: labels.media[s],
-            }))}
-          />
-        </div>
-      </div>
       {shown && provider ? (
         <ProviderShelf
-          title={`${provider.lead} ${provider.name}`}
+          header={header("em-alta-no-servico", provider.lead)}
           list={shown.lists[current]}
           pending={pending}
           footer={footer}
@@ -155,7 +170,7 @@ export function DiscoverBrowser({
           }
         >
           <section className="flex flex-col gap-3" aria-labelledby="trending">
-            <SectionHeader id="trending" size="lg" title={labels.trending} />
+            {header("trending", labels.trendingLead)}
             {trending[current]}
           </section>
           {nowPlaying[current] ? (
