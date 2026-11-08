@@ -58,6 +58,11 @@ export interface CatalogStore {
   ): Promise<void>;
 
   findTitleByRef(ref: CatalogRef): Promise<{ id: string } | null>;
+  // Das referências dadas, as que já estão no catálogo local, com o uuid do
+  // título. Uma consulta para a lista inteira.
+  findTitlesByRefs(
+    refs: readonly CatalogRef[],
+  ): Promise<{ ref: CatalogRef; id: string }[]>;
   readTitle(
     id: string,
     locale: string,

@@ -6,6 +6,7 @@ import { listLibrary } from "@/domain/library/list-library";
 import type { LibraryPreview } from "@/domain/library/library-preview";
 import { PREVIEW_SIZE } from "@/domain/library/library-preview";
 import type { LibraryItem } from "@/domain/library/ports";
+import { libraryRefsDeps } from "./library-refs-deps";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
 
@@ -70,12 +71,10 @@ export async function loadRefsInLibrary(
   refs: CatalogRef[],
 ): Promise<CatalogRef[] | null> {
   try {
-    const result = await withUser(user.claims, (tx) =>
-      listRefsInLibrary(
-        { library: createLibraryRepository(tx) },
-        { id: user.id },
-        { refs },
-      ),
+    const result = await listRefsInLibrary(
+      libraryRefsDeps(user),
+      { id: user.id },
+      { refs },
     );
     return result.ok ? result.value : null;
   } catch (error) {

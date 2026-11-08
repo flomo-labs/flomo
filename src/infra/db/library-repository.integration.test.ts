@@ -7,6 +7,7 @@ import { providerTitle } from "@/domain/catalog/test-fakes";
 import { listFollowing } from "@/domain/library/following";
 import {
   getTitleLibraryState,
+  listRefsInLibrary,
   listUnwatchedEpisodes,
 } from "@/domain/library/get-title-state";
 import { listLibrary } from "@/domain/library/list-library";
@@ -948,15 +949,24 @@ describe("adicionar à biblioteca um título fora do catálogo", () => {
         { mediaType: "movie", externalId: ref.externalId },
         { mediaType: "tv", externalId: "111" },
       ];
-      const inLibraryOf = (user: string) =>
-        asUser(tx, user, (utx) =>
-          createLibraryRepository(utx, "teste").findRefsInLibrary(user, wanted),
+      // O catálogo é lido fora da transação do usuário (RLS de `external_ids`).
+      const listFor = (user: string) =>
+        listRefsInLibrary(
+          {
+            catalog: { store: createCatalogStore(tx, "teste") },
+            inLibrary: (run) =>
+              asUser(tx, user, (utx) =>
+                run({ library: createLibraryRepository(utx) }),
+              ),
+          },
+          { id: user },
+          { refs: wanted },
         );
-      expect(await inLibraryOf(a)).toEqual([ref]);
-      // Outra pessoa não vê o que não guardou, e lista vazia não consulta.
-      expect(await inLibraryOf(b)).toEqual([]);
-      expect(
-        await createLibraryRepository(tx, "teste").findRefsInLibrary(a, []),
-      ).toEqual([]);
+      expect(await listFor(a)).toEqual({
+        ok: true,
+        value: [{ mediaType: "tv", externalId: ref.externalId }],
+      });
+      // Outra pessoa não vê o que não guardou.
+      expect(await listFor(b)).toEqual({ ok: true, value: [] });
     }));
 });

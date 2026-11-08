@@ -34,6 +34,7 @@ import { allowProviderFetch, createCatalogDeps } from "@/infra/catalog";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
 import { getCurrentUser } from "../_auth/session";
+import { libraryRefsDeps } from "./library-refs-deps";
 
 // Camada fina (ADR-004): resolve o usuário, chama o caso de uso dentro do
 // `withUser` (RLS) e atualiza as páginas de título. A regra fica em
@@ -201,12 +202,10 @@ export async function refsInLibrary(
     return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
   }
   try {
-    return await withUser(user.claims, (tx) =>
-      listRefsInLibrary(
-        { library: createLibraryRepository(tx) },
-        { id: user.id },
-        input,
-      ),
+    return await listRefsInLibrary(
+      libraryRefsDeps(user),
+      { id: user.id },
+      input,
     );
   } catch (error) {
     console.error("Falha ao ler a biblioteca:", error);

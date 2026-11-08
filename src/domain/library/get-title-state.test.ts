@@ -103,43 +103,63 @@ describe("listUnwatchedEpisodes", () => {
 });
 
 describe("listRefsInLibrary", () => {
-  const setupRefs = () =>
-    createFakeLibrary({
+  const SERIES_REF = { mediaType: "tv", externalId: "100" } as const;
+  const MOVIE_REF = { mediaType: "movie", externalId: "100" } as const;
+  const refs = [SERIES_REF, MOVIE_REF, { mediaType: "tv", externalId: "999" }];
+
+  function setupRefs() {
+    const lib = createFakeLibrary({
       titles: { [SERIES]: "tv", [MOVIE]: "movie" },
-      refs: {
-        [SERIES]: { mediaType: "tv", externalId: "100" },
-        [MOVIE]: { mediaType: "movie", externalId: "100" },
-      },
     });
-  const refs = [
-    { mediaType: "tv", externalId: "100" },
-    { mediaType: "movie", externalId: "100" },
-    { mediaType: "tv", externalId: "999" },
-  ];
+    // Catálogo: só a série e o filme (ids externos iguais, tipos diferentes).
+    const known = [
+      { ref: SERIES_REF, id: SERIES },
+      { ref: MOVIE_REF, id: MOVIE },
+    ];
+    const deps = {
+      catalog: {
+        store: {
+          findTitlesByRefs: async (wanted: readonly (typeof refs)[number][]) =>
+            known.filter((k) =>
+              wanted.some(
+                (w) =>
+                  w.mediaType === k.ref.mediaType &&
+                  w.externalId === k.ref.externalId,
+              ),
+            ),
+        },
+      } as unknown as Parameters<typeof listRefsInLibrary>[0]["catalog"],
+      inLibrary: <T>(run: (d: typeof lib.deps) => Promise<T>) => run(lib.deps),
+    };
+    return { lib, deps };
+  }
 
   it("devolve só as referências que estão na biblioteca", async () => {
-    const lib = setupRefs();
+    const { lib, deps } = setupRefs();
     await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
-    expect(await listRefsInLibrary(lib.deps, USER, { refs })).toEqual({
+    expect(await listRefsInLibrary(deps, USER, { refs })).toEqual({
       ok: true,
-      value: [{ mediaType: "movie", externalId: "100" }],
+      value: [MOVIE_REF],
     });
   });
 
   it("filme e série com o mesmo id externo são títulos diferentes", async () => {
-    const lib = setupRefs();
+    const { lib, deps } = setupRefs();
     await lib.deps.library.addTitleIfAbsent(USER.id, SERIES, "watchlist");
-    expect(await listRefsInLibrary(lib.deps, USER, { refs })).toEqual({
+    expect(await listRefsInLibrary(deps, USER, { refs })).toEqual({
       ok: true,
-      value: [{ mediaType: "tv", externalId: "100" }],
+      value: [SERIES_REF],
     });
   });
 
   it("recusa entrada inválida", async () => {
-    const lib = setupRefs();
-    const result = await listRefsInLibrary(lib.deps, USER, {
+    const { deps } = setupRefs();
+    const result = await listRefsInLibrary(deps, USER, {
       refs: [{ mediaType: "tv", externalId: "abc" }],
     });
-    expect(result).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INPUT" },
+    });
   });
 });

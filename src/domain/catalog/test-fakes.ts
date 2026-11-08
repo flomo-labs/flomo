@@ -134,6 +134,12 @@ export function memoryStore() {
     async writeWatchProviders(key, value, expiresAt) {
       providers.set(key, { value, expiresAt });
     },
+    async findTitlesByRefs(refs) {
+      return refs.flatMap((ref) => {
+        const id = ids.get(refKey(ref));
+        return id ? [{ ref, id }] : [];
+      });
+    },
     async findTitleByRef(ref) {
       const id = ids.get(refKey(ref));
       if (!id) return null;

@@ -5,6 +5,7 @@ import {
 import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
 import { CATALOG_COUNTRY, type CatalogRef } from "../catalog/types";
+import type { CatalogDeps } from "../catalog/ports";
 import type { LibraryDeps } from "./mark-watched";
 import type { TitleLibraryState } from "./ports";
 import { todayIn } from "./watch-date";
@@ -42,13 +43,30 @@ export async function listUnwatchedEpisodes(
 }
 
 // Quais das referências (resultados de busca) já estão na biblioteca do
-// usuário, para o atalho de adicionar mostrar o estado certo.
+// usuário, para o atalho de adicionar mostrar o estado certo. Os ids do
+// catálogo vêm de fora da transação do usuário (a tabela de ids externos não
+// é legível por ele); título que ninguém abriu ainda não está na biblioteca.
 export async function listRefsInLibrary(
-  deps: Pick<LibraryDeps, "library">,
+  deps: {
+    catalog: Pick<CatalogDeps, "store">;
+    inLibrary<T>(
+      run: (deps: Pick<LibraryDeps, "library">) => Promise<T>,
+    ): Promise<T>;
+  },
   user: AuthenticatedUser,
   input: unknown,
 ): Promise<Result<CatalogRef[], "INVALID_INPUT">> {
   const parsed = refsInLibraryInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Dados inválidos.");
-  return ok(await deps.library.findRefsInLibrary(user.id, parsed.data.refs));
+  const known = await deps.catalog.store.findTitlesByRefs(parsed.data.refs);
+  if (known.length === 0) return ok([]);
+  const owned = new Set(
+    await deps.inLibrary((d) =>
+      d.library.findTitleIdsInLibrary(
+        user.id,
+        known.map((k) => k.id),
+      ),
+    ),
+  );
+  return ok(known.filter((k) => owned.has(k.id)).map((k) => k.ref));
 }
