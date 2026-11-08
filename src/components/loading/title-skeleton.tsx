@@ -23,12 +23,37 @@ export function TitleSkeleton() {
   );
 }
 
-// Faixa de temporadas seguida das linhas de episódio.
+// Sanfona de temporadas: cabeçalhos fechados (título + barra de progresso) e,
+// no primeiro, a lista de episódios aberta. Largura toda, como a tela real.
 export function EpisodesSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div aria-hidden className="flex flex-col gap-3">
-      <Skeleton className="h-9 w-full max-w-sm rounded-full" />
-      <EpisodeListSkeleton count={count} />
+      <Skeleton className="h-6 w-32" />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 rounded-card border border-border p-3">
+          <SeasonHeaderSkeleton />
+          <EpisodeListSkeleton count={count} />
+        </div>
+        <div className="rounded-card border border-border p-3">
+          <SeasonHeaderSkeleton />
+        </div>
+        <div className="rounded-card border border-border p-3">
+          <SeasonHeaderSkeleton />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SeasonHeaderSkeleton() {
+  return (
+    <div className="flex items-center gap-3">
+      <Skeleton className="size-4 rounded-sm" />
+      <div className="flex flex-1 flex-col gap-2">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-3 w-40" />
+      </div>
+      <Skeleton className="h-8 w-24 rounded-full" />
     </div>
   );
 }
@@ -36,7 +61,7 @@ export function EpisodesSkeleton({ count = 3 }: { count?: number }) {
 // Só as linhas de episódio (a faixa de temporadas já está na tela).
 export function EpisodeListSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <ul aria-hidden className="flex max-w-reading flex-col gap-2">
+    <ul aria-hidden className="flex flex-col gap-2">
       {Array.from({ length: count }, (_, i) => (
         <li
           key={i}

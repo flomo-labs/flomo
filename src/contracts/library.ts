@@ -60,6 +60,8 @@ export const markSeasonWatchedInputSchema = z.object({
   titleId: z.uuid(),
   seasonNumber: z.number().int().min(1).max(1000),
   when: markWatchDateInputSchema,
+  // Marcar da temporada 1 até `seasonNumber` ("marcar até esta temporada").
+  throughSeason: z.boolean().optional(),
 });
 
 // Desfazer a marcação da temporada: os episódios que ela marcou.
