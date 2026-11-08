@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { ROADMAP_PATH, ROADMAP_TITLE } from "@/content/roadmap-link";
 
 export const FOOTER_LINKS = [
   { href: "/sobre", label: "Sobre" },
-  { href: "/em-breve", label: "Em breve no Flomo" },
+  { href: ROADMAP_PATH, label: ROADMAP_TITLE },
   { href: "/privacidade", label: "Privacidade" },
   { href: "/termos", label: "Termos de uso" },
 ] as const;
