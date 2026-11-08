@@ -112,9 +112,20 @@ export const SHELF_MEDIA_TYPES = [
   "animes",
 ] as const;
 
+// Tipo das listas "em alta" e "nos cinemas" (filtro no topo de Descobrir):
+// "all" (padrão) é o comportamento anterior.
+export const SHELF_TYPE_FILTERS = ["all", ...MEDIA_TYPES] as const;
+export type ShelfTypeFilter = (typeof SHELF_TYPE_FILTERS)[number];
+
 export const shelfInputSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("trending") }),
-  z.object({ kind: z.literal("now_playing") }),
+  z.object({
+    kind: z.literal("trending"),
+    mediaType: z.enum(SHELF_TYPE_FILTERS).default("all"),
+  }),
+  z.object({
+    kind: z.literal("now_playing"),
+    mediaType: z.enum(SHELF_TYPE_FILTERS).default("all"),
+  }),
   z.object({
     kind: z.literal("provider"),
     mediaType: z.enum(SHELF_MEDIA_TYPES),

@@ -522,7 +522,11 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
       };
 
       if (query.kind === "trending") {
-        return fetchList("trending/all/week", {}, null);
+        // `trending/tv` e `trending/movie` não trazem `media_type` por item:
+        // o tipo vem da consulta.
+        return query.mediaType === "all"
+          ? fetchList("trending/all/week", {}, null)
+          : fetchList(`trending/${query.mediaType}/week`, {}, query.mediaType);
       }
       if (query.kind === "now_playing") {
         return fetchList("movie/now_playing", { region: country }, "movie");
