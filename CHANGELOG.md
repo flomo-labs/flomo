@@ -26,6 +26,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 - Seletor de data de "assistido" com ícone de calendário visível no tema escuro, borda em destaque ao escolher, atalhos "Ontem", "Há 1 semana" e "Este ano", aviso de data anterior ao lançamento e confirmação com a data registrada (#249).
 - Novo ícone do Flomo em tema claro e escuro, também ao salvar na tela de início do iPhone (#219, #220).
 
+### Corrigido
+
+- O campo de busca do cabeçalho agora é apagado ao navegar para fora de Buscar (por exemplo, ao abrir um título e voltar); em Buscar continua preenchido com o termo da URL (#279).
+
 ## [0.9.0] - 2026-10-24
 
 Primeira versão do teste beta (MVP).
