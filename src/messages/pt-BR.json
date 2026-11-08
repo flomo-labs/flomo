@@ -68,7 +68,7 @@
     "noRatings": "Sem notas ainda",
     "flomoLabel": "Média no Flomo",
     "countInFlomo": "{count, plural, one {1 nota} other {# notas}} no Flomo",
-    "tmdbCard": "· TMDB · {votes}",
+    "tmdbCard": "TMDB · {votes}",
     "tmdb": "TMDB {average}/10 · {count, plural, one {1 voto} other {# votos}}",
     "tmdbAria": "Nota do público no TMDB: {average} de 10, {count, plural, one {1 voto} other {# votos}}"
   },

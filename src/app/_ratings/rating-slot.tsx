@@ -50,7 +50,7 @@ export async function RatingSlot({
   );
   if (!showLabel) return control;
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <p className="text-sm font-medium">{t("group")}</p>
       {control}
     </div>

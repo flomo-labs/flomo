@@ -19,8 +19,8 @@ export async function TmdbRating({
   const votes = format.number(rating.count, { notation: "compact" });
   return (
     <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card border border-border px-3 py-2">
-      <p aria-hidden="true" className="flex items-baseline gap-1.5">
-        <span className="text-3xl leading-none font-bold">{average}</span>
+      <p aria-hidden="true" className="flex flex-col gap-0.5">
+        <span className="text-xl leading-none font-semibold">{average}</span>
         <span className="text-xs text-muted-foreground">
           {t("tmdbCard", { votes })}
         </span>
