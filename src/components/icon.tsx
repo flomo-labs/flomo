@@ -56,6 +56,10 @@ const GLYPHS = {
     outline: stroke("m112 184 144 144 144-144", 48),
     filled: stroke("m112 184 144 144 144-144", 48),
   },
+  ellipsisVertical: {
+    outline: stroke("M256 112h.01M256 256h.01M256 400h.01", 72),
+    filled: stroke("M256 112h.01M256 256h.01M256 400h.01", 72),
+  },
   arrowBack: {
     outline: stroke("M244 400 100 256l144-144M120 256h292", 48),
     filled: stroke("M244 400 100 256l144-144M120 256h292", 48),

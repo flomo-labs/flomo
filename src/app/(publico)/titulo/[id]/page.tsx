@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { SectionHeader } from "@/components/section-header";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
@@ -9,6 +8,7 @@ import {
   listSeasonEpisodes as listSeasonEpisodesUncached,
 } from "@/app/_catalog/gateway";
 import { SeasonWatchSlot } from "@/app/_library/season-watch-slot";
+import { getLibraryState } from "@/app/_library/state";
 import { StatusSlot } from "@/app/_library/status-slot";
 import { WatchSlot } from "@/app/_library/watch-slot";
 import { CommentSection } from "@/app/_comments/comment-section";
@@ -16,7 +16,7 @@ import { RatingSlot } from "@/app/_ratings/rating-slot";
 import { getRatingSummary } from "@/app/_ratings/state";
 import { BackLink } from "@/components/back-link";
 import { Poster } from "@/components/catalog/poster";
-import { SeasonStrip } from "@/components/catalog/season-strip";
+import { SeasonAccordionItem } from "@/components/catalog/season-accordion-item";
 import { WatchProviders } from "@/components/catalog/watch-providers";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import {
@@ -26,7 +26,9 @@ import {
 import { RatingAverage } from "@/components/rating-average";
 import { TmdbRating } from "@/components/tmdb-rating";
 import { Badge } from "@/components/ui/badge";
-import type { CatalogTitle } from "@/domain/catalog/types";
+import { CATALOG_COUNTRY, type CatalogTitle } from "@/domain/catalog/types";
+import { computeSeasonProgress } from "@/domain/library/season-progress";
+import { todayIn } from "@/domain/library/watch-date";
 import { cn } from "@/lib/utils";
 
 // Metadados e página leem o mesmo título: uma consulta por requisição.
@@ -220,13 +222,50 @@ async function Seasons({
   selected: string | undefined;
 }) {
   const t = await getTranslations("Title");
-  // Padrão: a primeira temporada regular (a 0 são os especiais).
-  const fallback =
-    title.seasons.find((s) => s.seasonNumber > 0) ?? title.seasons[0];
-  const current =
-    title.seasons.find((s) => String(s.seasonNumber) === selected) ?? fallback;
+  const tl = await getTranslations("Library");
   const label = (n: number) =>
     n === 0 ? t("specials") : t("season", { number: n });
+  const regular = title.seasons.filter((s) => s.seasonNumber > 0);
+
+  // Progresso de cada temporada regular para o cabeçalho (e para decidir qual
+  // abre sozinha). Vem do que o usuário já viu; visitante não tem progresso.
+  const [lists, view] = await Promise.all([
+    Promise.all(
+      regular.map((s) => listSeasonEpisodes(title.id, s.seasonNumber)),
+    ),
+    getLibraryState(title.id),
+  ]);
+  const today = todayIn(CATALOG_COUNTRY, new Date());
+  const seasonEpisodes = regular.map((s, i) => ({
+    seasonNumber: s.seasonNumber,
+    episodes: (lists[i]?.ok ? lists[i].value : []).map((e) => ({
+      id: e.id,
+      airDate: e.airDate,
+    })),
+  }));
+  const watchedIds =
+    view.kind === "ok"
+      ? new Set(
+          view.state.watched.flatMap((w) => (w.episodeId ? [w.episodeId] : [])),
+        )
+      : null;
+  const progress = watchedIds
+    ? computeSeasonProgress(seasonEpisodes, watchedIds, today)
+    : null;
+  const progressOf = (n: number) =>
+    progress?.find((p) => p.seasonNumber === n) ?? null;
+
+  // Aberta: a da URL (`fechadas` = nenhuma); sem ela, a primeira com
+  // episódios pendentes; tudo visto, a primeira.
+  const openNumber =
+    selected === "fechadas"
+      ? null
+      : (title.seasons.find((s) => String(s.seasonNumber) === selected)
+          ?.seasonNumber ??
+        progress?.find((p) => p.missing > 0)?.seasonNumber ??
+        regular[0]?.seasonNumber ??
+        title.seasons[0]?.seasonNumber ??
+        null);
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="temporadas">
@@ -236,104 +275,78 @@ async function Seasons({
           <>
             {t("seasons")}{" "}
             <span className="font-normal text-muted-foreground">
-              ({title.seasons.filter((s) => s.seasonNumber > 0).length})
+              ({regular.length})
             </span>
           </>
         }
       />
-      <SeasonStrip ariaLabel={t("seasonsNav")}>
-        <ul className="flex gap-2 md:flex-wrap">
-          {title.seasons.map((season) => {
-            const active = season.id === current.id;
-            return (
-              <li key={season.id}>
-                <Link
-                  href={`/titulo/${title.id}?temporada=${season.seasonNumber}`}
-                  scroll={false}
-                  replace
-                  aria-current={active ? "true" : undefined}
-                  className={cn(
-                    "inline-flex min-h-11 items-center whitespace-nowrap rounded-full border px-4 text-sm transition-colors md:min-h-9",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border hover:bg-muted",
-                  )}
-                >
-                  {label(season.seasonNumber)}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </SeasonStrip>
-      <SeasonSummary
-        titleId={title.id}
-        seasonNumber={current.seasonNumber}
-        summary={`${label(current.seasonNumber)} · ${t("episodeCount", {
-          count: current.episodeCount,
-        })}`}
-      />
-      <Suspense fallback={null}>
-        <SeasonAverage titleId={title.id} seasonNumber={current.seasonNumber} />
-      </Suspense>
-      <Suspense
-        fallback={
-          <LoadingRegion>
-            <EpisodeListSkeleton />
-          </LoadingRegion>
-        }
+      <ul
+        className="flex max-w-reading flex-col gap-2"
+        aria-label={t("seasonsNav")}
       >
-        <Episodes titleId={title.id} seasonNumber={current.seasonNumber} />
-      </Suspense>
+        {title.seasons.map((season) => {
+          const n = season.seasonNumber;
+          const open = n === openNumber;
+          const p = progressOf(n);
+          const total = season.episodeCount;
+          const hasAirDate = seasonEpisodes.some(
+            (s) => s.seasonNumber <= n && s.episodes.some((e) => e.airDate),
+          );
+          return (
+            <SeasonAccordionItem
+              key={season.id}
+              id={`temporada-${n}`}
+              title={label(n)}
+              open={open}
+              toggleHref={`/titulo/${title.id}?temporada=${open ? "fechadas" : n}`}
+              progress={
+                p
+                  ? {
+                      watched: p.watched,
+                      total: p.total,
+                      label: tl("seasonProgress", {
+                        watched: p.watched,
+                        total: p.total,
+                      }),
+                    }
+                  : null
+              }
+              summary={p ? undefined : t("episodeCount", { count: total })}
+              actions={
+                n > 0 ? (
+                  <Suspense fallback={null}>
+                    <SeasonWatchSlot
+                      titleId={title.id}
+                      seasonNumber={n}
+                      progress={p}
+                      anonymous={view.kind === "anonymous"}
+                      hasAirDate={hasAirDate}
+                      today={today}
+                      loginHref={loginHref(
+                        `/titulo/${title.id}?temporada=${n}`,
+                      )}
+                    />
+                  </Suspense>
+                ) : null
+              }
+            >
+              <Suspense fallback={null}>
+                <SeasonAverage titleId={title.id} seasonNumber={n} />
+              </Suspense>
+              <Suspense
+                fallback={
+                  <LoadingRegion>
+                    <EpisodeListSkeleton />
+                  </LoadingRegion>
+                }
+              >
+                <Episodes titleId={title.id} seasonNumber={n} />
+              </Suspense>
+            </SeasonAccordionItem>
+          );
+        })}
+      </ul>
     </section>
-  );
-}
-
-// "Temporada N · X episódios". Nas temporadas regulares, ao lado vai o botão
-// de marcar a temporada inteira (os especiais, temporada 0, ficam só com o texto).
-async function SeasonSummary({
-  titleId,
-  seasonNumber,
-  summary,
-}: {
-  titleId: string;
-  seasonNumber: number;
-  summary: string;
-}) {
-  const text = <p className="text-sm text-muted-foreground">{summary}</p>;
-  if (seasonNumber < 1) return text;
-  return (
-    <Suspense fallback={text}>
-      <SeasonSummaryWithMark
-        titleId={titleId}
-        seasonNumber={seasonNumber}
-        summary={summary}
-      />
-    </Suspense>
-  );
-}
-
-async function SeasonSummaryWithMark({
-  titleId,
-  seasonNumber,
-  summary,
-}: {
-  titleId: string;
-  seasonNumber: number;
-  summary: string;
-}) {
-  const result = await listSeasonEpisodes(titleId, seasonNumber);
-  if (!result.ok || result.value.length === 0) {
-    return <p className="text-sm text-muted-foreground">{summary}</p>;
-  }
-  return (
-    <SeasonWatchSlot
-      titleId={titleId}
-      seasonNumber={seasonNumber}
-      summary={summary}
-      episodes={result.value.map((e) => ({ id: e.id, airDate: e.airDate }))}
-      loginHref={loginHref(`/titulo/${titleId}?temporada=${seasonNumber}`)}
-    />
   );
 }
 
