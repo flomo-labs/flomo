@@ -193,6 +193,11 @@ export function createFakeLibrary(catalog: {
         statuses.set(key(userId, titleId), status);
       }
     },
+    async addTitleIfAbsent(userId, titleId, status) {
+      if (statuses.has(key(userId, titleId))) return false;
+      statuses.set(key(userId, titleId), status);
+      return true;
+    },
     async setTitleStatus(userId, titleId, status) {
       statuses.set(key(userId, titleId), status);
     },
@@ -353,6 +358,7 @@ export function createFakeLibrary(catalog: {
       [...progress.keys()]
         .filter((k) => k.startsWith(`${userId}:`))
         .map((k) => k.slice(userId.length + 1)),
+    libraryCount: () => statuses.size,
     events,
   };
 }

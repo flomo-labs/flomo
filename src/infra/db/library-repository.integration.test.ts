@@ -1,5 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
+import { addTitleToLibraryByRef } from "@/domain/library/add-title-by-ref";
+import type { CatalogProvider } from "@/domain/catalog/ports";
+import { providerTitle } from "@/domain/catalog/test-fakes";
 import { listFollowing } from "@/domain/library/following";
 import {
   getTitleLibraryState,
@@ -22,6 +25,7 @@ import {
   setTitleHidden,
   setTitleStatus,
 } from "@/domain/library/set-status";
+import { createCatalogStore } from "./catalog-repository";
 import type { Tx } from "./client";
 import {
   asUser,
@@ -837,5 +841,98 @@ describe("marcar como assistido no banco", () => {
         watchedAtPrecision: "day",
         source: "backfill",
       });
+    }));
+});
+
+describe("adicionar à biblioteca um título fora do catálogo", () => {
+  const ref = { mediaType: "tv", externalId: "987654" };
+
+  function setupAdd(tx: Tx, userId: string) {
+    const calls: unknown[] = [];
+    const provider = {
+      fetchTitle: async () => {
+        calls.push(1);
+        return providerTitle({
+          ref: { mediaType: "tv", externalId: "987654" },
+        });
+      },
+    } as unknown as CatalogProvider;
+    return {
+      calls,
+      deps: {
+        catalog: {
+          provider,
+          store: createCatalogStore(tx, "teste"),
+          now: () => NOW,
+          background: () => undefined,
+        },
+        inLibrary: <T>(
+          fn: (deps: {
+            library: ReturnType<typeof createLibraryRepository>;
+            now: () => Date;
+          }) => Promise<T>,
+        ) =>
+          asUser(tx, userId, (utx) =>
+            fn({ library: createLibraryRepository(utx), now: () => NOW }),
+          ),
+        allowProviderFetch: () => true,
+      },
+    };
+  }
+
+  it("grava o título e põe em Quero ver numa operação só, sob RLS", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const { deps, calls } = setupAdd(tx, user);
+
+      const first = await addTitleToLibraryByRef(deps, { id: user }, ref);
+      expect(first).toMatchObject({ ok: true, value: { added: true } });
+      const second = await addTitleToLibraryByRef(deps, { id: user }, ref);
+      expect(second).toMatchObject({ ok: true, value: { added: false } });
+      expect(calls).toHaveLength(1);
+
+      const rows = await tx
+        .select({ status: userTitles.status })
+        .from(userTitles)
+        .where(eq(userTitles.userId, user));
+      expect(rows).toEqual([{ status: "watchlist" }]);
+    }));
+
+  it("duas pessoas com o mesmo título novo ficam com um só título no catálogo", () =>
+    inRollback(async (tx) => {
+      const a = await createUser(tx);
+      const b = await createUser(tx);
+      const first = await addTitleToLibraryByRef(
+        setupAdd(tx, a).deps,
+        { id: a },
+        ref,
+      );
+      const second = await addTitleToLibraryByRef(
+        setupAdd(tx, b).deps,
+        { id: b },
+        ref,
+      );
+      if (!first.ok || !second.ok) throw new Error("esperava sucesso");
+      expect(second.value.titleId).toBe(first.value.titleId);
+    }));
+
+  it("não troca a situação de quem já tinha o título", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const { deps } = setupAdd(tx, user);
+      const first = await addTitleToLibraryByRef(deps, { id: user }, ref);
+      if (!first.ok) throw new Error("esperava sucesso");
+      await run(tx, user, (d, u) =>
+        setTitleStatus(d, u, {
+          titleId: first.value.titleId,
+          status: "watching",
+        }),
+      );
+      await addTitleToLibraryByRef(deps, { id: user }, ref);
+      const rows = await tx
+        .select({ status: userTitles.status })
+        .from(userTitles)
+        .where(eq(userTitles.userId, user));
+      expect(rows).toEqual([{ status: "watching" }]);
     }));
 });

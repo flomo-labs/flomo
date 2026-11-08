@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import {
   deleteWatchRecord,
   markEpisodeWatched,
@@ -16,12 +17,18 @@ import {
   type MarkWatchedErrorCode,
 } from "@/domain/library/mark-watched";
 import {
+  addTitleToLibraryByRef,
+  type AddByRefErrorCode,
+  type AddByRefResult,
+} from "@/domain/library/add-title-by-ref";
+import {
   removeTitleFromLibrary,
   setTitleHidden,
   setTitleStatus,
   type SetStatusErrorCode,
 } from "@/domain/library/set-status";
 import { fail, type Result } from "@/domain/result";
+import { allowProviderFetch, createCatalogDeps } from "@/infra/catalog";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
 import { getCurrentUser } from "../_auth/session";
@@ -141,4 +148,41 @@ export async function changeTitleHidden(input: unknown) {
 
 export async function removeFromLibrary(input: unknown) {
   return run(removeTitleFromLibrary, input);
+}
+
+// Atalho "+" da busca: guarda em "Quero ver" um título que talvez ninguém
+// tenha aberto ainda (grava no catálogo e na biblioteca numa chamada só).
+// O catálogo é gravado fora da transação do usuário, que só abre depois.
+export async function addTitleByRef(
+  input: unknown,
+): Promise<Result<AddByRefResult, AddByRefErrorCode | "UNAUTHENTICATED">> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  const result = await addTitleToLibraryByRef(
+    {
+      catalog: createCatalogDeps((task) =>
+        after(async () => {
+          try {
+            await task();
+          } catch (error) {
+            console.error("Falha ao atualizar o cache do catálogo:", error);
+          }
+        }),
+      ),
+      inLibrary: (run) =>
+        withUser(user.claims, (tx) =>
+          run({ library: createLibraryRepository(tx), now: () => new Date() }),
+        ),
+      allowProviderFetch,
+    },
+    { id: user.id },
+    input,
+  );
+  if (!result.ok) return result;
+  revalidatePath("/titulo/[id]", "page");
+  revalidatePath("/seguintes");
+  revalidatePath("/biblioteca");
+  return result;
 }
