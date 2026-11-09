@@ -6,6 +6,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+### Alterado
+
+- Ao compartilhar o link do Flomo, o preview mostra a imagem da marca em vez de um pôster qualquer; a página de um título mostra o pôster dele (#293).
+
 ## [0.10.0] - 2026-11-09
 
 Correções do teste com usuários (4.3.3) e recuperação de senha.
