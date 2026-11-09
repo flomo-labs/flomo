@@ -6,6 +6,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+### Adicionado
+
+- Regras de seguir pessoas no servidor: seguir, deixar de seguir, pedir para seguir perfil privado, aceitar e recusar, ainda sem telas (#75).
+
 ## [0.11.0] - 2026-11-09
 
 ### Adicionado
