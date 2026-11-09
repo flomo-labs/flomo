@@ -10,6 +10,7 @@ import {
 import {
   comments,
   episodes,
+  follows,
   ratings,
   seasons,
   titles,
@@ -103,6 +104,17 @@ async function seedEverything(tx: Tx, userId: string) {
   });
 }
 
+// Os dois se seguem: cobre as duas colunas de `follows` (seguidor e seguido).
+// O `other` também precisa de um vínculo que sobreviva à exclusão do `owner`.
+async function followEachOther(tx: Tx, a: string, b: string) {
+  await asUser(tx, a, (utx) =>
+    utx.insert(follows).values({ followerId: a, followeeId: b }),
+  );
+  await asUser(tx, b, (utx) =>
+    utx.insert(follows).values({ followerId: b, followeeId: a }),
+  );
+}
+
 async function countsByTable(tx: Tx, columns: UserColumn[], userId: string) {
   const counts: Record<string, number> = {};
   for (const col of columns) {
@@ -130,6 +142,9 @@ describe("exclusão de conta", () => {
       const other = await createUser(tx);
       await seedEverything(tx, owner);
       await seedEverything(tx, other);
+      const bystander = await createUser(tx);
+      await followEachOther(tx, owner, other);
+      await followEachOther(tx, other, bystander);
       const columns = await userColumns(tx);
 
       // O preparo cobre todas as tabelas: sem isso, "zero depois" não prova

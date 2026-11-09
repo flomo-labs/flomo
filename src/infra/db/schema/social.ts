@@ -3,7 +3,9 @@ import {
   boolean,
   check,
   index,
+  pgPolicy,
   pgTable,
+  primaryKey,
   smallint,
   text,
   timestamp,
@@ -11,9 +13,10 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { COMMENT_MAX_LENGTH, MODERATION_STATUSES } from "@/contracts/comment";
+import { authenticatedRole } from "drizzle-orm/supabase";
 import { episodes, titles } from "./catalog";
 import { profiles } from "./profiles";
-import { ownRowsOnly } from "./rls";
+import { currentUserId, ownRowsOnly } from "./rls";
 
 // Avaliações (Fase 1.5): nota e comentário são tabelas separadas (Plano v2,
 // seção 3.2).
@@ -128,5 +131,68 @@ export const comments = pgTable(
       t.id.desc().nullsFirst(),
     ),
     ownRowsOnly("comments", t.userId),
+  ],
+);
+
+// Seguidores (Fase 2.1). Uma linha por par seguidor → seguido, com estado:
+// `accepted` (segue; perfil público segue direto) ou `requested` (solicitação
+// a perfil privado, esperando o dono). Quem foi aceito vê o perfil completo,
+// como se fosse público (app.profile_card e app.profile_stats).
+//
+// - Morre em cascata com qualquer um dos dois perfis (ADR-003, seção 9).
+// - Sem seguir a si mesmo.
+// - O estado de nascimento não vem do cliente: o trigger
+//   app.follows_set_status grava `accepted` se o perfil seguido é público e
+//   `requested` se é privado (a policy não enxerga o perfil privado).
+// - RLS: cada lado vê as próprias linhas. Só quem segue cria (e desfaz ou
+//   cancela a solicitação); só o seguido aceita (único UPDATE permitido,
+//   `requested` → `accepted`) e pode recusar ou remover (DELETE).
+//   Recusar apaga a linha: quem pediu pode pedir de novo.
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    followeeId: uuid("followee_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("requested"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Mantido pelo trigger app.set_updated_at.
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.followerId, t.followeeId] }),
+    check("follows_status", sql`${t.status} in ('requested', 'accepted')`),
+    check("follows_not_self", sql`${t.followerId} <> ${t.followeeId}`),
+    // Seguidores e solicitações pendentes de um perfil. A lista de quem a
+    // pessoa segue usa o índice da chave primária (follower_id primeiro).
+    index("follows_followee_status_idx").on(t.followeeId, t.status),
+    pgPolicy("follows_select_own", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${t.followerId} = ${currentUserId} or ${t.followeeId} = ${currentUserId}`,
+    }),
+    pgPolicy("follows_insert_as_follower", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${t.followerId} = ${currentUserId}`,
+    }),
+    pgPolicy("follows_accept_as_followee", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${t.followeeId} = ${currentUserId}`,
+      withCheck: sql`${t.followeeId} = ${currentUserId} and ${t.status} = 'accepted'`,
+    }),
+    pgPolicy("follows_delete_either_side", {
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${t.followerId} = ${currentUserId} or ${t.followeeId} = ${currentUserId}`,
+    }),
   ],
 );

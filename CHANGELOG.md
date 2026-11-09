@@ -6,6 +6,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+### Adicionado
+
+- Banco de dados preparado para seguir pessoas: tabela de seguidores com solicitação para perfis privados, ainda sem telas (#74).
+
 ### Alterado
 
 - Ao compartilhar o link do Flomo, o preview mostra a imagem da marca em vez de um pôster qualquer; a página de um título mostra o pôster dele (#293).
