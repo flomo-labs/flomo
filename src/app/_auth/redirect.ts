@@ -1,3 +1,7 @@
+// Tela que define a senha nova; o link do e-mail de redefinição chega aqui
+// pelo /auth/callback.
+export const RESET_PASSWORD_PATH = "/redefinir-senha";
+
 // Destino depois do login. Só aceita caminhos do próprio site, para o
 // parâmetro `next` não virar redirecionamento aberto para outro domínio.
 export function safeNextPath(value: unknown): string {
