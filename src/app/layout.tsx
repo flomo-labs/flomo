@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter, Roboto } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
+import { resolveMetadataBase, sharePreview } from "@/lib/share-preview";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -22,9 +23,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_DESCRIPTION =
+  "Acompanhe filmes e séries, avalie e compartilhe com amigos.";
+
 export const metadata: Metadata = {
+  metadataBase: resolveMetadataBase(),
   title: "Flomo",
-  description: "Acompanhe filmes e séries, avalie e compartilhe com amigos.",
+  description: SITE_DESCRIPTION,
+  // Preview ao compartilhar o link: imagem de marca fixa em todas as páginas
+  // (a do título troca pelo pôster, em titulo/[id]).
+  ...sharePreview({ title: "Flomo", description: SITE_DESCRIPTION }),
   // Ícone da aba por tema do navegador/dispositivo. O favicon.ico e o
   // apple-icon.png (src/app/) ficam como reserva, na versão do modo claro.
   icons: {

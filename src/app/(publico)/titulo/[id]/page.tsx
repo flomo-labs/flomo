@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { tmdbImageUrl } from "@/infra/catalog/tmdb/images";
 import { SectionHeader } from "@/components/section-header";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -30,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { CATALOG_COUNTRY, type CatalogTitle } from "@/domain/catalog/types";
 import { computeSeasonProgress } from "@/domain/library/season-progress";
 import { todayIn } from "@/domain/library/watch-date";
+import { sharePreview } from "@/lib/share-preview";
 import { cn } from "@/lib/utils";
 
 // Metadados e página leem o mesmo título: uma consulta por requisição.
@@ -45,9 +47,17 @@ export async function generateMetadata({
   const result = await getTitle(id);
   if (!result.ok)
     return { title: `${t("notFound")} · Flomo`, robots: { index: false } };
+  const description = result.value.overview ?? t("metaDescription");
+  const poster = tmdbImageUrl(result.value.posterPath, "w780");
   return {
     title: `${result.value.title} · Flomo`,
-    description: result.value.overview ?? t("metaDescription"),
+    description,
+    // Preview ao compartilhar: o pôster do próprio título, nunca o de outro.
+    ...sharePreview({
+      title: `${result.value.title} · Flomo`,
+      description,
+      image: poster ? { url: poster, alt: result.value.title } : undefined,
+    }),
   };
 }
 
