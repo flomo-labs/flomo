@@ -30,6 +30,12 @@ export type EmailAuthResult =
 // nasce quando a pessoa abre o link (volta em /auth/callback).
 export type EmailSignUpResult = EmailAuthResult | { ok: true; pending: true };
 
+// Operações de senha sem sessão nova: só dizem se deu certo. `pending` é o
+// e-mail de confirmação enviado (a mudança só vale depois do link).
+export type PasswordResult =
+  | { ok: true; pending?: true }
+  | { ok: false; code: EmailAuthFailure | "SAME_PASSWORD" };
+
 function toEmailFailure(code: string | undefined): EmailAuthFailure {
   switch (code) {
     case "user_already_exists":
@@ -152,6 +158,60 @@ export function createCookieAuth(cookies: AuthCookies) {
       }
       const claims = await verifyAccessToken(data.session.access_token);
       return claims ? { ok: true, claims } : { ok: false, code: "UNKNOWN" };
+    },
+
+    // Pede o e-mail de redefinição de senha (PKCE: o link volta em
+    // `redirectTo` com um código, trocado por `completeSignIn`). O Supabase
+    // responde igual para e-mail com e sem conta, e aqui só o limite de envios
+    // vira falha: a tela nunca revela se o e-mail tem conta.
+    async requestPasswordReset(
+      email: string,
+      redirectTo: string,
+    ): Promise<PasswordResult> {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+      if (!error) return { ok: true };
+      const code = toEmailFailure(error.code);
+      return { ok: false, code: code === "RATE_LIMITED" ? code : "UNKNOWN" };
+    },
+
+    // Troca a senha de quem está logado (inclusive pela sessão aberta pelo
+    // link de redefinição) e encerra as outras sessões. Conferir a senha
+    // atual é do chamador (`signInWithEmail`).
+    async updatePassword(password: string): Promise<PasswordResult> {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        return {
+          ok: false,
+          code:
+            error.code === "same_password"
+              ? "SAME_PASSWORD"
+              : toEmailFailure(error.code),
+        };
+      }
+      await supabase.auth.signOut({ scope: "others" });
+      return { ok: true };
+    },
+
+    // Conta que entrou só pelo Google: define a senha e pede a troca para um
+    // e-mail (que pode ser outro, não o do Google). O e-mail só vale depois
+    // do link de confirmação. E-mail já usado por outra conta responde como o
+    // pedido normal, sem revelar que ele tem conta.
+    async addEmailAndPassword(
+      email: string,
+      password: string,
+      emailRedirectTo: string,
+    ): Promise<PasswordResult> {
+      const { error } = await supabase.auth.updateUser(
+        { email, password },
+        { emailRedirectTo },
+      );
+      if (!error) return { ok: true, pending: true };
+      const code = toEmailFailure(error.code);
+      return code === "EMAIL_TAKEN"
+        ? { ok: true, pending: true }
+        : { ok: false, code };
     },
 
     // Vincula o Google à conta logada (PKCE): devolve a URL do Google, ou null
