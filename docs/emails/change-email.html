@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Confirme o e-mail da sua conta no Flomo.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0a0a0a;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+    <tr><td style="padding:0 4px 20px 4px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:24px;font-weight:700;color:#fafafa;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td valign="middle" style="padding:0 3px 0 0;font-size:0;line-height:0;"><div style="width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:11px solid #f0408a;"></div></td>
+        <td valign="middle" style="padding:0 8px 0 0;font-size:0;line-height:0;"><div style="width:3px;height:16px;background-color:#f0408a;border-radius:2px;"></div></td>
+        <td valign="middle" style="font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:24px;font-weight:700;color:#fafafa;">Flomo</td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="background-color:#171717;border:1px solid #2a2a2a;border-radius:16px;padding:32px 28px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <h1 style="margin:0 0 12px 0;font-size:24px;line-height:29px;font-weight:700;color:#fafafa;">Confirme seu novo e-mail</h1>
+      <p style="margin:0 0 24px 0;font-size:14px;line-height:22px;color:#a3a3a3;">Você pediu para usar este e-mail para entrar na sua conta do Flomo. Confirme para ativá-lo.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+        <tr><td align="center" bgcolor="#a3004c" style="background-color:#a3004c;border-radius:999px;">
+          <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 28px;font-size:14px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">Confirmar e-mail</a>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 8px 0;font-size:12px;line-height:18px;color:#a3a3a3;">Abra o link no mesmo navegador em que você fez o pedido.</p>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#a3a3a3;">O botão não funciona? Copie este endereço e cole no navegador:<br><a href="{{ .ConfirmationURL }}" style="color:#f0408a;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+    </td></tr>
+    <tr><td style="padding:20px 4px 0 4px;font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#737373;">
+      Se você não pediu isso, ignore esta mensagem: nada muda na sua conta.<br>
+      Flomo &middot; <a href="https://www.flomo.com.br" style="color:#737373;">www.flomo.com.br</a>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>
