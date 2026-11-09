@@ -6,6 +6,8 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+## [0.11.0] - 2026-11-09
+
 ### Adicionado
 
 - Banco de dados preparado para seguir pessoas: tabela de seguidores com solicitação para perfis privados, ainda sem telas (#74).
@@ -80,6 +82,7 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.10.0...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/flomo-labs/flomo/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/flomo-labs/flomo/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/flomo-labs/flomo/releases/tag/v0.9.0
