@@ -5,6 +5,7 @@ import {
   acceptFollowRequest,
   declineFollowRequest,
   followUser,
+  listFollowRequests,
   unfollowUser,
 } from "@/domain/follow/follow";
 import type { Tx } from "./client";
@@ -154,5 +155,45 @@ describe("seguir contra o banco", () => {
           followUser(deps(t), { id: me }, { profileId: me }),
         ),
       ).toMatchObject({ error: { code: "CANNOT_FOLLOW_SELF" } });
+    }));
+
+  it("lista as solicitações pendentes: quem pediu com perfil privado aparece", () =>
+    inRollback(async (tx) => {
+      const owner = await createPerson(tx, true);
+      const asker = await createPerson(tx, true);
+      await run(tx, asker.id, (t) =>
+        followUser(deps(t), { id: asker.id }, { profileId: owner.id }),
+      );
+      const result = await run(tx, owner.id, (t) =>
+        listFollowRequests(deps(t), { id: owner.id }),
+      );
+      expect(result.ok && result.value.requests).toMatchObject([
+        { followerId: asker.id },
+      ]);
+    }));
+
+  it("estranho não vê as solicitações de outro dono; aceitar tira da lista", () =>
+    inRollback(async (tx) => {
+      const owner = await createPerson(tx, true);
+      const asker = await createPerson(tx, false);
+      const stranger = await createUser(tx);
+      await run(tx, asker.id, (t) =>
+        followUser(deps(t), { id: asker.id }, { profileId: owner.id }),
+      );
+      const seen = (id: string) =>
+        run(tx, id, async (t) => {
+          const r = await listFollowRequests(deps(t), { id });
+          return r.ok ? r.value.requests.map((x) => x.followerId) : [];
+        });
+      expect(await seen(stranger)).toEqual([]);
+      expect(await seen(owner.id)).toEqual([asker.id]);
+      await run(tx, owner.id, (t) =>
+        acceptFollowRequest(
+          deps(t),
+          { id: owner.id },
+          { followerId: asker.id },
+        ),
+      );
+      expect(await seen(owner.id)).toEqual([]);
     }));
 });
