@@ -12,7 +12,7 @@ type Preview = Identity & {
 };
 
 // Os dois formulários (nome exibido e @usuário) são separados, mas o cartão
-// "Assim você aparece" mostra os dois ao mesmo tempo: o que se digita num
+// "Você aparece assim" mostra os dois ao mesmo tempo: o que se digita num
 // campo chega ao cartão por este contexto. Fora do provedor (ex.: /cadastro),
 // os formulários seguem normalmente, sem cartão.
 const IdentityPreviewContext = createContext<Preview | null>(null);
@@ -41,7 +41,7 @@ export function useIdentityPreview() {
   return useContext(IdentityPreviewContext);
 }
 
-// "Assim você aparece": iniciais, nome e @usuário como saem no perfil.
+// "Você aparece assim": iniciais, nome e @usuário como saem no perfil.
 export function IdentityPreviewCard({ label }: { label: string }) {
   const preview = useIdentityPreview();
   if (!preview) return null;

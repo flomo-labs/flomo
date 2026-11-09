@@ -87,7 +87,7 @@ async function BackToProfile() {
   return <BackLink fallbackHref={href} />;
 }
 
-// Cartão "Assim você aparece" no topo, nome exibido (com bio e perfil privado)
+// Cartão "Você aparece assim" no topo, nome exibido (com bio e perfil privado)
 // e @usuário. O cartão acompanha o que se digita nos dois campos. Troca do
 // @usuário a qualquer momento: o antigo fica livre na hora e os links antigos
 // param de funcionar. A foto continua a do Google.
