@@ -3,6 +3,7 @@ import {
   acceptFollowRequest,
   declineFollowRequest,
   followUser,
+  listFollowRequests,
   unfollowUser,
 } from "./follow";
 import { createFakeFollows } from "./test-fakes";
@@ -114,5 +115,55 @@ describe("acceptFollowRequest e declineFollowRequest", () => {
     await acceptFollowRequest(s.deps, owner, { followerId: ME.id });
     await declineFollowRequest(s.deps, owner, { followerId: ME.id });
     expect(s.rows).toHaveLength(1);
+  });
+});
+
+describe("listFollowRequests", () => {
+  const A = "55555555-5555-4555-8555-555555555555";
+  const B = "66666666-6666-4666-8666-666666666666";
+
+  function world() {
+    return createFakeFollows({
+      profiles: [ME.id, A, B, PUBLIC],
+      privateIds: [ME.id],
+      people: {
+        [A]: { handle: "ana", displayName: "Ana", avatarUrl: "https://x/a" },
+        [B]: { handle: "beto", displayName: null, avatarUrl: null },
+      },
+    });
+  }
+
+  it("lista as solicitações pendentes ao dono, da mais recente para a mais antiga", async () => {
+    const s = world();
+    await followUser(s.deps, { id: A }, { profileId: ME.id });
+    await followUser(s.deps, { id: B }, { profileId: ME.id });
+    const result = await listFollowRequests(s.deps, ME);
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) return;
+    expect(result.value.requests.map((r) => r.followerId)).toEqual([B, A]);
+    expect(result.value.requests[1]).toMatchObject({
+      handle: "ana",
+      displayName: "Ana",
+      avatarUrl: "https://x/a",
+    });
+  });
+
+  it("não lista quem já foi aceito nem pedidos que o dono fez a outros", async () => {
+    const s = world();
+    await followUser(s.deps, { id: A }, { profileId: ME.id });
+    await followUser(s.deps, { id: B }, { profileId: ME.id });
+    await acceptFollowRequest(s.deps, ME, { followerId: A });
+    await followUser(s.deps, ME, { profileId: PUBLIC });
+    const result = await listFollowRequests(s.deps, ME);
+    expect(result.ok && result.value.requests.map((r) => r.followerId)).toEqual(
+      [B],
+    );
+  });
+
+  it("outra pessoa não vê as solicitações do dono", async () => {
+    const s = world();
+    await followUser(s.deps, { id: A }, { profileId: ME.id });
+    const result = await listFollowRequests(s.deps, { id: B });
+    expect(result).toEqual({ ok: true, value: { requests: [] } });
   });
 });

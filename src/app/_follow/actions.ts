@@ -5,6 +5,7 @@ import {
   acceptFollowRequest,
   declineFollowRequest,
   followUser,
+  listFollowRequests,
   unfollowUser,
   type FollowErrorCode,
 } from "@/domain/follow/follow";
@@ -32,6 +33,7 @@ type UseCase<T> = (
 async function run<T>(
   useCase: UseCase<T>,
   input: unknown,
+  { revalidate = true }: { revalidate?: boolean } = {},
 ): Promise<FollowActionResult<T>> {
   const user = await getCurrentUser();
   if (!user) {
@@ -40,7 +42,7 @@ async function run<T>(
   const result = await withUser(user.claims, (tx) =>
     useCase({ follows: createFollowRepository(tx) }, { id: user.id }, input),
   );
-  if (result.ok) revalidatePath("/perfil/[handle]", "page");
+  if (result.ok && revalidate) revalidatePath("/perfil/[handle]", "page");
   return result;
 }
 
@@ -58,4 +60,11 @@ export async function acceptRequest(input: unknown) {
 
 export async function declineRequest(input: unknown) {
   return run(declineFollowRequest, input);
+}
+
+// Leitura: não muda nada, então não revalida a página.
+export async function listRequests() {
+  return run((deps, user) => listFollowRequests(deps, user), undefined, {
+    revalidate: false,
+  });
 }
