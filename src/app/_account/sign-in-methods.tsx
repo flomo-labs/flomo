@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { SignInMethod } from "@/domain/account/ports";
+import { AddEmailPasswordDialog } from "./add-email-password-dialog";
+import { ChangePasswordDialog } from "./change-password-dialog";
 import {
   linkGoogle,
   unlinkGoogle,
@@ -22,9 +24,10 @@ const UNLINK_ERRORS = {
   NOT_LINKED: "O Google já não está vinculado.",
 } as const;
 
-// Formas de entrar da conta (#81). O e-mail e senha só aparece como
-// informação; o Google pode ser vinculado e desvinculado, menos quando é a
-// única forma de entrar (a ação confere de novo no servidor).
+// Formas de entrar da conta (#81). Com e-mail e senha, dá para trocar a senha;
+// sem, dá para adicionar e-mail e senha (#288). O Google pode ser vinculado e
+// desvinculado, menos quando é a única forma de entrar (a ação confere de novo
+// no servidor).
 export function SignInMethods({
   methods,
   linkError,
@@ -65,7 +68,12 @@ export function SignInMethods({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      {hasEmail ? <Row name="E-mail e senha" status="Vinculado" /> : null}
+      <Row
+        name="E-mail e senha"
+        status={hasEmail ? "Vinculado" : "Não vinculado"}
+      >
+        {hasEmail ? <ChangePasswordDialog /> : <AddEmailPasswordDialog />}
+      </Row>
       <Row
         name="Google"
         icon={<GoogleLogo />}

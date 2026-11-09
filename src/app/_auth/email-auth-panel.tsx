@@ -175,10 +175,10 @@ export function EmailAuthPanel({
             </p>
           ) : (
             <Link
-              href="/em-breve"
+              href="/esqueci-senha"
               className="self-start text-xs text-muted-foreground underline underline-offset-4"
             >
-              Esqueci a senha (em breve)
+              Esqueci a senha
             </Link>
           )}
         </div>

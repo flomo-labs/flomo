@@ -17,6 +17,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 - Faixa de serviços de streaming e filtro Todos/Séries/Filmes no topo do Descobrir, valendo para as listas; escolher um serviço mostra só "Em alta no serviço" (#252).
 - Sanfona por temporada na página do título, com barra de progresso, botão "Marcar" e menu "Marcar só esta temporada", "Marcar até esta temporada (1 a N)" e "Desfazer temporada"; no back, `markSeasonWatched` aceita `throughSeason` (#255).
 - Tag "beta" ao lado da logo e versão do Flomo no rodapé de Configurações (#258).
+- Recuperar senha: "Esqueci a senha" na tela de entrar leva a `/esqueci-senha`, que envia um link por e-mail (a resposta é a mesma exista a conta ou não); o link abre `/redefinir-senha` para criar a senha nova, e as outras sessões da conta são encerradas. Em Configurações > Formas de entrar, quem tem e-mail e senha pode "Trocar senha", e quem entra só pelo Google pode "Adicionar e-mail e senha" (o e-mail pode ser outro e só vale depois do link de confirmação) (#288).
 - Para quem desenvolve: no back, pedir o link de redefinição de senha, trocar a senha (encerrando as outras sessões) e adicionar e-mail e senha a uma conta do Google. Cole os templates novos `docs/emails/recovery.html` (Reset password) e `docs/emails/change-email.html` (Change email address) no painel do Supabase de cada ambiente (#287).
 
 ### Alterado
