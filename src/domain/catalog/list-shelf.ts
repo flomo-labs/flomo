@@ -14,11 +14,18 @@ import {
 
 export type ListShelfErrorCode = "INVALID_INPUT" | "CATALOG_UNAVAILABLE";
 
+// "Nos cinemas" é só de filmes: "movie" e "all" são a mesma lista (mesma chave
+// e mesma consulta) e "tv" não se aplica, então devolve vazio sem consultar.
 function cacheKey(query: ShelfQuery) {
   const base = `shelf:${CATALOG_LOCALE}:${CATALOG_COUNTRY}:${query.kind}`;
-  return query.kind === "provider"
-    ? `${base}:${query.mediaType}:${query.providerId}`
-    : base;
+  if (query.kind === "provider") {
+    return `${base}:${query.mediaType}:${query.providerId}`;
+  }
+  // "all" mantém a chave anterior, para não perder o cache já gravado.
+  if (query.kind === "trending") {
+    return query.mediaType === "all" ? base : `${base}:${query.mediaType}`;
+  }
+  return base;
 }
 
 // Prateleiras da tela Descobrir (em alta, nos cinemas, em alta no serviço X).
@@ -32,6 +39,9 @@ export async function listShelf(
   const parsed = shelfInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Prateleira inválida.");
   const query = parsed.data;
+  if (query.kind === "now_playing" && query.mediaType === "tv") {
+    return ok([]);
+  }
   const key = cacheKey(query);
 
   const fetchAndStore = () =>

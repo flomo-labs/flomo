@@ -25,3 +25,15 @@ export const emailCredentialsSchema = z.object({
 });
 
 export type EmailCredentials = z.infer<typeof emailCredentialsSchema>;
+
+// Senha nova digitada duas vezes (redefinir, trocar e adicionar e-mail e
+// senha). A confirmação só confere se as duas são iguais.
+export const newPasswordSchema = z
+  .object({ password: passwordSchema, confirmPassword: z.string() })
+  .refine((value) => value.password === value.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "PASSWORD_MISMATCH",
+  });
+
+// Pedido do link de redefinição: só o e-mail.
+export const passwordResetRequestSchema = z.object({ email: emailSchema });

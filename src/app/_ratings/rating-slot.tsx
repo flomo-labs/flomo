@@ -11,10 +11,13 @@ import { getUserRatings } from "./state";
 export async function RatingSlot({
   titleId,
   episodeId,
+  showLabel = false,
 }: {
   titleId: string;
   // Ausente = nota do filme.
   episodeId?: string;
+  // Escreve "Sua nota" acima das estrelas (ficha do título).
+  showLabel?: boolean;
 }) {
   const view = await getLibraryState(titleId);
   if (view.kind !== "ok") return null;
@@ -27,7 +30,7 @@ export async function RatingSlot({
   if (!watched && !mine) return null;
 
   const t = await getTranslations("Rating");
-  return (
+  const control = (
     <RatingControl
       target={episodeId ? { episodeId } : { titleId }}
       value={mine?.halfStars ?? null}
@@ -44,5 +47,12 @@ export async function RatingSlot({
         failed: t("failed"),
       }}
     />
+  );
+  if (!showLabel) return control;
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <p className="text-sm font-medium">{t("group")}</p>
+      {control}
+    </div>
   );
 }

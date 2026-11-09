@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getTitleLibraryState, listUnwatchedEpisodes } from "./get-title-state";
+import {
+  getTitleLibraryState,
+  listRefsInLibrary,
+  listUnwatchedEpisodes,
+} from "./get-title-state";
 import { markEpisodeWatched, markMovieWatched } from "./mark-watched";
 import { createFakeLibrary, type FakeEpisode, NOW, USER } from "./test-fakes";
 
@@ -95,5 +99,67 @@ describe("listUnwatchedEpisodes", () => {
     expect(
       await listUnwatchedEpisodes(lib.deps, USER, { titleId: "x" }),
     ).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } });
+  });
+});
+
+describe("listRefsInLibrary", () => {
+  const SERIES_REF = { mediaType: "tv", externalId: "100" } as const;
+  const MOVIE_REF = { mediaType: "movie", externalId: "100" } as const;
+  const refs = [SERIES_REF, MOVIE_REF, { mediaType: "tv", externalId: "999" }];
+
+  function setupRefs() {
+    const lib = createFakeLibrary({
+      titles: { [SERIES]: "tv", [MOVIE]: "movie" },
+    });
+    // Catálogo: só a série e o filme (ids externos iguais, tipos diferentes).
+    const known = [
+      { ref: SERIES_REF, id: SERIES },
+      { ref: MOVIE_REF, id: MOVIE },
+    ];
+    const deps = {
+      catalog: {
+        store: {
+          findTitlesByRefs: async (wanted: readonly (typeof refs)[number][]) =>
+            known.filter((k) =>
+              wanted.some(
+                (w) =>
+                  w.mediaType === k.ref.mediaType &&
+                  w.externalId === k.ref.externalId,
+              ),
+            ),
+        },
+      } as unknown as Parameters<typeof listRefsInLibrary>[0]["catalog"],
+      inLibrary: <T>(run: (d: typeof lib.deps) => Promise<T>) => run(lib.deps),
+    };
+    return { lib, deps };
+  }
+
+  it("devolve só as referências que estão na biblioteca", async () => {
+    const { lib, deps } = setupRefs();
+    await markMovieWatched(lib.deps, USER, { titleId: MOVIE });
+    expect(await listRefsInLibrary(deps, USER, { refs })).toEqual({
+      ok: true,
+      value: [MOVIE_REF],
+    });
+  });
+
+  it("filme e série com o mesmo id externo são títulos diferentes", async () => {
+    const { lib, deps } = setupRefs();
+    await lib.deps.library.addTitleIfAbsent(USER.id, SERIES, "watchlist");
+    expect(await listRefsInLibrary(deps, USER, { refs })).toEqual({
+      ok: true,
+      value: [SERIES_REF],
+    });
+  });
+
+  it("recusa entrada inválida", async () => {
+    const { deps } = setupRefs();
+    const result = await listRefsInLibrary(deps, USER, {
+      refs: [{ mediaType: "tv", externalId: "abc" }],
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INPUT" },
+    });
   });
 });

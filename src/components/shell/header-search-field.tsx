@@ -8,6 +8,8 @@ import {
 
 // Campo do cabeçalho. Em /buscar vem preenchido com o termo da URL (e a
 // chave refaz o campo quando a busca muda), para ser o único campo da tela.
+// O termo só fica na tela de busca: a chave também leva a rota, então ao
+// navegar para outra tela (ou voltar dela) o campo é refeito e fica vazio.
 export function HeaderSearchField({
   ariaLabel,
   labels,
@@ -20,7 +22,7 @@ export function HeaderSearchField({
   const query = pathname === "/buscar" ? (params.get("q") ?? "") : "";
   return (
     <SearchCombobox
-      key={query}
+      key={`${pathname}|${query}`}
       defaultValue={query}
       withIcon
       ariaLabel={ariaLabel}

@@ -1,9 +1,12 @@
 import type { CurrentUser } from "@/app/_auth/session";
 import type { LibraryFilter } from "@/contracts/library";
+import { listRefsInLibrary } from "@/domain/library/get-title-state";
+import type { CatalogRef } from "@/domain/catalog/types";
 import { listLibrary } from "@/domain/library/list-library";
 import type { LibraryPreview } from "@/domain/library/library-preview";
 import { PREVIEW_SIZE } from "@/domain/library/library-preview";
 import type { LibraryItem } from "@/domain/library/ports";
+import { libraryRefsDeps } from "./library-refs-deps";
 import { withUser } from "@/infra/db/client";
 import { createLibraryRepository } from "@/infra/db/library-repository";
 
@@ -56,6 +59,26 @@ export async function loadLibraryPreview(
     });
   } catch (error) {
     console.error("Falha ao listar a biblioteca:", error);
+    return null;
+  }
+}
+
+// Das referências dadas (resultados de busca), as que o usuário já tem na
+// biblioteca, numa consulta só. `null` quando não dá para ler; chamar só com
+// usuário logado.
+export async function loadRefsInLibrary(
+  user: CurrentUser,
+  refs: CatalogRef[],
+): Promise<CatalogRef[] | null> {
+  try {
+    const result = await listRefsInLibrary(
+      libraryRefsDeps(user),
+      { id: user.id },
+      { refs },
+    );
+    return result.ok ? result.value : null;
+  } catch (error) {
+    console.error("Falha ao ler a biblioteca:", error);
     return null;
   }
 }

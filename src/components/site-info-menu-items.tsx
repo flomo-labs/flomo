@@ -15,17 +15,21 @@ export function SiteInfoMenuItems({
   tmdbNotice,
   className,
   leadingSeparator = false,
+  omitHref,
 }: {
   tmdbNotice: string;
   className?: string;
   leadingSeparator?: boolean;
+  // Link do rodapé que o menu já mostra em outro lugar (ex.: o roadmap, que no
+  // menu da foto vem logo depois de Configurações).
+  omitHref?: string;
 }) {
   return (
     <>
       {leadingSeparator ? (
         <DropdownMenuSeparator className={className} />
       ) : null}
-      {FOOTER_LINKS.map((link) => (
+      {FOOTER_LINKS.filter((link) => link.href !== omitHref).map((link) => (
         <DropdownMenuItem
           key={link.href}
           render={<Link href={link.href} />}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { catalogRefSchema } from "./catalog";
 
 // Entradas dos casos de uso da biblioteca (Fase 1.3). Valem para a web e,
 // depois, para a API e o app.
@@ -30,16 +31,42 @@ export const watchDateInputSchema = z.discriminatedUnion("kind", [
 
 export type WatchDateInput = z.infer<typeof watchDateInputSchema>;
 
+// Ao marcar, também vale "no dia da exibição/lançamento": a data vem do
+// catálogo (`airDate` do episódio, data de lançamento do filme), uma para
+// cada item. Sem data no catálogo, o registro fica sem data. Vale ao
+// marcar e ao trocar a data de um registro; "rever" usa `watchDateInputSchema`.
+export const markWatchDateInputSchema = z.discriminatedUnion("kind", [
+  ...watchDateInputSchema.options,
+  z.object({ kind: z.literal("airDate") }),
+]);
+
+export type MarkWatchDateInput = z.infer<typeof markWatchDateInputSchema>;
+
 export const markEpisodeWatchedInputSchema = z.object({
   episodeId: z.uuid(),
-  when: watchDateInputSchema.optional(),
+  when: markWatchDateInputSchema.optional(),
   // Marca também os episódios anteriores ainda não vistos.
   includePrevious: z.boolean().default(false),
 });
 
 export const markMovieWatchedInputSchema = z.object({
   titleId: z.uuid(),
-  when: watchDateInputSchema.optional(),
+  when: markWatchDateInputSchema.optional(),
+});
+
+// Marcar a temporada inteira (regular, sem especiais). A data é obrigatória:
+// a tela sempre pergunta, para não inflar as estatísticas de hoje sem querer.
+export const markSeasonWatchedInputSchema = z.object({
+  titleId: z.uuid(),
+  seasonNumber: z.number().int().min(1).max(1000),
+  when: markWatchDateInputSchema,
+  // Marcar da temporada 1 até `seasonNumber` ("marcar até esta temporada").
+  throughSeason: z.boolean().optional(),
+});
+
+// Desfazer a marcação da temporada: os episódios que ela marcou.
+export const unmarkEpisodesWatchedInputSchema = z.object({
+  episodeIds: z.array(z.uuid()).min(1).max(1000),
 });
 
 export const unmarkEpisodeWatchedInputSchema = z.object({
@@ -52,7 +79,7 @@ export const unmarkMovieWatchedInputSchema = z.object({
 
 export const setWatchDateInputSchema = z.object({
   eventId: z.uuid(),
-  when: watchDateInputSchema,
+  when: markWatchDateInputSchema,
 });
 
 export const titleLibraryStateInputSchema = z.object({
@@ -107,6 +134,17 @@ export const MANUAL_LIBRARY_STATUSES = [
 export const setTitleStatusInputSchema = z.object({
   titleId: z.uuid(),
   status: z.enum(MANUAL_LIBRARY_STATUSES),
+});
+
+// Guardar na biblioteca (em "Quero ver") um título que ainda pode não estar no
+// catálogo local: a entrada é a referência do provedor, como na busca.
+export const addTitleByRefInputSchema = catalogRefSchema;
+
+// Quais títulos de uma lista de resultados já estão na biblioteca. Uma
+// consulta para a lista inteira (sugestões da busca e resultados).
+export const MAX_REFS_IN_LIBRARY = 50;
+export const refsInLibraryInputSchema = z.object({
+  refs: z.array(catalogRefSchema).max(MAX_REFS_IN_LIBRARY),
 });
 
 export const setTitleHiddenInputSchema = z.object({

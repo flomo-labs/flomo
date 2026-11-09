@@ -15,12 +15,19 @@ export async function TmdbRating({
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
+  // Contagem curta ("9,8 mil") para o cartão caber em telas estreitas.
+  const votes = format.number(rating.count, { notation: "compact" });
   return (
-    <p className="text-sm text-muted-foreground">
-      <span aria-hidden="true">{t("tmdb", { average, count: rating.count })}</span>
-      <span className="sr-only">
+    <div className="flex min-w-0 flex-col justify-center gap-1 rounded-card border border-input bg-muted px-3 py-2">
+      <p aria-hidden="true" className="flex flex-col gap-0.5">
+        <span className="text-xl leading-none font-semibold">{average}</span>
+        <span className="text-xs text-muted-foreground">
+          {t("tmdbCard", { votes })}
+        </span>
+      </p>
+      <p className="sr-only">
         {t("tmdbAria", { average, count: rating.count })}
-      </span>
-    </p>
+      </p>
+    </div>
   );
 }

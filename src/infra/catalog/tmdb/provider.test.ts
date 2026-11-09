@@ -452,11 +452,42 @@ describe("mapShelf", () => {
 describe("fetchShelf", () => {
   const results = { page: 1, total_pages: 1, total_results: 0, results: [] };
 
+  it("em alta por tipo usa trending/movie e trending/tv", async () => {
+    const get = vi.fn(async () => results);
+    const provider = createTmdbProvider({ get });
+    for (const mediaType of ["movie", "tv"] as const) {
+      await provider.fetchShelf(
+        { kind: "trending", mediaType },
+        "BR",
+        "pt-BR",
+        10,
+      );
+    }
+    expect(get).toHaveBeenNthCalledWith(1, "trending/movie/week", {
+      language: "pt-BR",
+      include_adult: false,
+    });
+    expect(get).toHaveBeenNthCalledWith(2, "trending/tv/week", {
+      language: "pt-BR",
+      include_adult: false,
+    });
+  });
+
   it("monta a consulta de cada prateleira", async () => {
     const get = vi.fn(async () => results);
     const provider = createTmdbProvider({ get });
-    await provider.fetchShelf({ kind: "trending" }, "BR", "pt-BR", 10);
-    await provider.fetchShelf({ kind: "now_playing" }, "BR", "pt-BR", 10);
+    await provider.fetchShelf(
+      { kind: "trending", mediaType: "all" },
+      "BR",
+      "pt-BR",
+      10,
+    );
+    await provider.fetchShelf(
+      { kind: "now_playing", mediaType: "all" },
+      "BR",
+      "pt-BR",
+      10,
+    );
     await provider.fetchShelf(
       { kind: "provider", mediaType: "tv", providerId: "8" },
       "BR",
@@ -548,11 +579,29 @@ describe("fetchShelf", () => {
       results:
         path === "discover/movie"
           ? [
-              { id: 1, title: "F1", original_title: "M1", poster_path: "/m1.jpg", popularity: 40 },
+              {
+                id: 1,
+                title: "F1",
+                original_title: "M1",
+                poster_path: "/m1.jpg",
+                popularity: 40,
+              },
             ]
           : [
-              { id: 7, name: "S7", original_name: "T7", poster_path: "/t7.jpg", popularity: 90 },
-              { id: 8, name: "S8", original_name: "T8", poster_path: "/t8.jpg", popularity: 10 },
+              {
+                id: 7,
+                name: "S7",
+                original_name: "T7",
+                poster_path: "/t7.jpg",
+                popularity: 90,
+              },
+              {
+                id: 8,
+                name: "S8",
+                original_name: "T8",
+                poster_path: "/t8.jpg",
+                popularity: 10,
+              },
             ],
     }));
     const provider = createTmdbProvider({ get });
@@ -632,7 +681,12 @@ describe("fetchShelf", () => {
   it("404 vira indisponível", async () => {
     const provider = createTmdbProvider({ get: vi.fn(async () => null) });
     await expect(
-      provider.fetchShelf({ kind: "trending" }, "BR", "pt-BR", 10),
+      provider.fetchShelf(
+        { kind: "trending", mediaType: "all" },
+        "BR",
+        "pt-BR",
+        10,
+      ),
     ).rejects.toThrow(CatalogUnavailableError);
   });
 });

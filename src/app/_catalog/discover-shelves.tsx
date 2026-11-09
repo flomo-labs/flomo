@@ -1,58 +1,39 @@
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
-import { SectionHeader } from "@/components/section-header";
-import { ProviderShelf } from "@/components/catalog/provider-shelf";
+import { type ReactNode, Suspense } from "react";
+import { DiscoverBrowser } from "@/components/catalog/discover-browser";
 import { ShelfSkeleton } from "@/components/catalog/shelf";
 import { SHELF_PROVIDERS } from "@/contracts/catalog";
-import { buildProviderBundle } from "./provider-shelf";
+import { BASE_SEGMENTS, MEDIA_SEGMENTS, type MediaSegment } from "./segments";
 import { ShelfItems } from "./shelf-items";
 
-// Listas da tela Descobrir: em alta, nos cinemas e em alta por serviço.
-export function DiscoverShelves() {
-  return (
-    <div className="flex flex-col gap-10 md:gap-12">
-      <ShelfSection kind="trending" ranked />
-      <ShelfSection kind="now_playing" />
-      <Suspense fallback={<ShelfSkeleton />}>
-        <ProviderSection />
-      </Suspense>
-    </div>
-  );
-}
-
-function ShelfSection({
-  kind,
-  ranked = false,
-}: {
-  kind: "trending" | "now_playing";
-  ranked?: boolean;
-}) {
-  return (
-    <section className="flex flex-col gap-3">
-      <ShelfHeading id={kind} />
-      <Suspense fallback={<ShelfSkeleton />}>
-        <ShelfItems input={{ kind }} ranked={ranked} />
-      </Suspense>
-    </section>
-  );
-}
-
-async function ShelfHeading({ id }: { id: string }) {
-  const t = await getTranslations("Discover");
-  return <SectionHeader id={id} title={t(`shelf.${id}`)} size="lg" />;
-}
-
-// "Em alta no serviço X": serviço e tipo mudam na própria tela, sem URL nem
-// memória (ao abrir de novo, volta ao primeiro serviço e a "Todos").
-async function ProviderSection() {
-  // Lê o catálogo a cada requisição: sem isto o Next tentaria montar a
-  // prateleira no build, sem banco, e a gravaria no HTML estático.
+// Listas da tela Descobrir: em alta, nos cinemas e em alta por serviço. O
+// DiscoverBrowser (cliente) escolhe qual mostrar conforme serviço e tipo.
+export async function DiscoverShelves() {
+  // Lê o catálogo a cada requisição: sem isto o Next tentaria montar as
+  // prateleiras no build, sem banco, e as gravaria no HTML estático.
   await connection();
   const t = await getTranslations("Discover");
-  const initial = await buildProviderBundle();
+  const trending: Partial<Record<MediaSegment, ReactNode>> = {};
+  const nowPlaying: Partial<Record<MediaSegment, ReactNode>> = {};
+  for (const segment of BASE_SEGMENTS) {
+    const mediaType = MEDIA_SEGMENTS[segment];
+    trending[segment] = (
+      <Suspense fallback={<ShelfSkeleton />}>
+        <ShelfItems input={{ kind: "trending", mediaType }} ranked />
+      </Suspense>
+    );
+    // Cinemas só têm filmes: com "Séries" a lista some.
+    if (segment !== "series") {
+      nowPlaying[segment] = (
+        <Suspense fallback={<ShelfSkeleton />}>
+          <ShelfItems input={{ kind: "now_playing", mediaType }} />
+        </Suspense>
+      );
+    }
+  }
   return (
-    <ProviderShelf
+    <DiscoverBrowser
       providers={SHELF_PROVIDERS.map(({ id, name, feminine }) => ({
         id,
         name,
@@ -63,15 +44,20 @@ async function ProviderSection() {
       labels={{
         providerNav: t("providerNav"),
         mediaNav: t("mediaNav"),
+        allProviders: t("allProviders"),
+        trending: t("shelf.trending"),
+        trendingLead: t("shelf.trendingLead"),
+        nowPlaying: t("shelf.now_playing"),
         media: {
           tudo: t("media.tudo"),
-          filmes: t("media.filmes"),
           series: t("media.series"),
+          filmes: t("media.filmes"),
           novelas: t("media.novelas"),
           animes: t("media.animes"),
         },
       }}
-      initial={initial}
+      trending={trending}
+      nowPlaying={nowPlaying}
       footer={
         <p className="text-xs text-muted-foreground">
           {t("providerNote")}{" "}

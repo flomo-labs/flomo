@@ -14,6 +14,15 @@ export type LibraryEpisode = {
   titleId: string;
   seasonNumber: number;
   episodeNumber: number;
+  // Data de exibição no catálogo (AAAA-MM-DD); nulo quando não há.
+  airDate: string | null;
+};
+
+// Episódio de uma temporada com a situação para o usuário.
+export type SeasonEpisode = {
+  id: string;
+  airDate: string | null;
+  watched: boolean;
 };
 
 export type NewWatchEvent = {
@@ -77,6 +86,15 @@ export type LibraryItem = {
 export interface LibraryRepository {
   findEpisode(episodeId: string): Promise<LibraryEpisode | null>;
   findTitleMediaType(titleId: string): Promise<MediaType | null>;
+  // Data de lançamento do filme no catálogo (AAAA-MM-DD), ou nulo.
+  findTitleReleaseDate(titleId: string): Promise<string | null>;
+  // Episódios da temporada regular `seasonNumber` do título, em ordem de
+  // exibição, com o que o usuário já viu. Vazio quando a temporada não existe.
+  listSeasonEpisodes(
+    userId: string,
+    titleId: string,
+    seasonNumber: number,
+  ): Promise<SeasonEpisode[]>;
 
   // Biblioteca do usuário, com o que foi marcado como visto mais recentemente
   // primeiro (episódio ou filme marcado); o que nunca foi marcado vem depois,
@@ -125,7 +143,7 @@ export interface LibraryRepository {
     userId: string,
     episode: LibraryEpisode,
     today: string,
-  ): Promise<string[]>;
+  ): Promise<{ id: string; airDate: string | null }[]>;
 
   // Posição dos episódios regulares já lançados (ou sem data) que o usuário
   // ainda não viu; a tela conta os anteriores a cada episódio sem consultar
@@ -174,6 +192,15 @@ export interface LibraryRepository {
   countEpisodeEvents(userId: string, episodeId: string): Promise<number>;
   deleteEpisodeProgress(userId: string, episodeId: string): Promise<void>;
 
+  // Põe o título na biblioteca com `status` só se ele ainda não estiver nela.
+  // Devolve `true` quando adicionou agora e `false` quando já estava (a
+  // situação atual não muda). A PK decide em caso de corrida.
+  addTitleIfAbsent(
+    userId: string,
+    titleId: string,
+    status: LibraryStatus,
+  ): Promise<boolean>;
+
   // Põe o título na biblioteca com `status` ou troca a situação atual, seja
   // qual for. Não mexe no progresso nem no histórico.
   setTitleStatus(
@@ -188,9 +215,22 @@ export interface LibraryRepository {
     titleId: string,
     hidden: boolean,
   ): Promise<boolean>;
+  // Dentre os títulos dados, os que o usuário tem na biblioteca (qualquer
+  // situação, ocultos inclusive). Uma consulta para a lista inteira.
+  findTitleIdsInLibrary(
+    userId: string,
+    titleIds: readonly string[],
+  ): Promise<string[]>;
   // Tira o título da biblioteca. O progresso e o histórico ficam guardados
   // (marcar de novo traz o título de volta com eles).
   removeTitle(userId: string, titleId: string): Promise<void>;
+
+  // Data do catálogo do item de um registro do usuário (exibição do episódio
+  // ou lançamento do filme), ou `undefined` se o registro não existe.
+  findEventCatalogDate(
+    userId: string,
+    eventId: string,
+  ): Promise<{ catalogDate: string | null } | undefined>;
 
   // Troca a data de um registro do histórico e devolve o episódio dele
   // (`null` para filme), ou `undefined` se o registro não existe.

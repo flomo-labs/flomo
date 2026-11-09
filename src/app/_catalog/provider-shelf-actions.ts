@@ -1,6 +1,6 @@
 "use server";
 
-import type { ProviderBundle } from "@/components/catalog/provider-shelf";
+import type { ProviderBundle } from "@/components/catalog/discover-browser";
 import { buildProviderBundle } from "./provider-shelf";
 
 // Listas de um serviço, carregadas em segundo plano pelo Descobrir depois de abrir

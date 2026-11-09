@@ -19,6 +19,8 @@ describe("isNavItemActive", () => {
     expect(isNavItemActive(DISCOVER_ITEM, "/descobrir")).toBe(true);
     expect(isNavItemActive(DISCOVER_ITEM, "/buscar")).toBe(true);
     expect(isNavItemActive(LIBRARY_ITEM, "/biblioteca")).toBe(true);
+    expect(isNavItemActive(LIBRARY_ITEM, "/biblioteca/series")).toBe(true);
+    expect(isNavItemActive(LIBRARY_ITEM, "/biblioteca/filmes")).toBe(true);
     expect(isNavItemActive(LIBRARY_ITEM, "/seguintes")).toBe(false);
   });
 

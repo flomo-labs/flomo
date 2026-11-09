@@ -52,9 +52,9 @@ const HOLD_MS = 600;
 // se o carregamento já terminou (`done`: mostra o check).
 type Held = { row: FollowingRow; index: number; done: boolean };
 
-// Lista "Seguintes" com o menu Todos / Séries / Filmes, à direita das
+// Lista "Seguintes" com o menu Tudo / Séries / Filmes, à direita das
 // seções (`sections`), como na Biblioteca. A escolha vive só na tela (fora da
-// URL, sem memória: reabrir volta para "Todos").
+// URL, sem memória: reabrir volta para "Tudo").
 //
 // Ao marcar, a lista nova chega junto com a resposta: a série troca de
 // episódio e sobe para o topo, o filme some. Para a pessoa ver que deu certo,

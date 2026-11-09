@@ -72,32 +72,41 @@ export async function getTitle(
   return title ? ok(title) : fail("TITLE_NOT_FOUND", NOT_FOUND_MESSAGE);
 }
 
-// Título pela referência do provedor (resultado de busca ainda sem uuid):
-// usa o banco quando já existe; senão traz do provedor e grava.
-export async function getTitleByRef(
+// Garante o título da referência do provedor no banco e devolve o uuid dele:
+// usa o que já existe; senão traz do provedor e grava (as chamadas
+// simultâneas da mesma referência dividem uma busca só).
+export async function ensureTitleByRef(
   deps: CatalogDeps,
   input: unknown,
-): Promise<Result<CatalogTitle, TitleErrorCode>> {
+): Promise<Result<string, TitleErrorCode>> {
   const parsed = catalogRefSchema.safeParse(input);
   if (!parsed.success) {
     return fail("INVALID_INPUT", parsed.error.issues[0].message);
   }
   const ref = parsed.data;
 
-  let id = (await deps.store.findTitleByRef(ref))?.id ?? null;
-  if (!id) {
-    try {
-      id = await refreshTitle(deps, ref);
-    } catch (error) {
-      if (error instanceof CatalogUnavailableError) {
-        return fail("CATALOG_UNAVAILABLE", CATALOG_UNAVAILABLE_MESSAGE);
-      }
-      throw error;
+  const existing = (await deps.store.findTitleByRef(ref))?.id ?? null;
+  if (existing) return ok(existing);
+  try {
+    const id = await refreshTitle(deps, ref);
+    return id ? ok(id) : fail("TITLE_NOT_FOUND", NOT_FOUND_MESSAGE);
+  } catch (error) {
+    if (error instanceof CatalogUnavailableError) {
+      return fail("CATALOG_UNAVAILABLE", CATALOG_UNAVAILABLE_MESSAGE);
     }
-    if (!id) return fail("TITLE_NOT_FOUND", NOT_FOUND_MESSAGE);
+    throw error;
   }
+}
 
-  const title = await readOrRefreshInBackground(deps, id);
+// Título pela referência do provedor (resultado de busca ainda sem uuid):
+// usa o banco quando já existe; senão traz do provedor e grava.
+export async function getTitleByRef(
+  deps: CatalogDeps,
+  input: unknown,
+): Promise<Result<CatalogTitle, TitleErrorCode>> {
+  const ensured = await ensureTitleByRef(deps, input);
+  if (!ensured.ok) return ensured;
+  const title = await readOrRefreshInBackground(deps, ensured.value);
   return title ? ok(title) : fail("TITLE_NOT_FOUND", NOT_FOUND_MESSAGE);
 }
 

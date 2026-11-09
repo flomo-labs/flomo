@@ -1,3 +1,4 @@
+import { profileInitials } from "@/app/_profile/initials";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -113,6 +114,7 @@ export async function MobileNav() {
       items={[
         FOLLOWING_ITEM,
         DISCOVER_ITEM,
+        LIBRARY_ITEM,
         profileItem(handle ? profilePath(handle) : "/cadastro"),
       ]}
     />
@@ -136,7 +138,7 @@ async function Account() {
   return (
     <UserMenu
       label={handle ? `@${handle}` : "Minha conta"}
-      initials={handle ? handle.slice(0, 2).toUpperCase() : "?"}
+      initials={handle ? profileInitials(profile?.displayName, handle) : "?"}
       needsHandle={!handle}
       profileHref={handle ? profilePath(handle) : null}
       tmdbNotice={t("tmdbNotice")}

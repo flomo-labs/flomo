@@ -1,8 +1,13 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
+import { addTitleToLibraryByRef } from "@/domain/library/add-title-by-ref";
+import type { CatalogProvider } from "@/domain/catalog/ports";
+import type { CatalogRef } from "@/domain/catalog/types";
+import { providerTitle } from "@/domain/catalog/test-fakes";
 import { listFollowing } from "@/domain/library/following";
 import {
   getTitleLibraryState,
+  listRefsInLibrary,
   listUnwatchedEpisodes,
 } from "@/domain/library/get-title-state";
 import { listLibrary } from "@/domain/library/list-library";
@@ -10,6 +15,8 @@ import {
   deleteWatchRecord,
   markEpisodeWatched,
   markMovieWatched,
+  markSeasonWatched,
+  unmarkEpisodesWatched,
   rewatchEpisode,
   rewatchMovie,
   setWatchDate,
@@ -20,6 +27,7 @@ import {
   setTitleHidden,
   setTitleStatus,
 } from "@/domain/library/set-status";
+import { createCatalogStore } from "./catalog-repository";
 import type { Tx } from "./client";
 import {
   asUser,
@@ -726,5 +734,239 @@ describe("marcar como assistido no banco", () => {
         .from(userEpisodeProgress)
         .where(eq(userEpisodeProgress.userId, user));
       expect(cleared.watchedAt).toBeNull();
+    }));
+
+  it("temporada inteira: data de exibição de cada episódio, idempotente, só a biblioteca do próprio usuário, desfazer", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const other = await createUser(tx);
+      const c = await createCatalog(tx);
+      await tx
+        .update(episodes)
+        .set({ airDate: "2024-02-01" })
+        .where(eq(episodes.id, c.ep.S2E1));
+      await tx
+        .update(episodes)
+        .set({ airDate: null })
+        .where(eq(episodes.id, c.ep.S2E2));
+
+      const marked = await run(tx, user, (deps, u) =>
+        markSeasonWatched(deps, u, {
+          titleId: c.seriesId,
+          seasonNumber: 2,
+          when: { kind: "airDate" },
+        }),
+      );
+      // O S2E3 ainda não foi lançado e fica de fora.
+      expect(marked).toEqual({
+        ok: true,
+        value: {
+          marked: 2,
+          alreadyMarked: 0,
+          markedEpisodeIds: [c.ep.S2E1, c.ep.S2E2],
+        },
+      });
+      const events = await tx
+        .select()
+        .from(watchEvents)
+        .where(eq(watchEvents.userId, user));
+      const byEpisode = new Map(events.map((e) => [e.episodeId, e]));
+      expect(byEpisode.get(c.ep.S2E1)).toMatchObject({
+        watchedAt: new Date("2024-02-01T12:00:00Z"),
+        watchedAtPrecision: "day",
+        source: "backfill",
+      });
+      expect(byEpisode.get(c.ep.S2E2)).toMatchObject({
+        watchedAt: null,
+        watchedAtPrecision: "unknown",
+      });
+      expect(events).toHaveLength(2);
+
+      // Outro usuário não ganha nada, e marcar de novo não duplica.
+      expect(
+        await tx
+          .select()
+          .from(watchEvents)
+          .where(eq(watchEvents.userId, other)),
+      ).toHaveLength(0);
+      expect(
+        await run(tx, user, (deps, u) =>
+          markSeasonWatched(deps, u, {
+            titleId: c.seriesId,
+            seasonNumber: 2,
+            when: { kind: "now" },
+          }),
+        ),
+      ).toEqual({
+        ok: true,
+        value: { marked: 0, alreadyMarked: 2, markedEpisodeIds: [] },
+      });
+      expect(
+        await tx.select().from(watchEvents).where(eq(watchEvents.userId, user)),
+      ).toHaveLength(2);
+
+      expect(
+        await run(tx, user, (deps, u) =>
+          unmarkEpisodesWatched(deps, u, {
+            episodeIds: [c.ep.S2E1, c.ep.S2E2],
+          }),
+        ),
+      ).toEqual({ ok: true, value: { removed: 2 } });
+      expect(
+        await tx
+          .select()
+          .from(userEpisodeProgress)
+          .where(eq(userEpisodeProgress.userId, user)),
+      ).toHaveLength(0);
+    }));
+
+  it("filme: marcar no dia do lançamento usa a data do catálogo", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const c = await createCatalog(tx);
+      await tx
+        .update(titles)
+        .set({ releaseDate: "2019-07-01" })
+        .where(eq(titles.id, c.movieId));
+      await run(tx, user, (deps, u) =>
+        markMovieWatched(deps, u, {
+          titleId: c.movieId,
+          when: { kind: "airDate" },
+        }),
+      );
+      const [event] = await tx
+        .select()
+        .from(watchEvents)
+        .where(eq(watchEvents.userId, user));
+      expect(event).toMatchObject({
+        watchedAt: new Date("2019-07-01T12:00:00Z"),
+        watchedAtPrecision: "day",
+        source: "backfill",
+      });
+    }));
+});
+
+describe("adicionar à biblioteca um título fora do catálogo", () => {
+  const ref = { mediaType: "tv", externalId: "987654" };
+
+  function setupAdd(tx: Tx, userId: string) {
+    const calls: unknown[] = [];
+    const provider = {
+      fetchTitle: async () => {
+        calls.push(1);
+        return providerTitle({
+          ref: { mediaType: "tv", externalId: "987654" },
+        });
+      },
+    } as unknown as CatalogProvider;
+    return {
+      calls,
+      deps: {
+        catalog: {
+          provider,
+          store: createCatalogStore(tx, "teste"),
+          now: () => NOW,
+          background: () => undefined,
+        },
+        inLibrary: <T>(
+          fn: (deps: {
+            library: ReturnType<typeof createLibraryRepository>;
+            now: () => Date;
+          }) => Promise<T>,
+        ) =>
+          asUser(tx, userId, (utx) =>
+            fn({ library: createLibraryRepository(utx), now: () => NOW }),
+          ),
+        allowProviderFetch: () => true,
+      },
+    };
+  }
+
+  it("grava o título e põe em Quero ver numa operação só, sob RLS", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const { deps, calls } = setupAdd(tx, user);
+
+      const first = await addTitleToLibraryByRef(deps, { id: user }, ref);
+      expect(first).toMatchObject({ ok: true, value: { added: true } });
+      const second = await addTitleToLibraryByRef(deps, { id: user }, ref);
+      expect(second).toMatchObject({ ok: true, value: { added: false } });
+      expect(calls).toHaveLength(1);
+
+      const rows = await tx
+        .select({ status: userTitles.status })
+        .from(userTitles)
+        .where(eq(userTitles.userId, user));
+      expect(rows).toEqual([{ status: "watchlist" }]);
+    }));
+
+  it("duas pessoas com o mesmo título novo ficam com um só título no catálogo", () =>
+    inRollback(async (tx) => {
+      const a = await createUser(tx);
+      const b = await createUser(tx);
+      const first = await addTitleToLibraryByRef(
+        setupAdd(tx, a).deps,
+        { id: a },
+        ref,
+      );
+      const second = await addTitleToLibraryByRef(
+        setupAdd(tx, b).deps,
+        { id: b },
+        ref,
+      );
+      if (!first.ok || !second.ok) throw new Error("esperava sucesso");
+      expect(second.value.titleId).toBe(first.value.titleId);
+    }));
+
+  it("não troca a situação de quem já tinha o título", () =>
+    inRollback(async (tx) => {
+      const user = await createUser(tx);
+      const { deps } = setupAdd(tx, user);
+      const first = await addTitleToLibraryByRef(deps, { id: user }, ref);
+      if (!first.ok) throw new Error("esperava sucesso");
+      await run(tx, user, (d, u) =>
+        setTitleStatus(d, u, {
+          titleId: first.value.titleId,
+          status: "watching",
+        }),
+      );
+      await addTitleToLibraryByRef(deps, { id: user }, ref);
+      const rows = await tx
+        .select({ status: userTitles.status })
+        .from(userTitles)
+        .where(eq(userTitles.userId, user));
+      expect(rows).toEqual([{ status: "watching" }]);
+    }));
+
+  it("informa quais referências já estão na biblioteca, numa consulta só", () =>
+    inRollback(async (tx) => {
+      const a = await createUser(tx);
+      const b = await createUser(tx);
+      const { deps } = setupAdd(tx, a);
+      await addTitleToLibraryByRef(deps, { id: a }, ref);
+      const wanted: CatalogRef[] = [
+        { mediaType: "tv", externalId: ref.externalId },
+        { mediaType: "movie", externalId: ref.externalId },
+        { mediaType: "tv", externalId: "111" },
+      ];
+      // O catálogo é lido fora da transação do usuário (RLS de `external_ids`).
+      const listFor = (user: string) =>
+        listRefsInLibrary(
+          {
+            catalog: { store: createCatalogStore(tx, "teste") },
+            inLibrary: (run) =>
+              asUser(tx, user, (utx) =>
+                run({ library: createLibraryRepository(utx) }),
+              ),
+          },
+          { id: user },
+          { refs: wanted },
+        );
+      expect(await listFor(a)).toEqual({
+        ok: true,
+        value: [{ mediaType: "tv", externalId: ref.externalId }],
+      });
+      // Outra pessoa não vê o que não guardou.
+      expect(await listFor(b)).toEqual({ ok: true, value: [] });
     }));
 });
