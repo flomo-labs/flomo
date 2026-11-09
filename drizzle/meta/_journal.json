@@ -148,6 +148,13 @@
       "when": 1792481576593,
       "tag": "0020_remover_user_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794261179278,
+      "tag": "0021_seguidores",
+      "breakpoints": true
     }
   ]
 }
