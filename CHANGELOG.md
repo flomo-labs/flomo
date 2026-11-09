@@ -6,6 +6,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+## [0.10.0] - 2026-11-09
+
+Correções do teste com usuários (4.3.3) e recuperação de senha.
+
 ### Adicionado
 
 - Biblioteca como quarto item da barra inferior do celular (Seguintes, Descobrir, Biblioteca, Perfil), ativa em `/biblioteca` e nas subtelas (#253).
@@ -68,5 +72,6 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.9.0...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/flomo-labs/flomo/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/flomo-labs/flomo/releases/tag/v0.9.0
