@@ -5,14 +5,17 @@ import type { Tx } from "./client";
 import { follows } from "./schema";
 
 const FOREIGN_KEY_VIOLATION = "23503";
+// Códigos do gatilho app.follows_rate_limit (migration 0025).
+const FOLLOW_RATE_LIMITED = "FL001";
+const FOLLOW_LIMIT_NOT_CONFIGURED = "FL002";
 
 // O Drizzle embrulha o erro do driver em `cause`.
-function isForeignKeyViolation(error: unknown): boolean {
+function hasErrorCode(error: unknown, expected: string): boolean {
   const code = (e: unknown) =>
     typeof e === "object" && e !== null && "code" in e ? e.code : undefined;
   return (
-    code(error) === FOREIGN_KEY_VIOLATION ||
-    (error instanceof Error && code(error.cause) === FOREIGN_KEY_VIOLATION)
+    code(error) === expected ||
+    (error instanceof Error && code(error.cause) === expected)
   );
 }
 
@@ -54,11 +57,26 @@ export function createFollowRepository(tx: Tx): FollowRepository {
             .select({ status: follows.status })
             .from(follows)
             .where(pair(followerId, followeeId));
+          // Sem linha: o perfil (ou o vínculo) foi apagado entre o insert e a
+          // leitura. Mesmo desfecho da violação da chave estrangeira.
+          if (!row) return "not_found" as const;
           // O CHECK da tabela só deixa passar os valores de FollowStatus.
           return { status: row.status as FollowStatus };
         });
       } catch (error) {
-        if (isForeignKeyViolation(error)) return "not_found" as const;
+        if (hasErrorCode(error, FOREIGN_KEY_VIOLATION)) {
+          return "not_found" as const;
+        }
+        if (hasErrorCode(error, FOLLOW_RATE_LIMITED)) {
+          return "rate_limited" as const;
+        }
+        if (hasErrorCode(error, FOLLOW_LIMIT_NOT_CONFIGURED)) {
+          // Erro de configuração do ambiente, não do usuário: sobe como falha.
+          throw new Error(
+            "Limite de pedidos de seguir não configurado: grave ao menos uma linha em follow_limits (ver docs/regras-de-negocio.md).",
+            { cause: error },
+          );
+        }
         throw error;
       }
     },

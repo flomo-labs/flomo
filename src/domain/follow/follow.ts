@@ -25,7 +25,8 @@ export type FollowErrorCode =
   | "INVALID_INPUT"
   | "CANNOT_FOLLOW_SELF"
   | "PROFILE_NOT_FOUND"
-  | "REQUEST_NOT_FOUND";
+  | "REQUEST_NOT_FOUND"
+  | "RATE_LIMITED";
 
 // Seguir de novo quem já se segue (ou já se pediu) devolve o estado atual: o
 // duplo clique não vira erro nem cria outra linha.
@@ -36,7 +37,10 @@ export async function followUser(
 ): Promise<
   Result<
     { status: FollowStatus },
-    "INVALID_INPUT" | "CANNOT_FOLLOW_SELF" | "PROFILE_NOT_FOUND"
+    | "INVALID_INPUT"
+    | "CANNOT_FOLLOW_SELF"
+    | "PROFILE_NOT_FOUND"
+    | "RATE_LIMITED"
   >
 > {
   const parsed = followInputSchema.safeParse(input);
@@ -48,6 +52,12 @@ export async function followUser(
   const created = await deps.follows.insert(user.id, profileId);
   if (created === "not_found") {
     return fail("PROFILE_NOT_FOUND", "Perfil não encontrado.");
+  }
+  if (created === "rate_limited") {
+    return fail(
+      "RATE_LIMITED",
+      "Você fez muitos pedidos para seguir em pouco tempo. Tente de novo mais tarde.",
+    );
   }
   return ok(created);
 }

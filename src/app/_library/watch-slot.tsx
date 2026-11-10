@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { todayIn } from "@/domain/library/watch-date";
 import { CATALOG_COUNTRY } from "@/domain/catalog/types";
+import { buttonVariants } from "@/components/ui/button";
 import { watchDateLabel } from "@/lib/watch-date-label";
 import { getLibraryState, getUnwatchedEpisodes } from "./state";
 import { WatchControl } from "./watch-control";
@@ -34,6 +35,20 @@ export async function WatchSlot({
   const view = await getLibraryState(titleId);
 
   if (view.kind === "anonymous") {
+    // Episódio: no lugar da frase (que espremia o texto no celular, #310), o
+    // mesmo círculo de marcar do logado, sem texto visível, que leva a entrar.
+    // `mt-0!` anula o espaçamento que a lista aplica a filhos que não são
+    // `button`.
+    if (kind === "episode") {
+      return (
+        <Link
+          href={loginHref}
+          aria-label={t("signIn")}
+          title={t("signIn")}
+          className={`${buttonVariants({ variant: "outline" })} col-start-3 row-start-1 row-span-1 mt-0! sm:row-span-3 size-11 self-center rounded-full`}
+        />
+      );
+    }
     return (
       <Link href={loginHref} className="text-sm text-primary hover:underline">
         {t("signIn")}
