@@ -6,6 +6,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+### Alterado
+
+- Página de título carrega o pôster com prioridade e deixa de baixar antecipadamente fontes que quase nenhuma tela usa, para melhorar o tempo até o conteúdo principal (#242).
+
 ## [0.11.0] - 2026-11-09
 
 ### Adicionado
