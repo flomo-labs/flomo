@@ -1,17 +1,16 @@
 import { FormSkeleton } from "@/components/loading/form-skeleton";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { RouteProgress } from "@/components/loading/route-progress";
-import { Skeleton } from "@/components/ui/skeleton";
 
-// Fallback de navegação de Configurações: mesma coluna da tela.
+// Fallback de navegação entre grupos de Configurações: só o conteúdo, a
+// moldura (Voltar, título e grupos) continua na tela.
 export default function SettingsLoading() {
   return (
     <>
       <RouteProgress />
-      <LoadingRegion className="mx-auto flex w-full max-w-sm flex-col gap-6">
-        <Skeleton className="h-8 w-48" />
-        <FormSkeleton />
+      <LoadingRegion className="flex w-full flex-col gap-6">
         <FormSkeleton fields={3} />
+        <FormSkeleton fields={2} />
       </LoadingRegion>
     </>
   );
