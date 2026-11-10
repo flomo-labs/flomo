@@ -8,7 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
-- Página de título carrega o pôster com prioridade e deixa de baixar antecipadamente fontes que quase nenhuma tela usa, para melhorar o tempo até o conteúdo principal (#242).
+- Página de título carrega mais rápido: o título fica em cache por algumas horas (sinopse e nota do TMDB podem demorar a atualizar), o pôster carrega com prioridade e fontes pouco usadas deixam de ser baixadas antecipadamente (#242).
 
 ## [0.11.0] - 2026-11-09
 
