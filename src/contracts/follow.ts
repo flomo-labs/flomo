@@ -1,0 +1,37 @@
+import { z } from "zod";
+
+// Estado de um vínculo de seguir (tabela `follows`, CHECK da migration 0021):
+// `requested` é a solicitação pendente de perfil privado; `accepted` é quem
+// já segue. Mudar um exige mudar o outro (no banco, por uma migration nova).
+export const FOLLOW_STATUSES = ["requested", "accepted"] as const;
+
+export type FollowStatus = (typeof FOLLOW_STATUSES)[number];
+
+// Entradas dos casos de uso de seguir (Fase 2.1). `profileId` é a pessoa que
+// se quer seguir (ou deixar de seguir); `followerId` é quem pediu para seguir
+// o dono, nas ações de aceitar e recusar.
+export const followInputSchema = z.object({ profileId: z.uuid() });
+
+export const unfollowInputSchema = z.object({ profileId: z.uuid() });
+
+export const acceptFollowInputSchema = z.object({ followerId: z.uuid() });
+
+export const declineFollowInputSchema = z.object({ followerId: z.uuid() });
+
+// Páginas das listas de seguidores e de seguindo. O banco limita a página a
+// FOLLOW_LIST_MAX_PAGE_SIZE (função `app.followers_of`, migration 0023).
+export const FOLLOW_LIST_DEFAULT_PAGE_SIZE = 30;
+export const FOLLOW_LIST_MAX_PAGE_SIZE = 100;
+
+export const followCountsInputSchema = z.object({ profileId: z.uuid() });
+
+export const followListInputSchema = z.object({
+  profileId: z.uuid(),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(FOLLOW_LIST_MAX_PAGE_SIZE)
+    .default(FOLLOW_LIST_DEFAULT_PAGE_SIZE),
+  offset: z.number().int().min(0).default(0),
+});

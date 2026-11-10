@@ -8,7 +8,30 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
-- Página de título carrega mais rápido: o título fica em cache por algumas horas (sinopse e nota do TMDB podem demorar a atualizar), o pôster carrega com prioridade e fontes pouco usadas deixam de ser baixadas antecipadamente (#242).
+- Página de título carrega mais rápido: o título fica em cache por algumas horas (sinopse e nota do TMDB podem demorar a atualizar), o pôster carrega com prioridade e fontes pouco usadas deixam de ser baixadas antecipadamente (#324).
+
+## [0.12.1] - 2026-11-10
+
+### Corrigido
+
+- No celular, o card de episódio deixou de mostrar a frase longa "Entre para marcar o que você já viu" para quem não entrou: agora há só o círculo de marcar, que leva a entrar, e o texto do episódio usa a largura inteira (#310).
+
+## [0.12.0] - 2026-11-10
+
+Base do seguir pessoas no servidor, ainda sem telas.
+
+### Adicionado
+
+- Regras de seguir pessoas no servidor: seguir, deixar de seguir, pedir para seguir perfil privado, aceitar e recusar, ainda sem telas (#75).
+- Leitura, para o dono, das solicitações de seguir pendentes, com nome, handle e foto de quem pediu, ainda sem tela (#303).
+- Contagem de seguidores e de seguindo, que vale também para perfis privados, e listas de seguidores e de quem a pessoa segue: o dono e os seguidores aceitos veem as listas de perfil privado, e qualquer usuário logado vê as de perfil público, ainda sem telas (#296).
+- Banco de dados preparado para bloquear usuários, com a exclusão de conta cobrindo os bloqueios, ainda sem telas (#294).
+- Limite de volume de pedidos de seguir, contra abuso (#295).
+- Para quem desenvolve: quatro migrations novas (`0022` a `0025`); rodar `pnpm db:migrate` no `flomo-dev` antes dos testes de integração. Em produção, o workflow "Migrations (produção)" aplica ao mesclar.
+
+### Corrigido
+
+- Seguir devolve "não encontrado" quando a linha some logo após ser criada, em vez de falhar sem explicação (#305).
 
 ## [0.11.0] - 2026-11-09
 
@@ -86,7 +109,9 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.11.0...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/flomo-labs/flomo/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/flomo-labs/flomo/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/flomo-labs/flomo/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/flomo-labs/flomo/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/flomo-labs/flomo/releases/tag/v0.9.0

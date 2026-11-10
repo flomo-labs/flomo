@@ -155,6 +155,34 @@
       "when": 1794261179278,
       "tag": "0021_seguidores",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794267489620,
+      "tag": "0022_solicitacoes_pendentes",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794273739389,
+      "tag": "0023_seguidores_contagens_listas",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794287338970,
+      "tag": "0024_bloqueios",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794294044414,
+      "tag": "0025_limite_pedidos_seguir",
+      "breakpoints": true
     }
   ]
 }

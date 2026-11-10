@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+  bigserial,
   boolean,
   check,
   index,
+  integer,
   pgPolicy,
   pgTable,
   primaryKey,
@@ -196,3 +198,92 @@ export const follows = pgTable(
     }),
   ],
 );
+
+// Bloqueios entre usuários (Fase 2.1). Uma linha por par quem bloqueou →
+// quem foi bloqueado.
+//
+// - Morre em cascata com qualquer um dos dois perfis (ADR-003, seção 9).
+// - Sem bloquear a si mesmo.
+// - RLS: só quem bloqueou enxerga, cria e desfaz o próprio bloqueio; o
+//   bloqueado nunca enxerga a linha. Sem UPDATE: bloqueio não muda, só se cria
+//   ou se desfaz.
+// - Efeitos (migration 0024): ao bloquear, o vínculo de seguir some nos dois
+//   sentidos (trigger); enquanto houver bloqueio, nenhum dos dois cria
+//   vínculo de seguir (app.follows_set_status); o bloqueado deixa de ver o
+//   perfil de quem bloqueou (app.profile_card, app.profile_stats e as
+//   funções de contagem e listas de seguidores); quem bloqueou só vê nome,
+//   handle e foto do bloqueado. Desbloquear não restaura o vínculo.
+export const blocks = pgTable(
+  "blocks",
+  {
+    blockerId: uuid("blocker_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    blockedId: uuid("blocked_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.blockerId, t.blockedId] }),
+    check("blocks_not_self", sql`${t.blockerId} <> ${t.blockedId}`),
+    // Quem bloqueou um perfil (as checagens de visibilidade olham pelos dois
+    // lados; a lista de quem eu bloqueei usa o índice da chave primária).
+    index("blocks_blocked_idx").on(t.blockedId),
+    pgPolicy("blocks_select_own", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${t.blockerId} = ${currentUserId}`,
+    }),
+    pgPolicy("blocks_insert_as_blocker", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${t.blockerId} = ${currentUserId}`,
+    }),
+    pgPolicy("blocks_delete_as_blocker", {
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${t.blockerId} = ${currentUserId}`,
+    }),
+  ],
+);
+
+// Limite de volume de pedidos de seguir (Fase 2.1, #295). Duas tabelas sem
+// policy nem privilégio para o cliente: só o gatilho `follows_rate_limit`
+// (security definer, migration 0025) lê e grava.
+//
+// - `follow_limits`: a configuração, uma linha por janela (`window_seconds` →
+//   `max_count`). Os valores NUNCA ficam no repositório: cada ambiente os grava
+//   por SQL. Sem nenhuma linha, criar vínculo é recusado (falha fechada).
+// - `follow_attempts`: um registro por vínculo criado, apagado pela própria
+//   função quando passa da maior janela. Como o registro sobrevive ao
+//   `delete` do vínculo, o ciclo seguir e desfazer também conta.
+export const followLimits = pgTable(
+  "follow_limits",
+  {
+    windowSeconds: integer("window_seconds").primaryKey(),
+    maxCount: integer("max_count").notNull(),
+  },
+  (t) => [
+    check("follow_limits_window_positive", sql`${t.windowSeconds} > 0`),
+    check("follow_limits_max_positive", sql`${t.maxCount} > 0`),
+  ],
+).enableRLS();
+
+export const followAttempts = pgTable(
+  "follow_attempts",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("follow_attempts_follower_created_idx").on(t.followerId, t.createdAt),
+  ],
+).enableRLS();
