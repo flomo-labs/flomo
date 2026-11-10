@@ -33,7 +33,8 @@ export type BlockButtonLabels = {
   failed: string;
 };
 
-const fill = (text: string, name: string) => text.replace("{name}", () => name);
+const fill = (text: string, name: string) =>
+  text.replaceAll("{name}", () => name);
 
 // Bloquear / Desbloquear no perfil de outra pessoa. Bloquear pede confirmação
 // (o diálogo explica o que acontece); desbloquear age direto, porque não tira

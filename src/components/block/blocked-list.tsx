@@ -24,7 +24,8 @@ export type BlockedListLabels = {
   failed: string;
 };
 
-const fill = (text: string, name: string) => text.replace("{name}", () => name);
+const fill = (text: string, name: string) =>
+  text.replaceAll("{name}", () => name);
 
 // Lista de pessoas bloqueadas, em Configurações, com Desbloquear em cada uma.
 // Só nome, handle e foto: nada mais do perfil bloqueado aparece. A pessoa some
