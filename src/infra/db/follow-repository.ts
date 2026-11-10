@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import type { FollowStatus } from "@/contracts/follow";
 import type { FollowRepository } from "@/domain/follow/ports";
 import type { Tx } from "./client";
@@ -90,6 +90,52 @@ export function createFollowRepository(tx: Tx): FollowRepository {
         .where(
           and(pair(followerId, followeeId), eq(follows.status, "requested")),
         );
+    },
+
+    async statusOf(followerId, followeeId) {
+      const [row] = await tx
+        .select({ status: follows.status })
+        .from(follows)
+        .where(pair(followerId, followeeId));
+      // O CHECK da tabela só deixa passar os valores de FollowStatus.
+      return row ? (row.status as FollowStatus) : null;
+    },
+
+    async relationsWith(viewerId, profileIds) {
+      if (profileIds.length === 0) return [];
+      const rows = await tx
+        .select({
+          followerId: follows.followerId,
+          followeeId: follows.followeeId,
+          status: follows.status,
+        })
+        .from(follows)
+        .where(
+          or(
+            and(
+              eq(follows.followerId, viewerId),
+              inArray(follows.followeeId, profileIds),
+            ),
+            and(
+              eq(follows.followeeId, viewerId),
+              inArray(follows.followerId, profileIds),
+            ),
+          ),
+        );
+      return profileIds.map((profileId) => {
+        const mine = rows.find(
+          (r) => r.followerId === viewerId && r.followeeId === profileId,
+        );
+        const theirs = rows.find(
+          (r) => r.followeeId === viewerId && r.followerId === profileId,
+        );
+        return {
+          profileId,
+          // O CHECK da tabela só deixa passar os valores de FollowStatus.
+          following: mine ? (mine.status as FollowStatus) : null,
+          followsViewer: theirs?.status === "accepted",
+        };
+      });
     },
 
     // Pela função `app.pending_follow_requests` (migration 0022): a policy de

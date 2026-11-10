@@ -4,8 +4,18 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { followButtonLabels } from "@/app/_follow/labels";
+import {
+  loadFollowCounts,
+  loadFollowRequests,
+  loadFollowStatus,
+  loadFollowsMe,
+} from "@/app/_follow/queries";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { FollowCounts } from "@/components/follow/follow-counts";
+import { FollowButton } from "@/components/follow/follow-button";
+import { FollowRequests } from "@/components/follow/follow-requests";
 import { RoadmapTeaser } from "@/components/roadmap-teaser";
 import { ScrollHintRow } from "@/components/scroll-hint-row";
 import { LoadingRegion } from "@/components/loading/loading-region";
@@ -55,7 +65,15 @@ async function ProfileContent({
   if (!result.ok) notFound();
   const { profile, stats, isOwn } = result.value;
   const t = await getTranslations("Profile");
+  const tf = await getTranslations("seguidores");
   const name = profile.displayName ?? `@${profile.handle}`;
+  const format = new Intl.NumberFormat("pt-BR");
+  const [counts, followStatus, followsMe, requests] = await Promise.all([
+    loadFollowCounts(user, profile.id),
+    isOwn ? null : loadFollowStatus(user, profile.id),
+    isOwn ? false : loadFollowsMe(user, profile.id),
+    isOwn ? loadFollowRequests(user) : [],
+  ]);
 
   return (
     <article className="flex flex-col gap-8">
@@ -68,6 +86,42 @@ async function ProfileContent({
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold break-words">{name}</h1>
           <p className="text-muted-foreground break-words">@{profile.handle}</p>
+          <FollowCounts
+            label={tf("countsLabel")}
+            listsHref={
+              profile.canSeeDetails
+                ? {
+                    followers: `${profilePath(profile.handle)}/seguidores`,
+                    following: `${profilePath(profile.handle)}/seguindo`,
+                  }
+                : null
+            }
+            followers={
+              <>
+                <strong className="tabular-nums">
+                  {format.format(counts.followers)}
+                </strong>{" "}
+                <span className="text-muted-foreground">
+                  {tf("followersLabel", { count: counts.followers })}
+                </span>
+              </>
+            }
+            following={
+              <>
+                <strong className="tabular-nums">
+                  {format.format(counts.following)}
+                </strong>{" "}
+                <span className="text-muted-foreground">
+                  {tf("followingLabel")}
+                </span>
+              </>
+            }
+          />
+          {followsMe ? (
+            <Badge variant="outline" className="w-fit">
+              {tf("followsYou")}
+            </Badge>
+          ) : null}
           {profile.isPrivate ? (
             <Badge
               variant="secondary"
@@ -94,12 +148,39 @@ async function ProfileContent({
           >
             {t("edit")}
           </Button>
-        ) : null}
+        ) : (
+          <FollowButton
+            profileId={profile.id}
+            name={name}
+            status={followStatus}
+            followsYou={followsMe}
+            labels={followButtonLabels(tf)}
+          />
+        )}
       </header>
+      {isOwn && requests.length > 0 ? (
+        <FollowRequests
+          requests={requests}
+          labels={{
+            title: tf("requestsTitle"),
+            accept: tf("accept"),
+            decline: tf("decline"),
+            acceptAria: tf("acceptAria", { name: "{name}" }),
+            declineAria: tf("declineAria", { name: "{name}" }),
+            accepted: tf("accepted", { name: "{name}" }),
+            declined: tf("declined", { name: "{name}" }),
+            failed: tf("failed"),
+          }}
+        />
+      ) : null}
       {stats ? (
         <StatsList stats={stats} label={t("stats")} />
       ) : (
-        <p className="text-muted-foreground">{t("privateLocked")}</p>
+        <p className="text-muted-foreground">
+          {followStatus === "requested"
+            ? t("privateRequested", { name })
+            : t("privateNotice", { name })}
+        </p>
       )}
       {isOwn ? (
         <Suspense
