@@ -332,9 +332,12 @@
   },
   "seguidores": {
     "follow": "Seguir",
+    "followBack": "Seguir de volta",
+    "followsYou": "Segue você",
     "following": "Seguindo",
     "requested": "Solicitado",
     "followAria": "Seguir {name}",
+    "followBackAria": "Seguir {name} de volta",
     "unfollowAria": "Deixar de seguir {name}",
     "cancelAria": "Cancelar solicitação para {name}",
     "nowFollowing": "Agora você segue {name}.",
