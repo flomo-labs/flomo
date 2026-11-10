@@ -111,6 +111,7 @@ async function TitleContent({
         <Poster
           path={title.posterPath}
           size="w342"
+          priority
           alt={t("Title.poster", { title: title.title })}
           className="w-24 shrink-0 sm:w-44"
         />

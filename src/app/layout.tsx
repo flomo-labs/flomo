@@ -11,15 +11,19 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-// Só para o botão do Google, que pede Roboto Medium.
+// Só para o botão do Google, que pede Roboto Medium. Sem preload: só a tela de
+// entrada usa, e o download antecipado disputa banda com o LCP das demais.
 const roboto = Roboto({
   variable: "--font-roboto",
+  preload: false,
   subsets: ["latin"],
   weight: "500",
 });
 
+// Nenhuma tela usa a fonte mono hoje: sem preload, carrega só se aparecer.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  preload: false,
   subsets: ["latin"],
 });
 

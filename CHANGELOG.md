@@ -13,6 +13,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 - Botão Seguir, Seguindo e Solicitado no perfil, aviso de perfil privado e, para o dono, lista de solicitações pendentes com aceitar e recusar (#76).
 - No perfil de quem já segue você, aparece a indicação "Segue você" e o botão vira "Seguir de volta"; cancelar uma solicitação pendente segue clicando em "Solicitado" (#297).
 
+### Alterado
+
+- Página de título carrega o pôster com prioridade e deixa de baixar antecipadamente fontes que quase nenhuma tela usa, para melhorar o tempo até o conteúdo principal (#242).
+
 ## [0.11.0] - 2026-11-09
 
 ### Adicionado
