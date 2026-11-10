@@ -157,13 +157,13 @@ export async function signInWithEmail(
 // Vincula o Google a uma conta que entrou por e-mail. A volta é em
 // /auth/callback, que troca o código como num login comum.
 export async function linkGoogle() {
-  await requireUser("/configuracoes");
+  await requireUser("/configuracoes/conta");
   const callback = new URL("/auth/callback", await siteUrl());
-  callback.searchParams.set("next", "/configuracoes");
+  callback.searchParams.set("next", "/configuracoes/conta");
 
   const auth = await getRequestAuth();
   const googleUrl = await auth.startGoogleLink(callback.toString());
-  redirect(googleUrl ?? "/configuracoes?erro=vinculo");
+  redirect(googleUrl ?? "/configuracoes/conta?erro=vinculo");
 }
 
 export type UnlinkFormState = { error?: "NOT_LINKED" | "LAST_METHOD" };
@@ -171,7 +171,7 @@ export type UnlinkFormState = { error?: "NOT_LINKED" | "LAST_METHOD" };
 // Desvincula o Google. A regra de ouro (nunca ficar sem forma de entrar)
 // fica no caso de uso.
 export async function unlinkGoogle(): Promise<UnlinkFormState> {
-  await requireUser("/configuracoes");
+  await requireUser("/configuracoes/conta");
   const auth = await getRequestAuth();
   const result = await unlinkSignInMethod(
     { methods: auth.signInMethods() },
@@ -302,7 +302,7 @@ export type AddEmailState = {
 };
 
 // Conta que entrou só pelo Google: define e-mail (pode ser outro) e senha.
-// A volta do link de confirmação é /configuracoes.
+// A volta do link de confirmação é /configuracoes/conta.
 export async function addEmailAndPassword(
   email: string,
   password: string,
@@ -316,7 +316,7 @@ export async function addEmailAndPassword(
   if (input.error) return { error: input.error };
 
   const callback = new URL("/auth/callback", await siteUrl());
-  callback.searchParams.set("next", "/configuracoes");
+  callback.searchParams.set("next", "/configuracoes/conta");
   const auth = await getRequestAuth();
   const result = await auth.addEmailAndPassword(
     parsedEmail.data,
