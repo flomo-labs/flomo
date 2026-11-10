@@ -1,3 +1,4 @@
+import { LocalDate } from "@/components/local-date";
 import type { Metadata } from "next";
 import { tmdbImageUrl } from "@/infra/catalog/tmdb/images";
 import { SectionHeader } from "@/components/section-header";
@@ -408,12 +409,9 @@ async function Episodes({
             ) : null}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <p className="text-xs text-muted-foreground">
-                {[
-                  episode.airDate,
-                  episode.runtime ? `${episode.runtime} min` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
+                {episode.airDate ? <LocalDate value={episode.airDate} /> : null}
+                {episode.airDate && episode.runtime ? " · " : null}
+                {episode.runtime ? `${episode.runtime} min` : null}
               </p>
               <Suspense fallback={null}>
                 <EpisodeAverage titleId={titleId} episodeId={episode.id} />
