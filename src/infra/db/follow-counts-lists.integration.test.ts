@@ -11,8 +11,8 @@ import { createFollowRepository } from "./follow-repository";
 import { follows, profiles } from "./schema";
 
 // Exercita a migration 0023: contagens (visíveis a qualquer logado, só
-// `accepted`) e listas de seguidores e de seguindo (só o dono e o seguidor
-// aceito enxergam).
+// `accepted`) e listas de seguidores e de seguindo (perfil público: qualquer logado;
+// privado: só o dono e o seguidor aceito).
 afterAll(closeTestDb);
 
 const INSUFFICIENT_PRIVILEGE = "42501";
@@ -113,21 +113,20 @@ describe("contagens e listas de seguidores (migration 0023)", () => {
       }
     }));
 
-  it("perfil público: só dono e seguidor aceito veem a lista (público não abre a lista)", () =>
+  it("perfil público: qualquer logado vê a lista; perfil inexistente, não", () =>
     inRollback(async (tx) => {
       const s = await scene(tx);
-      await tx
-        .update(follows)
-        .set({ status: "accepted" })
-        .where(eq(follows.followerId, s.pending.id));
       const asStranger = await asUser(tx, s.stranger.id, (t) =>
         createFollowRepository(t).listFollowers(s.followed.id, PAGE),
       );
-      expect(asStranger).toEqual([]);
-      const asFollower = await asUser(tx, s.owner.id, (t) =>
-        createFollowRepository(t).listFollowers(s.followed.id, PAGE),
+      expect(asStranger.map((p) => p.profileId)).toEqual([s.owner.id]);
+      const missing = await asUser(tx, s.stranger.id, (t) =>
+        createFollowRepository(t).listFollowers(
+          "00000000-0000-4000-8000-000000000000",
+          PAGE,
+        ),
       );
-      expect(asFollower.map((p) => p.profileId)).toEqual([s.owner.id]);
+      expect(missing).toEqual([]);
     }));
 
   it("mais recentes primeiro e paginação", () =>

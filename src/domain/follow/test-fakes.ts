@@ -33,10 +33,11 @@ export function createFakeFollows(world: {
     avatarUrl: world.people?.[id]?.avatarUrl ?? null,
     followedAt: at,
   });
-  // Mesma regra do banco: só o dono e quem o segue (aceito) veem a lista.
+  // Mesma regra do banco: perfil público, o dono ou seguidor aceito.
   const canSeeList = (viewerId: string | undefined, profileId: string) =>
     viewerId !== undefined &&
-    (viewerId === profileId ||
+    (!world.privateIds?.includes(profileId) ||
+      viewerId === profileId ||
       rows.some(
         (r) =>
           r.followerId === viewerId &&

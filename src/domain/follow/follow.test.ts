@@ -237,7 +237,7 @@ describe("contagens e listas de seguidores", () => {
     }
   });
 
-  it("quem não é aceito (estranho ou pendente) recebe lista vazia", async () => {
+  it("em perfil privado, quem não é aceito (estranho ou pendente) recebe lista vazia", async () => {
     for (const viewer of [STRANGER, F2]) {
       const s = await build(viewer);
       expect(
@@ -247,6 +247,18 @@ describe("contagens e listas de seguidores", () => {
         await listFollowing(s.deps, { id: viewer }, { profileId: OWNER }),
       ).toEqual({ ok: true, value: { people: [] } });
     }
+  });
+
+  it("em perfil público, qualquer logado vê as listas", async () => {
+    const s = await build(STRANGER);
+    const followers = await listFollowers(
+      s.deps,
+      { id: STRANGER },
+      { profileId: PUBLIC },
+    );
+    expect(
+      followers.ok && followers.value.people.map((p) => p.profileId),
+    ).toEqual([OWNER]);
   });
 
   it("pagina e recusa página inválida", async () => {
