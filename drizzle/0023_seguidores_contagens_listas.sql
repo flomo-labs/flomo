@@ -10,8 +10,9 @@
 -- Regra (decisão de 2026-11-10):
 --   * a contagem é visível a qualquer usuário logado, inclusive para perfil
 --     privado e para quem não segue;
---   * as listas só são visíveis ao dono e a quem o segue com solicitação
---     aceita. Quem não pode ver recebe zero linhas.
+--   * as listas de perfil público são visíveis a qualquer usuário logado; as de
+--     perfil privado só ao dono e a quem o segue com solicitação aceita. Quem
+--     não pode ver recebe zero linhas.
 -- Nome de exibição, handle e foto de quem aparece na lista são sempre
 -- visíveis, qualquer que seja a privacidade do perfil dele (como nas
 -- solicitações pendentes, 0022).
@@ -48,8 +49,9 @@ revoke execute on function app.follow_counts(uuid) from public;
 --> statement-breakpoint
 grant execute on function app.follow_counts(uuid) to authenticated;
 --> statement-breakpoint
--- app.follow_list_visible: o usuário atual é o dono ou o segue com solicitação
--- aceita? Apoio das duas listas abaixo; fica sem EXECUTE para o cliente.
+-- app.follow_list_visible: o usuário atual pode ver as listas do perfil? Sim se
+-- o perfil é público, se é o dono ou se o segue com solicitação aceita. Perfil
+-- inexistente: não. Apoio das duas listas abaixo; fica sem EXECUTE para o cliente.
 create function app.follow_list_visible(p_profile_id uuid)
 returns boolean
 language sql
@@ -59,14 +61,19 @@ set search_path = ''
 as $$
   select
     app.current_user_id() is not null
-    and (
-      app.current_user_id() = p_profile_id
-      or exists (
-        select 1 from public.follows f
-        where f.follower_id = app.current_user_id()
-          and f.followee_id = p_profile_id
-          and f.status = 'accepted'
-      )
+    and exists (
+      select 1 from public.profiles p
+      where p.id = p_profile_id
+        and (
+          not p.is_private
+          or p.id = app.current_user_id()
+          or exists (
+            select 1 from public.follows f
+            where f.follower_id = app.current_user_id()
+              and f.followee_id = p.id
+              and f.status = 'accepted'
+          )
+        )
     )
 $$;
 --> statement-breakpoint
