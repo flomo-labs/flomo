@@ -6,6 +6,12 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+## [0.12.1] - 2026-11-10
+
+### Corrigido
+
+- No celular, o card de episódio deixou de mostrar a frase longa "Entre para marcar o que você já viu" para quem não entrou: agora há só o círculo de marcar, que leva a entrar, e o texto do episódio usa a largura inteira (#310).
+
 ## [0.12.0] - 2026-11-10
 
 Base do seguir pessoas no servidor, ainda sem telas.
@@ -99,7 +105,8 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.0...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/flomo-labs/flomo/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/flomo-labs/flomo/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/flomo-labs/flomo/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/flomo-labs/flomo/compare/v0.9.0...v0.10.0
