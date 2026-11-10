@@ -62,6 +62,9 @@ export function createFakeFollows(world: {
         );
         if (i >= 0) rows.splice(i, 1);
       },
+      async statusOf(followerId, followeeId) {
+        return find(followerId, followeeId)?.status ?? null;
+      },
       async listPending(followeeId) {
         return rows
           .filter(
