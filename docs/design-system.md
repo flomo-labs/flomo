@@ -81,7 +81,7 @@ Quase sem sombra: profundidade vem de borda (`border-border`) e `ring-1 ring-for
 ### Compartilhados (`src/components/`)
 | Componente | Para quê | Detalhes |
 |---|---|---|
-| `Poster` | pôster TMDB | 2:3, `rounded-poster`, `bg-muted` sem imagem |
+| `Poster` | pôster TMDB | 2:3, `rounded-poster`, `bg-muted` sem imagem; `priority` só no pôster do topo da página do título (elemento do LCP), nunca em listas |
 | `PosterCard` | cartão de grade | pôster + título 2 linhas + complemento; hover `opacity-80` |
 | `PosterRow` | linha de título | pôster 64/80px (`md`) ou 48/56px (`sm`), `rounded-card border p-3`, ação à direita (`trailing`) |
 | `Shelf` / `ShelfSkeleton` | prateleira do Descobrir | grade 3 colunas (celular) / 5 (`sm+`); `ranked` = número em degradê (`-ml-5`) sobre escurecimento; esqueleto `animate-pulse` |

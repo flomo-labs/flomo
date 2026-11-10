@@ -4,10 +4,8 @@ import { SectionHeader } from "@/components/section-header";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
-import {
-  getTitle as getTitleUncached,
-  listSeasonEpisodes as listSeasonEpisodesUncached,
-} from "@/app/_catalog/gateway";
+import { getTitleCached } from "@/app/_catalog/cached-title";
+import { listSeasonEpisodes as listSeasonEpisodesUncached } from "@/app/_catalog/gateway";
 import { SeasonWatchSlot } from "@/app/_library/season-watch-slot";
 import { getLibraryState } from "@/app/_library/state";
 import { StatusSlot } from "@/app/_library/status-slot";
@@ -23,6 +21,7 @@ import { WatchProviders } from "@/components/catalog/watch-providers";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import {
   EpisodeListSkeleton,
+  EpisodesSkeleton,
   TitleSkeleton,
 } from "@/components/loading/title-skeleton";
 import { RatingAverage } from "@/components/rating-average";
@@ -34,8 +33,9 @@ import { todayIn } from "@/domain/library/watch-date";
 import { sharePreview } from "@/lib/share-preview";
 import { cn } from "@/lib/utils";
 
-// Metadados e página leem o mesmo título: uma consulta por requisição.
-const getTitle = cache(getTitleUncached);
+// Metadados e página leem o mesmo título: uma consulta por requisição (e, com
+// o cache do Next, nem isso: o título fica em memória por algumas horas).
+const getTitle = cache(getTitleCached);
 // O botão da temporada e a lista de episódios leem os mesmos episódios.
 const listSeasonEpisodes = cache(listSeasonEpisodesUncached);
 
@@ -86,7 +86,6 @@ async function TitleContent({
   searchParams,
 }: Pick<PageProps<"/titulo/[id]">, "params" | "searchParams">) {
   const { id } = await params;
-  const query = await searchParams;
   const result = await getTitle(id);
   if (!result.ok) notFound();
   const title = result.value;
@@ -111,6 +110,7 @@ async function TitleContent({
         <Poster
           path={title.posterPath}
           size="w342"
+          priority
           alt={t("Title.poster", { title: title.title })}
           className="w-24 shrink-0 sm:w-44"
         />
@@ -173,7 +173,15 @@ async function TitleContent({
       </Suspense>
 
       {title.mediaType === "tv" && title.seasons.length > 0 ? (
-        <Seasons title={title} selected={firstValue(query.temporada)} />
+        <Suspense
+          fallback={
+            <LoadingRegion>
+              <EpisodesSkeleton />
+            </LoadingRegion>
+          }
+        >
+          <Seasons title={title} searchParams={searchParams} />
+        </Suspense>
       ) : null}
 
       <Suspense fallback={null}>
@@ -227,11 +235,14 @@ function firstValue(value: string | string[] | undefined): string | undefined {
 
 async function Seasons({
   title,
-  selected,
+  searchParams,
 }: {
   title: CatalogTitle;
-  selected: string | undefined;
+  searchParams: PageProps<"/titulo/[id]">["searchParams"];
 }) {
+  // `searchParams` só é lido aqui: o cabeçalho e a sinopse não dependem da
+  // requisição e saem sem esperar por ele.
+  const selected = firstValue((await searchParams).temporada);
   const t = await getTranslations("Title");
   const tl = await getTranslations("Library");
   const label = (n: number) =>
