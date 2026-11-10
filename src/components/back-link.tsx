@@ -42,7 +42,7 @@ export function BackLink({
       <Button
         variant="secondary"
         size="icon"
-        className="shrink-0 rounded-full border-border"
+        className="shrink-0 rounded-full border-foreground/25"
         aria-label="Voltar"
         render={<Link href={fallbackHref} />}
         nativeButton={false}
