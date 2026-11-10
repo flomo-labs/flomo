@@ -21,7 +21,13 @@ const nextConfig: NextConfig = {
   // Perfil em /@handle. Pastas com @ são slots no App Router, então a página
   // mora em /perfil/[handle] e o endereço curto é reescrito para ela.
   async rewrites() {
-    return [{ source: "/@:handle", destination: "/perfil/:handle" }];
+    return [
+      { source: "/@:handle", destination: "/perfil/:handle" },
+      {
+        source: "/@:handle/:list(seguidores|seguindo)",
+        destination: "/perfil/:handle/:list",
+      },
+    ];
   },
   turbopack: {
     rules: {

@@ -4,13 +4,16 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { followButtonLabels } from "@/app/_follow/labels";
 import {
+  loadFollowCounts,
   loadFollowRequests,
   loadFollowStatus,
   loadFollowsMe,
 } from "@/app/_follow/queries";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { FollowCounts } from "@/components/follow/follow-counts";
 import { FollowButton } from "@/components/follow/follow-button";
 import { FollowRequests } from "@/components/follow/follow-requests";
 import { RoadmapTeaser } from "@/components/roadmap-teaser";
@@ -64,7 +67,9 @@ async function ProfileContent({
   const t = await getTranslations("Profile");
   const tf = await getTranslations("seguidores");
   const name = profile.displayName ?? `@${profile.handle}`;
-  const [followStatus, followsMe, requests] = await Promise.all([
+  const format = new Intl.NumberFormat("pt-BR");
+  const [counts, followStatus, followsMe, requests] = await Promise.all([
+    loadFollowCounts(user, profile.id),
     isOwn ? null : loadFollowStatus(user, profile.id),
     isOwn ? false : loadFollowsMe(user, profile.id),
     isOwn ? loadFollowRequests(user) : [],
@@ -81,6 +86,37 @@ async function ProfileContent({
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold break-words">{name}</h1>
           <p className="text-muted-foreground break-words">@{profile.handle}</p>
+          <FollowCounts
+            label={tf("countsLabel")}
+            listsHref={
+              profile.canSeeDetails
+                ? {
+                    followers: `${profilePath(profile.handle)}/seguidores`,
+                    following: `${profilePath(profile.handle)}/seguindo`,
+                  }
+                : null
+            }
+            followers={
+              <>
+                <strong className="tabular-nums">
+                  {format.format(counts.followers)}
+                </strong>{" "}
+                <span className="text-muted-foreground">
+                  {tf("followersLabel", { count: counts.followers })}
+                </span>
+              </>
+            }
+            following={
+              <>
+                <strong className="tabular-nums">
+                  {format.format(counts.following)}
+                </strong>{" "}
+                <span className="text-muted-foreground">
+                  {tf("followingLabel")}
+                </span>
+              </>
+            }
+          />
           {followsMe ? (
             <Badge variant="outline" className="w-fit">
               {tf("followsYou")}
@@ -118,21 +154,7 @@ async function ProfileContent({
             name={name}
             status={followStatus}
             followsYou={followsMe}
-            labels={{
-              follow: tf("follow"),
-              followBack: tf("followBack"),
-              following: tf("following"),
-              requested: tf("requested"),
-              followAria: tf("followAria", { name: "{name}" }),
-              followBackAria: tf("followBackAria", { name: "{name}" }),
-              unfollowAria: tf("unfollowAria", { name: "{name}" }),
-              cancelAria: tf("cancelAria", { name: "{name}" }),
-              nowFollowing: tf("nowFollowing", { name: "{name}" }),
-              nowRequested: tf("nowRequested", { name: "{name}" }),
-              unfollowed: tf("unfollowed", { name: "{name}" }),
-              cancelled: tf("cancelled", { name: "{name}" }),
-              failed: tf("failed"),
-            }}
+            labels={followButtonLabels(tf)}
           />
         )}
       </header>

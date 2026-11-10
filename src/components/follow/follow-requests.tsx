@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { acceptRequest, declineRequest } from "@/app/_follow/actions";
-import { profileInitials } from "@/app/_profile/initials";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { PersonList, PersonRow } from "@/components/follow/person-row";
 import { Button } from "@/components/ui/button";
 
 export type FollowRequestItem = {
@@ -79,53 +77,32 @@ export function FollowRequests({
       <h2 id="follow-requests-title" className="text-lg font-semibold">
         {labels.title} ({items.length})
       </h2>
-      <ul className="flex flex-col gap-2">
+      <PersonList>
         {items.map((item) => {
           const name = item.displayName ?? `@${item.handle}`;
           return (
-            <li
-              key={item.followerId}
-              className="flex flex-wrap items-center gap-3 rounded-card border border-border p-3"
-            >
-              <Link
-                href={`/@${item.handle}`}
-                className="flex min-w-0 flex-1 items-center gap-3"
+            <PersonRow key={item.followerId} person={item}>
+              <Button
+                size="sm"
+                disabled={pending}
+                aria-label={fill(labels.acceptAria, name)}
+                onClick={() => answer(item, "accept")}
               >
-                <Avatar>
-                  <AvatarFallback>
-                    {profileInitials(item.displayName, item.handle)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="flex min-w-0 flex-col">
-                  <span className="font-medium break-words">{name}</span>
-                  <span className="text-sm text-muted-foreground break-words">
-                    @{item.handle}
-                  </span>
-                </span>
-              </Link>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  disabled={pending}
-                  aria-label={fill(labels.acceptAria, name)}
-                  onClick={() => answer(item, "accept")}
-                >
-                  {labels.accept}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={pending}
-                  aria-label={fill(labels.declineAria, name)}
-                  onClick={() => answer(item, "decline")}
-                >
-                  {labels.decline}
-                </Button>
-              </div>
-            </li>
+                {labels.accept}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={pending}
+                aria-label={fill(labels.declineAria, name)}
+                onClick={() => answer(item, "decline")}
+              >
+                {labels.decline}
+              </Button>
+            </PersonRow>
           );
         })}
-      </ul>
+      </PersonList>
     </section>
   );
 }
