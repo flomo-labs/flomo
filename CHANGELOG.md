@@ -27,6 +27,19 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 Base do seguir pessoas no servidor, ainda sem telas.
 
+### Adicionado
+
+- Regras de seguir pessoas no servidor: seguir, deixar de seguir, pedir para seguir perfil privado, aceitar e recusar, ainda sem telas (#75).
+- Leitura, para o dono, das solicitações de seguir pendentes, com nome, handle e foto de quem pediu, ainda sem tela (#303).
+- Contagem de seguidores e de seguindo, que vale também para perfis privados, e listas de seguidores e de quem a pessoa segue: o dono e os seguidores aceitos veem as listas de perfil privado, e qualquer usuário logado vê as de perfil público, ainda sem telas (#296).
+- Banco de dados preparado para bloquear usuários, com a exclusão de conta cobrindo os bloqueios, ainda sem telas (#294).
+- Limite de volume de pedidos de seguir, contra abuso (#295).
+- Para quem desenvolve: quatro migrations novas (`0022` a `0025`); rodar `pnpm db:migrate` no `flomo-dev` antes dos testes de integração. Em produção, o workflow "Migrations (produção)" aplica ao mesclar.
+
+### Corrigido
+
+- Seguir devolve "não encontrado" quando a linha some logo após ser criada, em vez de falhar sem explicação (#305).
+
 ## [0.11.0] - 2026-11-09
 
 ### Adicionado
