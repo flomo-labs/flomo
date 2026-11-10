@@ -48,7 +48,7 @@ export function BackLink({
         nativeButton={false}
         onClick={onClick}
       >
-        <Icon name="chevronForward" className="rotate-180" />
+        <Icon name="chevronForward" className="-translate-x-[0.5px] rotate-180" />
       </Button>
     );
   }
