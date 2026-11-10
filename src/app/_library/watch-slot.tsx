@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { todayIn } from "@/domain/library/watch-date";
 import { CATALOG_COUNTRY } from "@/domain/catalog/types";
+import { cn } from "cn";
 import { buttonVariants } from "@/components/ui/button";
 import { watchDateLabel } from "@/lib/watch-date-label";
 import { getLibraryState, getUnwatchedEpisodes } from "./state";
@@ -45,7 +46,10 @@ export async function WatchSlot({
           href={loginHref}
           aria-label={t("signIn")}
           title={t("signIn")}
-          className={`${buttonVariants({ variant: "outline" })} col-start-3 row-start-1 row-span-1 mt-0! sm:row-span-3 size-11 self-center rounded-full`}
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "col-start-3 row-start-1 row-span-1 mt-0! sm:row-span-3 size-11 self-center rounded-full",
+          )}
         />
       );
     }
