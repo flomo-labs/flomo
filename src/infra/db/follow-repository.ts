@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { FollowStatus } from "@/contracts/follow";
 import type { FollowRepository } from "@/domain/follow/ports";
 import type { Tx } from "./client";
@@ -72,6 +72,26 @@ export function createFollowRepository(tx: Tx): FollowRepository {
         .where(
           and(pair(followerId, followeeId), eq(follows.status, "requested")),
         );
+    },
+
+    // Pela função `app.pending_follow_requests` (migration 0022): a policy de
+    // `profiles` esconde o perfil privado de quem pediu, e a função devolve só
+    // nome, handle e foto, e só as solicitações do usuário logado.
+    async listPending() {
+      const rows = await tx.execute<{
+        follower_id: string;
+        handle: string;
+        display_name: string | null;
+        avatar_url: string | null;
+        requested_at: Date | string;
+      }>(sql`select * from app.pending_follow_requests()`);
+      return [...rows].map((r) => ({
+        followerId: r.follower_id,
+        handle: r.handle,
+        displayName: r.display_name,
+        avatarUrl: r.avatar_url,
+        requestedAt: new Date(r.requested_at),
+      }));
     },
   };
 }

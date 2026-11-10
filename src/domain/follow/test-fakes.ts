@@ -6,12 +6,19 @@ import type { FollowDeps } from "./ports";
 export function createFakeFollows(world: {
   profiles: string[];
   privateIds?: string[];
+  // Dados de exibição de quem pede (o fake gera um padrão se faltar).
+  people?: Record<
+    string,
+    { handle: string; displayName: string | null; avatarUrl: string | null }
+  >;
 }) {
   const rows: {
     followerId: string;
     followeeId: string;
     status: FollowStatus;
+    requestedAt: Date;
   }[] = [];
+  let tick = 0;
   const find = (followerId: string, followeeId: string) =>
     rows.find(
       (r) => r.followerId === followerId && r.followeeId === followeeId,
@@ -26,7 +33,12 @@ export function createFakeFollows(world: {
         const status = world.privateIds?.includes(followeeId)
           ? "requested"
           : "accepted";
-        rows.push({ followerId, followeeId, status });
+        rows.push({
+          followerId,
+          followeeId,
+          status,
+          requestedAt: new Date(Date.UTC(2026, 0, 1, 0, 0, tick++)),
+        });
         return { status };
       },
       async delete(followerId, followeeId) {
@@ -49,6 +61,20 @@ export function createFakeFollows(world: {
             r.status === "requested",
         );
         if (i >= 0) rows.splice(i, 1);
+      },
+      async listPending(followeeId) {
+        return rows
+          .filter(
+            (r) => r.followeeId === followeeId && r.status === "requested",
+          )
+          .sort((a, b) => b.requestedAt.getTime() - a.requestedAt.getTime())
+          .map((r) => ({
+            followerId: r.followerId,
+            handle: world.people?.[r.followerId]?.handle ?? `u-${r.followerId}`,
+            displayName: world.people?.[r.followerId]?.displayName ?? null,
+            avatarUrl: world.people?.[r.followerId]?.avatarUrl ?? null,
+            requestedAt: r.requestedAt,
+          }));
       },
     },
   };

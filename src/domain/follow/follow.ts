@@ -7,7 +7,7 @@ import {
 } from "@/contracts/follow";
 import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
-import type { FollowDeps } from "./ports";
+import type { FollowDeps, PendingFollowRequest } from "./ports";
 
 // Seguir, deixar de seguir, aceitar e recusar (Fase 2.1). Regras em
 // docs/regras-de-negocio.md, seção Perfil e identidade (Seguidores). Perfil
@@ -84,4 +84,13 @@ export async function declineFollowRequest(
   if (!parsed.success) return fail("INVALID_INPUT", "Pessoa inválida.");
   await deps.follows.decline(user.id, parsed.data.followerId);
   return ok({});
+}
+
+// Lista, para o dono, as solicitações de seguir que esperam resposta. Sem
+// entrada: quem pergunta é sempre o usuário logado, e só vê as próprias.
+export async function listFollowRequests(
+  deps: FollowDeps,
+  user: AuthenticatedUser,
+): Promise<Result<{ requests: PendingFollowRequest[] }, never>> {
+  return ok({ requests: await deps.follows.listPending(user.id) });
 }
