@@ -12,7 +12,7 @@ export default function ConfiguracoesLayout({
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
       <SettingsShell
         backToProfile={
-          <Suspense fallback={<BackLink />}>
+          <Suspense fallback={<BackLink variant="icon" />}>
             <BackToProfile />
           </Suspense>
         }
@@ -35,5 +35,5 @@ async function BackToProfile() {
     profile && !isProvisionalHandle(profile.handle)
       ? profilePath(profile.handle)
       : "/";
-  return <BackLink fallbackHref={href} />;
+  return <BackLink fallbackHref={href} variant="icon" />;
 }

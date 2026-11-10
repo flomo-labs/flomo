@@ -35,11 +35,11 @@ export function SettingsShell({
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3">
         <div className={cn(!isIndex && "max-md:hidden")}>{backToProfile}</div>
         {isIndex ? null : (
           <div className="md:hidden">
-            <BackLink fallbackHref={SETTINGS_INDEX_PATH} />
+            <BackLink fallbackHref={SETTINGS_INDEX_PATH} variant="icon" />
           </div>
         )}
         <h1 className="text-2xl font-bold">Configurações</h1>

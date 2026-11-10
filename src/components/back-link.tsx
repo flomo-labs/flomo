@@ -22,8 +22,36 @@ function canGoBackInApp(): boolean {
 // outro site, ou navegador sem a Navigation API), leva ao `fallbackHref`,
 // a tela-pai de quem usa. É um link de verdade: funciona sem JavaScript, que
 // só troca o clique por "voltar".
-export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
+export function BackLink({
+  fallbackHref = "/",
+  variant = "text",
+}: {
+  fallbackHref?: string;
+  // "icon": círculo só com a seta, para ficar na linha do título (#320).
+  variant?: "text" | "icon";
+}) {
   const router = useRouter();
+  const onClick = (event: React.MouseEvent) => {
+    if (canGoBackInApp()) {
+      event.preventDefault();
+      router.back();
+    }
+  };
+  if (variant === "icon") {
+    return (
+      <Button
+        variant="secondary"
+        size="icon"
+        className="shrink-0 rounded-full"
+        aria-label="Voltar"
+        render={<Link href={fallbackHref} />}
+        nativeButton={false}
+        onClick={onClick}
+      >
+        <Icon name="chevronForward" className="rotate-180" />
+      </Button>
+    );
+  }
   return (
     <Button
       variant="ghost"
@@ -31,12 +59,7 @@ export function BackLink({ fallbackHref = "/" }: { fallbackHref?: string }) {
       className="self-start"
       render={<Link href={fallbackHref} />}
       nativeButton={false}
-      onClick={(event) => {
-        if (canGoBackInApp()) {
-          event.preventDefault();
-          router.back();
-        }
-      }}
+      onClick={onClick}
     >
       <Icon name="arrowBack" data-icon="inline-start" />
       Voltar
