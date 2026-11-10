@@ -17,3 +17,21 @@ export const unfollowInputSchema = z.object({ profileId: z.uuid() });
 export const acceptFollowInputSchema = z.object({ followerId: z.uuid() });
 
 export const declineFollowInputSchema = z.object({ followerId: z.uuid() });
+
+// Páginas das listas de seguidores e de seguindo. O banco limita a página a
+// FOLLOW_LIST_MAX_PAGE_SIZE (função `app.followers_of`, migration 0023).
+export const FOLLOW_LIST_DEFAULT_PAGE_SIZE = 30;
+export const FOLLOW_LIST_MAX_PAGE_SIZE = 100;
+
+export const followCountsInputSchema = z.object({ profileId: z.uuid() });
+
+export const followListInputSchema = z.object({
+  profileId: z.uuid(),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(FOLLOW_LIST_MAX_PAGE_SIZE)
+    .default(FOLLOW_LIST_DEFAULT_PAGE_SIZE),
+  offset: z.number().int().min(0).default(0),
+});

@@ -3,6 +3,9 @@ import {
   acceptFollowRequest,
   declineFollowRequest,
   followUser,
+  getFollowCounts,
+  listFollowers,
+  listFollowing,
   listFollowRequests,
   unfollowUser,
 } from "./follow";
@@ -165,5 +168,122 @@ describe("listFollowRequests", () => {
     await followUser(s.deps, { id: A }, { profileId: ME.id });
     const result = await listFollowRequests(s.deps, { id: B });
     expect(result).toEqual({ ok: true, value: { requests: [] } });
+  });
+});
+
+describe("contagens e listas de seguidores", () => {
+  const OWNER = "55555555-5555-4555-8555-555555555555";
+  const F1 = "66666666-6666-4666-8666-666666666666";
+  const F2 = "77777777-7777-4777-8777-777777777777";
+  const STRANGER = "88888888-8888-4888-8888-888888888888";
+
+  // Dono privado: F1 aceito, F2 pendente; o dono segue PUBLIC.
+  async function build(viewerId: string) {
+    const s = createFakeFollows({
+      viewerId,
+      profiles: [OWNER, F1, F2, STRANGER, PUBLIC],
+      privateIds: [OWNER],
+    });
+    await followUser(s.deps, { id: F1 }, { profileId: OWNER });
+    await followUser(s.deps, { id: F2 }, { profileId: OWNER });
+    await acceptFollowRequest(s.deps, { id: OWNER }, { followerId: F1 });
+    await followUser(s.deps, { id: OWNER }, { profileId: PUBLIC });
+    return s;
+  }
+
+  it("a contagem conta só aceitos e é visível a quem não segue, mesmo em perfil privado", async () => {
+    const s = await build(STRANGER);
+    expect(
+      await getFollowCounts(s.deps, { id: STRANGER }, { profileId: OWNER }),
+    ).toEqual({
+      ok: true,
+      value: { followers: 1, following: 1 },
+    });
+  });
+
+  it("contagem de perfil inexistente ou entrada inválida é erro", async () => {
+    const s = await build(STRANGER);
+    expect(
+      await getFollowCounts(s.deps, { id: STRANGER }, { profileId: MISSING }),
+    ).toMatchObject({
+      error: { code: "PROFILE_NOT_FOUND" },
+    });
+    expect(
+      await getFollowCounts(s.deps, { id: STRANGER }, { profileId: "x" }),
+    ).toMatchObject({
+      error: { code: "INVALID_INPUT" },
+    });
+  });
+
+  it("o dono e o seguidor aceito veem as listas, sem pendentes", async () => {
+    for (const viewer of [OWNER, F1]) {
+      const s = await build(viewer);
+      const followers = await listFollowers(
+        s.deps,
+        { id: viewer },
+        { profileId: OWNER },
+      );
+      expect(
+        followers.ok && followers.value.people.map((p) => p.profileId),
+      ).toEqual([F1]);
+      const following = await listFollowing(
+        s.deps,
+        { id: viewer },
+        { profileId: OWNER },
+      );
+      expect(
+        following.ok && following.value.people.map((p) => p.profileId),
+      ).toEqual([PUBLIC]);
+    }
+  });
+
+  it("em perfil privado, quem não é aceito (estranho ou pendente) recebe lista vazia", async () => {
+    for (const viewer of [STRANGER, F2]) {
+      const s = await build(viewer);
+      expect(
+        await listFollowers(s.deps, { id: viewer }, { profileId: OWNER }),
+      ).toEqual({ ok: true, value: { people: [] } });
+      expect(
+        await listFollowing(s.deps, { id: viewer }, { profileId: OWNER }),
+      ).toEqual({ ok: true, value: { people: [] } });
+    }
+  });
+
+  it("em perfil público, qualquer logado vê as listas", async () => {
+    const s = await build(STRANGER);
+    const followers = await listFollowers(
+      s.deps,
+      { id: STRANGER },
+      { profileId: PUBLIC },
+    );
+    expect(
+      followers.ok && followers.value.people.map((p) => p.profileId),
+    ).toEqual([OWNER]);
+  });
+
+  it("pagina e recusa página inválida", async () => {
+    const s = await build(OWNER);
+    await followUser(s.deps, { id: STRANGER }, { profileId: OWNER });
+    await acceptFollowRequest(s.deps, { id: OWNER }, { followerId: STRANGER });
+    const page = await listFollowers(
+      s.deps,
+      { id: OWNER },
+      { profileId: OWNER, limit: 1, offset: 1 },
+    );
+    expect(page.ok && page.value.people.map((p) => p.profileId)).toEqual([F1]);
+    expect(
+      await listFollowers(
+        s.deps,
+        { id: OWNER },
+        { profileId: OWNER, limit: 0 },
+      ),
+    ).toMatchObject({ error: { code: "INVALID_INPUT" } });
+    expect(
+      await listFollowing(
+        s.deps,
+        { id: OWNER },
+        { profileId: OWNER, limit: 101 },
+      ),
+    ).toMatchObject({ error: { code: "INVALID_INPUT" } });
   });
 });
