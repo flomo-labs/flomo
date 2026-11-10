@@ -1,13 +1,20 @@
 import {
   acceptFollowInputSchema,
   declineFollowInputSchema,
+  followCountsInputSchema,
+  followListInputSchema,
   followInputSchema,
   unfollowInputSchema,
   type FollowStatus,
 } from "@/contracts/follow";
 import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
-import type { FollowDeps, PendingFollowRequest } from "./ports";
+import type {
+  FollowCounts,
+  FollowDeps,
+  FollowListEntry,
+  PendingFollowRequest,
+} from "./ports";
 
 // Seguir, deixar de seguir, aceitar e recusar (Fase 2.1). Regras em
 // docs/regras-de-negocio.md, seção Perfil e identidade (Seguidores). Perfil
@@ -93,4 +100,47 @@ export async function listFollowRequests(
   user: AuthenticatedUser,
 ): Promise<Result<{ requests: PendingFollowRequest[] }, never>> {
   return ok({ requests: await deps.follows.listPending(user.id) });
+}
+
+// Contagens de seguidores e de seguindo de um perfil, visíveis a qualquer
+// usuário logado, mesmo de perfil privado e para quem não o segue.
+export async function getFollowCounts(
+  deps: FollowDeps,
+  _user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<FollowCounts, "INVALID_INPUT" | "PROFILE_NOT_FOUND">> {
+  const parsed = followCountsInputSchema.safeParse(input);
+  if (!parsed.success) return fail("INVALID_INPUT", "Pessoa inválida.");
+  const counts = await deps.follows.counts(parsed.data.profileId);
+  if (!counts) return fail("PROFILE_NOT_FOUND", "Perfil não encontrado.");
+  return ok(counts);
+}
+
+// Listas de seguidores e de seguindo: só o dono e quem o segue com solicitação
+// aceita enxergam. Para os demais a lista vem vazia (a tela sabe se pode
+// mostrá-la pelo `canSeeDetails` do cartão do perfil, que segue a mesma regra).
+export async function listFollowers(
+  deps: FollowDeps,
+  _user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ people: FollowListEntry[] }, "INVALID_INPUT">> {
+  const parsed = followListInputSchema.safeParse(input);
+  if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
+  const { profileId, limit, offset } = parsed.data;
+  return ok({
+    people: await deps.follows.listFollowers(profileId, { limit, offset }),
+  });
+}
+
+export async function listFollowing(
+  deps: FollowDeps,
+  _user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ people: FollowListEntry[] }, "INVALID_INPUT">> {
+  const parsed = followListInputSchema.safeParse(input);
+  if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
+  const { profileId, limit, offset } = parsed.data;
+  return ok({
+    people: await deps.follows.listFollowing(profileId, { limit, offset }),
+  });
 }
