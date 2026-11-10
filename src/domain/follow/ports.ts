@@ -35,6 +35,13 @@ export interface FollowRepository {
   // seguidor aceito não sai por aqui.
   decline(followeeId: string, followerId: string): Promise<void>;
 
+  // Estado do vínculo de `followerId` com `followeeId`; `null` se não segue
+  // nem pediu. Só enxerga o par quando um dos dois é o usuário logado (RLS).
+  statusOf(
+    followerId: string,
+    followeeId: string,
+  ): Promise<FollowStatus | null>;
+
   // Solicitações pendentes (`requested`) feitas ao dono (`followeeId`), da mais
   // recente para a mais antiga. Só devolve as do próprio dono.
   listPending(followeeId: string): Promise<PendingFollowRequest[]>;

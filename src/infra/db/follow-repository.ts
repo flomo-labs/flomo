@@ -74,6 +74,15 @@ export function createFollowRepository(tx: Tx): FollowRepository {
         );
     },
 
+    async statusOf(followerId, followeeId) {
+      const [row] = await tx
+        .select({ status: follows.status })
+        .from(follows)
+        .where(pair(followerId, followeeId));
+      // O CHECK da tabela só deixa passar os valores de FollowStatus.
+      return row ? (row.status as FollowStatus) : null;
+    },
+
     // Pela função `app.pending_follow_requests` (migration 0022): a policy de
     // `profiles` esconde o perfil privado de quem pediu, e a função devolve só
     // nome, handle e foto, e só as solicitações do usuário logado.
