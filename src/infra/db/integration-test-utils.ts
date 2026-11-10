@@ -67,6 +67,12 @@ export async function setFollowLimits(
 // 0025). Os testes que não tratam do limite recebem uma folga enorme, mas só se
 // ainda não houver configuração, para não mexer na que o teste de limite pôs.
 async function ensureFollowLimits(tx: Tx) {
+  // Se o teste já trocou de papel (ex.: `flomo_app`), o insert seria negado:
+  // só o papel administrativo (`role` = none) consegue semear.
+  const [row] = await tx.execute<{ role: string }>(
+    sql`select current_setting('role') as role`,
+  );
+  if (row.role !== "none") return;
   await tx.execute(
     sql`insert into public.follow_limits (window_seconds, max_count)
         select 3600, 1000000
