@@ -8,6 +8,7 @@ import {
   inRollback,
 } from "./integration-test-utils";
 import {
+  blocks,
   comments,
   episodes,
   follows,
@@ -115,6 +116,18 @@ async function followEachOther(tx: Tx, a: string, b: string) {
   );
 }
 
+// Os dois se bloqueiam: cobre as duas colunas de `blocks` (quem bloqueou e quem
+// foi bloqueado). Feito com uma terceira pessoa, fora dos pares que se seguem,
+// porque bloquear apaga o vínculo de seguir entre os dois.
+async function blockEachOther(tx: Tx, a: string, b: string) {
+  await asUser(tx, a, (utx) =>
+    utx.insert(blocks).values({ blockerId: a, blockedId: b }),
+  );
+  await asUser(tx, b, (utx) =>
+    utx.insert(blocks).values({ blockerId: b, blockedId: a }),
+  );
+}
+
 async function countsByTable(tx: Tx, columns: UserColumn[], userId: string) {
   const counts: Record<string, number> = {};
   for (const col of columns) {
@@ -145,6 +158,9 @@ describe("exclusão de conta", () => {
       const bystander = await createUser(tx);
       await followEachOther(tx, owner, other);
       await followEachOther(tx, other, bystander);
+      const blocked = await createUser(tx);
+      await blockEachOther(tx, owner, blocked);
+      await blockEachOther(tx, other, blocked);
       const columns = await userColumns(tx);
 
       // O preparo cobre todas as tabelas: sem isso, "zero depois" não prova
