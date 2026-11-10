@@ -186,4 +186,30 @@ describe("contagens e listas de seguidores (migration 0023)", () => {
         }),
       );
     }));
+
+  it("relationsWith diz como o usuário logado se liga a cada pessoa da lista", () =>
+    inRollback(async (tx) => {
+      const s = await scene(tx);
+      // `accepted` segue o dono (aceito); o dono segue `followed`; `pending`
+      // pediu para seguir o dono.
+      const ids = [s.accepted.id, s.pending.id, s.followed.id, s.stranger.id];
+      const fromOwner = await asUser(tx, s.owner.id, (t) =>
+        createFollowRepository(t).relationsWith(s.owner.id, ids),
+      );
+      expect(fromOwner).toEqual([
+        { profileId: s.accepted.id, following: null, followsViewer: true },
+        { profileId: s.pending.id, following: null, followsViewer: false },
+        {
+          profileId: s.followed.id,
+          following: "accepted",
+          followsViewer: false,
+        },
+        { profileId: s.stranger.id, following: null, followsViewer: false },
+      ]);
+      expect(
+        await asUser(tx, s.owner.id, (t) =>
+          createFollowRepository(t).relationsWith(s.owner.id, []),
+        ),
+      ).toEqual([]);
+    }));
 });

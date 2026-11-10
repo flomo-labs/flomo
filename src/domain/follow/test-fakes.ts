@@ -88,6 +88,13 @@ export function createFakeFollows(world: {
       async statusOf(followerId, followeeId) {
         return find(followerId, followeeId)?.status ?? null;
       },
+      async relationsWith(viewerId, profileIds) {
+        return profileIds.map((profileId) => ({
+          profileId,
+          following: find(viewerId, profileId)?.status ?? null,
+          followsViewer: find(profileId, viewerId)?.status === "accepted",
+        }));
+      },
       async listPending(followeeId) {
         return rows
           .filter(

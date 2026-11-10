@@ -24,6 +24,12 @@ export type FollowListEntry = {
   followedAt: Date;
 };
 
+export type FollowRelation = {
+  profileId: string;
+  following: FollowStatus | null;
+  followsViewer: boolean;
+};
+
 // Porta dos vínculos de seguir, implementada em infra/ (ADR-001). Dentro do
 // `withUser`, o RLS limita as linhas a quem é seguidor ou seguido. O estado de
 // nascimento (`accepted` ou `requested`) vem do banco, nunca do cliente.
@@ -54,6 +60,15 @@ export interface FollowRepository {
     followerId: string,
     followeeId: string,
   ): Promise<FollowStatus | null>;
+
+  // Como `viewerId` se relaciona com cada pessoa de `profileIds`, numa só
+  // consulta (para os botões das listas): `following` é o estado do vínculo
+  // dele com ela (`null` se não segue) e `followsViewer` diz se ela o segue
+  // (só aceito). Só enxerga os pares em que um dos dois é o usuário logado (RLS).
+  relationsWith(
+    viewerId: string,
+    profileIds: string[],
+  ): Promise<FollowRelation[]>;
 
   // Solicitações pendentes (`requested`) feitas ao dono (`followeeId`), da mais
   // recente para a mais antiga. Só devolve as do próprio dono.
