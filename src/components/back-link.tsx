@@ -50,7 +50,7 @@ export function BackLink({
       >
         <Icon
           name="chevronForward"
-          className="-translate-x-[0.5px] rotate-180"
+          className="size-4 -translate-x-[0.5px] rotate-180 pointer-coarse:size-5.5"
         />
       </Button>
     );
