@@ -8,14 +8,24 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
-- Regras de seguir pessoas no servidor: seguir, deixar de seguir, pedir para seguir perfil privado, aceitar e recusar, ainda sem telas (#75).
-- Leitura, para o dono, das solicitações de seguir pendentes, com nome, handle e foto de quem pediu, ainda sem tela (#303).
 - Botão Seguir, Seguindo e Solicitado no perfil, aviso de perfil privado e, para o dono, lista de solicitações pendentes com aceitar e recusar (#76).
 - No perfil de quem já segue você, aparece a indicação "Segue você" e o botão vira "Seguir de volta"; cancelar uma solicitação pendente segue clicando em "Solicitado" (#297).
 
+## [0.12.2] - 2026-11-10
+
 ### Alterado
 
-- Página de título carrega mais rápido: o título fica em cache por algumas horas (sinopse e nota do TMDB podem demorar a atualizar), o pôster carrega com prioridade e fontes pouco usadas deixam de ser baixadas antecipadamente (#242).
+- Página de título carrega mais rápido: o título fica em cache por algumas horas (sinopse e nota do TMDB podem demorar a atualizar), o pôster carrega com prioridade e fontes pouco usadas deixam de ser baixadas antecipadamente (#324).
+
+## [0.12.1] - 2026-11-10
+
+### Corrigido
+
+- No celular, o card de episódio deixou de mostrar a frase longa "Entre para marcar o que você já viu" para quem não entrou: agora há só o círculo de marcar, que leva a entrar, e o texto do episódio usa a largura inteira (#310).
+
+## [0.12.0] - 2026-11-10
+
+Base do seguir pessoas no servidor, ainda sem telas.
 
 ## [0.11.0] - 2026-11-09
 
@@ -93,7 +103,10 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.11.0...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/flomo-labs/flomo/compare/v0.12.1...v0.12.2
+[0.12.1]: https://github.com/flomo-labs/flomo/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/flomo-labs/flomo/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/flomo-labs/flomo/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/flomo-labs/flomo/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/flomo-labs/flomo/releases/tag/v0.9.0
