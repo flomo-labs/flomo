@@ -18,7 +18,7 @@ async function chooseHandle(page: Page) {
 
 async function makePrivate(page: Page) {
   await page.goto("/configuracoes");
-  await page.getByLabel("Perfil privado").check();
+  await page.getByRole("checkbox", { name: "Perfil privado" }).click();
   await page
     .getByRole("button", { name: /^Salvar/ })
     .first()
@@ -51,6 +51,8 @@ test("seguir perfil público, deixar de seguir", async ({ browser }) => {
 });
 
 test("perfil privado: solicitar, aceitar e recusar", async ({ browser }) => {
+  // Três cadastros e várias ações de servidor: passa dos 30 s padrão.
+  test.setTimeout(120_000);
   const owner = await browser.newContext();
   const x = await browser.newContext();
   const y = await browser.newContext();
