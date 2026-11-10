@@ -71,7 +71,9 @@ test("perfil privado: solicitar, aceitar e recusar", async ({ browser }) => {
     await page.goto(`/@${handleOwner}`);
     await expect(page.getByText(/Este perfil é privado/)).toBeVisible();
     await page.getByRole("button", { name: /^Seguir / }).click();
-    await expect(page.getByRole("button", { name: "Solicitado" })).toBeVisible({
+    await expect(
+      page.getByRole("button", { name: /^Cancelar solicitação / }),
+    ).toBeVisible({
       timeout: SLOW,
     });
   }
