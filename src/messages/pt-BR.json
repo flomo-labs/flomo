@@ -308,7 +308,8 @@
     "notFoundTitle": "Perfil não encontrado",
     "notFound": "Este perfil não existe.",
     "privateNotice": "Este perfil é privado. Peça para seguir para ver a bio e os números, quando {name} aceitar.",
-    "privateRequested": "Solicitação enviada. Você verá a bio e os números quando {name} aceitar."
+    "privateRequested": "Solicitação enviada. Você verá a bio e os números quando {name} aceitar.",
+    "blockedNotice": "Você bloqueou {name}. Desbloqueie para voltar a seguir."
   },
   "ProfileEdit": {
     "handle": "Nome de usuário",
@@ -349,5 +350,21 @@
     "declineAria": "Recusar {name}",
     "accepted": "{name} agora segue você.",
     "declined": "Solicitação de {name} recusada."
+  },
+  "bloqueios": {
+    "block": "Bloquear",
+    "unblock": "Desbloquear",
+    "confirmTitle": "Bloquear {name}?",
+    "confirmDescription": "{name} deixa de seguir você e você deixa de seguir {name}, e nenhum dos dois consegue seguir o outro enquanto o bloqueio durar. {name} deixa de ver seu perfil, que passa a aparecer como não encontrado. Você pode desbloquear a qualquer momento, mas o vínculo de seguir não volta: será preciso seguir de novo.",
+    "confirm": "Bloquear",
+    "cancel": "Cancelar",
+    "blockAria": "Bloquear {name}",
+    "unblockAria": "Desbloquear {name}",
+    "blocked": "Você bloqueou {name}.",
+    "unblocked": "Você desbloqueou {name}.",
+    "failed": "Não foi possível concluir agora. Tente de novo.",
+    "sectionTitle": "Pessoas bloqueadas",
+    "sectionDescription": "Quem você bloqueou não vê seu perfil e não pode seguir você. Só nome e @usuário aparecem aqui.",
+    "empty": "Você não bloqueou ninguém."
   }
 }

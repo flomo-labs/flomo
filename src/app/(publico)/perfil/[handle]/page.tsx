@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
+import { loadHasBlocked } from "@/app/_block/queries";
 import { loadFollowRequests, loadFollowStatus } from "@/app/_follow/queries";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { BlockButton } from "@/components/block/block-button";
 import { FollowButton } from "@/components/follow/follow-button";
 import { FollowRequests } from "@/components/follow/follow-requests";
 import { RoadmapTeaser } from "@/components/roadmap-teaser";
@@ -59,11 +61,29 @@ async function ProfileContent({
   const { profile, stats, isOwn } = result.value;
   const t = await getTranslations("Profile");
   const tf = await getTranslations("seguidores");
+  const tb = await getTranslations("bloqueios");
   const name = profile.displayName ?? `@${profile.handle}`;
-  const [followStatus, requests] = await Promise.all([
+  // Quem bloqueou vê só nome e handle da pessoa (o cartão já vem sem bio nem
+  // números); no lugar de Seguir, o botão Desbloquear. Perfil próprio não tem
+  // Bloquear nem Seguir.
+  const [followStatus, requests, isBlocked] = await Promise.all([
     isOwn ? null : loadFollowStatus(user, profile.id),
     isOwn ? loadFollowRequests(user) : [],
+    isOwn ? false : loadHasBlocked(user, profile.id),
   ]);
+  const blockLabels = {
+    block: tb("block"),
+    unblock: tb("unblock"),
+    confirmTitle: tb("confirmTitle", { name: "{name}" }),
+    confirmDescription: tb("confirmDescription", { name: "{name}" }),
+    confirm: tb("confirm"),
+    cancel: tb("cancel"),
+    blockAria: tb("blockAria", { name: "{name}" }),
+    unblockAria: tb("unblockAria", { name: "{name}" }),
+    blocked: tb("blocked", { name: "{name}" }),
+    unblocked: tb("unblocked", { name: "{name}" }),
+    failed: tb("failed"),
+  };
 
   return (
     <article className="flex flex-col gap-8">
@@ -103,24 +123,34 @@ async function ProfileContent({
             {t("edit")}
           </Button>
         ) : (
-          <FollowButton
-            profileId={profile.id}
-            name={name}
-            status={followStatus}
-            labels={{
-              follow: tf("follow"),
-              following: tf("following"),
-              requested: tf("requested"),
-              followAria: tf("followAria", { name: "{name}" }),
-              unfollowAria: tf("unfollowAria", { name: "{name}" }),
-              cancelAria: tf("cancelAria", { name: "{name}" }),
-              nowFollowing: tf("nowFollowing", { name: "{name}" }),
-              nowRequested: tf("nowRequested", { name: "{name}" }),
-              unfollowed: tf("unfollowed", { name: "{name}" }),
-              cancelled: tf("cancelled", { name: "{name}" }),
-              failed: tf("failed"),
-            }}
-          />
+          <div className="flex flex-col items-end gap-1">
+            {isBlocked ? null : (
+              <FollowButton
+                profileId={profile.id}
+                name={name}
+                status={followStatus}
+                labels={{
+                  follow: tf("follow"),
+                  following: tf("following"),
+                  requested: tf("requested"),
+                  followAria: tf("followAria", { name: "{name}" }),
+                  unfollowAria: tf("unfollowAria", { name: "{name}" }),
+                  cancelAria: tf("cancelAria", { name: "{name}" }),
+                  nowFollowing: tf("nowFollowing", { name: "{name}" }),
+                  nowRequested: tf("nowRequested", { name: "{name}" }),
+                  unfollowed: tf("unfollowed", { name: "{name}" }),
+                  cancelled: tf("cancelled", { name: "{name}" }),
+                  failed: tf("failed"),
+                }}
+              />
+            )}
+            <BlockButton
+              profileId={profile.id}
+              name={name}
+              blocked={isBlocked}
+              labels={blockLabels}
+            />
+          </div>
         )}
       </header>
       {isOwn && requests.length > 0 ? (
@@ -142,9 +172,11 @@ async function ProfileContent({
         <StatsList stats={stats} label={t("stats")} />
       ) : (
         <p className="text-muted-foreground">
-          {followStatus === "requested"
-            ? t("privateRequested", { name })
-            : t("privateNotice", { name })}
+          {isBlocked
+            ? t("blockedNotice", { name })
+            : followStatus === "requested"
+              ? t("privateRequested", { name })
+              : t("privateNotice", { name })}
         </p>
       )}
       {isOwn ? (
