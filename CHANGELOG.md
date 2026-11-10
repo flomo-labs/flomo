@@ -10,6 +10,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 - Regras de seguir pessoas no servidor: seguir, deixar de seguir, pedir para seguir perfil privado, aceitar e recusar, ainda sem telas (#75).
 - Leitura, para o dono, das solicitações de seguir pendentes, com nome, handle e foto de quem pediu, ainda sem tela (#303).
+- Botão Seguir, Seguindo e Solicitado no perfil, aviso de perfil privado e, para o dono, lista de solicitações pendentes com aceitar e recusar (#76).
 
 ## [0.11.0] - 2026-11-09
 
