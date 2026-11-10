@@ -10,10 +10,13 @@ import type { FollowStatus } from "@/contracts/follow";
 
 export type FollowButtonLabels = {
   follow: string;
+  // "Seguir de volta": quando a pessoa já segue o usuário logado.
+  followBack: string;
   following: string;
   requested: string;
   // Nomes acessíveis, com `{name}`.
   followAria: string;
+  followBackAria: string;
   unfollowAria: string;
   cancelAria: string;
   // Avisos.
@@ -26,7 +29,7 @@ export type FollowButtonLabels = {
 
 const fill = (text: string, name: string) => text.replace("{name}", () => name);
 
-// Seguir / Seguindo / Solicitado no perfil de outra pessoa. Seguir e
+// Seguir (ou Seguir de volta) / Seguindo / Solicitado no perfil de outra pessoa. Seguir e
 // "Solicitado" (perfil privado) mudam para o estado que o banco devolveu;
 // clicar em "Seguindo" deixa de seguir e em "Solicitado" cancela o pedido.
 // Enquanto a ação roda o botão fica desabilitado (clique repetido não faz nada).
@@ -34,12 +37,15 @@ export function FollowButton({
   profileId,
   name,
   status,
+  followsYou = false,
   labels,
 }: {
   profileId: string;
   // Nome para os avisos e nomes acessíveis.
   name: string;
   status: FollowStatus | null;
+  // A pessoa do perfil segue quem está logado: o botão vira "Seguir de volta".
+  followsYou?: boolean;
   labels: FollowButtonLabels;
 }) {
   const router = useRouter();
@@ -92,13 +98,17 @@ export function FollowButton({
 
   const text =
     current === null
-      ? labels.follow
+      ? followsYou
+        ? labels.followBack
+        : labels.follow
       : current === "requested"
         ? labels.requested
         : labels.following;
   const aria = fill(
     current === null
-      ? labels.followAria
+      ? followsYou
+        ? labels.followBackAria
+        : labels.followAria
       : current === "requested"
         ? labels.cancelAria
         : labels.unfollowAria,

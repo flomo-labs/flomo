@@ -98,3 +98,33 @@ test("perfil privado: solicitar, aceitar e recusar", async ({ browser }) => {
   await x.close();
   await y.close();
 });
+
+test("quem é seguido vê 'Segue você' e pode seguir de volta", async ({
+  browser,
+}) => {
+  const a = await browser.newContext();
+  const b = await browser.newContext();
+  const pageA = await a.newPage();
+  const pageB = await b.newPage();
+  await signUpAndSignIn(a);
+  await signUpAndSignIn(b);
+  const handleA = await chooseHandle(pageA);
+  const handleB = await chooseHandle(pageB);
+
+  await pageB.goto(`/@${handleA}`);
+  await pageB.getByRole("button", { name: /^Seguir / }).click();
+  await expect(
+    pageB.getByRole("button", { name: /^Deixar de seguir / }),
+  ).toBeVisible({ timeout: SLOW });
+
+  await pageA.goto(`/@${handleB}`);
+  await expect(pageA.getByText("Segue você")).toBeVisible();
+  const back = pageA.getByRole("button", { name: /de volta$/ });
+  await expect(back).toHaveText("Seguir de volta");
+  await back.click();
+  await expect(
+    pageA.getByRole("button", { name: /^Deixar de seguir / }),
+  ).toBeVisible({ timeout: SLOW });
+  await a.close();
+  await b.close();
+});
