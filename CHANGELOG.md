@@ -6,6 +6,8 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+## [0.12.2] - 2026-11-10
+
 ### Alterado
 
 - Página de título carrega mais rápido: o título fica em cache por algumas horas (sinopse e nota do TMDB podem demorar a atualizar), o pôster carrega com prioridade e fontes pouco usadas deixam de ser baixadas antecipadamente (#324).
@@ -109,7 +111,8 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.1...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/flomo-labs/flomo/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/flomo-labs/flomo/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/flomo-labs/flomo/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/flomo-labs/flomo/compare/v0.10.0...v0.11.0
