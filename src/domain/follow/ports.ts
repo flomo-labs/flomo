@@ -29,12 +29,13 @@ export type FollowListEntry = {
 // nascimento (`accepted` ou `requested`) vem do banco, nunca do cliente.
 export interface FollowRepository {
   // Cria o vínculo e devolve o estado que o banco deu. Se já existe, devolve o
-  // estado atual (nunca duas linhas para o mesmo par). `not_found` se a pessoa
-  // seguida não existe.
+  // estado atual (nunca duas linhas para o mesmo par; isso não gasta limite).
+  // `not_found` se a pessoa seguida não existe; `rate_limited` se quem pede
+  // passou do limite de vínculos criados em pouco tempo (o banco decide).
   insert(
     followerId: string,
     followeeId: string,
-  ): Promise<{ status: FollowStatus } | "not_found">;
+  ): Promise<{ status: FollowStatus } | "not_found" | "rate_limited">;
 
   // Deixa de seguir ou cancela a solicitação; não falha se não há vínculo.
   delete(followerId: string, followeeId: string): Promise<void>;
