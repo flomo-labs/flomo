@@ -57,6 +57,9 @@ export function createFollowRepository(tx: Tx): FollowRepository {
             .select({ status: follows.status })
             .from(follows)
             .where(pair(followerId, followeeId));
+          // Sem linha: o perfil (ou o vínculo) foi apagado entre o insert e a
+          // leitura. Mesmo desfecho da violação da chave estrangeira.
+          if (!row) return "not_found" as const;
           // O CHECK da tabela só deixa passar os valores de FollowStatus.
           return { status: row.status as FollowStatus };
         });
