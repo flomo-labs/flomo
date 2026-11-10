@@ -42,13 +42,16 @@ export function BackLink({
       <Button
         variant="secondary"
         size="icon"
-        className="shrink-0 rounded-full"
+        className="shrink-0 rounded-full border-border"
         aria-label="Voltar"
         render={<Link href={fallbackHref} />}
         nativeButton={false}
         onClick={onClick}
       >
-        <Icon name="chevronForward" className="-translate-x-[0.5px] rotate-180" />
+        <Icon
+          name="chevronForward"
+          className="-translate-x-[0.5px] rotate-180"
+        />
       </Button>
     );
   }
