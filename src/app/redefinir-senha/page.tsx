@@ -5,6 +5,11 @@ import { Icon } from "@/components/icon";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  isRecentSignIn,
+  RESET_PASSWORD_MAX_AGE_MS,
+} from "@/domain/account/recent-sign-in";
+import { signedInAt } from "@/infra/auth/supabase";
 import { getCurrentUser } from "../_auth/session";
 import { ResetPasswordForm } from "../_auth/reset-password-form";
 
@@ -26,11 +31,21 @@ export default function RedefinirSenhaPage() {
   );
 }
 
-// Sem sessão, o link do e-mail venceu, já foi usado ou foi aberto em outro
+// Sem sessão (ou com uma entrada de mais de 10 minutos, ver
+// RESET_PASSWORD_MAX_AGE_MS), o link do e-mail venceu, já foi usado ou foi aberto em outro
 // navegador: a tela explica e deixa pedir outro.
 async function ResetPasswordContent() {
   const user = await getCurrentUser();
-  if (user) return <ResetPasswordForm />;
+  if (
+    user &&
+    isRecentSignIn(
+      signedInAt(user.claims),
+      new Date(),
+      RESET_PASSWORD_MAX_AGE_MS,
+    )
+  ) {
+    return <ResetPasswordForm />;
+  }
 
   return (
     <div className="flex flex-col items-start gap-3" role="status">
