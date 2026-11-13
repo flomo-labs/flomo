@@ -6,6 +6,12 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ## [Não lançado]
 
+## [0.12.4] - 2026-11-13
+
+### Segurança
+
+- A tela de senha nova da redefinição agora só abre para quem acabou de entrar pelo link do e-mail; sessões antigas veem "Link vencido ou já usado" (#341).
+
 ## [0.12.3] - 2026-11-10
 
 ### Corrigido
@@ -117,7 +123,8 @@ Primeira versão do teste beta (MVP).
 - Filtro do Descobrir rola para o lado no celular quando passa da tela (#196, #197).
 - Contorno no botão de fechar dos diálogos (#194).
 
-[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.3...HEAD
+[Não lançado]: https://github.com/flomo-labs/flomo/compare/v0.12.4...HEAD
+[0.12.4]: https://github.com/flomo-labs/flomo/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/flomo-labs/flomo/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/flomo-labs/flomo/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/flomo-labs/flomo/compare/v0.12.0...v0.12.1
