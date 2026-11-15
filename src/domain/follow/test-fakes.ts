@@ -8,6 +8,9 @@ export function createFakeFollows(world: {
   viewerId?: string;
   profiles: string[];
   privateIds?: string[];
+  // Imita o gatilho de limite do banco: quantos vínculos cada pessoa pode criar.
+  // Desfazer não devolve o limite (o registro da criação continua).
+  createLimit?: number;
   // Dados de exibição de quem pede (o fake gera um padrão se faltar).
   people?: Record<
     string,
@@ -21,6 +24,7 @@ export function createFakeFollows(world: {
     requestedAt: Date;
   }[] = [];
   let tick = 0;
+  const created = new Map<string, number>();
   const find = (followerId: string, followeeId: string) =>
     rows.find(
       (r) => r.followerId === followerId && r.followeeId === followeeId,
@@ -53,6 +57,11 @@ export function createFakeFollows(world: {
         if (!world.profiles.includes(followeeId)) return "not_found";
         const existing = find(followerId, followeeId);
         if (existing) return { status: existing.status };
+        const used = created.get(followerId) ?? 0;
+        if (world.createLimit !== undefined && used >= world.createLimit) {
+          return "rate_limited";
+        }
+        created.set(followerId, used + 1);
         const status = world.privateIds?.includes(followeeId)
           ? "requested"
           : "accepted";

@@ -8,8 +8,12 @@ import {
   newPasswordSchema,
   passwordResetRequestSchema,
 } from "@/contracts/credentials";
+import {
+  isRecentSignIn,
+  RESET_PASSWORD_MAX_AGE_MS,
+} from "@/domain/account/recent-sign-in";
 import { unlinkSignInMethod } from "@/domain/account/unlink-sign-in-method";
-import type { EmailAuthFailure } from "@/infra/auth/supabase";
+import { signedInAt, type EmailAuthFailure } from "@/infra/auth/supabase";
 import { destinationAfterLogin } from "../_profile/queries";
 import { RESET_PASSWORD_PATH, safeNextPath } from "./redirect";
 import { resolveSiteUrl } from "./site-url";
@@ -249,14 +253,25 @@ async function savePassword(password: string): Promise<NewPasswordState> {
 }
 
 // Define a senha nova na sessão aberta pelo link do e-mail (a volta de
-// /auth/callback). Sem sessão, o link venceu ou já foi usado. Formato de
-// `useActionState`.
+// /auth/callback). Sem sessão, o link venceu ou já foi usado; com sessão antiga,
+// qualquer outra entrada (inclusive uma sessão roubada) ficaria trocando a
+// senha sem conhecer a atual, então só vale a entrada dos últimos minutos.
+// Formato de `useActionState`.
 export async function resetPassword(
   _previous: NewPasswordState,
   formData: FormData,
 ): Promise<NewPasswordState> {
   const user = await getCurrentUser();
   if (!user) return { error: "UNAUTHENTICATED" };
+  if (
+    !isRecentSignIn(
+      signedInAt(user.claims),
+      new Date(),
+      RESET_PASSWORD_MAX_AGE_MS,
+    )
+  ) {
+    return { error: "UNAUTHENTICATED" };
+  }
   const input = newPasswordInput(
     formData.get("password"),
     formData.get("confirmPassword"),
