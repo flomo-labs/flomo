@@ -13,4 +13,9 @@ export const SETTINGS_GROUPS = [
     label: "Conta",
     description: "Formas de entrar, senha e excluir conta",
   },
+  {
+    href: "/configuracoes/privacidade",
+    label: "Privacidade",
+    description: "Pessoas bloqueadas",
+  },
 ] as const;
