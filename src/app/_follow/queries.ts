@@ -17,6 +17,18 @@ export function loadFollowStatus(
   );
 }
 
+// Se a pessoa do perfil segue o usuário logado (vínculo aceito; pedido
+// pendente não conta). O RLS deixa o seguido ler a própria linha.
+export async function loadFollowsMe(
+  user: CurrentUser,
+  profileId: string,
+): Promise<boolean> {
+  const status = await withUser(user.claims, (tx) =>
+    createFollowRepository(tx).statusOf(profileId, user.id),
+  );
+  return status === "accepted";
+}
+
 // Solicitações pendentes feitas ao usuário logado, da mais recente à mais antiga.
 export async function loadFollowRequests(user: CurrentUser) {
   const result = await withUser(user.claims, (tx) =>

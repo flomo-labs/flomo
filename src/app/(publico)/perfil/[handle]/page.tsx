@@ -4,7 +4,11 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
-import { loadFollowRequests, loadFollowStatus } from "@/app/_follow/queries";
+import {
+  loadFollowRequests,
+  loadFollowStatus,
+  loadFollowsMe,
+} from "@/app/_follow/queries";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
 import { FollowButton } from "@/components/follow/follow-button";
@@ -60,8 +64,9 @@ async function ProfileContent({
   const t = await getTranslations("Profile");
   const tf = await getTranslations("seguidores");
   const name = profile.displayName ?? `@${profile.handle}`;
-  const [followStatus, requests] = await Promise.all([
+  const [followStatus, followsMe, requests] = await Promise.all([
     isOwn ? null : loadFollowStatus(user, profile.id),
+    isOwn ? false : loadFollowsMe(user, profile.id),
     isOwn ? loadFollowRequests(user) : [],
   ]);
 
@@ -76,6 +81,11 @@ async function ProfileContent({
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold break-words">{name}</h1>
           <p className="text-muted-foreground break-words">@{profile.handle}</p>
+          {followsMe ? (
+            <Badge variant="outline" className="w-fit">
+              {tf("followsYou")}
+            </Badge>
+          ) : null}
           {profile.isPrivate ? (
             <Badge
               variant="secondary"
@@ -107,11 +117,14 @@ async function ProfileContent({
             profileId={profile.id}
             name={name}
             status={followStatus}
+            followsYou={followsMe}
             labels={{
               follow: tf("follow"),
+              followBack: tf("followBack"),
               following: tf("following"),
               requested: tf("requested"),
               followAria: tf("followAria", { name: "{name}" }),
+              followBackAria: tf("followBackAria", { name: "{name}" }),
               unfollowAria: tf("unfollowAria", { name: "{name}" }),
               cancelAria: tf("cancelAria", { name: "{name}" }),
               nowFollowing: tf("nowFollowing", { name: "{name}" }),
