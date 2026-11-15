@@ -10,10 +10,12 @@ import {
   unfollowUser,
   type FollowErrorCode,
 } from "@/domain/follow/follow";
-import { fail, type Result } from "@/domain/result";
+import { loadMorePeopleInputSchema } from "@/contracts/follow";
+import { fail, ok, type Result } from "@/domain/result";
 import { withUser } from "@/infra/db/client";
 import { createFollowRepository } from "@/infra/db/follow-repository";
 import { getCurrentUser } from "../_auth/session";
+import { loadFollowList } from "./queries";
 
 // Camada fina (ADR-004): resolve o usuário, chama o caso de uso dentro do
 // `withUser` (RLS) e atualiza a página do perfil. A regra fica em
@@ -78,4 +80,17 @@ export async function listRequests() {
   return run((deps, user) => listFollowRequests(deps, user), undefined, {
     revalidate: false,
   });
+}
+
+// Próximo trecho das listas de seguidores e de seguindo, chamado pela rolagem
+// infinita. Quem pode ver a lista é decidido pelo banco (RLS), como na página.
+export async function loadMorePeople(input: unknown) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  const parsed = loadMorePeopleInputSchema.safeParse(input);
+  if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
+  const { profileId, kind, offset } = parsed.data;
+  return ok(await loadFollowList(user, profileId, kind, offset));
 }

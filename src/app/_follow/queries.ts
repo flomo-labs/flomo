@@ -8,6 +8,7 @@ import {
 } from "@/domain/follow/follow";
 import { withUser } from "@/infra/db/client";
 import { createFollowRepository } from "@/infra/db/follow-repository";
+import type { FollowListItem } from "@/components/follow/infinite-person-list";
 import type { CurrentUser } from "../_auth/session";
 
 // Leituras para a página do perfil (as escritas ficam em actions.ts).
@@ -63,22 +64,23 @@ export const FOLLOW_LIST_PAGE_SIZE = 30;
 
 export type FollowListKind = "followers" | "following";
 
-// Uma página da lista (do vínculo mais recente ao mais antigo) com a relação
-// do usuário logado com cada pessoa, para os botões. Busca uma a mais que a
-// página para saber se há próxima. Para quem não pode ver a lista volta vazia
-// (a regra é do banco).
+// Um trecho da lista (do vínculo mais recente ao mais antigo), a partir de
+// `offset`, com a relação do usuário logado com cada pessoa, para o menu.
+// Busca uma a mais que o trecho para saber se há mais. Para quem não pode ver
+// a lista volta vazia (a regra é do banco). A tela carrega o primeiro trecho
+// no servidor e os outros conforme a rolagem (`loadMorePeople`).
 export async function loadFollowList(
   user: CurrentUser,
   profileId: string,
   kind: FollowListKind,
-  page: number,
-) {
+  offset: number,
+): Promise<{ items: FollowListItem[]; hasMore: boolean }> {
   return withUser(user.claims, async (tx) => {
     const follows = createFollowRepository(tx);
     const input = {
       profileId,
       limit: FOLLOW_LIST_PAGE_SIZE + 1,
-      offset: (page - 1) * FOLLOW_LIST_PAGE_SIZE,
+      offset,
     };
     const result = await (kind === "followers"
       ? listFollowers({ follows }, { id: user.id }, input)
@@ -90,11 +92,18 @@ export async function loadFollowList(
       people.map((p) => p.profileId),
     );
     return {
-      people: people.map((person) => ({
-        ...person,
-        relation: relations.find((r) => r.profileId === person.profileId),
-      })),
-      hasNext: all.length > FOLLOW_LIST_PAGE_SIZE,
+      items: people.map((person) => {
+        const relation = relations.find((r) => r.profileId === person.profileId);
+        return {
+          profileId: person.profileId,
+          handle: person.handle,
+          displayName: person.displayName,
+          following: relation?.following ?? null,
+          followsYou: relation?.followsViewer ?? false,
+          isSelf: person.profileId === user.id,
+        };
+      }),
+      hasMore: all.length > FOLLOW_LIST_PAGE_SIZE,
     };
   });
 }

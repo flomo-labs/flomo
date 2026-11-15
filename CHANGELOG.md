@@ -12,7 +12,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 - Bloquear e desbloquear pessoas: o botão Bloquear fica no perfil de outra pessoa, com diálogo de confirmação; o vínculo de seguir some nos dois sentidos e quem foi bloqueado deixa de ver o perfil. Em Configurações > Privacidade, a lista de pessoas bloqueadas tem o botão Desbloquear (#298).
 - Configurações ganha uma coluna de grupos ao lado do conteúdo no computador e uma lista de grupos no celular: Perfil (`/configuracoes/perfil`), Conta (`/configuracoes/conta`) e Privacidade (`/configuracoes/privacidade`) (#320).
 - O botão Seguir avisa quando o limite de pedidos de seguir foi atingido (#322).
-- Remover seguidor: na lista de seguidores do próprio perfil, cada pessoa tem o botão Remover, com confirmação (a pessoa deixa de seguir, não é avisada e pode pedir de novo) (#352).
+- Remover seguidor: na lista de seguidores do próprio perfil, cada pessoa tem um menu "⋮" (no lugar dos botões Seguir e Seguindo) com Seguir/Deixar de seguir e Remover seguidor, com confirmação (a pessoa deixa de seguir, não é avisada e pode pedir de novo). As telas Seguidores e Seguindo passam a ter só o título, o Voltar igual ao de Configurações e rolagem infinita no lugar das páginas: mais pessoas carregam conforme você desliza (#352).
 - Base para remover seguidor: o dono do perfil já pode remover um seguidor aceito pelo servidor; o botão na tela vem em outra tarefa (#351).
 
 ### Alterado

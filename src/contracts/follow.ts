@@ -37,3 +37,11 @@ export const followListInputSchema = z.object({
     .default(FOLLOW_LIST_DEFAULT_PAGE_SIZE),
   offset: z.number().int().min(0).default(0),
 });
+
+// Rolagem infinita das listas de seguidores e de seguindo: `offset` é quantas
+// pessoas a tela já carregou.
+export const loadMorePeopleInputSchema = z.object({
+  profileId: z.uuid(),
+  kind: z.enum(["followers", "following"]),
+  offset: z.number().int().min(0).max(100_000),
+});
