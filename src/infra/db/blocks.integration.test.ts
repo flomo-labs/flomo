@@ -337,3 +337,73 @@ describe("app.blocked_profiles", () => {
       ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
     }));
 });
+
+describe("blocks: listas e contagens de terceiros", () => {
+  const listOf = (tx: Tx, fn: "followers_of" | "following_of", id: string) =>
+    tx.execute<{ profile_id: string }>(
+      fn === "followers_of"
+        ? sql`select profile_id from app.followers_of(${id}::uuid)`
+        : sql`select profile_id from app.following_of(${id}::uuid)`,
+    );
+  const countsOf = (tx: Tx, id: string) =>
+    tx.execute<{ followers_count: number; following_count: number }>(
+      sql`select * from app.follow_counts(${id}::uuid)`,
+    );
+
+  it("o bloqueado não vê quem o bloqueou em followers_of, following_of nem follow_counts", () =>
+    inRollback(async (tx) => {
+      const blocker = await createProfile(tx);
+      const blocked = await createProfile(tx);
+      const third = await createProfile(tx);
+      const other = await createProfile(tx);
+      // blocker segue third e é seguido por third; other também segue third.
+      await asUser(tx, blocker.id, (utx) => follow(utx, blocker.id, third.id));
+      await asUser(tx, third.id, (utx) => follow(utx, third.id, blocker.id));
+      await asUser(tx, other.id, (utx) => follow(utx, other.id, third.id));
+      await asUser(tx, third.id, (utx) => follow(utx, third.id, other.id));
+      await asUser(tx, blocker.id, (utx) => block(utx, blocker.id, blocked.id));
+
+      await asUser(tx, blocked.id, async (utx) => {
+        expect(
+          [...(await listOf(utx, "followers_of", third.id))].map(
+            (r) => r.profile_id,
+          ),
+        ).toEqual([other.id]);
+        expect(
+          [...(await listOf(utx, "following_of", third.id))].map(
+            (r) => r.profile_id,
+          ),
+        ).toEqual([other.id]);
+        expect([...(await countsOf(utx, third.id))]).toEqual([
+          { followers_count: 1, following_count: 1 },
+        ]);
+      });
+    }));
+
+  it("quem bloqueou e terceiros continuam vendo tudo", () =>
+    inRollback(async (tx) => {
+      const blocker = await createProfile(tx);
+      const blocked = await createProfile(tx);
+      const third = await createProfile(tx);
+      const other = await createProfile(tx);
+      await asUser(tx, blocker.id, (utx) => follow(utx, blocker.id, third.id));
+      await asUser(tx, third.id, (utx) => follow(utx, third.id, blocker.id));
+      await asUser(tx, other.id, (utx) => follow(utx, other.id, third.id));
+      await asUser(tx, third.id, (utx) => follow(utx, third.id, other.id));
+      await asUser(tx, blocker.id, (utx) => block(utx, blocker.id, blocked.id));
+
+      for (const viewer of [blocker.id, other.id]) {
+        await asUser(tx, viewer, async (utx) => {
+          expect(
+            [...(await listOf(utx, "followers_of", third.id))],
+          ).toHaveLength(2);
+          expect(
+            [...(await listOf(utx, "following_of", third.id))],
+          ).toHaveLength(2);
+          expect([...(await countsOf(utx, third.id))]).toEqual([
+            { followers_count: 2, following_count: 2 },
+          ]);
+        });
+      }
+    }));
+});
