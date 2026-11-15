@@ -41,6 +41,7 @@ Base do seguir pessoas no servidor, ainda sem telas.
 - Contagem de seguidores e de seguindo, que vale também para perfis privados, e listas de seguidores e de quem a pessoa segue: o dono e os seguidores aceitos veem as listas de perfil privado, e qualquer usuário logado vê as de perfil público, ainda sem telas (#296).
 - Banco de dados preparado para bloquear usuários, com a exclusão de conta cobrindo os bloqueios, ainda sem telas (#294).
 - Limite de volume de pedidos de seguir, contra abuso (#295).
+- Botão Seguir, Seguindo e Solicitado no perfil, aviso de perfil privado e, para o dono, lista de solicitações pendentes com aceitar e recusar (#76).
 - Para quem desenvolve: quatro migrations novas (`0022` a `0025`); rodar `pnpm db:migrate` no `flomo-dev` antes dos testes de integração. Em produção, o workflow "Migrations (produção)" aplica ao mesclar.
 
 ### Corrigido
