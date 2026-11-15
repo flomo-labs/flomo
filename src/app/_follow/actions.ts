@@ -6,6 +6,7 @@ import {
   declineFollowRequest,
   followUser,
   listFollowRequests,
+  removeFollower,
   unfollowUser,
   type FollowErrorCode,
 } from "@/domain/follow/follow";
@@ -60,6 +61,10 @@ export async function acceptRequest(input: unknown) {
 
 export async function declineRequest(input: unknown) {
   return run(declineFollowRequest, input);
+}
+
+export async function removeFollowerAction(input: unknown) {
+  return run(removeFollower, input);
 }
 
 // Leitura: não muda nada, então não revalida a página.

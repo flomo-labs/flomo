@@ -6,6 +6,7 @@ import {
   declineFollowRequest,
   followUser,
   listFollowRequests,
+  removeFollower,
   unfollowUser,
 } from "@/domain/follow/follow";
 import type { Tx } from "./client";
@@ -110,6 +111,51 @@ describe("seguir contra o banco", () => {
       );
       await decline();
       expect(await followRows(tx, me, owner.id)).toHaveLength(1);
+    }));
+
+  it("remover seguidor: o dono remove; terceiro não; pendente fica; o ex-seguidor segue de novo", () =>
+    inRollback(async (tx) => {
+      const owner = await createPerson(tx, true);
+      const me = await createUser(tx);
+      const stranger = await createUser(tx);
+      await run(tx, me, (t) =>
+        followUser(deps(t), { id: me }, { profileId: owner.id }),
+      );
+      const remove = (by: string, followerId = me) =>
+        run(tx, by, (t) =>
+          removeFollower(deps(t), { id: by }, { followerId }),
+        );
+      // Pendente não é seguidor: nada some.
+      expect(await remove(owner.id)).toMatchObject({
+        value: { removed: false },
+      });
+      expect(await followRows(tx, me, owner.id)).toHaveLength(1);
+      await run(tx, owner.id, (t) =>
+        acceptFollowRequest(deps(t), { id: owner.id }, { followerId: me }),
+      );
+      // Terceiro tenta remover o seguidor do dono: não apaga nada.
+      expect(await remove(stranger)).toMatchObject({
+        value: { removed: false },
+      });
+      expect(await followRows(tx, me, owner.id)).toHaveLength(1);
+      // O próprio seguidor não se remove por aqui (é o "deixar de seguir").
+      expect(await remove(me, owner.id)).toMatchObject({
+        value: { removed: false },
+      });
+      expect(await followRows(tx, me, owner.id)).toHaveLength(1);
+      expect(await remove(owner.id)).toMatchObject({
+        value: { removed: true },
+      });
+      expect(await followRows(tx, me, owner.id)).toHaveLength(0);
+      expect(await remove(owner.id)).toMatchObject({
+        value: { removed: false },
+      });
+      // O ex-seguidor volta a pedir (perfil privado: solicitação).
+      expect(
+        await run(tx, me, (t) =>
+          followUser(deps(t), { id: me }, { profileId: owner.id }),
+        ),
+      ).toMatchObject({ value: { status: "requested" } });
     }));
 
   it("só o seguido aceita: o próprio solicitante e estranhos não conseguem", () =>

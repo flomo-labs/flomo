@@ -4,6 +4,7 @@ import {
   followCountsInputSchema,
   followListInputSchema,
   followInputSchema,
+  removeFollowerInputSchema,
   unfollowInputSchema,
   type FollowStatus,
 } from "@/contracts/follow";
@@ -16,7 +17,7 @@ import type {
   PendingFollowRequest,
 } from "./ports";
 
-// Seguir, deixar de seguir, aceitar e recusar (Fase 2.1). Regras em
+// Seguir, deixar de seguir, aceitar, recusar e remover seguidor (Fase 2.1). Regras em
 // docs/regras-de-negocio.md, seção Perfil e identidade (Seguidores). Perfil
 // público é seguido direto; perfil privado recebe uma solicitação. Quem decide
 // o estado é o banco (gatilho), então o caso de uso só repassa o que voltou.
@@ -101,6 +102,23 @@ export async function declineFollowRequest(
   if (!parsed.success) return fail("INVALID_INPUT", "Pessoa inválida.");
   await deps.follows.decline(user.id, parsed.data.followerId);
   return ok({});
+}
+
+// O dono (o seguido) remove um seguidor aceito. Quem não segue, ou só tem
+// solicitação pendente (essa se recusa), não perde nada: `removed` vem `false`
+// em vez de erro. O ex-seguidor pode pedir para seguir de novo.
+export async function removeFollower(
+  deps: FollowDeps,
+  user: AuthenticatedUser,
+  input: unknown,
+): Promise<Result<{ removed: boolean }, "INVALID_INPUT">> {
+  const parsed = removeFollowerInputSchema.safeParse(input);
+  if (!parsed.success) return fail("INVALID_INPUT", "Pessoa inválida.");
+  const removed = await deps.follows.removeFollower(
+    user.id,
+    parsed.data.followerId,
+  );
+  return ok({ removed });
 }
 
 // Lista, para o dono, as solicitações de seguir que esperam resposta. Sem
