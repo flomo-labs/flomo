@@ -64,7 +64,13 @@ export async function declineRequest(input: unknown) {
 }
 
 export async function removeFollowerAction(input: unknown) {
-  return run(removeFollower, input);
+  const result = await run(removeFollower, input);
+  // As listas do dono e de quem deixou de seguir também mudam.
+  if (result.ok) {
+    revalidatePath("/perfil/[handle]/seguidores", "page");
+    revalidatePath("/perfil/[handle]/seguindo", "page");
+  }
+  return result;
 }
 
 // Leitura: não muda nada, então não revalida a página.

@@ -6,10 +6,11 @@ import { loadProfilePage, profilePath } from "@/app/_profile/queries";
 import { BackLink } from "@/components/back-link";
 import { EmptyState } from "@/components/empty-state";
 import { FollowButton } from "@/components/follow/follow-button";
+import { RemoveFollowerButton } from "@/components/follow/remove-follower-button";
 import { PersonList, PersonRow } from "@/components/follow/person-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { followButtonLabels } from "./labels";
+import { followButtonLabels, removeFollowerLabels } from "./labels";
 import { loadFollowList, type FollowListKind } from "./queries";
 
 // Páginas /@handle/seguidores e /@handle/seguindo: a lista do vínculo mais
@@ -40,6 +41,9 @@ export async function FollowListPage({
     ? await loadFollowList(user, profile.id, kind, page)
     : null;
   const labels = followButtonLabels(tf);
+  // Só o dono remove seguidor, e só na lista de seguidores dele.
+  const canRemove = kind === "followers" && profile.id === user.id;
+  const removeLabels = canRemove ? removeFollowerLabels(tf) : null;
 
   return (
     <div className="flex max-w-reading flex-col gap-6">
@@ -86,6 +90,13 @@ export async function FollowListPage({
                       labels={labels}
                     />
                   )}
+                  {removeLabels && person.profileId !== user.id ? (
+                    <RemoveFollowerButton
+                      followerId={person.profileId}
+                      name={personName}
+                      labels={removeLabels}
+                    />
+                  ) : null}
                 </PersonRow>
               );
             })}

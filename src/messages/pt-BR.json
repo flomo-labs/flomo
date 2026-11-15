@@ -366,7 +366,14 @@
     "emptyFollowing": "Ainda não segue ninguém.",
     "listLocked": "Só quem segue {name} vê esta lista.",
     "previousPage": "Anterior",
-    "nextPage": "Próxima"
+    "nextPage": "Próxima",
+    "removeFollower": "Remover",
+    "removeFollowerAria": "Remover {name} dos seus seguidores",
+    "removeFollowerTitle": "Remover {name} dos seus seguidores?",
+    "removeFollowerDescription": "{name} deixa de seguir você e não é avisado(a). Se quiser, pode pedir para seguir de novo.",
+    "removeFollowerConfirm": "Remover seguidor",
+    "removeFollowerCancel": "Cancelar",
+    "followerRemoved": "{name} não segue mais você."
   },
   "bloqueios": {
     "block": "Bloquear",
