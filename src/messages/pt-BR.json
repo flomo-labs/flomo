@@ -351,6 +351,19 @@
     "acceptAria": "Aceitar {name}",
     "declineAria": "Recusar {name}",
     "accepted": "{name} agora segue você.",
-    "declined": "Solicitação de {name} recusada."
+    "declined": "Solicitação de {name} recusada.",
+    "countsLabel": "Seguidores e seguindo",
+    "followersLabel": "{count, plural, one {seguidor} other {seguidores}}",
+    "followingLabel": "seguindo",
+    "followersTitle": "Seguidores",
+    "followingTitle": "Seguindo",
+    "followersOf": "Seguidores de {name}",
+    "followingOf": "Quem {name} segue",
+    "backToProfile": "Voltar ao perfil",
+    "emptyFollowers": "Ainda não há seguidores por aqui.",
+    "emptyFollowing": "Ainda não segue ninguém.",
+    "listLocked": "Só quem segue {name} vê esta lista.",
+    "previousPage": "Anterior",
+    "nextPage": "Próxima"
   }
 }
