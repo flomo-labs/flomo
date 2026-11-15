@@ -63,6 +63,11 @@ function cardOf(tx: Tx, handle: string) {
   }>(sql`select handle, bio, can_see_details from app.profile_card(${handle})`);
 }
 
+// Só os bloqueios de quem foi criado no teste, sem depender de linhas
+// residuais de uso manual no flomo-dev.
+const blocksBy = (tx: Tx, blockerId: string) =>
+  tx.select().from(blocks).where(eq(blocks.blockerId, blockerId));
+
 describe("blocks: RLS", () => {
   it("anônimo não toca na tabela", () =>
     inRollback(async (tx) => {
@@ -135,10 +140,10 @@ describe("blocks: RLS", () => {
 
       for (const intruder of [target, stranger]) {
         await asUser(tx, intruder, (utx) => utx.delete(blocks));
-        expect(await tx.select().from(blocks)).toHaveLength(1);
+        expect(await blocksBy(tx, me)).toHaveLength(1);
       }
       await asUser(tx, me, (utx) => utx.delete(blocks));
-      expect(await tx.select().from(blocks)).toHaveLength(0);
+      expect(await blocksBy(tx, me)).toHaveLength(0);
     }));
 });
 
