@@ -26,14 +26,14 @@ type Labels = {
   mediaNav: string;
   allProviders: string;
   trending: string;
-  // Começo do título de "Em alta" sem serviço ("Em alta esta semana em").
+  // Começo do título de "Em alta" sem serviço ("Em alta em").
   trendingLead: string;
   nowPlaying: string;
   media: Record<MediaSegment, string>;
 };
 
 // Descobrir: o serviço é um seletor no próprio título de "Em alta" ("Em alta
-// esta semana em Todos", "Em alta no Netflix") e o tipo (Tudo, Séries,
+// em Todos", "Em alta no Netflix") e o tipo (Tudo, Séries,
 // Filmes) fica à direita do título; os dois valem para todas as listas. Sem
 // serviço ("Todos"): "Em alta" e "Nos cinemas" (esta só tem filmes, então some
 // com "Séries"). Com serviço: só "Em alta no serviço X". As listas chegam prontas do
@@ -122,7 +122,7 @@ export function DiscoverBrowser({
   // no celular o texto fica sozinho em cima e o seletor e o filtro dividem a
   // linha de baixo, o filtro sempre à direita.
   const header = (id: string, lead: string) => (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
       <h2 id={id} className="text-section-title-lg">
         {lead}
       </h2>
