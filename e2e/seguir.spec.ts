@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { signUpAndSignIn } from "./support/auth";
+import { ensureFollowLimits } from "./support/follow-limits";
 
 // Seguir no perfil (Fase 2.1, #76): perfil público segue direto; perfil
 // privado recebe solicitação, que o dono aceita ou recusa. Duas pessoas, cada
 // uma em seu contexto de navegador.
 const SLOW = 15_000;
+
+test.beforeAll(ensureFollowLimits);
 
 async function chooseHandle(page: Page) {
   const handle = `e2e.${randomUUID().slice(0, 8)}`;
