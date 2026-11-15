@@ -106,6 +106,22 @@ describe("followUser: limite de volume", () => {
   });
 });
 
+describe("followUser: ambiente sem limite configurado", () => {
+  it("devolve FOLLOW_LIMITS_NOT_CONFIGURED com mensagem clara e não cria vínculo", async () => {
+    const s = createFakeFollows({
+      profiles: [ME.id, PUBLIC],
+      limitsNotConfigured: true,
+    });
+    const result = await followUser(s.deps, ME, { profileId: PUBLIC });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "FOLLOW_LIMITS_NOT_CONFIGURED" },
+    });
+    expect(JSON.stringify(result)).toContain("Tente de novo mais tarde");
+    expect(s.rows).toHaveLength(0);
+  });
+});
+
 describe("unfollowUser", () => {
   it("deixa de seguir e cancela solicitação pendente; sem vínculo não falha", async () => {
     const s = setup();

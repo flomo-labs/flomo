@@ -1,5 +1,5 @@
 import { eq, inArray, sql } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { followUser, unfollowUser } from "@/domain/follow/follow";
 import { withUser, type Tx } from "./client";
 import { createFollowRepository } from "./follow-repository";
@@ -117,13 +117,23 @@ describe("limite de pedidos de seguir no banco", () => {
       const [me, a] = await people(tx, 2);
       await setFollowLimits(tx, []);
       // Sem `asUser` de propósito: ele repõe uma configuração de folga.
-      await expect(
-        withUser(
+      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const result = await withUser(
           { sub: me, role: "authenticated" },
           (t) => followUser(deps(t), { id: me }, { profileId: a }),
           tx,
-        ),
-      ).rejects.toThrow(/follow_limits/);
+        );
+        expect(result).toMatchObject({
+          ok: false,
+          error: { code: "FOLLOW_LIMITS_NOT_CONFIGURED" },
+        });
+        expect(spy).toHaveBeenCalledWith(
+          expect.stringContaining("follow_limits"),
+        );
+      } finally {
+        spy.mockRestore();
+      }
     }));
 
   it("o cliente não lê nem altera a configuração nem os registros", () =>

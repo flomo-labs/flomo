@@ -71,11 +71,12 @@ export function createFollowRepository(tx: Tx): FollowRepository {
           return "rate_limited" as const;
         }
         if (hasErrorCode(error, FOLLOW_LIMIT_NOT_CONFIGURED)) {
-          // Erro de configuração do ambiente, não do usuário: sobe como falha.
-          throw new Error(
+          // Erro de configuração do ambiente, não do usuário: o caso de uso
+          // devolve um código próprio e registra o motivo no log do servidor.
+          console.error(
             "Limite de pedidos de seguir não configurado: grave ao menos uma linha em follow_limits (ver docs/regras-de-negocio.md).",
-            { cause: error },
           );
+          return "not_configured" as const;
         }
         throw error;
       }
