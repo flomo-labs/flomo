@@ -17,6 +17,10 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 - No Descobrir, o título "Em alta esta semana em" passou a "Em alta em" e o espaço até o seletor de serviço ficou menor (#343).
 
+### Segurança
+
+- Quem bloqueou você deixa de aparecer nos dados de perfil de quem foi bloqueado (#317).
+
 ## [0.12.4] - 2026-11-13
 
 ### Segurança
