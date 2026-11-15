@@ -117,7 +117,11 @@ describe("followUser: ambiente sem limite configurado", () => {
       ok: false,
       error: { code: "FOLLOW_LIMITS_NOT_CONFIGURED" },
     });
-    expect(JSON.stringify(result)).toContain("Tente de novo mais tarde");
+    expect(result).toMatchObject({
+      error: {
+        message: "Não foi possível seguir agora. Tente de novo mais tarde.",
+      },
+    });
     expect(s.rows).toHaveLength(0);
   });
 });

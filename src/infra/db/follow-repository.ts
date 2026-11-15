@@ -75,6 +75,7 @@ export function createFollowRepository(tx: Tx): FollowRepository {
           // devolve um código próprio e registra o motivo no log do servidor.
           console.error(
             "Limite de pedidos de seguir não configurado: grave ao menos uma linha em follow_limits (ver docs/regras-de-negocio.md).",
+            error,
           );
           return "not_configured" as const;
         }

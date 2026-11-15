@@ -130,6 +130,7 @@ describe("limite de pedidos de seguir no banco", () => {
         });
         expect(spy).toHaveBeenCalledWith(
           expect.stringContaining("follow_limits"),
+          expect.anything(),
         );
       } finally {
         spy.mockRestore();
