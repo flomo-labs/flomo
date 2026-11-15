@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import type { Tx } from "./client";
 import {
@@ -46,6 +46,20 @@ function statusOf(tx: Tx, followerId: string, followeeId: string) {
       and(
         eq(follows.followerId, followerId),
         eq(follows.followeeId, followeeId),
+      ),
+    );
+}
+
+// Só as linhas das pessoas criadas no teste: o flomo-dev pode ter linhas
+// residuais de uso manual, e a tabela inteira não é um estado conhecido.
+function followRows(tx: Tx, ...personIds: string[]) {
+  return tx
+    .select()
+    .from(follows)
+    .where(
+      or(
+        inArray(follows.followerId, personIds),
+        inArray(follows.followeeId, personIds),
       ),
     );
 }
@@ -226,7 +240,7 @@ describe("follows: RLS", () => {
       await asUser(tx, owner.id, (utx) =>
         utx.delete(follows).where(eq(follows.followerId, other)),
       );
-      expect(await tx.select().from(follows)).toHaveLength(0);
+      expect(await followRows(tx, me, other, owner.id)).toHaveLength(0);
     }));
 
   it("apagar um perfil leva os seguidores junto", () =>
@@ -235,7 +249,7 @@ describe("follows: RLS", () => {
       const me = await createUser(tx);
       await asUser(tx, me, (utx) => follow(utx, me, owner.id));
       await tx.execute(sql`delete from auth.users where id = ${me}`);
-      expect(await tx.select().from(follows)).toHaveLength(0);
+      expect(await followRows(tx, me, owner.id)).toHaveLength(0);
     }));
 });
 

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import {
@@ -32,6 +32,20 @@ function run<T>(tx: Tx, userId: string, fn: Parameters<typeof asUser<T>>[2]) {
   return asUser(tx, userId, fn);
 }
 
+// Só as linhas das pessoas criadas no teste: o flomo-dev pode ter linhas
+// residuais de uso manual, e a tabela inteira não é um estado conhecido.
+function followRows(tx: Tx, ...personIds: string[]) {
+  return tx
+    .select()
+    .from(follows)
+    .where(
+      or(
+        inArray(follows.followerId, personIds),
+        inArray(follows.followeeId, personIds),
+      ),
+    );
+}
+
 const deps = (tx: Tx) => ({ follows: createFollowRepository(tx) });
 
 describe("seguir contra o banco", () => {
@@ -48,7 +62,7 @@ describe("seguir contra o banco", () => {
       );
       expect(first).toEqual({ ok: true, value: { status: "accepted" } });
       expect(again).toEqual(first);
-      expect(await tx.select().from(follows)).toHaveLength(1);
+      expect(await followRows(tx, me, owner.id)).toHaveLength(1);
     }));
 
   it("perfil privado: solicita; o dono aceita e quem pediu passa a seguir", () =>
@@ -65,7 +79,7 @@ describe("seguir contra o banco", () => {
           acceptFollowRequest(deps(t), { id: owner.id }, { followerId: me }),
         ),
       ).toMatchObject({ ok: true });
-      const [row] = await tx.select().from(follows);
+      const [row] = await followRows(tx, me, owner.id);
       expect(row.status).toBe("accepted");
       // Aceitar de novo (duplo clique) não é erro.
       expect(
@@ -89,13 +103,13 @@ describe("seguir contra o banco", () => {
         );
       await follow();
       await decline();
-      expect(await tx.select().from(follows)).toHaveLength(0);
+      expect(await followRows(tx, me, owner.id)).toHaveLength(0);
       expect(await follow()).toMatchObject({ value: { status: "requested" } });
       await run(tx, owner.id, (t) =>
         acceptFollowRequest(deps(t), { id: owner.id }, { followerId: me }),
       );
       await decline();
-      expect(await tx.select().from(follows)).toHaveLength(1);
+      expect(await followRows(tx, me, owner.id)).toHaveLength(1);
     }));
 
   it("só o seguido aceita: o próprio solicitante e estranhos não conseguem", () =>
@@ -113,7 +127,7 @@ describe("seguir contra o banco", () => {
           ),
         ).toMatchObject({ error: { code: "REQUEST_NOT_FOUND" } });
       }
-      const [row] = await tx.select().from(follows);
+      const [row] = await followRows(tx, me, owner.id);
       expect(row.status).toBe("requested");
     }));
 
@@ -138,7 +152,7 @@ describe("seguir contra o banco", () => {
           ),
         ).toMatchObject({ ok: true });
       }
-      const rows = await tx.select().from(follows);
+      const rows = await followRows(tx, me, other, pub.id, priv.id);
       expect(rows).toEqual([expect.objectContaining({ followerId: other })]);
     }));
 
