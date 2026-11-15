@@ -119,7 +119,7 @@ test("bloquear e desbloquear: vínculo desfeito e perfil escondido do bloqueado"
   ).toBeVisible({ timeout: SLOW });
   await expect(a.page.getByRole("button", { name: /^Seguir / })).toHaveCount(0);
   await a.page.goto(`/@${a.handle}`);
-  await expect(counts(a.page)).toContainText("0 seguidores");
+  await expect(counts(a.page)).toContainText("0 seguidor");
 
   // Para B, o perfil de A passa a não existir; o vínculo dele foi desfeito.
   await b.page.goto(`/@${a.handle}`);
@@ -258,6 +258,6 @@ test("excluir a conta apaga os vínculos de seguir", async ({ browser }) => {
     b.page.getByRole("heading", { name: "Perfil não encontrado" }),
   ).toBeVisible();
   await b.page.goto(`/@${b.handle}`);
-  await expect(counts(b.page)).toContainText("0 seguidores");
+  await expect(counts(b.page)).toContainText("0 seguidor");
   await expect(counts(b.page)).toContainText("0 seguindo");
 });

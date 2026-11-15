@@ -27,7 +27,8 @@ Precisa de Docker e da CLI do Supabase (`pnpm dlx supabase@2.121.0`).
    `PUBLISHABLE_KEY` (ou `ANON_KEY`) e `DB_URL`.
 3. Num terminal só para o E2E, defina `NEXT_PUBLIC_SUPABASE_URL` (o `API_URL`),
    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL` e
-   `DATABASE_URL_MIGRATIONS` (os dois com o `DB_URL`),
+   `DATABASE_URL_MIGRATIONS` (os dois com o `DB_URL`), `SUPABASE_SECRET_KEY`
+   (o `SECRET_KEY`, ou `SERVICE_ROLE_KEY`; o app a usa para excluir a conta),
    `NEXT_PUBLIC_SITE_URL=http://localhost:3000`,
    `TMDB_READ_ACCESS_TOKEN=e2e-tmdb-falso` e
    `TMDB_BASE_URL=http://localhost:3999/3`.

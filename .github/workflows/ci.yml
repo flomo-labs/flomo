@@ -110,6 +110,7 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY:-$ANON_KEY}"
             echo "DATABASE_URL=$DB_URL"
             echo "DATABASE_URL_MIGRATIONS=$DB_URL"
+            echo "SUPABASE_SECRET_KEY=${SECRET_KEY:-$SERVICE_ROLE_KEY}"
           } >> "$GITHUB_ENV"
 
       - run: pnpm db:migrate
