@@ -10,10 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function Page({
-  params,
-  searchParams,
-}: PageProps<"/perfil/[handle]/seguindo">) {
+export default function Page({ params }: PageProps<"/perfil/[handle]/seguindo">) {
   return (
     <Suspense
       fallback={
@@ -22,21 +19,19 @@ export default function Page({
         </LoadingRegion>
       }
     >
-      <Content params={params} searchParams={searchParams} />
+      <Content params={params} />
     </Suspense>
   );
 }
 
 async function Content({
   params,
-  searchParams,
-}: Pick<PageProps<"/perfil/[handle]/seguindo">, "params" | "searchParams">) {
+}: Pick<PageProps<"/perfil/[handle]/seguindo">, "params">) {
   const { handle } = await params;
   return (
     <FollowListPage
       kind="following"
       handle={handle}
-      searchParams={searchParams}
     />
   );
 }

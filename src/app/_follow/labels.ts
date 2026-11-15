@@ -1,5 +1,6 @@
 import type { getTranslations } from "next-intl/server";
 import type { FollowButtonLabels } from "@/components/follow/follow-button";
+import type { RemoveFollowerLabels } from "@/components/follow/remove-follower-dialog";
 
 type FollowTranslator = Awaited<
   ReturnType<typeof getTranslations<"seguidores">>
@@ -22,5 +23,20 @@ export function followButtonLabels(tf: FollowTranslator): FollowButtonLabels {
     cancelled: tf("cancelled", { name: "{name}" }),
     failed: tf("failed"),
     rateLimited: tf("rateLimited"),
+  };
+}
+
+// Textos do `RemoveFollowerDialog` e do item do menu (lista de seguidores do dono); `{name}` é preenchido no cliente.
+export function removeFollowerLabels(
+  tf: FollowTranslator,
+): RemoveFollowerLabels {
+  return {
+    menuItem: tf("removeFollower"),
+    confirmTitle: tf("removeFollowerTitle", { name: "{name}" }),
+    confirmDescription: tf("removeFollowerDescription", { name: "{name}" }),
+    confirm: tf("removeFollowerConfirm"),
+    cancel: tf("removeFollowerCancel"),
+    removed: tf("followerRemoved", { name: "{name}" }),
+    failed: tf("failed"),
   };
 }
