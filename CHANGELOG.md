@@ -20,6 +20,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 ### Segurança
 
 - Quem bloqueou você deixa de aparecer nos dados de perfil de quem foi bloqueado (#317).
+- Para quem desenvolve: uma migration nova (`0026`); rodar `pnpm db:migrate` no `flomo-dev` antes dos testes de integração. Em produção, o workflow "Migrations (produção)" aplica ao mesclar na `main`.
 
 ## [0.12.4] - 2026-11-13
 
