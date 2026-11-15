@@ -27,7 +27,8 @@ export type FollowErrorCode =
   | "CANNOT_FOLLOW_SELF"
   | "PROFILE_NOT_FOUND"
   | "REQUEST_NOT_FOUND"
-  | "RATE_LIMITED";
+  | "RATE_LIMITED"
+  | "FOLLOW_LIMITS_NOT_CONFIGURED";
 
 // Seguir de novo quem já se segue (ou já se pediu) devolve o estado atual: o
 // duplo clique não vira erro nem cria outra linha.
@@ -42,6 +43,7 @@ export async function followUser(
     | "CANNOT_FOLLOW_SELF"
     | "PROFILE_NOT_FOUND"
     | "RATE_LIMITED"
+    | "FOLLOW_LIMITS_NOT_CONFIGURED"
   >
 > {
   const parsed = followInputSchema.safeParse(input);
@@ -58,6 +60,12 @@ export async function followUser(
     return fail(
       "RATE_LIMITED",
       "Você fez muitos pedidos para seguir em pouco tempo. Tente de novo mais tarde.",
+    );
+  }
+  if (created === "not_configured") {
+    return fail(
+      "FOLLOW_LIMITS_NOT_CONFIGURED",
+      "Não foi possível seguir agora. Tente de novo mais tarde.",
     );
   }
   return ok(created);

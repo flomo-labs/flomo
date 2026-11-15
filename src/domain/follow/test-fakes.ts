@@ -11,6 +11,8 @@ export function createFakeFollows(world: {
   // Imita o gatilho de limite do banco: quantos vínculos cada pessoa pode criar.
   // Desfazer não devolve o limite (o registro da criação continua).
   createLimit?: number;
+  // Imita o ambiente sem linha em `follow_limits`: criar vínculo falha fechado.
+  limitsNotConfigured?: boolean;
   // Dados de exibição de quem pede (o fake gera um padrão se faltar).
   people?: Record<
     string,
@@ -57,6 +59,7 @@ export function createFakeFollows(world: {
         if (!world.profiles.includes(followeeId)) return "not_found";
         const existing = find(followerId, followeeId);
         if (existing) return { status: existing.status };
+        if (world.limitsNotConfigured) return "not_configured";
         const used = created.get(followerId) ?? 0;
         if (world.createLimit !== undefined && used >= world.createLimit) {
           return "rate_limited";

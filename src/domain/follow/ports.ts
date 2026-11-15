@@ -37,11 +37,14 @@ export interface FollowRepository {
   // Cria o vínculo e devolve o estado que o banco deu. Se já existe, devolve o
   // estado atual (nunca duas linhas para o mesmo par; isso não gasta limite).
   // `not_found` se a pessoa seguida não existe; `rate_limited` se quem pede
-  // passou do limite de vínculos criados em pouco tempo (o banco decide).
+  // passou do limite de vínculos criados em pouco tempo (o banco decide);
+  // `not_configured` se o ambiente não tem limite gravado (falha fechada).
   insert(
     followerId: string,
     followeeId: string,
-  ): Promise<{ status: FollowStatus } | "not_found" | "rate_limited">;
+  ): Promise<
+    { status: FollowStatus } | "not_found" | "rate_limited" | "not_configured"
+  >;
 
   // Deixa de seguir ou cancela a solicitação; não falha se não há vínculo.
   delete(followerId: string, followeeId: string): Promise<void>;
