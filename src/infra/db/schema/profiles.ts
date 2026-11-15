@@ -62,6 +62,16 @@ export const profiles = pgTable(
       to: authenticatedRole,
       using: sql`not ${t.isPrivate} or ${t.id} = ${currentUserId}`,
     }),
+    // Restritiva (soma-se à policy acima com AND): quem foi bloqueado não lê a
+    // linha de quem o bloqueou (#317). A função é security definer porque a
+    // policy de `blocks` esconde do bloqueado a linha do bloqueio; ela vive na
+    // migration 0026, escrita à mão.
+    pgPolicy("profiles_select_hide_blocker", {
+      as: "restrictive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`not app.is_blocked_by(${t.id})`,
+    }),
     pgPolicy("profiles_update_own", {
       for: "update",
       to: authenticatedRole,

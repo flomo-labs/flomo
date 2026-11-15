@@ -183,6 +183,13 @@
       "when": 1794294044414,
       "tag": "0025_limite_pedidos_seguir",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794725581627,
+      "tag": "0026_esconder_perfil_do_bloqueador",
+      "breakpoints": true
     }
   ]
 }
