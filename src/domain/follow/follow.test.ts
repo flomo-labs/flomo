@@ -61,6 +61,49 @@ describe("followUser", () => {
   });
 });
 
+describe("followUser: limite de volume", () => {
+  const OTHER = "55555555-5555-4555-8555-555555555555";
+
+  it("abaixo do limite segue normalmente; acima, recusa com RATE_LIMITED e mensagem clara", async () => {
+    const s = createFakeFollows({
+      profiles: [ME.id, PUBLIC, PRIVATE, OTHER],
+      createLimit: 2,
+    });
+    expect(await followUser(s.deps, ME, { profileId: PUBLIC })).toMatchObject({
+      ok: true,
+    });
+    expect(await followUser(s.deps, ME, { profileId: PRIVATE })).toMatchObject({
+      ok: true,
+    });
+    const blocked = await followUser(s.deps, ME, { profileId: OTHER });
+    expect(blocked).toMatchObject({ error: { code: "RATE_LIMITED" } });
+    expect(JSON.stringify(blocked)).toContain("Tente de novo mais tarde");
+    expect(s.rows).toHaveLength(2);
+  });
+
+  it("seguir de novo quem já segue não gasta limite", async () => {
+    const s = createFakeFollows({
+      profiles: [ME.id, PUBLIC, PRIVATE],
+      createLimit: 1,
+    });
+    await followUser(s.deps, ME, { profileId: PUBLIC });
+    expect(await followUser(s.deps, ME, { profileId: PUBLIC })).toMatchObject({
+      ok: true,
+    });
+  });
+
+  it("seguir e desfazer em ciclo também conta", async () => {
+    const s = createFakeFollows({ profiles: [ME.id, PUBLIC], createLimit: 2 });
+    for (let i = 0; i < 2; i++) {
+      await followUser(s.deps, ME, { profileId: PUBLIC });
+      await unfollowUser(s.deps, ME, { profileId: PUBLIC });
+    }
+    expect(await followUser(s.deps, ME, { profileId: PUBLIC })).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+  });
+});
+
 describe("unfollowUser", () => {
   it("deixa de seguir e cancela solicitação pendente; sem vínculo não falha", async () => {
     const s = setup();

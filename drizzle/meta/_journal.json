@@ -176,6 +176,13 @@
       "when": 1794287338970,
       "tag": "0024_bloqueios",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794294044414,
+      "tag": "0025_limite_pedidos_seguir",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+  bigserial,
   boolean,
   check,
   index,
+  integer,
   pgPolicy,
   pgTable,
   primaryKey,
@@ -247,3 +249,41 @@ export const blocks = pgTable(
     }),
   ],
 );
+
+// Limite de volume de pedidos de seguir (Fase 2.1, #295). Duas tabelas sem
+// policy nem privilégio para o cliente: só o gatilho `follows_rate_limit`
+// (security definer, migration 0025) lê e grava.
+//
+// - `follow_limits`: a configuração, uma linha por janela (`window_seconds` →
+//   `max_count`). Os valores NUNCA ficam no repositório: cada ambiente os grava
+//   por SQL. Sem nenhuma linha, criar vínculo é recusado (falha fechada).
+// - `follow_attempts`: um registro por vínculo criado, apagado pela própria
+//   função quando passa da maior janela. Como o registro sobrevive ao
+//   `delete` do vínculo, o ciclo seguir e desfazer também conta.
+export const followLimits = pgTable(
+  "follow_limits",
+  {
+    windowSeconds: integer("window_seconds").primaryKey(),
+    maxCount: integer("max_count").notNull(),
+  },
+  (t) => [
+    check("follow_limits_window_positive", sql`${t.windowSeconds} > 0`),
+    check("follow_limits_max_positive", sql`${t.maxCount} > 0`),
+  ],
+).enableRLS();
+
+export const followAttempts = pgTable(
+  "follow_attempts",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("follow_attempts_follower_created_idx").on(t.followerId, t.createdAt),
+  ],
+).enableRLS();
