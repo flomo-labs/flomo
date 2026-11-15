@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, count, eq, inArray, or, sql } from "drizzle-orm";
 import type { FollowStatus } from "@/contracts/follow";
 import type { FollowRepository } from "@/domain/follow/ports";
 import type { Tx } from "./client";
@@ -184,6 +184,21 @@ export function createFollowRepository(tx: Tx): FollowRepository {
         avatarUrl: r.avatar_url,
         requestedAt: new Date(r.requested_at),
       }));
+    },
+
+    // Direto na tabela: o seguido lê a própria linha pelo RLS
+    // (`follows_select_own`) e o índice (followee_id, status) cobre a conta.
+    async countPending(followeeId) {
+      const [row] = await tx
+        .select({ total: count() })
+        .from(follows)
+        .where(
+          and(
+            eq(follows.followeeId, followeeId),
+            eq(follows.status, "requested"),
+          ),
+        );
+      return row?.total ?? 0;
     },
 
     // Funções da migration 0023: o RLS de `follows` só mostra a linha a

@@ -130,6 +130,15 @@ export async function listFollowRequests(
   return ok({ requests: await deps.follows.listPending(user.id) });
 }
 
+// Quantas solicitações de seguir esperam resposta do usuário logado, para o
+// indicador do cabeçalho (#353). Mesma regra da lista: só as próprias.
+export async function countFollowRequests(
+  deps: FollowDeps,
+  user: AuthenticatedUser,
+): Promise<Result<{ count: number }, never>> {
+  return ok({ count: await deps.follows.countPending(user.id) });
+}
+
 // Contagens de seguidores e de seguindo de um perfil, visíveis a qualquer
 // usuário logado, mesmo de perfil privado e para quem não o segue.
 export async function getFollowCounts(

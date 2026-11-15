@@ -80,6 +80,10 @@ export interface FollowRepository {
   // recente para a mais antiga. Só devolve as do próprio dono.
   listPending(followeeId: string): Promise<PendingFollowRequest[]>;
 
+  // Quantas solicitações pendentes o dono tem (#353): contagem barata, sem
+  // trazer as linhas, para o indicador do cabeçalho.
+  countPending(followeeId: string): Promise<number>;
+
   // Contagens de seguidores e de seguindo (só `accepted`), visíveis a qualquer
   // usuário logado, inclusive de perfil privado. `null` se o perfil não existe.
   counts(profileId: string): Promise<FollowCounts | null>;

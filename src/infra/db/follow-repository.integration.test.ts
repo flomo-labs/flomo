@@ -5,6 +5,7 @@ import {
   acceptFollowRequest,
   declineFollowRequest,
   followUser,
+  countFollowRequests,
   listFollowRequests,
   removeFollower,
   unfollowUser,
@@ -230,6 +231,31 @@ describe("seguir contra o banco", () => {
       expect(result.ok && result.value.requests).toMatchObject([
         { followerId: asker.id },
       ]);
+    }));
+
+  it("conta as pendentes só do dono; aceitar tira da conta (#353)", () =>
+    inRollback(async (tx) => {
+      const owner = await createPerson(tx, true);
+      const asker = await createPerson(tx, false);
+      const stranger = await createUser(tx);
+      await run(tx, asker.id, (t) =>
+        followUser(deps(t), { id: asker.id }, { profileId: owner.id }),
+      );
+      const total = (id: string) =>
+        run(tx, id, async (t) => {
+          const r = await countFollowRequests(deps(t), { id });
+          return r.ok ? r.value.count : -1;
+        });
+      expect(await total(stranger)).toBe(0);
+      expect(await total(owner.id)).toBe(1);
+      await run(tx, owner.id, (t) =>
+        acceptFollowRequest(
+          deps(t),
+          { id: owner.id },
+          { followerId: asker.id },
+        ),
+      );
+      expect(await total(owner.id)).toBe(0);
     }));
 
   it("estranho não vê as solicitações de outro dono; aceitar tira da lista", () =>

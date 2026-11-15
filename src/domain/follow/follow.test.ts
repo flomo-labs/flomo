@@ -6,6 +6,7 @@ import {
   getFollowCounts,
   listFollowers,
   listFollowing,
+  countFollowRequests,
   listFollowRequests,
   removeFollower,
   unfollowUser,
@@ -256,6 +257,38 @@ describe("listFollowRequests", () => {
     await followUser(s.deps, { id: A }, { profileId: ME.id });
     const result = await listFollowRequests(s.deps, { id: B });
     expect(result).toEqual({ ok: true, value: { requests: [] } });
+  });
+});
+
+describe("countFollowRequests", () => {
+  const A = "55555555-5555-4555-8555-555555555555";
+  const B = "66666666-6666-4666-8666-666666666666";
+
+  it("conta só as pendentes do próprio dono", async () => {
+    const s = createFakeFollows({
+      profiles: [ME.id, A, B, PUBLIC],
+      privateIds: [ME.id],
+    });
+    expect(await countFollowRequests(s.deps, ME)).toEqual({
+      ok: true,
+      value: { count: 0 },
+    });
+    await followUser(s.deps, { id: A }, { profileId: ME.id });
+    await followUser(s.deps, { id: B }, { profileId: ME.id });
+    await followUser(s.deps, ME, { profileId: PUBLIC });
+    expect(await countFollowRequests(s.deps, ME)).toEqual({
+      ok: true,
+      value: { count: 2 },
+    });
+    await acceptFollowRequest(s.deps, ME, { followerId: A });
+    expect(await countFollowRequests(s.deps, ME)).toEqual({
+      ok: true,
+      value: { count: 1 },
+    });
+    expect(await countFollowRequests(s.deps, { id: B })).toEqual({
+      ok: true,
+      value: { count: 0 },
+    });
   });
 });
 

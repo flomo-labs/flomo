@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { isProvisionalHandle } from "@/contracts/profile";
 import { signOut } from "@/app/_auth/actions";
 import { getCurrentUser } from "@/app/_auth/session";
+import { loadPendingRequestCount } from "@/app/_follow/queries";
 import { getOwnProfile, profilePath } from "@/app/_profile/queries";
 import { BottomNav } from "./shell/bottom-nav";
 import { HeaderSearch } from "./shell/header-search";
@@ -132,7 +133,11 @@ async function Account() {
   }
 
   const t = await getTranslations("Landing");
-  const profile = await getOwnProfile(user).catch(() => null);
+  const tf = await getTranslations("seguidores");
+  const [profile, pending] = await Promise.all([
+    getOwnProfile(user).catch(() => null),
+    loadPendingRequestCount(user),
+  ]);
   const handle =
     profile && !isProvisionalHandle(profile.handle) ? profile.handle : null;
   return (
@@ -143,6 +148,12 @@ async function Account() {
       profileHref={handle ? profilePath(handle) : null}
       tmdbNotice={t("tmdbNotice")}
       signOut={signOut}
+      pendingRequests={{
+        count: pending,
+        triggerAria: tf("requestsMenuAria", { count: pending }),
+        itemLabel: tf("requestsMenuItem"),
+        countLabel: tf("requestsMenuCount", { count: pending }),
+      }}
     />
   );
 }

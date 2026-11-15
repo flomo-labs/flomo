@@ -1,6 +1,8 @@
 import "server-only";
+import { cache } from "react";
 import type { FollowStatus } from "@/contracts/follow";
 import {
+  countFollowRequests,
   getFollowCounts,
   listFollowers,
   listFollowing,
@@ -46,6 +48,22 @@ export async function loadFollowRequests(user: CurrentUser) {
   // Esta leitura não tem erro de negócio (`never`).
   return result.ok ? result.value.requests : [];
 }
+
+// Quantas solicitações pendentes o usuário logado tem, para o indicador do
+// cabeçalho (#353). Uma contagem por requisição, sem trazer as linhas; se a
+// leitura falhar, o cabeçalho segue sem indicador.
+export const loadPendingRequestCount = cache(
+  async (user: CurrentUser): Promise<number> => {
+    try {
+      const result = await withUser(user.claims, (tx) =>
+        countFollowRequests({ follows: createFollowRepository(tx) }, user),
+      );
+      return result.ok ? result.value.count : 0;
+    } catch {
+      return 0;
+    }
+  },
+);
 
 // Contagens de seguidores e de seguindo (só vínculos aceitos), visíveis a
 // qualquer usuário logado, inclusive de perfil privado.

@@ -129,6 +129,11 @@ export function createFakeFollows(world: {
             requestedAt: r.requestedAt,
           }));
       },
+      async countPending(followeeId) {
+        return rows.filter(
+          (r) => r.followeeId === followeeId && r.status === "requested",
+        ).length;
+      },
       async counts(profileId) {
         if (!world.profiles.includes(profileId)) return null;
         const accepted = rows.filter((r) => r.status === "accepted");
