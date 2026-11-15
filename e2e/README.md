@@ -2,7 +2,10 @@
 
 Teste de ponta a ponta do fluxo do spike: entrar, buscar, abrir título, marcar
 episódio, dar 3,5★, escrever 2 comentários e abrir `/em-breve`
-(`fluxo-spike.spec.ts`). Roda no CI, no job `e2e`.
+(`fluxo-spike.spec.ts`). Seguir, solicitar e aceitar ficam em `seguir.spec.ts`;
+listas e contagens, bloqueio, cancelar solicitação, limite de pedidos, aceite
+automático e exclusão de conta, em `seguidores.spec.ts` (muita gente criada
+direto no banco por `support/follow-seed.ts`). Roda no CI, no job `e2e`.
 
 ## O que ele usa
 
