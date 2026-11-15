@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { acceptRequest, declineRequest } from "@/app/_follow/actions";
@@ -37,6 +38,7 @@ export function FollowRequests({
 }) {
   const [items, setItems] = useState(requests);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function answer(item: FollowRequestItem, action: "accept" | "decline") {
     if (pending) return;
@@ -57,6 +59,8 @@ export function FollowRequests({
         setItems((prev) =>
           prev.filter((i) => i.followerId !== item.followerId),
         );
+        // O ponto do cabeçalho (#353) vem do servidor: renova a contagem.
+        router.refresh();
         if (result.ok) {
           toast.success(
             fill(action === "accept" ? labels.accepted : labels.declined, name),
@@ -71,8 +75,9 @@ export function FollowRequests({
   if (items.length === 0) return null;
   return (
     <section
+      id="solicitacoes"
       aria-labelledby="follow-requests-title"
-      className="flex flex-col gap-3"
+      className="flex scroll-mt-4 flex-col gap-3"
     >
       <h2 id="follow-requests-title" className="text-lg font-semibold">
         {labels.title} ({items.length})
