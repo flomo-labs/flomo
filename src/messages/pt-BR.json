@@ -346,6 +346,7 @@
     "unfollowed": "Você deixou de seguir {name}.",
     "cancelled": "Solicitação para {name} cancelada.",
     "failed": "Não foi possível concluir agora. Tente de novo.",
+    "rateLimited": "Você fez muitos pedidos para seguir em pouco tempo. Tente de novo mais tarde.",
     "requestsTitle": "Solicitações para seguir",
     "accept": "Aceitar",
     "decline": "Recusar",

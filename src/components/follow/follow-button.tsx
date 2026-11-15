@@ -25,6 +25,8 @@ export type FollowButtonLabels = {
   unfollowed: string;
   cancelled: string;
   failed: string;
+  // Limite de pedidos para seguir em pouco tempo (RATE_LIMITED).
+  rateLimited: string;
 };
 
 const fill = (text: string, name: string) => text.replace("{name}", () => name);
@@ -69,7 +71,11 @@ export function FollowButton({
             router.push("/entrar");
             return;
           }
-          toast.error(result.error.message || labels.failed);
+          toast.error(
+            result.error.code === "RATE_LIMITED"
+              ? labels.rateLimited
+              : result.error.message || labels.failed,
+          );
           return;
         }
         if (current === null) {
