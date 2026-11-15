@@ -55,6 +55,11 @@ export interface FollowRepository {
   // seguidor aceito não sai por aqui.
   decline(followeeId: string, followerId: string): Promise<void>;
 
+  // Remove só seguidor aceito do dono (`followeeId`); solicitação pendente fica
+  // (para isso há `decline`). `true` se apagou um vínculo, `false` se não havia
+  // seguidor aceito. O seguidor removido pode pedir para seguir de novo.
+  removeFollower(followeeId: string, followerId: string): Promise<boolean>;
+
   // Estado do vínculo de `followerId` com `followeeId`; `null` se não segue
   // nem pediu. Só enxerga o par quando um dos dois é o usuário logado (RLS).
   statusOf(

@@ -110,6 +110,16 @@ export function createFollowRepository(tx: Tx): FollowRepository {
         );
     },
 
+    async removeFollower(followeeId, followerId) {
+      const deleted = await tx
+        .delete(follows)
+        .where(
+          and(pair(followerId, followeeId), eq(follows.status, "accepted")),
+        )
+        .returning({ followerId: follows.followerId });
+      return deleted.length > 0;
+    },
+
     async statusOf(followerId, followeeId) {
       const [row] = await tx
         .select({ status: follows.status })

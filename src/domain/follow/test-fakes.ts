@@ -94,6 +94,17 @@ export function createFakeFollows(world: {
         );
         if (i >= 0) rows.splice(i, 1);
       },
+      async removeFollower(followeeId, followerId) {
+        const i = rows.findIndex(
+          (r) =>
+            r.followerId === followerId &&
+            r.followeeId === followeeId &&
+            r.status === "accepted",
+        );
+        if (i < 0) return false;
+        rows.splice(i, 1);
+        return true;
+      },
       async statusOf(followerId, followeeId) {
         return find(followerId, followeeId)?.status ?? null;
       },

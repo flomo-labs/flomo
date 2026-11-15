@@ -7,6 +7,7 @@ import {
   listFollowers,
   listFollowing,
   listFollowRequests,
+  removeFollower,
   unfollowUser,
 } from "./follow";
 import { createFakeFollows } from "./test-fakes";
@@ -161,6 +162,50 @@ describe("acceptFollowRequest e declineFollowRequest", () => {
     await acceptFollowRequest(s.deps, owner, { followerId: ME.id });
     await declineFollowRequest(s.deps, owner, { followerId: ME.id });
     expect(s.rows).toHaveLength(1);
+  });
+});
+
+describe("removeFollower", () => {
+  it("o dono remove um seguidor aceito e o ex-seguidor pode seguir de novo", async () => {
+    const s = setup();
+    const owner = { id: PUBLIC };
+    await followUser(s.deps, ME, { profileId: PUBLIC });
+    expect(
+      await removeFollower(s.deps, owner, { followerId: ME.id }),
+    ).toEqual({ ok: true, value: { removed: true } });
+    expect(s.rows).toHaveLength(0);
+    expect(await followUser(s.deps, ME, { profileId: PUBLIC })).toMatchObject({
+      value: { status: "accepted" },
+    });
+  });
+
+  it("quem não segue ou só tem solicitação pendente não perde nada e vem removed false", async () => {
+    const s = setup();
+    const owner = { id: PRIVATE };
+    expect(
+      await removeFollower(s.deps, owner, { followerId: ME.id }),
+    ).toEqual({ ok: true, value: { removed: false } });
+    await followUser(s.deps, ME, { profileId: PRIVATE });
+    expect(
+      await removeFollower(s.deps, owner, { followerId: ME.id }),
+    ).toEqual({ ok: true, value: { removed: false } });
+    expect(s.rows).toHaveLength(1);
+  });
+
+  it("só remove quem segue o próprio dono, não o vínculo de outro", async () => {
+    const s = setup();
+    await followUser(s.deps, ME, { profileId: PUBLIC });
+    expect(
+      await removeFollower(s.deps, { id: PRIVATE }, { followerId: ME.id }),
+    ).toEqual({ ok: true, value: { removed: false } });
+    expect(s.rows).toHaveLength(1);
+  });
+
+  it("rejeita entrada inválida", async () => {
+    const s = setup();
+    expect(
+      await removeFollower(s.deps, ME, { followerId: "x" }),
+    ).toMatchObject({ error: { code: "INVALID_INPUT" } });
   });
 });
 
