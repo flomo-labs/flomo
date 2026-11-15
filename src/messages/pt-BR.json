@@ -247,8 +247,8 @@
     "title": "Descobrir",
     "description": "Em alta, nos cinemas e nos serviços de streaming.",
     "shelf": {
-      "trending": "Em alta esta semana",
-      "trendingLead": "Em alta esta semana em",
+      "trending": "Em alta",
+      "trendingLead": "Em alta em",
       "now_playing": "Nos cinemas",
       "providerLead": "Em alta {gender, select, feminine {na} other {no}}"
     },
