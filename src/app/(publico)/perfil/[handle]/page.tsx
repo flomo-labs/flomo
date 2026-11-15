@@ -5,9 +5,16 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_auth/session";
 import { loadHasBlocked } from "@/app/_block/queries";
-import { loadFollowRequests, loadFollowStatus } from "@/app/_follow/queries";
+import { followButtonLabels } from "@/app/_follow/labels";
+import {
+  loadFollowCounts,
+  loadFollowRequests,
+  loadFollowStatus,
+  loadFollowsMe,
+} from "@/app/_follow/queries";
 import { LibraryPreview } from "@/app/_profile/library-preview";
 import { loadProfilePage, profilePath } from "@/app/_profile/queries";
+import { FollowCounts } from "@/components/follow/follow-counts";
 import { BlockButton } from "@/components/block/block-button";
 import { FollowButton } from "@/components/follow/follow-button";
 import { FollowRequests } from "@/components/follow/follow-requests";
@@ -66,11 +73,15 @@ async function ProfileContent({
   // Quem bloqueou vê só nome e handle da pessoa (o cartão já vem sem bio nem
   // números); no lugar de Seguir, o botão Desbloquear. Perfil próprio não tem
   // Bloquear nem Seguir.
-  const [followStatus, requests, isBlocked] = await Promise.all([
-    isOwn ? null : loadFollowStatus(user, profile.id),
-    isOwn ? loadFollowRequests(user) : [],
-    isOwn ? false : loadHasBlocked(user, profile.id),
-  ]);
+  const format = new Intl.NumberFormat("pt-BR");
+  const [counts, followStatus, followsMe, requests, isBlocked] =
+    await Promise.all([
+      loadFollowCounts(user, profile.id),
+      isOwn ? null : loadFollowStatus(user, profile.id),
+      isOwn ? false : loadFollowsMe(user, profile.id),
+      isOwn ? loadFollowRequests(user) : [],
+      isOwn ? false : loadHasBlocked(user, profile.id),
+    ]);
   const blockLabels = {
     block: tb("block"),
     unblock: tb("unblock"),
@@ -96,6 +107,42 @@ async function ProfileContent({
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold break-words">{name}</h1>
           <p className="text-muted-foreground break-words">@{profile.handle}</p>
+          <FollowCounts
+            label={tf("countsLabel")}
+            listsHref={
+              profile.canSeeDetails
+                ? {
+                    followers: `${profilePath(profile.handle)}/seguidores`,
+                    following: `${profilePath(profile.handle)}/seguindo`,
+                  }
+                : null
+            }
+            followers={
+              <>
+                <strong className="tabular-nums">
+                  {format.format(counts.followers)}
+                </strong>{" "}
+                <span className="text-muted-foreground">
+                  {tf("followersLabel", { count: counts.followers })}
+                </span>
+              </>
+            }
+            following={
+              <>
+                <strong className="tabular-nums">
+                  {format.format(counts.following)}
+                </strong>{" "}
+                <span className="text-muted-foreground">
+                  {tf("followingLabel")}
+                </span>
+              </>
+            }
+          />
+          {followsMe ? (
+            <Badge variant="outline" className="w-fit">
+              {tf("followsYou")}
+            </Badge>
+          ) : null}
           {profile.isPrivate ? (
             <Badge
               variant="secondary"
@@ -129,19 +176,8 @@ async function ProfileContent({
                 profileId={profile.id}
                 name={name}
                 status={followStatus}
-                labels={{
-                  follow: tf("follow"),
-                  following: tf("following"),
-                  requested: tf("requested"),
-                  followAria: tf("followAria", { name: "{name}" }),
-                  unfollowAria: tf("unfollowAria", { name: "{name}" }),
-                  cancelAria: tf("cancelAria", { name: "{name}" }),
-                  nowFollowing: tf("nowFollowing", { name: "{name}" }),
-                  nowRequested: tf("nowRequested", { name: "{name}" }),
-                  unfollowed: tf("unfollowed", { name: "{name}" }),
-                  cancelled: tf("cancelled", { name: "{name}" }),
-                  failed: tf("failed"),
-                }}
+                followsYou={followsMe}
+                labels={followButtonLabels(tf)}
               />
             )}
             <BlockButton

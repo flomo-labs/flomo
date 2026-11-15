@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { signUpAndSignIn } from "./support/auth";
+import { ensureFollowLimits } from "./support/follow-limits";
 
 // Seguir no perfil (Fase 2.1, #76): perfil público segue direto; perfil
 // privado recebe solicitação, que o dono aceita ou recusa. Duas pessoas, cada
 // uma em seu contexto de navegador.
 const SLOW = 15_000;
+
+test.beforeAll(ensureFollowLimits);
 
 async function chooseHandle(page: Page) {
   const handle = `e2e.${randomUUID().slice(0, 8)}`;
@@ -97,4 +100,34 @@ test("perfil privado: solicitar, aceitar e recusar", async ({ browser }) => {
   await owner.close();
   await x.close();
   await y.close();
+});
+
+test("quem é seguido vê 'Segue você' e pode seguir de volta", async ({
+  browser,
+}) => {
+  const a = await browser.newContext();
+  const b = await browser.newContext();
+  const pageA = await a.newPage();
+  const pageB = await b.newPage();
+  await signUpAndSignIn(a);
+  await signUpAndSignIn(b);
+  const handleA = await chooseHandle(pageA);
+  const handleB = await chooseHandle(pageB);
+
+  await pageB.goto(`/@${handleA}`);
+  await pageB.getByRole("button", { name: /^Seguir / }).click();
+  await expect(
+    pageB.getByRole("button", { name: /^Deixar de seguir / }),
+  ).toBeVisible({ timeout: SLOW });
+
+  await pageA.goto(`/@${handleB}`);
+  await expect(pageA.getByText("Segue você")).toBeVisible();
+  const back = pageA.getByRole("button", { name: /de volta$/ });
+  await expect(back).toHaveText("Seguir de volta");
+  await back.click();
+  await expect(
+    pageA.getByRole("button", { name: /^Deixar de seguir / }),
+  ).toBeVisible({ timeout: SLOW });
+  await a.close();
+  await b.close();
 });
