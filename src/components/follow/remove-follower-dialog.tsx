@@ -47,7 +47,8 @@ export function RemoveFollowerDialog({
   onOpenChange: (open: boolean) => void;
   labels: RemoveFollowerLabels;
   // Chamado depois que o servidor removeu (a lista tira a pessoa da tela).
-  onRemoved?: () => void;
+  // `deleted` é falso quando a pessoa já não seguia (nada foi apagado agora).
+  onRemoved?: (deleted: boolean) => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -66,8 +67,10 @@ export function RemoveFollowerDialog({
           return;
         }
         onOpenChange(false);
-        toast.success(fillName(labels.removed, name));
-        onRemoved?.();
+        if (result.value.removed) {
+          toast.success(fillName(labels.removed, name));
+        }
+        onRemoved?.(result.value.removed);
       } catch {
         toast.error(labels.failed);
       }

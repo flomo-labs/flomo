@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadMorePeople } from "@/app/_follow/actions";
 import { EmptyState } from "@/components/empty-state";
@@ -53,7 +54,10 @@ export function InfinitePersonList({
   initialHasMore: boolean;
   labels: InfinitePersonListLabels;
 }) {
+  const router = useRouter();
   const [items, setItems] = useState(initialItems);
+  // Quantos trechos já foram pedidos: refaz o observador só a cada trecho.
+  const [batches, setBatches] = useState(0);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -75,6 +79,10 @@ export function InfinitePersonList({
         offset: delivered.current - removed.current,
       });
       if (!result.ok) {
+        if (result.error.code === "UNAUTHENTICATED") {
+          router.push("/entrar");
+          return;
+        }
         setFailed(true);
         return;
       }
@@ -87,13 +95,14 @@ export function InfinitePersonList({
         ];
       });
       setHasMore(result.value.hasMore);
+      setBatches((n) => n + 1);
     } catch {
       setFailed(true);
     } finally {
       busy.current = false;
       setLoading(false);
     }
-  }, [profileId, kind]);
+  }, [profileId, kind, router]);
 
   useEffect(() => {
     const node = sentinel.current;
@@ -106,12 +115,13 @@ export function InfinitePersonList({
     );
     observer.observe(node);
     return () => observer.disconnect();
-    // `items` na lista: depois de cada trecho o observador é recriado e, se o
+    // `batches` na lista: depois de cada trecho o observador é recriado e, se o
     // fim ainda estiver perto da tela, já pede o seguinte.
-  }, [hasMore, failed, loadMore, items]);
+  }, [hasMore, failed, loadMore, batches]);
 
-  function onRemoved(id: string) {
-    removed.current += 1;
+  function onRemoved(id: string, deleted: boolean) {
+    // Só quem foi apagado agora desloca a posição das páginas seguintes.
+    if (deleted) removed.current += 1;
     setItems((prev) => prev.filter((p) => p.profileId !== id));
   }
 
@@ -143,7 +153,7 @@ export function InfinitePersonList({
                   labels={labels.follow}
                   menuLabel={labels.menu}
                   removeLabels={labels.remove}
-                  onRemoved={() => onRemoved(person.profileId)}
+                  onRemoved={(deleted) => onRemoved(person.profileId, deleted)}
                 />
               )}
             </PersonRow>

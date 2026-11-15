@@ -42,7 +42,7 @@ export function PersonActionsMenu({
   menuLabel: string;
   // Só na lista de seguidores do dono; sem isso não há "Remover seguidor".
   removeLabels?: RemoveFollowerLabels | null;
-  onRemoved?: () => void;
+  onRemoved?: (deleted: boolean) => void;
 }) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const { pending, toggle, aria } = useFollowToggle({
