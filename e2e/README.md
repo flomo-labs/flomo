@@ -2,7 +2,10 @@
 
 Teste de ponta a ponta do fluxo do spike: entrar, buscar, abrir título, marcar
 episódio, dar 3,5★, escrever 2 comentários e abrir `/em-breve`
-(`fluxo-spike.spec.ts`). Roda no CI, no job `e2e`.
+(`fluxo-spike.spec.ts`). Seguir, solicitar e aceitar ficam em `seguir.spec.ts`;
+listas e contagens, bloqueio, cancelar solicitação, limite de pedidos, aceite
+automático e exclusão de conta, em `seguidores.spec.ts` (muita gente criada
+direto no banco por `support/follow-seed.ts`). Roda no CI, no job `e2e`.
 
 ## O que ele usa
 
@@ -24,7 +27,8 @@ Precisa de Docker e da CLI do Supabase (`pnpm dlx supabase@2.121.0`).
    `PUBLISHABLE_KEY` (ou `ANON_KEY`) e `DB_URL`.
 3. Num terminal só para o E2E, defina `NEXT_PUBLIC_SUPABASE_URL` (o `API_URL`),
    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL` e
-   `DATABASE_URL_MIGRATIONS` (os dois com o `DB_URL`),
+   `DATABASE_URL_MIGRATIONS` (os dois com o `DB_URL`), `SUPABASE_SECRET_KEY`
+   (o `SECRET_KEY`, ou `SERVICE_ROLE_KEY`; o app a usa para excluir a conta),
    `NEXT_PUBLIC_SITE_URL=http://localhost:3000`,
    `TMDB_READ_ACCESS_TOKEN=e2e-tmdb-falso` e
    `TMDB_BASE_URL=http://localhost:3999/3`.

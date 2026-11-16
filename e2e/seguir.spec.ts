@@ -1,33 +1,13 @@
-import { randomUUID } from "node:crypto";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { signUpAndSignIn } from "./support/auth";
 import { ensureFollowLimits } from "./support/follow-limits";
+import { chooseHandle, setPrivate, SLOW } from "./support/profile";
 
 // Seguir no perfil (Fase 2.1, #76): perfil público segue direto; perfil
 // privado recebe solicitação, que o dono aceita ou recusa. Duas pessoas, cada
 // uma em seu contexto de navegador.
-const SLOW = 15_000;
 
 test.beforeAll(ensureFollowLimits);
-
-async function chooseHandle(page: Page) {
-  const handle = `e2e.${randomUUID().slice(0, 8)}`;
-  await page.goto("/cadastro");
-  await page.getByLabel("Nome de usuário").fill(handle);
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page).not.toHaveURL(/\/cadastro/);
-  return handle;
-}
-
-async function makePrivate(page: Page) {
-  await page.goto("/configuracoes");
-  await page.getByRole("checkbox", { name: "Perfil privado" }).click();
-  await page
-    .getByRole("button", { name: /^Salvar/ })
-    .first()
-    .click();
-  await expect(page.getByText("Perfil salvo.")).toBeVisible({ timeout: SLOW });
-}
 
 test("seguir perfil público, deixar de seguir", async ({ browser }) => {
   const a = await browser.newContext();
@@ -68,7 +48,7 @@ test("perfil privado: solicitar, aceitar e recusar", async ({ browser }) => {
   const handleOwner = await chooseHandle(pageOwner);
   await chooseHandle(pageX);
   await chooseHandle(pageY);
-  await makePrivate(pageOwner);
+  await setPrivate(pageOwner, true);
 
   for (const page of [pageX, pageY]) {
     await page.goto(`/@${handleOwner}`);
