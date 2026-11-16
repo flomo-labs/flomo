@@ -2,7 +2,7 @@ import { and, count, eq, inArray, or, sql } from "drizzle-orm";
 import type { FollowStatus } from "@/contracts/follow";
 import type { FollowRepository } from "@/domain/follow/ports";
 import type { Tx } from "./client";
-import { follows } from "./schema";
+import { blocks, follows } from "./schema";
 
 const FOREIGN_KEY_VIOLATION = "23503";
 // Códigos do gatilho app.follows_rate_limit (migration 0025).
@@ -11,6 +11,8 @@ const FOLLOW_LIMIT_NOT_CONFIGURED = "FL002";
 // O gatilho app.follows_set_status recusa vínculo com bloqueio vigente com o
 // mesmo código de uma policy negada (migration 0024). Aqui o insert é sempre do
 // próprio usuário, então a policy não é a causa.
+// Só quem bloqueou recebe `blocked`; para quem foi bloqueado o resultado é
+// `not_found`, igual a um perfil inexistente, para a ação não revelar o bloqueio.
 const INSUFFICIENT_PRIVILEGE = "42501";
 
 // O Drizzle embrulha o erro do driver em `cause`.
@@ -72,7 +74,18 @@ export function createFollowRepository(tx: Tx): FollowRepository {
           return "not_found" as const;
         }
         if (hasErrorCode(error, INSUFFICIENT_PRIVILEGE)) {
-          return "blocked" as const;
+          // O savepoint já desfez o insert; a transação externa segue
+          // utilizável. O RLS de `blocks` só mostra os bloqueios de quem pede.
+          const [mine] = await tx
+            .select({ blockedId: blocks.blockedId })
+            .from(blocks)
+            .where(
+              and(
+                eq(blocks.blockerId, followerId),
+                eq(blocks.blockedId, followeeId),
+              ),
+            );
+          return mine ? ("blocked" as const) : ("not_found" as const);
         }
         if (hasErrorCode(error, FOLLOW_RATE_LIMITED)) {
           return "rate_limited" as const;

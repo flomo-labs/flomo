@@ -33,6 +33,7 @@ const labels: FollowButtonLabels = {
   cancelled: "Solicitação para {name} cancelada.",
   failed: "Não foi possível concluir agora.",
   rateLimited: "Muitos pedidos para seguir. Tente mais tarde.",
+  blocked: "Você bloqueou esta pessoa.",
 };
 
 function renderButton() {
@@ -45,6 +46,17 @@ function renderButton() {
 describe("FollowButton", () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(cleanup);
+
+  it("BLOCKED mostra o aviso de quem bloqueou, não o texto do servidor", async () => {
+    follow.mockResolvedValue({
+      ok: false,
+      error: { code: "BLOCKED", message: "texto do servidor" },
+    });
+    await userEvent.click(renderButton());
+    await waitFor(() =>
+      expect(toastError).toHaveBeenCalledWith(labels.blocked),
+    );
+  });
 
   it("mostra a mensagem de limite e mantém o estado e o botão clicável", async () => {
     follow.mockResolvedValue({

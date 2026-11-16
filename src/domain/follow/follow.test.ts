@@ -107,23 +107,33 @@ describe("followUser: limite de volume", () => {
 });
 
 describe("followUser: bloqueio vigente", () => {
-  it("recusa com BLOCKED nos dois sentidos, sem criar vínculo e sem revelar quem bloqueou", async () => {
+  it("quem bloqueou recebe BLOCKED e não cria vínculo", async () => {
+    const s = createFakeFollows({
+      profiles: [ME.id, PUBLIC],
+      blockedPairs: [[ME.id, PUBLIC]],
+    });
+    expect(await followUser(s.deps, ME, { profileId: PUBLIC })).toMatchObject({
+      ok: false,
+      error: {
+        code: "BLOCKED",
+        message: "Você bloqueou esta pessoa. Desbloqueie para seguir.",
+      },
+    });
+    expect(s.rows).toHaveLength(0);
+  });
+
+  it("o bloqueado recebe o mesmo erro de perfil inexistente, sem revelar o bloqueio", async () => {
     const s = createFakeFollows({
       profiles: [ME.id, PUBLIC],
       blockedPairs: [[PUBLIC, ME.id]],
     });
     const byBlocked = await followUser(s.deps, ME, { profileId: PUBLIC });
-    expect(byBlocked).toMatchObject({ ok: false, error: { code: "BLOCKED" } });
-    expect(JSON.stringify(byBlocked)).not.toMatch(/bloque/i);
-
-    const s2 = createFakeFollows({
-      profiles: [ME.id, PUBLIC],
-      blockedPairs: [[ME.id, PUBLIC]],
+    const missing = await followUser(s.deps, ME, {
+      profileId: "99999999-9999-4999-8999-999999999999",
     });
-    const byBlocker = await followUser(s2.deps, ME, { profileId: PUBLIC });
-    expect(byBlocker).toEqual(byBlocked);
+    expect(byBlocked).toEqual(missing);
+    expect(byBlocked).toMatchObject({ error: { code: "PROFILE_NOT_FOUND" } });
     expect(s.rows).toHaveLength(0);
-    expect(s2.rows).toHaveLength(0);
   });
 });
 

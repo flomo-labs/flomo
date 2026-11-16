@@ -39,8 +39,8 @@ export interface FollowRepository {
   // `not_found` se a pessoa seguida não existe; `rate_limited` se quem pede
   // passou do limite de vínculos criados em pouco tempo (o banco decide);
   // `not_configured` se o ambiente não tem limite gravado (falha fechada);
-  // `blocked` se há bloqueio vigente entre os dois, em qualquer sentido (o
-  // banco recusa e não diz quem bloqueou quem).
+  // `blocked` se quem pede bloqueou a pessoa (o banco também recusa o
+  // contrário, mas aí a resposta é `not_found`, para não revelar o bloqueio).
   insert(
     followerId: string,
     followeeId: string,

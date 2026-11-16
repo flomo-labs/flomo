@@ -51,6 +51,7 @@ const follow = {
   cancelled: "ok",
   failed: "falhou",
   rateLimited: "limite",
+  blocked: "bloqueada",
 };
 
 const labels: InfinitePersonListLabels = {

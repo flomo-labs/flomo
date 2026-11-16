@@ -27,3 +27,29 @@ describe("createFollowRepository.insert", () => {
     expect(await repo.insert("a", "b")).toEqual({ status: "accepted" });
   });
 });
+
+// Insert recusado pelo gatilho de bloqueio (42501): quem bloqueou recebe
+// `blocked`; para o bloqueado a resposta é `not_found`, sem revelar o bloqueio.
+function txRefusedByTrigger(blockRows: { blockedId: string }[]): Tx {
+  const refusal = Object.assign(new Error("recusado"), { code: "42501" });
+  return {
+    transaction: async () => {
+      throw refusal;
+    },
+    select: () => ({ from: () => ({ where: async () => blockRows }) }),
+  } as unknown as Tx;
+}
+
+describe("createFollowRepository.insert: gatilho de bloqueio (42501)", () => {
+  it("devolve blocked a quem bloqueou a pessoa", async () => {
+    const repo = createFollowRepository(
+      txRefusedByTrigger([{ blockedId: "b" }]),
+    );
+    expect(await repo.insert("a", "b")).toBe("blocked");
+  });
+
+  it("devolve not_found ao bloqueado, igual a perfil inexistente", async () => {
+    const repo = createFollowRepository(txRefusedByTrigger([]));
+    expect(await repo.insert("a", "b")).toBe("not_found");
+  });
+});
