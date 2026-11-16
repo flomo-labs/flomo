@@ -13,7 +13,8 @@ export function createFakeFollows(world: {
   createLimit?: number;
   // Imita o ambiente sem linha em `follow_limits`: criar vínculo falha fechado.
   limitsNotConfigured?: boolean;
-  // Pares com bloqueio vigente (em qualquer sentido): criar vínculo é recusado.
+  // Pares [quem bloqueou, quem foi bloqueado]: criar vínculo é recusado, com
+  // `blocked` para quem bloqueou e `not_found` para o bloqueado (como o banco).
   blockedPairs?: [string, string][];
   // Dados de exibição de quem pede (o fake gera um padrão se faltar).
   people?: Record<
@@ -59,15 +60,14 @@ export function createFakeFollows(world: {
     follows: {
       async insert(followerId, followeeId) {
         if (!world.profiles.includes(followeeId)) return "not_found";
-        if (
-          world.blockedPairs?.some(
-            ([a, b]) =>
-              (a === followerId && b === followeeId) ||
-              (a === followeeId && b === followerId),
-          )
-        ) {
-          return "blocked";
-        }
+        const byMe = world.blockedPairs?.some(
+          ([a, b]) => a === followerId && b === followeeId,
+        );
+        const byThem = world.blockedPairs?.some(
+          ([a, b]) => a === followeeId && b === followerId,
+        );
+        if (byMe) return "blocked";
+        if (byThem) return "not_found";
         const existing = find(followerId, followeeId);
         if (existing) return { status: existing.status };
         if (world.limitsNotConfigured) return "not_configured";

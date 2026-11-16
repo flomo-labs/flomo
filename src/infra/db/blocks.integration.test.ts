@@ -188,7 +188,7 @@ describe("blocks: vínculo de seguir", () => {
       ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
     }));
 
-  it("followUser devolve BLOCKED nos dois sentidos, sem criar vínculo", () =>
+  it("followUser: quem bloqueou recebe BLOCKED; o bloqueado recebe o mesmo erro de perfil inexistente", () =>
     inRollback(async (tx) => {
       const me = await createProfile(tx);
       const them = await createProfile(tx, true);
@@ -203,8 +203,11 @@ describe("blocks: vínculo de seguir", () => {
         );
       const byBlocked = await run(them.id, me.id);
       const byBlocker = await run(me.id, them.id);
-      expect(byBlocked).toMatchObject({ ok: false, error: { code: "BLOCKED" } });
-      expect(byBlocker).toEqual(byBlocked);
+      expect(byBlocker).toMatchObject({ ok: false, error: { code: "BLOCKED" } });
+      expect(byBlocked).toMatchObject({
+        ok: false,
+        error: { code: "PROFILE_NOT_FOUND" },
+      });
       expect(await linksBetween(tx, me.id, them.id)).toHaveLength(0);
     }));
 

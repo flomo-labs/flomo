@@ -23,6 +23,7 @@ export function followButtonLabels(tf: FollowTranslator): FollowButtonLabels {
     cancelled: tf("cancelled", { name: "{name}" }),
     failed: tf("failed"),
     rateLimited: tf("rateLimited"),
+    blocked: tf("blockedFollow"),
   };
 }
 

@@ -25,6 +25,8 @@ export type FollowToggleLabels = {
   failed: string;
   // Limite de pedidos para seguir em pouco tempo (RATE_LIMITED).
   rateLimited: string;
+  // Bloqueio vigente (BLOCKED): só chega a quem bloqueou a pessoa.
+  blocked: string;
 };
 
 export const fillName = (text: string, name: string) =>
@@ -69,10 +71,12 @@ export function useFollowToggle({
             router.push("/entrar");
             return;
           }
+          const known: Record<string, string> = {
+            RATE_LIMITED: labels.rateLimited,
+            BLOCKED: labels.blocked,
+          };
           toast.error(
-            result.error.code === "RATE_LIMITED"
-              ? labels.rateLimited
-              : result.error.message || labels.failed,
+            known[result.error.code] ?? (result.error.message || labels.failed),
           );
           return;
         }

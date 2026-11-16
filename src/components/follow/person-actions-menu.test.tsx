@@ -47,6 +47,7 @@ const labels: FollowToggleLabels = {
   cancelled: "Solicitação para {name} cancelada.",
   failed: "Não foi possível concluir agora.",
   rateLimited: "Muitos pedidos para seguir. Tente mais tarde.",
+  blocked: "Você bloqueou esta pessoa.",
 };
 
 const removeLabels: RemoveFollowerLabels = {

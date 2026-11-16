@@ -347,6 +347,7 @@
     "cancelled": "Solicitação para {name} cancelada.",
     "failed": "Não foi possível concluir agora. Tente de novo.",
     "rateLimited": "Você fez muitos pedidos para seguir em pouco tempo. Tente de novo mais tarde.",
+    "blockedFollow": "Você bloqueou esta pessoa. Desbloqueie para seguir.",
     "requestsTitle": "Solicitações para seguir",
     "requestsMenuItem": "Solicitações para seguir",
     "requestsMenuAria": "{count, plural, one {Menu da conta, # solicitação para seguir pendente} other {Menu da conta, # solicitações para seguir pendentes}}",

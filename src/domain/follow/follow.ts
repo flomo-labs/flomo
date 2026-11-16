@@ -71,7 +71,7 @@ export async function followUser(
     );
   }
   if (created === "blocked") {
-    // Mensagem única para os dois sentidos: não revela quem bloqueou quem.
+    // Só chega aqui quem bloqueou; o bloqueado recebe PROFILE_NOT_FOUND.
     return fail("BLOCKED", "Não foi possível seguir esta pessoa.");
   }
   return ok(created);
