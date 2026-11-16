@@ -28,10 +28,13 @@ describe("createFollowRepository.insert", () => {
   });
 });
 
-// Insert recusado pelo gatilho de bloqueio (42501): quem bloqueou recebe
+// Insert recusado pelo gatilho de bloqueio (FL003): quem bloqueou recebe
 // `blocked`; para o bloqueado a resposta é `not_found`, sem revelar o bloqueio.
-function txRefusedByTrigger(blockRows: { blockedId: string }[]): Tx {
-  const refusal = Object.assign(new Error("recusado"), { code: "42501" });
+function txRefusedByTrigger(
+  blockRows: { blockedId: string }[],
+  code = "FL003",
+): Tx {
+  const refusal = Object.assign(new Error("recusado"), { code });
   return {
     transaction: async () => {
       throw refusal;
@@ -40,7 +43,7 @@ function txRefusedByTrigger(blockRows: { blockedId: string }[]): Tx {
   } as unknown as Tx;
 }
 
-describe("createFollowRepository.insert: gatilho de bloqueio (42501)", () => {
+describe("createFollowRepository.insert: gatilho de bloqueio (FL003)", () => {
   it("devolve blocked a quem bloqueou a pessoa", async () => {
     const repo = createFollowRepository(
       txRefusedByTrigger([{ blockedId: "b" }]),
@@ -51,5 +54,12 @@ describe("createFollowRepository.insert: gatilho de bloqueio (42501)", () => {
   it("devolve not_found ao bloqueado, igual a perfil inexistente", async () => {
     const repo = createFollowRepository(txRefusedByTrigger([]));
     expect(await repo.insert("a", "b")).toBe("not_found");
+  });
+
+  it("42501 (policy ou grant negado) sobe como erro, não vira not_found", async () => {
+    const repo = createFollowRepository(txRefusedByTrigger([], "42501"));
+    await expect(repo.insert("a", "b")).rejects.toMatchObject({
+      code: "42501",
+    });
   });
 });
