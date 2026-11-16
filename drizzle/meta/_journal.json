@@ -211,6 +211,13 @@
       "when": 1794857522170,
       "tag": "0029_bloqueio_sqlstate_proprio",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794871100374,
+      "tag": "0030_busca_de_pessoas",
+      "breakpoints": true
     }
   ]
 }

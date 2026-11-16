@@ -17,7 +17,16 @@
     "suggestions": "Sugestões de títulos",
     "seeAll": "Ver todos os resultados para “{query}”",
     "headerLabel": "Buscar títulos",
-    "headerPlaceholder": "Buscar títulos"
+    "headerPlaceholder": "Buscar títulos",
+    "kindLabel": "O que buscar",
+    "kindTitles": "Filmes e séries",
+    "kindPeople": "Pessoas"
+  },
+  "PeopleSearch": {
+    "title": "Pessoas",
+    "tooShort": "Digite pelo menos {min} letras para buscar pessoas pelo @usuário ou pelo nome.",
+    "empty": "Não encontramos ninguém para “{query}”. Confira a grafia ou tente o @usuário.",
+    "failed": "Não foi possível buscar pessoas agora. Tente de novo."
   },
   "QuickAdd": {
     "add": "Adicionar {title} à biblioteca",
