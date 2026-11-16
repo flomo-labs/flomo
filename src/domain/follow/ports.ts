@@ -1,4 +1,4 @@
-import type { FollowStatus } from "@/contracts/follow";
+import type { FollowListCursor, FollowStatus } from "@/contracts/follow";
 
 // Quem pediu para seguir o dono: nome, handle e foto são sempre visíveis,
 // qualquer que seja a privacidade do perfil de quem pediu (decisão de
@@ -15,13 +15,15 @@ export type PendingFollowRequest = {
 export type FollowCounts = { followers: number; following: number };
 
 // Uma pessoa de uma lista de seguidores ou de seguindo. `followedAt` é quando o
-// vínculo foi criado. Nome, handle e foto são sempre visíveis.
+// vínculo foi criado; `cursorAt` é essa data com microssegundos, para o cursor
+// da próxima página (#361). Nome, handle e foto são sempre visíveis.
 export type FollowListEntry = {
   profileId: string;
   handle: string;
   displayName: string | null;
   avatarUrl: string | null;
   followedAt: Date;
+  cursorAt: string;
 };
 
 export type FollowRelation = {
@@ -101,11 +103,11 @@ export interface FollowRepository {
   // quem o segue com solicitação aceita enxergam; para os demais volta vazio.
   listFollowers(
     profileId: string,
-    page: { limit: number; offset: number },
+    page: { limit: number; after: FollowListCursor | null },
   ): Promise<FollowListEntry[]>;
   listFollowing(
     profileId: string,
-    page: { limit: number; offset: number },
+    page: { limit: number; after: FollowListCursor | null },
   ): Promise<FollowListEntry[]>;
 }
 

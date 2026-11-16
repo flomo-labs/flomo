@@ -1,5 +1,5 @@
-import type { FollowStatus } from "@/contracts/follow";
-import type { FollowDeps } from "./ports";
+import type { FollowListCursor, FollowStatus } from "@/contracts/follow";
+import type { FollowDeps, FollowListEntry } from "./ports";
 
 // Vínculos em memória para os testes de domínio (sem banco). `privateIds`
 // imita o gatilho do banco: seguir perfil privado nasce `requested`.
@@ -41,6 +41,8 @@ export function createFakeFollows(world: {
     displayName: world.people?.[id]?.displayName ?? null,
     avatarUrl: world.people?.[id]?.avatarUrl ?? null,
     followedAt: at,
+    // Mesmo formato do banco: ISO com microssegundos.
+    cursorAt: at.toISOString().replace("Z", "000Z"),
   });
   // Mesma regra do banco: perfil público, o dono ou seguidor aceito.
   const canSeeList = (viewerId: string | undefined, profileId: string) =>
@@ -53,8 +55,22 @@ export function createFakeFollows(world: {
           r.followeeId === profileId &&
           r.status === "accepted",
       ));
-  const page = <T>(list: T[], p: { limit: number; offset: number }) =>
-    list.slice(p.offset, p.offset + p.limit);
+  // Lista já em ordem (mais recente primeiro; empate pelo id): corta depois do
+  // cursor e limita, como as funções do banco.
+  const page = (
+    list: FollowListEntry[],
+    p: { limit: number; after: FollowListCursor | null },
+  ) => {
+    const { after } = p;
+    const rest = after
+      ? list.filter(
+          (e) =>
+            e.cursorAt < after.at ||
+            (e.cursorAt === after.at && e.profileId > after.id),
+        )
+      : list;
+    return rest.slice(0, p.limit);
+  };
 
   const deps: FollowDeps = {
     follows: {

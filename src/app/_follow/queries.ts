@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import type { FollowStatus } from "@/contracts/follow";
+import type { FollowListCursor, FollowStatus } from "@/contracts/follow";
 import {
   countFollowRequests,
   getFollowCounts,
@@ -82,29 +82,36 @@ export const FOLLOW_LIST_PAGE_SIZE = 30;
 
 export type FollowListKind = "followers" | "following";
 
-// Um trecho da lista (do vínculo mais recente ao mais antigo), a partir de
-// `offset`, com a relação do usuário logado com cada pessoa, para o menu.
-// Busca uma a mais que o trecho para saber se há mais. Para quem não pode ver
-// a lista volta vazia (a regra é do banco). A tela carrega o primeiro trecho
-// no servidor e os outros conforme a rolagem (`loadMorePeople`).
+// Um trecho da lista (do vínculo mais recente ao mais antigo), depois do
+// cursor `after` (`null` = começo), com a relação do usuário logado com cada
+// pessoa, para o menu. Busca uma a mais que o trecho para saber se há mais; o
+// `nextCursor` é o do último item do trecho (`null` quando acabou), então
+// quem entra ou sai da lista durante a rolagem não desloca o trecho seguinte.
+// Para quem não pode ver a lista volta vazia (a regra é do banco). A tela
+// carrega o primeiro trecho no servidor e os outros conforme a rolagem
+// (`loadMorePeople`).
 export async function loadFollowList(
   user: CurrentUser,
   profileId: string,
   kind: FollowListKind,
-  offset: number,
-): Promise<{ items: FollowListItem[]; hasMore: boolean }> {
+  after: FollowListCursor | null,
+): Promise<{
+  items: FollowListItem[];
+  nextCursor: FollowListCursor | null;
+}> {
   return withUser(user.claims, async (tx) => {
     const follows = createFollowRepository(tx);
     const input = {
       profileId,
       limit: FOLLOW_LIST_PAGE_SIZE + 1,
-      offset,
+      after,
     };
     const result = await (kind === "followers"
       ? listFollowers({ follows }, { id: user.id }, input)
       : listFollowing({ follows }, { id: user.id }, input));
     const all = result.ok ? result.value.people : [];
     const people = all.slice(0, FOLLOW_LIST_PAGE_SIZE);
+    const last = people[people.length - 1];
     const relations = await follows.relationsWith(
       user.id,
       people.map((p) => p.profileId),
@@ -121,7 +128,10 @@ export async function loadFollowList(
           isSelf: person.profileId === user.id,
         };
       }),
-      hasMore: all.length > FOLLOW_LIST_PAGE_SIZE,
+      nextCursor:
+        last && all.length > FOLLOW_LIST_PAGE_SIZE
+          ? { at: last.cursorAt, id: last.profileId }
+          : null,
     };
   });
 }

@@ -83,13 +83,17 @@ function person(n: number): FollowListItem {
   };
 }
 
+// Cursor do último item do trecho inicial (a pessoa 2) e o do trecho seguinte.
+const CURSOR_2 = { at: "2026-01-02T00:00:00.123456Z", id: person(2).profileId };
+const CURSOR_3 = { at: "2026-01-01T00:00:00.000000Z", id: person(3).profileId };
+
 function renderList(hasMore = true) {
   render(
     <InfinitePersonList
       profileId="owner"
       kind="followers"
       initialItems={[person(1), person(2)]}
-      initialHasMore={hasMore}
+      initialNextCursor={hasMore ? CURSOR_2 : null}
       labels={labels}
     />,
   );
@@ -108,7 +112,7 @@ describe("InfinitePersonList", () => {
   it("carrega o próximo trecho ao chegar no fim e para quando acaba", async () => {
     loadMorePeople.mockResolvedValue({
       ok: true,
-      value: { items: [person(3)], hasMore: false },
+      value: { items: [person(3)], nextCursor: null },
     });
     renderList();
     act(() => trigger());
@@ -116,15 +120,37 @@ describe("InfinitePersonList", () => {
     expect(loadMorePeople).toHaveBeenCalledWith({
       profileId: "owner",
       kind: "followers",
-      offset: 2,
+      after: CURSOR_2,
     });
   });
 
-  it("desconta quem foi removido no próximo pedido", async () => {
+  it("pede o trecho seguinte a partir do cursor devolvido, não da quantidade", async () => {
+    loadMorePeople.mockResolvedValueOnce({
+      ok: true,
+      value: { items: [person(3)], nextCursor: CURSOR_3 },
+    });
+    loadMorePeople.mockResolvedValueOnce({
+      ok: true,
+      value: { items: [], nextCursor: null },
+    });
+    renderList();
+    act(() => trigger());
+    await screen.findByText("Pessoa 3");
+    act(() => trigger());
+    await waitFor(() =>
+      expect(loadMorePeople).toHaveBeenLastCalledWith({
+        profileId: "owner",
+        kind: "followers",
+        after: CURSOR_3,
+      }),
+    );
+  });
+
+  it("quem foi removido não muda o cursor do próximo pedido", async () => {
     removeFollowerAction.mockResolvedValue({ ok: true, value: { removed: true } });
     loadMorePeople.mockResolvedValue({
       ok: true,
-      value: { items: [], hasMore: false },
+      value: { items: [], nextCursor: null },
     });
     renderList();
     await userEvent.click(
@@ -140,7 +166,7 @@ describe("InfinitePersonList", () => {
       expect(loadMorePeople).toHaveBeenCalledWith({
         profileId: "owner",
         kind: "followers",
-        offset: 1,
+        after: CURSOR_2,
       }),
     );
   });
@@ -149,7 +175,7 @@ describe("InfinitePersonList", () => {
     loadMorePeople.mockRejectedValueOnce(new Error("rede"));
     loadMorePeople.mockResolvedValueOnce({
       ok: true,
-      value: { items: [person(3)], hasMore: false },
+      value: { items: [person(3)], nextCursor: null },
     });
     renderList();
     act(() => trigger());
@@ -164,7 +190,7 @@ describe("InfinitePersonList", () => {
         profileId="owner"
         kind="followers"
         initialItems={[]}
-        initialHasMore={false}
+        initialNextCursor={null}
         labels={labels}
       />,
     );

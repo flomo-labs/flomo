@@ -27,7 +27,7 @@ export async function FollowListPage({
   const tf = await getTranslations("seguidores");
   const name = profile.displayName ?? `@${profile.handle}`;
   const list = profile.canSeeDetails
-    ? await loadFollowList(user, profile.id, kind, 0)
+    ? await loadFollowList(user, profile.id, kind, null)
     : null;
   // Só o dono remove seguidor, e só na lista de seguidores dele.
   const canRemove = kind === "followers" && profile.id === user.id;
@@ -47,7 +47,7 @@ export async function FollowListPage({
           profileId={profile.id}
           kind={kind}
           initialItems={list.items}
-          initialHasMore={list.hasMore}
+          initialNextCursor={list.nextCursor}
           labels={{
             followsYou: tf("followsYou"),
             menu: tf("personMenuAria", { name: "{name}" }),

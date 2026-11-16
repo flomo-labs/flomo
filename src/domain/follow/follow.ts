@@ -177,9 +177,9 @@ export async function listFollowers(
 ): Promise<Result<{ people: FollowListEntry[] }, "INVALID_INPUT">> {
   const parsed = followListInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
-  const { profileId, limit, offset } = parsed.data;
+  const { profileId, limit, after } = parsed.data;
   return ok({
-    people: await deps.follows.listFollowers(profileId, { limit, offset }),
+    people: await deps.follows.listFollowers(profileId, { limit, after }),
   });
 }
 
@@ -190,8 +190,8 @@ export async function listFollowing(
 ): Promise<Result<{ people: FollowListEntry[] }, "INVALID_INPUT">> {
   const parsed = followListInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
-  const { profileId, limit, offset } = parsed.data;
+  const { profileId, limit, after } = parsed.data;
   return ok({
-    people: await deps.follows.listFollowing(profileId, { limit, offset }),
+    people: await deps.follows.listFollowing(profileId, { limit, after }),
   });
 }
