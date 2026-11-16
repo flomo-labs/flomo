@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- As listas de seguidores e de seguindo limitam os pedidos de mais pessoas por usuário; passando do limite, a lista mostra "Muitas requisições. Tente de novo em instantes." (#362).
 - Seguir alguém com bloqueio vigente: quem bloqueou vê "Você bloqueou esta pessoa. Desbloqueie para seguir."; quem foi bloqueado recebe o mesmo erro de perfil inexistente (sem revelar o bloqueio). O perfil de quem você bloqueou deixa de mostrar as contagens de seguidores e seguindo (#356).
 - Perfil mostra "N seguidores" e "N seguindo", também em perfil privado; viram links para as listas quando a pessoa pode vê-las. As telas `/@handle/seguidores` e `/@handle/seguindo` listam as pessoas, 30 por página, com Seguir, Seguir de volta, Seguindo ou Solicitado e a indicação "Segue você" (#299).
 - Bloquear e desbloquear pessoas: o botão Bloquear fica no perfil de outra pessoa, com diálogo de confirmação; o vínculo de seguir some nos dois sentidos e quem foi bloqueado deixa de ver o perfil. Em Configurações > Privacidade, a lista de pessoas bloqueadas tem o botão Desbloquear (#298).
