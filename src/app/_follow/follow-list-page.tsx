@@ -55,6 +55,7 @@ export async function FollowListPage({
               kind === "followers" ? "emptyFollowers" : "emptyFollowing",
             ),
             loadFailed: tf("loadMoreFailed"),
+            rateLimited: tf("loadMoreRateLimited"),
             retry: tf("retry"),
             follow: followButtonLabels(tf),
             remove: canRemove ? removeFollowerLabels(tf) : null,

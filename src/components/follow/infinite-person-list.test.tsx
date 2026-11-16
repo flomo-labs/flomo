@@ -59,6 +59,7 @@ const labels: InfinitePersonListLabels = {
   menu: "Mais opções para {name}",
   empty: "Ainda não há seguidores por aqui.",
   loadFailed: "Não foi possível carregar mais pessoas.",
+  rateLimited: "Muitas requisições. Tente de novo em instantes.",
   retry: "Tentar de novo",
   follow,
   remove: {
@@ -147,7 +148,10 @@ describe("InfinitePersonList", () => {
   });
 
   it("quem foi removido não muda o cursor do próximo pedido", async () => {
-    removeFollowerAction.mockResolvedValue({ ok: true, value: { removed: true } });
+    removeFollowerAction.mockResolvedValue({
+      ok: true,
+      value: { removed: true },
+    });
     loadMorePeople.mockResolvedValue({
       ok: true,
       value: { items: [], nextCursor: null },
@@ -159,7 +163,9 @@ describe("InfinitePersonList", () => {
     await userEvent.click(
       await screen.findByRole("menuitem", { name: "Remover seguidor" }),
     );
-    await userEvent.click(await screen.findByRole("button", { name: "Remover" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Remover" }),
+    );
     await waitFor(() => expect(screen.queryByText("Pessoa 1")).toBeNull());
     act(() => trigger());
     await waitFor(() =>
@@ -180,8 +186,21 @@ describe("InfinitePersonList", () => {
     renderList();
     act(() => trigger());
     await screen.findByText(labels.loadFailed);
-    await userEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Tentar de novo" }),
+    );
     await screen.findByText("Pessoa 3");
+  });
+
+  it("mostra a mensagem de limite quando o servidor responde RATE_LIMITED", async () => {
+    loadMorePeople.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "RATE_LIMITED", message: "texto do servidor" },
+    });
+    renderList();
+    act(() => trigger());
+    await screen.findByText(labels.rateLimited);
+    expect(screen.queryByText(labels.loadFailed)).toBeNull();
   });
 
   it("mostra o estado vazio quando não há ninguém", () => {

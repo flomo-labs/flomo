@@ -31,6 +31,8 @@ export type InfinitePersonListLabels = {
   menu: string;
   empty: string;
   loadFailed: string;
+  // Limite de pedidos atingido (RATE_LIMITED).
+  rateLimited: string;
   retry: string;
   follow: FollowToggleLabels;
   // Só na lista de seguidores do próprio dono.
@@ -66,6 +68,7 @@ export function InfinitePersonList({
   const cursor = useRef(initialNextCursor);
   const hasMore = nextCursor !== null;
   const [failed, setFailed] = useState(false);
+  const [limited, setLimited] = useState(false);
   const [loading, setLoading] = useState(false);
   const busy = useRef(false);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -76,6 +79,7 @@ export function InfinitePersonList({
     busy.current = true;
     setLoading(true);
     setFailed(false);
+    setLimited(false);
     try {
       const result = await loadMorePeople({
         profileId,
@@ -87,6 +91,7 @@ export function InfinitePersonList({
           router.push("/entrar");
           return;
         }
+        setLimited(result.error.code === "RATE_LIMITED");
         setFailed(true);
         return;
       }
@@ -170,9 +175,13 @@ export function InfinitePersonList({
           {failed ? (
             <div className="flex flex-col items-center gap-2">
               <p role="alert" className="text-sm text-destructive">
-                {labels.loadFailed}
+                {limited ? labels.rateLimited : labels.loadFailed}
               </p>
-              <Button variant="outline" size="sm" onClick={() => void loadMore()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void loadMore()}
+              >
                 {labels.retry}
               </Button>
             </div>

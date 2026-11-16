@@ -370,6 +370,7 @@
     "emptyFollowing": "Ainda não segue ninguém.",
     "listLocked": "Só quem segue {name} vê esta lista.",
     "loadMoreFailed": "Não foi possível carregar mais pessoas.",
+    "loadMoreRateLimited": "Muitas requisições. Tente de novo em instantes.",
     "retry": "Tentar de novo",
     "removeFollower": "Remover seguidor",
     "personMenuAria": "Mais opções para {name}",

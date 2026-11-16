@@ -14,6 +14,7 @@ import { loadMorePeopleInputSchema } from "@/contracts/follow";
 import { fail, ok, type Result } from "@/domain/result";
 import { withUser } from "@/infra/db/client";
 import { createFollowRepository } from "@/infra/db/follow-repository";
+import { createRateLimiter } from "@/lib/rate-limit";
 import { getCurrentUser } from "../_auth/session";
 import { loadFollowList } from "./queries";
 
@@ -82,6 +83,16 @@ export async function listRequests() {
   });
 }
 
+// Freio por usuário na carga de mais pessoas: cada chamada faz uma consulta
+// paginada e a busca das relações. A rolagem normal (30 pessoas por trecho)
+// fica longe do limite. Conta na memória de cada instância, como o das
+// sugestões da busca (src/lib/rate-limit.ts), então é um freio parcial.
+const checkLoadMoreRate = createRateLimiter({
+  limit: 30,
+  windowMs: 60_000,
+  maxKeys: 5000,
+});
+
 // Próximo trecho das listas de seguidores e de seguindo, chamado pela rolagem
 // infinita. Quem pode ver a lista é decidido pelo banco (RLS), como na página.
 export async function loadMorePeople(input: unknown) {
@@ -91,6 +102,12 @@ export async function loadMorePeople(input: unknown) {
   }
   const parsed = loadMorePeopleInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
+  if (!checkLoadMoreRate(user.id, Date.now()).allowed) {
+    return fail(
+      "RATE_LIMITED",
+      "Muitas requisições. Tente de novo em instantes.",
+    );
+  }
   const { profileId, kind, after } = parsed.data;
   return ok(await loadFollowList(user, profileId, kind, after));
 }
