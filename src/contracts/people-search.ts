@@ -6,6 +6,9 @@ import { z } from "zod";
 // limitada a PEOPLE_SEARCH_MAX_PAGE_SIZE.
 export const PEOPLE_SEARCH_MIN_LENGTH = 3;
 export const PEOPLE_SEARCH_MAX_QUERY_LENGTH = 50;
+// Tamanho máximo do texto recebido; o termo usado é cortado em
+// PEOPLE_SEARCH_MAX_QUERY_LENGTH (um texto maior vindo da URL não vira erro).
+export const PEOPLE_SEARCH_MAX_INPUT_LENGTH = 500;
 export const PEOPLE_SEARCH_PAGE_SIZE = 20;
 export const PEOPLE_SEARCH_MAX_PAGE_SIZE = 50;
 
@@ -25,7 +28,7 @@ export const peopleSearchCursorSchema = z.object({
 export type PeopleSearchCursor = z.infer<typeof peopleSearchCursorSchema>;
 
 export const searchPeopleInputSchema = z.object({
-  query: z.string().max(PEOPLE_SEARCH_MAX_QUERY_LENGTH * 2),
+  query: z.string().max(PEOPLE_SEARCH_MAX_INPUT_LENGTH),
   limit: z
     .number()
     .int()
@@ -38,6 +41,6 @@ export const searchPeopleInputSchema = z.object({
 
 // Rolagem infinita da busca: `after` é o cursor do último item recebido.
 export const loadMorePeopleSearchInputSchema = z.object({
-  query: z.string().max(PEOPLE_SEARCH_MAX_QUERY_LENGTH * 2),
+  query: z.string().max(PEOPLE_SEARCH_MAX_INPUT_LENGTH),
   after: peopleSearchCursorSchema,
 });

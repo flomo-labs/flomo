@@ -77,6 +77,7 @@ async function SearchBody({
       <SearchKindTabs
         query={query}
         kind={kind}
+        canSearchPeople={Boolean(await getCurrentUser())}
         labels={{
           aria: t("kindLabel"),
           titles: t("kindTitles"),

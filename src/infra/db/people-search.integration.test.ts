@@ -80,6 +80,9 @@ describe("app.search_people", () => {
       expect(await search(tx, me, "an")).toEqual([]);
       expect(await search(tx, me, "%%%")).toEqual([]);
       expect(await search(tx, me, "___")).toEqual([]);
+      // O mínimo vale depois de tirar `.` e `_` do termo do handle (0031).
+      expect(await search(tx, me, "a._")).toEqual([]);
+      expect(await search(tx, me, "a__")).toEqual([]);
       const anon = await tx.execute(
         sql`select * from app.search_people(${`ana${tag}`}::text, 10, null, null)`,
       );

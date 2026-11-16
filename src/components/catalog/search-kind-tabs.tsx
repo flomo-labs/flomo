@@ -12,12 +12,16 @@ export function SearchKindTabs({
   query,
   kind,
   labels,
+  canSearchPeople,
 }: {
   query: string;
   kind: SearchKind;
   labels: { aria: string; titles: string; people: string };
+  // Só quem entrou na conta busca pessoas; para visitante a aba some.
+  canSearchPeople: boolean;
 }) {
   const router = useRouter();
+  if (!canSearchPeople) return null;
   return (
     <SegmentedControl
       value={kind}

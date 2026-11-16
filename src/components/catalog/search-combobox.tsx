@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { refsInLibrary } from "@/app/_library/actions";
 import { Poster } from "@/components/catalog/poster";
@@ -60,6 +60,8 @@ export function SearchCombobox({
   ariaLabel?: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const listId = useId();
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -133,7 +135,12 @@ export function SearchCombobox({
 
   function openSearch() {
     setOpen(false);
-    router.push(`/buscar?${new URLSearchParams({ q: query })}`);
+    const params = new URLSearchParams({ q: query });
+    // Nova busca feita na aba Pessoas continua nela.
+    if (pathname === "/buscar" && searchParams.get("tipo") === "pessoas") {
+      params.set("tipo", "pessoas");
+    }
+    router.push(`/buscar?${params}`);
   }
 
   function openSuggestion(index: number) {
