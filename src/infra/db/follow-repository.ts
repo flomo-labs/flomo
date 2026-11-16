@@ -8,6 +8,10 @@ const FOREIGN_KEY_VIOLATION = "23503";
 // Códigos do gatilho app.follows_rate_limit (migration 0025).
 const FOLLOW_RATE_LIMITED = "FL001";
 const FOLLOW_LIMIT_NOT_CONFIGURED = "FL002";
+// O gatilho app.follows_set_status recusa vínculo com bloqueio vigente com o
+// mesmo código de uma policy negada (migration 0024). Aqui o insert é sempre do
+// próprio usuário, então a policy não é a causa.
+const INSUFFICIENT_PRIVILEGE = "42501";
 
 // O Drizzle embrulha o erro do driver em `cause`.
 function hasErrorCode(error: unknown, expected: string): boolean {
@@ -66,6 +70,9 @@ export function createFollowRepository(tx: Tx): FollowRepository {
       } catch (error) {
         if (hasErrorCode(error, FOREIGN_KEY_VIOLATION)) {
           return "not_found" as const;
+        }
+        if (hasErrorCode(error, INSUFFICIENT_PRIVILEGE)) {
+          return "blocked" as const;
         }
         if (hasErrorCode(error, FOLLOW_RATE_LIMITED)) {
           return "rate_limited" as const;

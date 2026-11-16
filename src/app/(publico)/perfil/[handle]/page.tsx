@@ -107,37 +107,39 @@ async function ProfileContent({
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold break-words">{name}</h1>
           <p className="text-muted-foreground break-words">@{profile.handle}</p>
-          <FollowCounts
-            label={tf("countsLabel")}
-            listsHref={
-              profile.canSeeDetails
-                ? {
-                    followers: `${profilePath(profile.handle)}/seguidores`,
-                    following: `${profilePath(profile.handle)}/seguindo`,
-                  }
-                : null
-            }
-            followers={
-              <>
-                <strong className="tabular-nums">
-                  {format.format(counts.followers)}
-                </strong>{" "}
-                <span className="text-muted-foreground">
-                  {tf("followersLabel", { count: counts.followers })}
-                </span>
-              </>
-            }
-            following={
-              <>
-                <strong className="tabular-nums">
-                  {format.format(counts.following)}
-                </strong>{" "}
-                <span className="text-muted-foreground">
-                  {tf("followingLabel")}
-                </span>
-              </>
-            }
-          />
+          {isBlocked ? null : (
+            <FollowCounts
+              label={tf("countsLabel")}
+              listsHref={
+                profile.canSeeDetails
+                  ? {
+                      followers: `${profilePath(profile.handle)}/seguidores`,
+                      following: `${profilePath(profile.handle)}/seguindo`,
+                    }
+                  : null
+              }
+              followers={
+                <>
+                  <strong className="tabular-nums">
+                    {format.format(counts.followers)}
+                  </strong>{" "}
+                  <span className="text-muted-foreground">
+                    {tf("followersLabel", { count: counts.followers })}
+                  </span>
+                </>
+              }
+              following={
+                <>
+                  <strong className="tabular-nums">
+                    {format.format(counts.following)}
+                  </strong>{" "}
+                  <span className="text-muted-foreground">
+                    {tf("followingLabel")}
+                  </span>
+                </>
+              }
+            />
+          )}
           {followsMe ? (
             <Badge variant="outline" className="w-fit">
               {tf("followsYou")}

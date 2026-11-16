@@ -28,7 +28,8 @@ export type FollowErrorCode =
   | "PROFILE_NOT_FOUND"
   | "REQUEST_NOT_FOUND"
   | "RATE_LIMITED"
-  | "FOLLOW_LIMITS_NOT_CONFIGURED";
+  | "FOLLOW_LIMITS_NOT_CONFIGURED"
+  | "BLOCKED";
 
 // Seguir de novo quem já se segue (ou já se pediu) devolve o estado atual: o
 // duplo clique não vira erro nem cria outra linha.
@@ -44,6 +45,7 @@ export async function followUser(
     | "PROFILE_NOT_FOUND"
     | "RATE_LIMITED"
     | "FOLLOW_LIMITS_NOT_CONFIGURED"
+    | "BLOCKED"
   >
 > {
   const parsed = followInputSchema.safeParse(input);
@@ -67,6 +69,10 @@ export async function followUser(
       "FOLLOW_LIMITS_NOT_CONFIGURED",
       "Não foi possível seguir agora. Tente de novo mais tarde.",
     );
+  }
+  if (created === "blocked") {
+    // Mensagem única para os dois sentidos: não revela quem bloqueou quem.
+    return fail("BLOCKED", "Não foi possível seguir esta pessoa.");
   }
   return ok(created);
 }

@@ -1,6 +1,8 @@
 import { and, eq, or, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
+import { followUser } from "@/domain/follow/follow";
 import type { Tx } from "./client";
+import { createFollowRepository } from "./follow-repository";
 import {
   asUser,
   closeTestDb,
@@ -184,6 +186,26 @@ describe("blocks: vínculo de seguir", () => {
       await expect(
         asUser(tx, them.id, (utx) => follow(utx, them.id, priv.id)),
       ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+    }));
+
+  it("followUser devolve BLOCKED nos dois sentidos, sem criar vínculo", () =>
+    inRollback(async (tx) => {
+      const me = await createProfile(tx);
+      const them = await createProfile(tx, true);
+      await asUser(tx, me.id, (utx) => block(utx, me.id, them.id));
+      const run = (from: string, to: string) =>
+        asUser(tx, from, (utx) =>
+          followUser(
+            { follows: createFollowRepository(utx) },
+            { id: from },
+            { profileId: to },
+          ),
+        );
+      const byBlocked = await run(them.id, me.id);
+      const byBlocker = await run(me.id, them.id);
+      expect(byBlocked).toMatchObject({ ok: false, error: { code: "BLOCKED" } });
+      expect(byBlocker).toEqual(byBlocked);
+      expect(await linksBetween(tx, me.id, them.id)).toHaveLength(0);
     }));
 
   it("quem bloqueou também não segue o bloqueado enquanto durar o bloqueio", () =>
