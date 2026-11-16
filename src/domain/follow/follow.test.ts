@@ -116,7 +116,7 @@ describe("followUser: bloqueio vigente", () => {
       ok: false,
       error: {
         code: "BLOCKED",
-        message: "Não foi possível seguir esta pessoa.",
+        message: "Você bloqueou esta pessoa. Desbloqueie para seguir.",
       },
     });
     expect(s.rows).toHaveLength(0);

@@ -71,12 +71,13 @@ export function useFollowToggle({
             router.push("/entrar");
             return;
           }
-          const known: Record<string, string> = {
-            RATE_LIMITED: labels.rateLimited,
-            BLOCKED: labels.blocked,
-          };
+          const { code, message } = result.error;
           toast.error(
-            known[result.error.code] ?? (result.error.message || labels.failed),
+            code === "RATE_LIMITED"
+              ? labels.rateLimited
+              : code === "BLOCKED"
+                ? labels.blocked
+                : message || labels.failed,
           );
           return;
         }

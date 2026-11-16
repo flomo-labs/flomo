@@ -72,7 +72,7 @@ export async function followUser(
   }
   if (created === "blocked") {
     // Só chega aqui quem bloqueou; o bloqueado recebe PROFILE_NOT_FOUND.
-    return fail("BLOCKED", "Não foi possível seguir esta pessoa.");
+    return fail("BLOCKED", "Você bloqueou esta pessoa. Desbloqueie para seguir.");
   }
   return ok(created);
 }
