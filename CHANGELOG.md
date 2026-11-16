@@ -21,6 +21,11 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 - No Descobrir, o título "Em alta esta semana em" passou a "Em alta em" e o espaço até o seletor de serviço ficou menor (#343).
 
+### Corrigido
+
+- Nas listas de seguidores e de seguindo, rolar não pula nem repete mais ninguém quando alguém segue ou deixa de seguir durante a rolagem: a lista passou a continuar depois da última pessoa recebida, em vez de contar posições (#361).
+- Para quem desenvolve: migration nova (`0028`, funções de lista com cursor, aditiva); rodar `pnpm db:migrate` no `flomo-dev` antes dos testes de integração.
+
 ### Segurança
 
 - Quem bloqueou você deixa de aparecer nos dados de perfil de quem foi bloqueado (#317).

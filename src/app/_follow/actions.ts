@@ -91,6 +91,6 @@ export async function loadMorePeople(input: unknown) {
   }
   const parsed = loadMorePeopleInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Pedido inválido.");
-  const { profileId, kind, offset } = parsed.data;
-  return ok(await loadFollowList(user, profileId, kind, offset));
+  const { profileId, kind, after } = parsed.data;
+  return ok(await loadFollowList(user, profileId, kind, after));
 }

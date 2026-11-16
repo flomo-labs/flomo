@@ -11,7 +11,7 @@ import type { FollowToggleLabels } from "@/components/follow/use-follow-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import type { FollowStatus } from "@/contracts/follow";
+import type { FollowListCursor, FollowStatus } from "@/contracts/follow";
 
 export type FollowListItem = {
   profileId: string;
@@ -39,36 +39,40 @@ export type InfinitePersonListLabels = {
 
 // Lista de pessoas com rolagem infinita: o primeiro trecho vem do servidor e
 // os seguintes são pedidos (`loadMorePeople`) quando o fim da lista chega perto
-// da tela. Quem é removido sai da lista na hora; como o banco pagina por
-// posição, o próximo pedido desconta os removidos para não pular ninguém.
+// da tela. Quem é removido sai da lista na hora. O banco pagina por cursor (o
+// último item entregue), então remover, seguir ou deixar de seguir durante a
+// rolagem não pula nem repete ninguém.
 export function InfinitePersonList({
   profileId,
   kind,
   initialItems,
-  initialHasMore,
+  initialNextCursor,
   labels,
 }: {
   profileId: string;
   kind: "followers" | "following";
   initialItems: FollowListItem[];
-  initialHasMore: boolean;
+  // Cursor do último item do trecho inicial; `null` quando não há mais.
+  initialNextCursor: FollowListCursor | null;
   labels: InfinitePersonListLabels;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   // Quantos trechos já foram pedidos: refaz o observador só a cada trecho.
   const [batches, setBatches] = useState(0);
-  const [hasMore, setHasMore] = useState(initialHasMore);
+  // Cursor do último item já entregue pelo servidor (mesmo que removido
+  // depois); `null` quando a lista acabou.
+  const [nextCursor, setNextCursor] = useState(initialNextCursor);
+  const cursor = useRef(initialNextCursor);
+  const hasMore = nextCursor !== null;
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Quantas pessoas o servidor já entregou e quantas foram removidas depois.
-  const delivered = useRef(initialItems.length);
-  const removed = useRef(0);
   const busy = useRef(false);
   const sentinel = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(async () => {
-    if (busy.current) return;
+    const after = cursor.current;
+    if (busy.current || !after) return;
     busy.current = true;
     setLoading(true);
     setFailed(false);
@@ -76,7 +80,7 @@ export function InfinitePersonList({
       const result = await loadMorePeople({
         profileId,
         kind,
-        offset: delivered.current - removed.current,
+        after,
       });
       if (!result.ok) {
         if (result.error.code === "UNAUTHENTICATED") {
@@ -86,7 +90,7 @@ export function InfinitePersonList({
         setFailed(true);
         return;
       }
-      delivered.current += result.value.items.length;
+      cursor.current = result.value.nextCursor;
       setItems((prev) => {
         const seen = new Set(prev.map((p) => p.profileId));
         return [
@@ -94,7 +98,7 @@ export function InfinitePersonList({
           ...result.value.items.filter((p) => !seen.has(p.profileId)),
         ];
       });
-      setHasMore(result.value.hasMore);
+      setNextCursor(result.value.nextCursor);
       setBatches((n) => n + 1);
     } catch {
       setFailed(true);
@@ -119,9 +123,7 @@ export function InfinitePersonList({
     // fim ainda estiver perto da tela, já pede o seguinte.
   }, [hasMore, failed, loadMore, batches]);
 
-  function onRemoved(id: string, deleted: boolean) {
-    // Só quem foi apagado agora desloca a posição das páginas seguintes.
-    if (deleted) removed.current += 1;
+  function onRemoved(id: string) {
     setItems((prev) => prev.filter((p) => p.profileId !== id));
   }
 
@@ -153,7 +155,7 @@ export function InfinitePersonList({
                   labels={labels.follow}
                   menuLabel={labels.menu}
                   removeLabels={labels.remove}
-                  onRemoved={(deleted) => onRemoved(person.profileId, deleted)}
+                  onRemoved={() => onRemoved(person.profileId)}
                 />
               )}
             </PersonRow>

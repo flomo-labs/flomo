@@ -16,7 +16,7 @@ import { follows, profiles } from "./schema";
 afterAll(closeTestDb);
 
 const INSUFFICIENT_PRIVILEGE = "42501";
-const PAGE = { limit: 30, offset: 0 };
+const PAGE = { limit: 30, after: null };
 
 async function person(tx: Tx, isPrivate: boolean) {
   const id = await createUser(tx, { full_name: "Pessoa de Teste" });
@@ -148,7 +148,10 @@ describe("contagens e listas de seguidores (migration 0023)", () => {
         s.accepted.id,
       ]);
       const second = await asUser(tx, s.owner.id, (t) =>
-        repo(t).listFollowers(s.owner.id, { limit: 1, offset: 1 }),
+        repo(t).listFollowers(s.owner.id, {
+          limit: 1,
+          after: { at: all[0]!.cursorAt, id: all[0]!.profileId },
+        }),
       );
       expect(second.map((p) => p.profileId)).toEqual([s.accepted.id]);
     }));

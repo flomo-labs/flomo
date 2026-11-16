@@ -31,6 +31,7 @@ type FollowListRow = {
   display_name: string | null;
   avatar_url: string | null;
   followed_at: Date | string;
+  cursor_at: string;
 };
 
 function toEntry(r: FollowListRow) {
@@ -40,6 +41,7 @@ function toEntry(r: FollowListRow) {
     displayName: r.display_name,
     avatarUrl: r.avatar_url,
     followedAt: new Date(r.followed_at),
+    cursorAt: r.cursor_at,
   };
 }
 
@@ -238,16 +240,16 @@ export function createFollowRepository(tx: Tx): FollowRepository {
       };
     },
 
-    async listFollowers(profileId, { limit, offset }) {
+    async listFollowers(profileId, { limit, after }) {
       const rows = await tx.execute<FollowListRow>(
-        sql`select * from app.followers_of(${profileId}::uuid, ${limit}::integer, ${offset}::integer)`,
+        sql`select * from app.followers_of(${profileId}::uuid, ${limit}::integer, ${after?.at ?? null}::timestamptz, ${after?.id ?? null}::uuid)`,
       );
       return [...rows].map(toEntry);
     },
 
-    async listFollowing(profileId, { limit, offset }) {
+    async listFollowing(profileId, { limit, after }) {
       const rows = await tx.execute<FollowListRow>(
-        sql`select * from app.following_of(${profileId}::uuid, ${limit}::integer, ${offset}::integer)`,
+        sql`select * from app.following_of(${profileId}::uuid, ${limit}::integer, ${after?.at ?? null}::timestamptz, ${after?.id ?? null}::uuid)`,
       );
       return [...rows].map(toEntry);
     },

@@ -437,10 +437,23 @@ describe("contagens e listas de seguidores", () => {
     const s = await build(OWNER);
     await followUser(s.deps, { id: STRANGER }, { profileId: OWNER });
     await acceptFollowRequest(s.deps, { id: OWNER }, { followerId: STRANGER });
+    const first = await listFollowers(
+      s.deps,
+      { id: OWNER },
+      { profileId: OWNER, limit: 1 },
+    );
     const page = await listFollowers(
       s.deps,
       { id: OWNER },
-      { profileId: OWNER, limit: 1, offset: 1 },
+      {
+        profileId: OWNER,
+        limit: 1,
+        after: {
+          // O cursor é o do primeiro item (o vínculo mais recente).
+          at: first.ok ? first.value.people[0]!.cursorAt : "",
+          id: first.ok ? first.value.people[0]!.profileId : "",
+        },
+      },
     );
     expect(page.ok && page.value.people.map((p) => p.profileId)).toEqual([F1]);
     expect(

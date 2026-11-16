@@ -21,9 +21,19 @@ export const declineFollowInputSchema = z.object({ followerId: z.uuid() });
 export const removeFollowerInputSchema = z.object({ followerId: z.uuid() });
 
 // Páginas das listas de seguidores e de seguindo. O banco limita a página a
-// FOLLOW_LIST_MAX_PAGE_SIZE (função `app.followers_of`, migration 0023).
+// FOLLOW_LIST_MAX_PAGE_SIZE (função `app.followers_of`, migrations 0023 e 0028).
 export const FOLLOW_LIST_DEFAULT_PAGE_SIZE = 30;
 export const FOLLOW_LIST_MAX_PAGE_SIZE = 100;
+
+// Cursor das listas (#361): data do vínculo do último item entregue, com
+// microssegundos (o formato que o banco devolve em `cursor_at`; um `Date` os
+// perderia), e o id da pessoa, que desempata datas iguais.
+export const followListCursorSchema = z.object({
+  at: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/),
+  id: z.uuid(),
+});
+
+export type FollowListCursor = z.infer<typeof followListCursorSchema>;
 
 export const followCountsInputSchema = z.object({ profileId: z.uuid() });
 
@@ -35,13 +45,14 @@ export const followListInputSchema = z.object({
     .min(1)
     .max(FOLLOW_LIST_MAX_PAGE_SIZE)
     .default(FOLLOW_LIST_DEFAULT_PAGE_SIZE),
-  offset: z.number().int().min(0).default(0),
+  // `null` é a primeira página.
+  after: followListCursorSchema.nullable().default(null),
 });
 
-// Rolagem infinita das listas de seguidores e de seguindo: `offset` é quantas
-// pessoas a tela já carregou.
+// Rolagem infinita das listas de seguidores e de seguindo: `after` é o cursor
+// do último item que a tela recebeu.
 export const loadMorePeopleInputSchema = z.object({
   profileId: z.uuid(),
   kind: z.enum(["followers", "following"]),
-  offset: z.number().int().min(0).max(100_000),
+  after: followListCursorSchema,
 });
