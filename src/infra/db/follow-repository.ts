@@ -8,12 +8,12 @@ const FOREIGN_KEY_VIOLATION = "23503";
 // Códigos do gatilho app.follows_rate_limit (migration 0025).
 const FOLLOW_RATE_LIMITED = "FL001";
 const FOLLOW_LIMIT_NOT_CONFIGURED = "FL002";
-// O gatilho app.follows_set_status recusa vínculo com bloqueio vigente com o
-// mesmo código de uma policy negada (migration 0024). Aqui o insert é sempre do
-// próprio usuário, então a policy não é a causa.
+// O gatilho app.follows_set_status recusa vínculo com bloqueio vigente com
+// FL003 (migration 0029). Um 42501 aqui seria grant ou policy quebrado e sobe
+// como erro, nunca como `not_found`.
 // Só quem bloqueou recebe `blocked`; para quem foi bloqueado o resultado é
 // `not_found`, igual a um perfil inexistente, para a ação não revelar o bloqueio.
-const INSUFFICIENT_PRIVILEGE = "42501";
+const FOLLOW_BLOCKED = "FL003";
 
 // O Drizzle embrulha o erro do driver em `cause`.
 function hasErrorCode(error: unknown, expected: string): boolean {
@@ -75,7 +75,7 @@ export function createFollowRepository(tx: Tx): FollowRepository {
         if (hasErrorCode(error, FOREIGN_KEY_VIOLATION)) {
           return "not_found" as const;
         }
-        if (hasErrorCode(error, INSUFFICIENT_PRIVILEGE)) {
+        if (hasErrorCode(error, FOLLOW_BLOCKED)) {
           // O savepoint já desfez o insert; a transação externa segue
           // utilizável. O RLS de `blocks` só mostra os bloqueios de quem pede.
           const [mine] = await tx

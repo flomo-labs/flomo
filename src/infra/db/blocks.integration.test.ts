@@ -18,6 +18,7 @@ import { blocks, follows, profiles } from "./schema";
 afterAll(closeTestDb);
 
 const INSUFFICIENT_PRIVILEGE = "42501";
+const FOLLOW_BLOCKED = "FL003";
 const CHECK_VIOLATION = "23514";
 const UNIQUE_VIOLATION = "23505";
 
@@ -182,10 +183,10 @@ describe("blocks: vínculo de seguir", () => {
       await asUser(tx, priv.id, (utx) => block(utx, priv.id, them.id));
       await expect(
         asUser(tx, them.id, (utx) => follow(utx, them.id, me.id)),
-      ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+      ).rejects.toEqual(pgError(FOLLOW_BLOCKED));
       await expect(
         asUser(tx, them.id, (utx) => follow(utx, them.id, priv.id)),
-      ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+      ).rejects.toEqual(pgError(FOLLOW_BLOCKED));
     }));
 
   it("followUser: quem bloqueou recebe BLOCKED; o bloqueado recebe o mesmo erro de perfil inexistente", () =>
@@ -211,6 +212,19 @@ describe("blocks: vínculo de seguir", () => {
       expect(await linksBetween(tx, me.id, them.id)).toHaveLength(0);
     }));
 
+  it("o repositório só lê FL003 como bloqueio: policy negada (42501) sobe como erro", () =>
+    inRollback(async (tx) => {
+      const me = await createProfile(tx);
+      const other = await createProfile(tx);
+      const them = await createProfile(tx);
+      // Insert em nome de outra pessoa: a policy de `follows` nega com 42501.
+      await expect(
+        asUser(tx, me.id, (utx) =>
+          createFollowRepository(utx).insert(other.id, them.id),
+        ),
+      ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+    }));
+
   it("quem bloqueou também não segue o bloqueado enquanto durar o bloqueio", () =>
     inRollback(async (tx) => {
       const me = await createProfile(tx);
@@ -218,7 +232,7 @@ describe("blocks: vínculo de seguir", () => {
       await asUser(tx, me.id, (utx) => block(utx, me.id, them.id));
       await expect(
         asUser(tx, me.id, (utx) => follow(utx, me.id, them.id)),
-      ).rejects.toEqual(pgError(INSUFFICIENT_PRIVILEGE));
+      ).rejects.toEqual(pgError(FOLLOW_BLOCKED));
     }));
 
   it("desbloquear não restaura o vínculo, mas libera seguir de novo", () =>
