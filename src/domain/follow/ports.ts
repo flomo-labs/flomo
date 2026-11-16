@@ -38,12 +38,18 @@ export interface FollowRepository {
   // estado atual (nunca duas linhas para o mesmo par; isso não gasta limite).
   // `not_found` se a pessoa seguida não existe; `rate_limited` se quem pede
   // passou do limite de vínculos criados em pouco tempo (o banco decide);
-  // `not_configured` se o ambiente não tem limite gravado (falha fechada).
+  // `not_configured` se o ambiente não tem limite gravado (falha fechada);
+  // `blocked` se há bloqueio vigente entre os dois, em qualquer sentido (o
+  // banco recusa e não diz quem bloqueou quem).
   insert(
     followerId: string,
     followeeId: string,
   ): Promise<
-    { status: FollowStatus } | "not_found" | "rate_limited" | "not_configured"
+    | { status: FollowStatus }
+    | "not_found"
+    | "rate_limited"
+    | "not_configured"
+    | "blocked"
   >;
 
   // Deixa de seguir ou cancela a solicitação; não falha se não há vínculo.

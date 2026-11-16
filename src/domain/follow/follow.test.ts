@@ -106,6 +106,27 @@ describe("followUser: limite de volume", () => {
   });
 });
 
+describe("followUser: bloqueio vigente", () => {
+  it("recusa com BLOCKED nos dois sentidos, sem criar vínculo e sem revelar quem bloqueou", async () => {
+    const s = createFakeFollows({
+      profiles: [ME.id, PUBLIC],
+      blockedPairs: [[PUBLIC, ME.id]],
+    });
+    const byBlocked = await followUser(s.deps, ME, { profileId: PUBLIC });
+    expect(byBlocked).toMatchObject({ ok: false, error: { code: "BLOCKED" } });
+    expect(JSON.stringify(byBlocked)).not.toMatch(/bloque/i);
+
+    const s2 = createFakeFollows({
+      profiles: [ME.id, PUBLIC],
+      blockedPairs: [[ME.id, PUBLIC]],
+    });
+    const byBlocker = await followUser(s2.deps, ME, { profileId: PUBLIC });
+    expect(byBlocker).toEqual(byBlocked);
+    expect(s.rows).toHaveLength(0);
+    expect(s2.rows).toHaveLength(0);
+  });
+});
+
 describe("followUser: ambiente sem limite configurado", () => {
   it("devolve FOLLOW_LIMITS_NOT_CONFIGURED com mensagem clara e não cria vínculo", async () => {
     const s = createFakeFollows({
