@@ -44,4 +44,4 @@ revoke execute on function app.comment_hidden_author_ids() from public;
 --> statement-breakpoint
 grant execute on function app.comment_hidden_author_ids() to authenticated;
 --> statement-breakpoint
-ALTER POLICY "comments_select_published_visible_author" ON "comments" TO authenticated USING ("comments"."moderation_status" = 'published' and app.current_user_id() is not null and "comments"."user_id" not in (select app.comment_hidden_author_ids()));
+ALTER POLICY "comments_select_published_visible_author" ON "comments" TO authenticated USING ("comments"."moderation_status" = 'published' and app.current_user_id() is not null and not exists (select 1 from app.comment_hidden_author_ids() h(id) where h.id = "comments"."user_id"));

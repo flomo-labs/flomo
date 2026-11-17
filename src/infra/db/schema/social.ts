@@ -162,7 +162,7 @@ export const comments = pgTable(
     pgPolicy("comments_select_published_visible_author", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${t.moderationStatus} = 'published' and app.current_user_id() is not null and ${t.userId} not in (select app.comment_hidden_author_ids())`,
+      using: sql`${t.moderationStatus} = 'published' and app.current_user_id() is not null and not exists (select 1 from app.comment_hidden_author_ids() h(id) where h.id = ${t.userId})`,
     }),
   ],
 );
