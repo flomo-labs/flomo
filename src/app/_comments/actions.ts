@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import {
   createComment,
   deleteComment,
+  listTitleComments,
   updateComment,
   type CommentErrorCode,
+  type CommentPage,
 } from "@/domain/comment/comments";
 import { fail, type Result } from "@/domain/result";
 import { withUser } from "@/infra/db/client";
@@ -65,4 +67,25 @@ export async function editComment(input: unknown) {
 
 export async function removeComment(input: unknown) {
   return run(deleteComment, input);
+}
+
+// Leitura dos comentários de outras pessoas (um título, uma temporada ou um
+// episódio, em páginas). Não revalida página nenhuma.
+export async function loadTitleComments(
+  input: unknown,
+): Promise<Result<CommentPage, CommentErrorCode | "UNAUTHENTICATED">> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  return withUser(user.claims, (tx) =>
+    listTitleComments(
+      {
+        comments: createCommentRepository(tx),
+        library: createLibraryRepository(tx),
+      },
+      { id: user.id },
+      input,
+    ),
+  );
 }

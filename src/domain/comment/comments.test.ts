@@ -4,6 +4,7 @@ import {
   createComment,
   deleteComment,
   listMyComments,
+  listTitleComments,
   updateComment,
 } from "./comments";
 import { createFakeComments } from "./test-fakes";
@@ -129,5 +130,127 @@ describe("listMyComments", () => {
     expect(await listMyComments(s.deps, USER, { titleId: "x" })).toMatchObject({
       error: { code: "INVALID_INPUT" },
     });
+  });
+});
+
+const SERIES = "aaaaaaaa-0000-4000-8000-000000000001";
+const SEASON = "bbbbbbbb-0000-4000-8000-000000000001";
+const EPISODE = "bbbbbbbb-0000-4000-8000-000000000002";
+const OTHER_SEASON = "bbbbbbbb-0000-4000-8000-000000000003";
+const ANA = { id: "33333333-3333-4333-8333-333333333333" };
+const BRUNO = { id: "44444444-4444-4444-8444-444444444444" };
+
+function setupSeries(readable?: (viewer: string, author: string) => boolean) {
+  return createFakeComments({
+    titles: { [SERIES]: "tv", [MOVIE]: "movie" },
+    seasons: { [SEASON]: SERIES, [OTHER_SEASON]: MOVIE },
+    episodes: { [EPISODE]: SERIES },
+    readable,
+    authors: {
+      [ANA.id]: { id: ANA.id, handle: "ana.silva", displayName: "Ana", avatarUrl: null },
+    },
+  });
+}
+
+describe("comentário de temporada e de episódio", () => {
+  it("grava o alvo e recusa alvo de outro título, inexistente ou os dois juntos", async () => {
+    const s = setupSeries();
+    expect(
+      await createComment(s.deps, USER, { titleId: SERIES, seasonId: SEASON, body: "Oi" }),
+    ).toMatchObject({ ok: true, value: { seasonId: SEASON, episodeId: null } });
+    expect(
+      await createComment(s.deps, USER, { titleId: SERIES, episodeId: EPISODE, body: "Oi" }),
+    ).toMatchObject({ ok: true, value: { seasonId: null, episodeId: EPISODE } });
+    expect(
+      await createComment(s.deps, USER, { titleId: SERIES, seasonId: OTHER_SEASON, body: "Oi" }),
+    ).toMatchObject({ error: { code: "TARGET_NOT_FOUND" } });
+    expect(
+      await createComment(s.deps, USER, { titleId: SERIES, episodeId: MISSING, body: "Oi" }),
+    ).toMatchObject({ error: { code: "TARGET_NOT_FOUND" } });
+    expect(
+      await createComment(s.deps, USER, {
+        titleId: SERIES,
+        seasonId: SEASON,
+        episodeId: EPISODE,
+        body: "Oi",
+      }),
+    ).toMatchObject({ error: { code: "INVALID_INPUT" } });
+    expect(s.rows).toHaveLength(2);
+  });
+});
+
+describe("listTitleComments", () => {
+  it("lista só os de outras pessoas, no escopo pedido, do mais recente para o mais antigo", async () => {
+    const s = setupSeries();
+    await createComment(s.deps, ANA, { titleId: SERIES, body: "do título 1" });
+    await createComment(s.deps, ANA, { titleId: SERIES, seasonId: SEASON, body: "da temporada" });
+    await createComment(s.deps, ANA, { titleId: SERIES, episodeId: EPISODE, body: "do episódio" });
+    await createComment(s.deps, BRUNO, { titleId: SERIES, body: "do título 2" });
+    await createComment(s.deps, USER, { titleId: SERIES, body: "meu" });
+
+    const bodies = async (input: object) => {
+      const r = await listTitleComments(s.deps, USER, input);
+      return r.ok ? r.value.items.map((c) => c.body) : r;
+    };
+    expect(await bodies({ titleId: SERIES })).toEqual(["do título 2", "do título 1"]);
+    expect(await bodies({ titleId: SERIES, seasonId: SEASON })).toEqual(["da temporada"]);
+    expect(await bodies({ titleId: SERIES, episodeId: EPISODE })).toEqual(["do episódio"]);
+  });
+
+  it("traz o autor, ou nulo quando o perfil não é legível", async () => {
+    const s = setupSeries();
+    await createComment(s.deps, ANA, { titleId: SERIES, body: "a" });
+    await createComment(s.deps, BRUNO, { titleId: SERIES, body: "b" });
+    const r = await listTitleComments(s.deps, USER, { titleId: SERIES });
+    expect(r.ok && r.value.items.map((c) => c.author?.handle ?? null)).toEqual([null, "ana.silva"]);
+  });
+
+  it("só aparece o que a leitura permite e o publicado", async () => {
+    const s = setupSeries((_viewer, author) => author !== BRUNO.id);
+    await createComment(s.deps, ANA, { titleId: SERIES, body: "visível" });
+    await createComment(s.deps, BRUNO, { titleId: SERIES, body: "perfil privado" });
+    const hidden = await createComment(s.deps, ANA, { titleId: SERIES, body: "oculto" });
+    s.rows.find((r) => hidden.ok && r.id === hidden.value.id)!.moderationStatus = "hidden";
+    const r = await listTitleComments(s.deps, USER, { titleId: SERIES });
+    expect(r.ok && r.value.items.map((c) => c.body)).toEqual(["visível"]);
+  });
+
+  it("pagina com cursor sem repetir nem perder comentários", async () => {
+    const s = setupSeries();
+    for (let i = 1; i <= 5; i++) {
+      await createComment(s.deps, ANA, { titleId: SERIES, body: `c${i}` });
+    }
+    const first = await listTitleComments(s.deps, USER, { titleId: SERIES, limit: 2 });
+    expect(first.ok && first.value.items.map((c) => c.body)).toEqual(["c5", "c4"]);
+    const next = first.ok && first.value.next;
+    expect(next).toBeTruthy();
+    const second = await listTitleComments(s.deps, USER, { titleId: SERIES, limit: 2, after: next });
+    expect(second.ok && second.value.items.map((c) => c.body)).toEqual(["c3", "c2"]);
+    const third = await listTitleComments(s.deps, USER, {
+      titleId: SERIES,
+      limit: 2,
+      after: second.ok ? second.value.next : null,
+    });
+    expect(third.ok && third.value.items.map((c) => c.body)).toEqual(["c1"]);
+    expect(third.ok && third.value.next).toBeNull();
+  });
+
+  it("recusa título ou alvo inexistente, alvo de outro título e entrada ruim", async () => {
+    const s = setupSeries();
+    expect(await listTitleComments(s.deps, USER, { titleId: MISSING })).toMatchObject({
+      error: { code: "TITLE_NOT_FOUND" },
+    });
+    expect(await listTitleComments(s.deps, USER, { titleId: SERIES, seasonId: OTHER_SEASON })).toMatchObject({
+      error: { code: "TARGET_NOT_FOUND" },
+    });
+    expect(await listTitleComments(s.deps, USER, { titleId: SERIES, limit: 1000 })).toMatchObject({
+      error: { code: "INVALID_INPUT" },
+    });
+    expect(
+      await listTitleComments(s.deps, USER, {
+        titleId: SERIES,
+        after: { at: "2026-10-18", id: SEASON },
+      }),
+    ).toMatchObject({ error: { code: "INVALID_INPUT" } });
   });
 });
