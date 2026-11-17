@@ -48,7 +48,9 @@ test("outra pessoa lê o comentário do título e o spoiler fica escondido", asy
 
   await openTitle(bia.page, title, heading);
   const section = bia.page.getByRole("region", { name: "Comentários" });
-  await expect(section.getByText(`@${ana.handle}`)).toBeVisible({
+  // O nome mostrado é o de exibição (se houver), então o autor se confere
+  // pelo link do perfil.
+  await expect(section.locator(`a[href="/@${ana.handle}"]`)).toBeVisible({
     timeout: SLOW,
   });
   await expect(section.getByText(`Spoiler da ${unique}`)).toHaveCount(0);
