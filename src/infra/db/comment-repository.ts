@@ -1,8 +1,8 @@
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, ne, notExists, sql } from "drizzle-orm";
 import type { ModerationStatus } from "@/contracts/comment";
 import type { CommentRecord, CommentRepository } from "@/domain/comment/ports";
 import type { Tx } from "./client";
-import { comments, episodes, profiles, seasons } from "./schema";
+import { blocks, comments, episodes, profiles, seasons } from "./schema";
 
 function toRecord(row: typeof comments.$inferSelect): CommentRecord {
   return {
@@ -101,6 +101,19 @@ export function createCommentRepository(tx: Tx): CommentRepository {
             eq(comments.titleId, titleId),
             target,
             ne(comments.userId, viewerId),
+            // Bloqueio nos dois sentidos: quem o viewer bloqueou
+            // não aparece (a 0032 já esconde quem bloqueou o viewer).
+            notExists(
+              tx
+                .select({ one: sql`1` })
+                .from(blocks)
+                .where(
+                  and(
+                    eq(blocks.blockerId, viewerId),
+                    eq(blocks.blockedId, comments.userId),
+                  ),
+                ),
+            ),
             eq(comments.moderationStatus, "published"),
             after
               ? sql`(${comments.createdAt}, ${comments.id}) < (${after.at}::timestamptz, ${after.id}::uuid)`

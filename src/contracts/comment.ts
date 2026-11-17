@@ -67,7 +67,11 @@ export const COMMENT_LIST_MAX_PAGE_SIZE = 50;
 // que o banco devolve em `cursor_at`; um `Date` os perderia), e o id, que
 // desempata datas iguais.
 export const commentListCursorSchema = z.object({
-  at: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/),
+  at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/)
+    // Data impossível (mês 99) passaria no formato e o Postgres a recusaria.
+    .refine((s) => !Number.isNaN(Date.parse(s.replace(/\.\d{6}Z$/, "Z")))),
   id: z.uuid(),
 });
 

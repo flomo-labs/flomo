@@ -71,5 +71,8 @@ describe("alvo e página dos comentários", () => {
     expect(
       listTitleCommentsInputSchema.safeParse({ titleId: id, after: { at: "2026-11-17T04:00:00.123Z", id: other } }).success,
     ).toBe(false);
+    expect(
+      listTitleCommentsInputSchema.safeParse({ titleId: id, after: { at: "9999-99-99T99:99:99.123456Z", id: other } }).success,
+    ).toBe(false);
   });
 });

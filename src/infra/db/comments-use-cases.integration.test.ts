@@ -148,6 +148,7 @@ describe("comentários de outras pessoas e de temporada/episódio no banco", () 
       const follower = await person(tx);
       const stranger = await person(tx);
       const blocked = await person(tx);
+      const blocker = await person(tx);
       const { titleId } = await catalog(tx);
       await write(tx, author, { titleId, body: "público" });
       await write(tx, privateAuthor, { titleId, body: "privado" });
@@ -168,6 +169,9 @@ describe("comentários de outras pessoas e de temporada/episódio no banco", () 
       expect(await bodiesFor(tx, stranger, { titleId })).toEqual(["público"]);
       expect(await bodiesFor(tx, follower, { titleId })).toEqual(["privado", "público"]);
       expect(await bodiesFor(tx, blocked, { titleId })).toEqual([]);
+      // Quem bloqueou o autor também deixa de ver os comentários dele.
+      await tx.insert(blocks).values({ blockerId: blocker, blockedId: author });
+      expect(await bodiesFor(tx, blocker, { titleId })).toEqual([]);
     }));
 
   it("pagina sem repetir nem perder, mesmo com a mesma data de criação", () =>

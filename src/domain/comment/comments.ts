@@ -1,4 +1,5 @@
 import {
+  type CommentListCursor,
   createCommentInputSchema,
   deleteCommentInputSchema,
   listMyCommentsInputSchema,
@@ -115,7 +116,7 @@ export async function listMyComments(
 export type CommentPage = {
   items: PublicComment[];
   // Cursor da próxima página; `null` quando não há mais.
-  next: { at: string; id: string } | null;
+  next: CommentListCursor | null;
 };
 
 // Comentários de outras pessoas num título, numa temporada ou num episódio
