@@ -332,7 +332,11 @@ describe("comentários (comments) no banco", () => {
       await asUser(tx, owner, (utx) =>
         utx.delete(comments).where(eq(comments.id, first.id)),
       );
-      const left = await asUser(tx, owner, (utx) => utx.select().from(comments));
+      // Filtrado pelo título da cena: o banco de desenvolvimento tem
+      // comentários de verdade de outras pessoas, que a leitura alcança.
+      const left = await asUser(tx, owner, (utx) =>
+        utx.select().from(comments).where(eq(comments.titleId, titleId)),
+      );
       expect(left.map((r) => r.body)).toEqual(["Revi e mudei de ideia."]);
     }));
 
@@ -436,7 +440,9 @@ describe("comentários (comments) no banco", () => {
       await tx.insert(comments).values({ userId: owner, titleId, body: "Minha." });
 
       expect(
-        await asUser(tx, other, (utx) => utx.select().from(comments)),
+        await asUser(tx, other, (utx) =>
+          utx.select().from(comments).where(eq(comments.titleId, titleId)),
+        ),
       ).toEqual([]);
       const changed = await asUser(tx, other, (utx) =>
         utx
