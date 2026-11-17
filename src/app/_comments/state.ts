@@ -1,9 +1,14 @@
 import "server-only";
 import { cache } from "react";
-import { listMyComments } from "@/domain/comment/comments";
+import {
+  listMyComments,
+  listTitleComments,
+  type CommentPage,
+} from "@/domain/comment/comments";
 import type { CommentRecord } from "@/domain/comment/ports";
 import { withUser } from "@/infra/db/client";
 import { createCommentRepository } from "@/infra/db/comment-repository";
+import { createLibraryRepository } from "@/infra/db/library-repository";
 import { getCurrentUser } from "../_auth/session";
 
 export type MyCommentsView =
@@ -33,3 +38,52 @@ export const getMyComments = cache(
     }
   },
 );
+
+// Primeira página de comentários de outras pessoas no título (só os do próprio
+// título; temporada e episódio são pedidos ao abrir). Número de comentários
+// por página: o mesmo de "Carregar mais".
+export const getOtherComments = cache(
+  async (
+    titleId: string,
+    limit: number,
+  ): Promise<
+    { kind: "ok"; page: CommentPage } | { kind: "unavailable" }
+  > => {
+    const user = await getCurrentUser();
+    if (!user) return { kind: "unavailable" };
+    try {
+      const result = await withUser(user.claims, (tx) =>
+        listTitleComments(
+          {
+            comments: createCommentRepository(tx),
+            library: createLibraryRepository(tx),
+          },
+          { id: user.id },
+          { titleId, limit },
+        ),
+      );
+      return result.ok
+        ? { kind: "ok", page: result.value }
+        : { kind: "unavailable" };
+    } catch (error) {
+      console.error("Falha ao ler os comentários de outras pessoas:", error);
+      return { kind: "unavailable" };
+    }
+  },
+);
+
+// Comentários do próprio usuário num alvo: o título (sem temporada nem
+// episódio), uma temporada ou um episódio. `listMyComments` traz os de todos
+// os alvos do título.
+export function commentsFor(
+  all: CommentRecord[],
+  scope: { seasonId?: string; episodeId?: string },
+): CommentRecord[] {
+  return all.filter((c) =>
+    scope.episodeId
+      ? c.episodeId === scope.episodeId
+      : scope.seasonId
+        ? c.seasonId === scope.seasonId
+        : c.seasonId === null && c.episodeId === null,
+  );
+}

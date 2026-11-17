@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Comentários de outras pessoas: a página do título mostra os comentários de quem tem perfil público (e de perfil privado que você segue), do mais recente ao mais antigo, 10 por vez com "Carregar mais"; comentário com spoiler fica escondido até você tocar em "Mostrar spoiler" e quem tem perfil privado seguido aparece como "Pessoa do Flomo". O botão "Comentários" de cada temporada e episódio abre o mesmo bloco (seus comentários, o formulário e os de outras pessoas), e agora dá para comentar numa temporada ou episódio. Visitante vê só o convite para entrar (#79).
 - Busca de pessoas: na tela Buscar, a aba "Pessoas" acha perfis pelo @usuário ou pelo nome (a partir de 3 letras), com botão de seguir e rolagem infinita; não aparecem você mesmo nem quem tem bloqueio com você (#357).
 - As listas de seguidores e de seguindo limitam os pedidos de mais pessoas por usuário; passando do limite, a lista mostra "Muitas requisições. Tente de novo em instantes." (#362).
 - Seguir alguém com bloqueio vigente: quem bloqueou vê "Você bloqueou esta pessoa. Desbloqueie para seguir."; quem foi bloqueado recebe o mesmo erro de perfil inexistente (sem revelar o bloqueio). O perfil de quem você bloqueou deixa de mostrar as contagens de seguidores e seguindo (#356).

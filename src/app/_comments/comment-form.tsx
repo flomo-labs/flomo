@@ -19,7 +19,8 @@ export type CommentFormLabels = {
   failed: string;
 };
 
-// Formulário de comentário, usado para escrever (`target.titleId`) e para
+// Formulário de comentário, usado para escrever (`target.titleId`, com
+// `seasonId` ou `episodeId` para comentar numa temporada ou episódio) e para
 // editar (`target.commentId`). Ao dar certo, o de novo comentário se esvazia e
 // `onDone` fecha o de edição.
 export function CommentForm({
@@ -29,7 +30,9 @@ export function CommentForm({
   onCancel,
   labels,
 }: {
-  target: { titleId: string } | { commentId: string };
+  target:
+    | { titleId: string; seasonId?: string; episodeId?: string }
+    | { commentId: string };
   initial?: { body: string; containsSpoilers: boolean };
   onDone?: () => void;
   onCancel?: () => void;
