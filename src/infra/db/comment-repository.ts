@@ -1,13 +1,15 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne, notExists, sql } from "drizzle-orm";
 import type { ModerationStatus } from "@/contracts/comment";
 import type { CommentRecord, CommentRepository } from "@/domain/comment/ports";
 import type { Tx } from "./client";
-import { comments } from "./schema";
+import { blocks, comments, episodes, profiles, seasons } from "./schema";
 
 function toRecord(row: typeof comments.$inferSelect): CommentRecord {
   return {
     id: row.id,
     titleId: row.titleId,
+    seasonId: row.seasonId,
+    episodeId: row.episodeId,
     body: row.body,
     containsSpoilers: row.containsSpoilers,
     // O CHECK da tabela só deixa passar os valores de ModerationStatus.
@@ -22,10 +24,18 @@ function toRecord(row: typeof comments.$inferSelect): CommentRecord {
 // outras pessoas: o filtro por `userId` é obrigatório nas consultas "meus".
 export function createCommentRepository(tx: Tx): CommentRepository {
   return {
-    async insert(userId, titleId, body, containsSpoilers) {
+    async insert(userId, titleId, scope, body, containsSpoilers) {
+      // O trigger da 0032 acerta `title_id` pelo alvo; aqui já vem o certo.
       const [row] = await tx
         .insert(comments)
-        .values({ userId, titleId, body, containsSpoilers })
+        .values({
+          userId,
+          titleId,
+          seasonId: scope && "seasonId" in scope ? scope.seasonId : null,
+          episodeId: scope && "episodeId" in scope ? scope.episodeId : null,
+          body,
+          containsSpoilers,
+        })
         .returning();
       return toRecord(row);
     },
@@ -49,6 +59,86 @@ export function createCommentRepository(tx: Tx): CommentRepository {
         .where(and(eq(comments.userId, userId), eq(comments.titleId, titleId)))
         .orderBy(desc(comments.createdAt), desc(comments.id));
       return rows.map(toRecord);
+    },
+    async findScopeTitleId(scope) {
+      if ("seasonId" in scope) {
+        const [row] = await tx
+          .select({ titleId: seasons.titleId })
+          .from(seasons)
+          .where(eq(seasons.id, scope.seasonId));
+        return row?.titleId;
+      }
+      const [row] = await tx
+        .select({ titleId: seasons.titleId })
+        .from(episodes)
+        .innerJoin(seasons, eq(seasons.id, episodes.seasonId))
+        .where(eq(episodes.id, scope.episodeId));
+      return row?.titleId;
+    },
+    // O RLS já limita a perfil visível e comentário publicado; os filtros
+    // abaixo repetem o publicado de propósito (defesa em dupla). O perfil entra
+    // por junção à esquerda: se o RLS de `profiles` o esconde (perfil privado
+    // seguido), o comentário vem com `author` nulo.
+    async listOthers(viewerId, titleId, scope, limit, after) {
+      const cursorAt = sql<string>`to_char(${comments.createdAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
+      const target = !scope
+        ? sql`${comments.seasonId} is null and ${comments.episodeId} is null`
+        : "seasonId" in scope
+          ? eq(comments.seasonId, scope.seasonId)
+          : eq(comments.episodeId, scope.episodeId);
+      const rows = await tx
+        .select({
+          comment: comments,
+          cursorAt,
+          handle: profiles.handle,
+          displayName: profiles.displayName,
+          avatarUrl: profiles.avatarUrl,
+        })
+        .from(comments)
+        .leftJoin(profiles, eq(profiles.id, comments.userId))
+        .where(
+          and(
+            eq(comments.titleId, titleId),
+            target,
+            ne(comments.userId, viewerId),
+            // Bloqueio nos dois sentidos: quem o viewer bloqueou
+            // não aparece (a 0032 já esconde quem bloqueou o viewer).
+            notExists(
+              tx
+                .select({ one: sql`1` })
+                .from(blocks)
+                .where(
+                  and(
+                    eq(blocks.blockerId, viewerId),
+                    eq(blocks.blockedId, comments.userId),
+                  ),
+                ),
+            ),
+            eq(comments.moderationStatus, "published"),
+            after
+              ? sql`(${comments.createdAt}, ${comments.id}) < (${after.at}::timestamptz, ${after.id}::uuid)`
+              : undefined,
+          ),
+        )
+        .orderBy(desc(comments.createdAt), desc(comments.id))
+        .limit(limit);
+      return rows.map((r) => {
+        const { moderationStatus, ...record } = toRecord(r.comment);
+        void moderationStatus;
+        return {
+          ...record,
+          author:
+            r.handle === null
+              ? null
+              : {
+                  id: r.comment.userId,
+                  handle: r.handle,
+                  displayName: r.displayName,
+                  avatarUrl: r.avatarUrl,
+                },
+          cursorAt: r.cursorAt,
+        };
+      });
     },
   };
 }

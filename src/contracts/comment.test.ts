@@ -3,6 +3,7 @@ import {
   COMMENT_MAX_LENGTH,
   commentBodySchema,
   createCommentInputSchema,
+  listTitleCommentsInputSchema,
 } from "./comment";
 
 describe("commentBodySchema", () => {
@@ -46,5 +47,32 @@ describe("createCommentInputSchema", () => {
 
   it("exige um título válido", () => {
     expect(createCommentInputSchema.safeParse({ titleId: "x", body: "Oi" }).success).toBe(false);
+  });
+});
+
+describe("alvo e página dos comentários", () => {
+  const id = "aaaaaaaa-0000-4000-8000-000000000001";
+  const other = "bbbbbbbb-0000-4000-8000-000000000001";
+
+  it("aceita temporada ou episódio, nunca os dois", () => {
+    const base = { titleId: id, body: "Oi" };
+    expect(createCommentInputSchema.safeParse({ ...base, seasonId: other }).success).toBe(true);
+    expect(createCommentInputSchema.safeParse({ ...base, episodeId: other }).success).toBe(true);
+    expect(
+      createCommentInputSchema.safeParse({ ...base, seasonId: other, episodeId: other }).success,
+    ).toBe(false);
+  });
+
+  it("a lista tem tamanho padrão, limite e cursor com microssegundos", () => {
+    expect(listTitleCommentsInputSchema.parse({ titleId: id })).toMatchObject({ limit: 20, after: null });
+    expect(listTitleCommentsInputSchema.safeParse({ titleId: id, limit: 51 }).success).toBe(false);
+    const at = "2026-11-17T04:00:00.123456Z";
+    expect(listTitleCommentsInputSchema.safeParse({ titleId: id, after: { at, id: other } }).success).toBe(true);
+    expect(
+      listTitleCommentsInputSchema.safeParse({ titleId: id, after: { at: "2026-11-17T04:00:00.123Z", id: other } }).success,
+    ).toBe(false);
+    expect(
+      listTitleCommentsInputSchema.safeParse({ titleId: id, after: { at: "9999-99-99T99:99:99.123456Z", id: other } }).success,
+    ).toBe(false);
   });
 });
