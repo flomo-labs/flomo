@@ -26,6 +26,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Corrigido
 
+- Comentários de outras pessoas: o nome e a foto de quem comenta aparecem também quando o perfil é privado e você já foi aceito como seguidor; quem não segue continua sem ver o comentário (#382).
 - Nas listas de seguidores e de seguindo, rolar não pula nem repete mais ninguém quando alguém segue ou deixa de seguir durante a rolagem: a lista passou a continuar depois da última pessoa recebida, em vez de contar posições (#361).
 - Para quem desenvolve: migration nova (`0028`, funções de lista com cursor, aditiva); rodar `pnpm db:migrate` no `flomo-dev` antes dos testes de integração.
 

@@ -232,6 +232,13 @@
       "when": 1794887059772,
       "tag": "0032_comentarios_leitura_e_temporada_episodio",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794895169665,
+      "tag": "0033_autor_comentario_seguidor_aceito",
+      "breakpoints": true
     }
   ]
 }
