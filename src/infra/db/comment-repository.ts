@@ -17,8 +17,9 @@ function toRecord(row: typeof comments.$inferSelect): CommentRecord {
   };
 }
 
-// Roda dentro do `withUser`: o RLS limita tudo aos comentários do usuário, e
-// o filtro por `userId` só deixa a consulta explícita.
+// Roda dentro do `withUser`. Escrever e apagar é só nos próprios comentários
+// (RLS), mas desde a migration 0032 ler também alcança os publicados de
+// outras pessoas: o filtro por `userId` é obrigatório nas consultas "meus".
 export function createCommentRepository(tx: Tx): CommentRepository {
   return {
     async insert(userId, titleId, body, containsSpoilers) {

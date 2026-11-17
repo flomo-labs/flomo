@@ -16,7 +16,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { COMMENT_MAX_LENGTH, MODERATION_STATUSES } from "@/contracts/comment";
 import { authenticatedRole } from "drizzle-orm/supabase";
-import { episodes, titles } from "./catalog";
+import { episodes, seasons, titles } from "./catalog";
 import { profiles } from "./profiles";
 import { currentUserId, ownRowsOnly } from "./rls";
 
@@ -85,11 +85,16 @@ export const ratings = pgTable(
 );
 
 // Vários comentários por usuário e título, só texto (a nota fica em
-// `ratings`). Qualquer usuário logado comenta, tenha assistido ou não. Por
-// enquanto só do título. Comentário de temporada ou episódio (Fase 2) entra
-// por migration com `season_id`/`episode_id` opcionais (no máximo um), como
-// em `watch_events`: `title_id` continua obrigatório, e os comentários atuais
-// seguem valendo como do título.
+// `ratings`). Qualquer usuário logado comenta, tenha assistido ou não.
+// Comentário de temporada ou episódio usa `season_id`
+// ou `episode_id` opcionais (no máximo um; migration 0032): `title_id`
+// continua obrigatório e o trigger o acerta pela temporada ou episódio, e os
+// comentários antigos seguem valendo como do título.
+//
+// RLS: o autor lê e escreve os próprios (`comments_all_own`); outras pessoas
+// só leem comentário `published` de autor visível a elas (perfil público, ou
+// privado com seguidor aceito; sem bloqueio do autor), pela função
+// app.comment_author_visible (migration 0032).
 export const comments = pgTable(
   "comments",
   {
@@ -100,6 +105,12 @@ export const comments = pgTable(
     titleId: uuid("title_id")
       .notNull()
       .references(() => titles.id, { onDelete: "restrict" }),
+    seasonId: uuid("season_id").references(() => seasons.id, {
+      onDelete: "restrict",
+    }),
+    episodeId: uuid("episode_id").references(() => episodes.id, {
+      onDelete: "restrict",
+    }),
     body: text("body").notNull(),
     containsSpoilers: boolean("contains_spoilers").notNull().default(false),
     // Só o servidor muda: o trigger (migrations 0009, 0010 e 0012) força
@@ -125,6 +136,18 @@ export const comments = pgTable(
       "comments_moderation_status",
       sql`${t.moderationStatus} in (${sql.raw(MODERATION_STATUSES.map((v) => `'${v}'`).join(", "))})`,
     ),
+    // No máximo um entre temporada e episódio.
+    check(
+      "comments_season_or_episode",
+      sql`${t.seasonId} is null or ${t.episodeId} is null`,
+    ),
+    // Comentários de um título (leitura de outras pessoas), mais recente
+    // primeiro.
+    index("comments_title_created_idx").on(
+      t.titleId,
+      t.createdAt.desc().nullsFirst(),
+      t.id.desc().nullsFirst(),
+    ),
     // "Meus comentários deste título", mais recente primeiro.
     index("comments_user_title_created_idx").on(
       t.userId,
@@ -133,6 +156,12 @@ export const comments = pgTable(
       t.id.desc().nullsFirst(),
     ),
     ownRowsOnly("comments", t.userId),
+    // Soma-se (OR) à policy do dono: outras pessoas leem só o publicado.
+    pgPolicy("comments_select_published_visible_author", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${t.moderationStatus} = 'published' and app.comment_author_visible(${t.userId})`,
+    }),
   ],
 );
 

@@ -7,7 +7,7 @@ import {
   createUser,
   inRollback,
 } from "./integration-test-utils";
-import { comments, episodes, ratings, seasons, titles } from "./schema";
+import { comments, episodes, profiles, ratings, seasons, titles } from "./schema";
 import { COMMENT_MAX_LENGTH } from "@/contracts/comment";
 
 // Exercita o SQL das migrations de avaliações (policies, CHECKs, cascata,
@@ -332,7 +332,11 @@ describe("comentários (comments) no banco", () => {
       await asUser(tx, owner, (utx) =>
         utx.delete(comments).where(eq(comments.id, first.id)),
       );
-      const left = await asUser(tx, owner, (utx) => utx.select().from(comments));
+      // Filtrado pelo título da cena: o banco de desenvolvimento tem
+      // comentários de verdade de outras pessoas, que a leitura alcança.
+      const left = await asUser(tx, owner, (utx) =>
+        utx.select().from(comments).where(eq(comments.titleId, titleId)),
+      );
       expect(left.map((r) => r.body)).toEqual(["Revi e mudei de ideia."]);
     }));
 
@@ -425,15 +429,20 @@ describe("comentários (comments) no banco", () => {
       expect(row.updatedAt).toEqual(old);
     }));
 
-  it("ninguém lê, altera ou grava comentário de outro usuário", () =>
+  it("outro usuário não lê (perfil privado), altera nem grava comentário alheio", () =>
     inRollback(async (tx) => {
       const owner = await createUser(tx);
       const other = await createUser(tx);
+      // Perfil público é lido por outros logados desde a 0032 (ver
+      // comments-read.integration.test.ts); aqui o dono é privado.
+      await tx.update(profiles).set({ isPrivate: true }).where(eq(profiles.id, owner));
       const titleId = await createTitle(tx);
       await tx.insert(comments).values({ userId: owner, titleId, body: "Minha." });
 
       expect(
-        await asUser(tx, other, (utx) => utx.select().from(comments)),
+        await asUser(tx, other, (utx) =>
+          utx.select().from(comments).where(eq(comments.titleId, titleId)),
+        ),
       ).toEqual([]);
       const changed = await asUser(tx, other, (utx) =>
         utx
