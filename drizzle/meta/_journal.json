@@ -225,6 +225,13 @@
       "when": 1794871968089,
       "tag": "0031_busca_de_pessoas_minimo_handle",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794887059772,
+      "tag": "0032_comentarios_leitura_e_temporada_episodio",
+      "breakpoints": true
     }
   ]
 }
