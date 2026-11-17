@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   createComment,
@@ -173,10 +173,20 @@ describe("comentários de outras pessoas e de temporada/episódio no banco", () 
         id: privateAuthor,
         displayName: "Pessoa de Teste",
       });
-      // Pendente, estranho e bloqueado não leem o comentário nem o autor.
+      // Pendente, estranho e bloqueado não leem o comentário nem o autor; a
+      // função também não os devolve se chamada direto. O bloqueio apaga o
+      // vínculo de seguir, então esse caso vale como o do estranho.
+      const authorsFor = (viewer: string) =>
+        asUser(tx, viewer, async (t) => [
+          ...(await t.execute(
+            sql`select id from app.comment_authors(array[${privateAuthor}::uuid])`,
+          )),
+        ]);
+      expect(await authorsFor(follower)).toHaveLength(1);
       for (const viewer of [pending, stranger, blockedByAuthor]) {
         const r = await as(tx, viewer, (d, u) => listTitleComments(d, u, { titleId }));
         expect(r.ok && r.value.items).toEqual([]);
+        expect(await authorsFor(viewer)).toEqual([]);
       }
     }));
 
