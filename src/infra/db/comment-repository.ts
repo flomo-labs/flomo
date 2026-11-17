@@ -1,8 +1,12 @@
 import { and, desc, eq, ne, notExists, sql } from "drizzle-orm";
 import type { ModerationStatus } from "@/contracts/comment";
-import type { CommentRecord, CommentRepository } from "@/domain/comment/ports";
+import type {
+  CommentAuthor,
+  CommentRecord,
+  CommentRepository,
+} from "@/domain/comment/ports";
 import type { Tx } from "./client";
-import { blocks, comments, episodes, profiles, seasons } from "./schema";
+import { blocks, comments, episodes, seasons } from "./schema";
 
 function toRecord(row: typeof comments.$inferSelect): CommentRecord {
   return {
@@ -76,9 +80,9 @@ export function createCommentRepository(tx: Tx): CommentRepository {
       return row?.titleId;
     },
     // O RLS já limita a perfil visível e comentário publicado; os filtros
-    // abaixo repetem o publicado de propósito (defesa em dupla). O perfil entra
-    // por junção à esquerda: se o RLS de `profiles` o esconde (perfil privado
-    // seguido), o comentário vem com `author` nulo.
+    // abaixo repetem o publicado de propósito (defesa em dupla). Nome e foto
+    // vêm de `app.comment_authors` (migration 0033), que libera também o autor
+    // de perfil privado seguido; sem linha lá, `author` fica nulo.
     async listOthers(viewerId, titleId, scope, limit, after) {
       const cursorAt = sql<string>`to_char(${comments.createdAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
       const target = !scope
@@ -90,12 +94,8 @@ export function createCommentRepository(tx: Tx): CommentRepository {
         .select({
           comment: comments,
           cursorAt,
-          handle: profiles.handle,
-          displayName: profiles.displayName,
-          avatarUrl: profiles.avatarUrl,
         })
         .from(comments)
-        .leftJoin(profiles, eq(profiles.id, comments.userId))
         .where(
           and(
             eq(comments.titleId, titleId),
@@ -122,20 +122,35 @@ export function createCommentRepository(tx: Tx): CommentRepository {
         )
         .orderBy(desc(comments.createdAt), desc(comments.id))
         .limit(limit);
+      const authorIds = [...new Set(rows.map((r) => r.comment.userId))];
+      const authors = new Map<string, CommentAuthor>();
+      if (authorIds.length > 0) {
+        const found = await tx.execute<{
+          id: string;
+          handle: string;
+          display_name: string | null;
+          avatar_url: string | null;
+        }>(
+          sql`select id, handle, display_name, avatar_url from app.comment_authors(array[${sql.join(
+            authorIds.map((id) => sql`${id}::uuid`),
+            sql`, `,
+          )}])`,
+        );
+        for (const a of found) {
+          authors.set(a.id, {
+            id: a.id,
+            handle: a.handle,
+            displayName: a.display_name,
+            avatarUrl: a.avatar_url,
+          });
+        }
+      }
       return rows.map((r) => {
         const { moderationStatus, ...record } = toRecord(r.comment);
         void moderationStatus;
         return {
           ...record,
-          author:
-            r.handle === null
-              ? null
-              : {
-                  id: r.comment.userId,
-                  handle: r.handle,
-                  displayName: r.displayName,
-                  avatarUrl: r.avatarUrl,
-                },
+          author: authors.get(r.comment.userId) ?? null,
           cursorAt: r.cursorAt,
         };
       });

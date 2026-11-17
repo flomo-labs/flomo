@@ -25,9 +25,9 @@ export type CommentRecord = {
 // Alvo de um comentário abaixo do título.
 export type CommentScope = { seasonId: string } | { episodeId: string };
 
-// Quem escreveu. `null` em `PublicComment.author` quando o perfil do autor
-// não é legível ao usuário (perfil privado seguido): o comentário aparece, mas
-// sem nome nem foto.
+// Quem escreveu. Quem já pode ler o comentário vê o autor, inclusive de perfil
+// privado seguido com follow aceito. `null` em `PublicComment.author` só como
+// rede de segurança (autor sem perfil legível): sem nome nem foto.
 export type CommentAuthor = {
   id: string;
   handle: string;

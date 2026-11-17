@@ -141,6 +141,45 @@ describe("comentários de outras pessoas e de temporada/episódio no banco", () 
       });
     }));
 
+  it("autor de perfil privado: nome e foto só para quem o segue com follow aceito", () =>
+    inRollback(async (tx) => {
+      const privateAuthor = await person(tx, true);
+      const follower = await person(tx);
+      const pending = await person(tx);
+      const stranger = await person(tx);
+      const blockedByAuthor = await person(tx);
+      const { titleId } = await catalog(tx);
+      await write(tx, privateAuthor, { titleId, body: "privado" });
+      await tx.insert(follows).values([
+        { followerId: follower, followeeId: privateAuthor },
+        { followerId: pending, followeeId: privateAuthor },
+        { followerId: blockedByAuthor, followeeId: privateAuthor },
+      ]);
+      await tx
+        .update(follows)
+        .set({ status: "accepted" })
+        .where(eq(follows.followerId, follower));
+      await tx
+        .update(follows)
+        .set({ status: "accepted" })
+        .where(eq(follows.followerId, blockedByAuthor));
+      await tx
+        .insert(blocks)
+        .values({ blockerId: privateAuthor, blockedId: blockedByAuthor });
+
+      const seen = await as(tx, follower, (d, u) => listTitleComments(d, u, { titleId }));
+      expect(seen.ok && seen.value.items).toHaveLength(1);
+      expect(seen.ok && seen.value.items[0].author).toMatchObject({
+        id: privateAuthor,
+        displayName: "Pessoa de Teste",
+      });
+      // Pendente, estranho e bloqueado não leem o comentário nem o autor.
+      for (const viewer of [pending, stranger, blockedByAuthor]) {
+        const r = await as(tx, viewer, (d, u) => listTitleComments(d, u, { titleId }));
+        expect(r.ok && r.value.items).toEqual([]);
+      }
+    }));
+
   it("só aparece o que a política permite: perfil privado, bloqueio e comentário oculto", () =>
     inRollback(async (tx) => {
       const author = await person(tx);
