@@ -54,16 +54,23 @@ returns trigger
 language plpgsql
 set search_path = ''
 as $$
+declare
+  v_title_id uuid;
 begin
   if new.episode_id is not null then
-    select s.title_id into new.title_id
+    select s.title_id into v_title_id
     from public.episodes e
     join public.seasons s on s.id = e.season_id
     where e.id = new.episode_id;
   elsif new.season_id is not null then
-    select s.title_id into new.title_id
+    select s.title_id into v_title_id
     from public.seasons s
     where s.id = new.season_id;
+  end if;
+  -- Se não achou (id inexistente), deixa o title_id como veio: quem recusa é a
+  -- chave estrangeira, com o erro certo.
+  if v_title_id is not null then
+    new.title_id := v_title_id;
   end if;
   return new;
 end;

@@ -23,6 +23,7 @@ afterAll(closeTestDb);
 
 const CHECK_VIOLATION = "23514";
 const INSUFFICIENT_PRIVILEGE = "42501";
+const FOREIGN_KEY_VIOLATION = "23503";
 
 function pgError(code: string) {
   return expect.objectContaining({
@@ -73,9 +74,16 @@ async function comment(tx: Tx, userId: string, titleId: string, body = "oi") {
   return row.id;
 }
 
-const visibleTo = (tx: Tx, viewer: string) =>
+// Só os comentários da cena de teste: o banco pode ter outros, de outras
+// pessoas, já gravados.
+const visibleTo = (tx: Tx, viewer: string, titleId: string) =>
   asUser(tx, viewer, async (t) =>
-    (await t.select({ id: comments.id }).from(comments)).map((r) => r.id),
+    (
+      await t
+        .select({ id: comments.id })
+        .from(comments)
+        .where(eq(comments.titleId, titleId))
+    ).map((r) => r.id),
   );
 
 describe("leitura de comentários de outras pessoas (migration 0032)", () => {
@@ -85,8 +93,8 @@ describe("leitura de comentários de outras pessoas (migration 0032)", () => {
       const viewer = await person(tx, false);
       const { titleId } = await catalog(tx);
       const id = await comment(tx, author, titleId);
-      expect(await visibleTo(tx, viewer)).toEqual([id]);
-      expect(await visibleTo(tx, author)).toEqual([id]);
+      expect(await visibleTo(tx, viewer, titleId)).toEqual([id]);
+      expect(await visibleTo(tx, author, titleId)).toEqual([id]);
     }));
 
   it("anônimo não lê nada", () =>
@@ -118,10 +126,10 @@ describe("leitura de comentários de outras pessoas (migration 0032)", () => {
         .update(follows)
         .set({ status: "accepted" })
         .where(eq(follows.followerId, accepted));
-      expect(await visibleTo(tx, author)).toEqual([id]);
-      expect(await visibleTo(tx, accepted)).toEqual([id]);
-      expect(await visibleTo(tx, pending)).toEqual([]);
-      expect(await visibleTo(tx, stranger)).toEqual([]);
+      expect(await visibleTo(tx, author, titleId)).toEqual([id]);
+      expect(await visibleTo(tx, accepted, titleId)).toEqual([id]);
+      expect(await visibleTo(tx, pending, titleId)).toEqual([]);
+      expect(await visibleTo(tx, stranger, titleId)).toEqual([]);
     }));
 
   it("comentário oculto ou removido pela plataforma some para os outros, e o autor ainda o vê", () =>
@@ -140,8 +148,8 @@ describe("leitura de comentários de outras pessoas (migration 0032)", () => {
         .update(comments)
         .set({ moderationStatus: "removed" })
         .where(eq(comments.id, removed));
-      expect(await visibleTo(tx, viewer)).toEqual([shown]);
-      expect((await visibleTo(tx, author)).sort()).toEqual(
+      expect(await visibleTo(tx, viewer, titleId)).toEqual([shown]);
+      expect((await visibleTo(tx, author, titleId)).sort()).toEqual(
         [hidden, removed, shown].sort(),
       );
     }));
@@ -154,8 +162,8 @@ describe("leitura de comentários de outras pessoas (migration 0032)", () => {
       const { titleId } = await catalog(tx);
       const id = await comment(tx, author, titleId);
       await tx.insert(blocks).values({ blockerId: author, blockedId: blocked });
-      expect(await visibleTo(tx, blocked)).toEqual([]);
-      expect(await visibleTo(tx, other)).toEqual([id]);
+      expect(await visibleTo(tx, blocked, titleId)).toEqual([]);
+      expect(await visibleTo(tx, other, titleId)).toEqual([id]);
     }));
 
   it("outra pessoa continua sem poder alterar nem apagar o comentário", () =>
@@ -201,6 +209,22 @@ describe("comentário de temporada e de episódio (migration 0032)", () => {
       const [row] = await tx.select().from(comments).where(eq(comments.id, id));
       expect(row.seasonId).toBeNull();
       expect(row.episodeId).toBeNull();
+    }));
+
+  it("temporada ou episódio inexistente dá erro de chave estrangeira, não de title_id nulo", () =>
+    inRollback(async (tx) => {
+      const author = await person(tx, false);
+      const c = await catalog(tx);
+      await expect(
+        tx.transaction((sp) =>
+          sp.insert(comments).values({
+            userId: author,
+            titleId: c.titleId,
+            episodeId: "00000000-0000-4000-8000-000000000000",
+            body: "x",
+          }),
+        ),
+      ).rejects.toEqual(pgError(FOREIGN_KEY_VIOLATION));
     }));
 
   it("o title_id é acertado pela temporada ou pelo episódio, e as colunas aceitam um só", () =>

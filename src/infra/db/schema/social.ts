@@ -85,8 +85,8 @@ export const ratings = pgTable(
 );
 
 // Vários comentários por usuário e título, só texto (a nota fica em
-// `ratings`). Qualquer usuário logado comenta, tenha assistido ou não. Por
-// enquanto só do título. Comentário de temporada ou episódio usa `season_id`
+// `ratings`). Qualquer usuário logado comenta, tenha assistido ou não.
+// Comentário de temporada ou episódio usa `season_id`
 // ou `episode_id` opcionais (no máximo um; migration 0032): `title_id`
 // continua obrigatório e o trigger o acerta pela temporada ou episódio, e os
 // comentários antigos seguem valendo como do título.
