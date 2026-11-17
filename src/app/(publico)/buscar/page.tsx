@@ -16,6 +16,8 @@ import { Poster } from "@/components/catalog/poster";
 import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterRowSkeleton } from "@/components/loading/poster-row-skeleton";
 import { SearchForm } from "@/components/catalog/search-form";
+import { SearchKindTabs } from "@/components/catalog/search-kind-tabs";
+import { PeopleResults } from "@/app/_people/people-results";
 import { Button } from "@/components/ui/button";
 import { SEARCH_MAX_PAGE } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
@@ -58,7 +60,9 @@ async function SearchBody({
 }: {
   searchParams: PageProps<"/buscar">["searchParams"];
 }) {
+  const t = await getTranslations("Search");
   const params = await searchParams;
+  const kind = firstValue(params.tipo) === "pessoas" ? "pessoas" : "titulos";
   const query = firstValue(params.q).trim();
   // Página fora do intervalo vira a mais próxima (o TMDB só vai até a 500).
   const requested = Math.trunc(Number(firstValue(params.pagina))) || 1;
@@ -70,7 +74,21 @@ async function SearchBody({
   return (
     <>
       <SearchForm query={query} />
-      <Results query={query} page={page} />
+      <SearchKindTabs
+        query={query}
+        kind={kind}
+        canSearchPeople={Boolean(await getCurrentUser())}
+        labels={{
+          aria: t("kindLabel"),
+          titles: t("kindTitles"),
+          people: t("kindPeople"),
+        }}
+      />
+      {kind === "pessoas" ? (
+        <PeopleResults query={query} />
+      ) : (
+        <Results query={query} page={page} />
+      )}
     </>
   );
 }

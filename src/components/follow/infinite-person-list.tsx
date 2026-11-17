@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadMorePeople } from "@/app/_follow/actions";
+import { loadMorePeopleSearch } from "@/app/_people/actions";
 import { EmptyState } from "@/components/empty-state";
 import { PersonActionsMenu } from "@/components/follow/person-actions-menu";
 import { PersonList, PersonRow } from "@/components/follow/person-row";
@@ -12,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { FollowListCursor, FollowStatus } from "@/contracts/follow";
+import type { PeopleSearchCursor } from "@/contracts/people-search";
 
 export type FollowListItem = {
   profileId: string;
@@ -39,26 +41,34 @@ export type InfinitePersonListLabels = {
   remove: RemoveFollowerLabels | null;
 };
 
+// De onde vêm os trechos: as listas de seguidores e de seguindo de um perfil
+// ou a busca de pessoas (#357). Cada uma tem o seu cursor.
+export type PersonListSource =
+  | { type: "follows"; profileId: string; kind: "followers" | "following" }
+  | { type: "search"; query: string };
+
 // Lista de pessoas com rolagem infinita: o primeiro trecho vem do servidor e
-// os seguintes são pedidos (`loadMorePeople`) quando o fim da lista chega perto
+// os seguintes são pedidos (`loadMorePeople`, ou `loadMorePeopleSearch` na
+// busca) quando o fim da lista chega perto
 // da tela. Quem é removido sai da lista na hora. O banco pagina por cursor (o
 // último item entregue), então remover, seguir ou deixar de seguir durante a
 // rolagem não pula nem repete ninguém.
 export function InfinitePersonList({
-  profileId,
-  kind,
+  source,
   initialItems,
   initialNextCursor,
   labels,
 }: {
-  profileId: string;
-  kind: "followers" | "following";
+  source: PersonListSource;
   initialItems: FollowListItem[];
   // Cursor do último item do trecho inicial; `null` quando não há mais.
-  initialNextCursor: FollowListCursor | null;
+  initialNextCursor: FollowListCursor | PeopleSearchCursor | null;
   labels: InfinitePersonListLabels;
 }) {
   const router = useRouter();
+  // O `source` chega do servidor como objeto novo a cada render do pai: a
+  // chave em texto evita refazer o observador sem necessidade.
+  const sourceKey = JSON.stringify(source);
   const [items, setItems] = useState(initialItems);
   // Quantos trechos já foram pedidos: refaz o observador só a cada trecho.
   const [batches, setBatches] = useState(0);
@@ -74,6 +84,7 @@ export function InfinitePersonList({
   const sentinel = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(async () => {
+    const source = JSON.parse(sourceKey) as PersonListSource;
     const after = cursor.current;
     if (busy.current || !after) return;
     busy.current = true;
@@ -81,11 +92,14 @@ export function InfinitePersonList({
     setFailed(false);
     setLimited(false);
     try {
-      const result = await loadMorePeople({
-        profileId,
-        kind,
-        after,
-      });
+      const result =
+        source.type === "follows"
+          ? await loadMorePeople({
+              profileId: source.profileId,
+              kind: source.kind,
+              after,
+            })
+          : await loadMorePeopleSearch({ query: source.query, after });
       if (!result.ok) {
         if (result.error.code === "UNAUTHENTICATED") {
           router.push("/entrar");
@@ -111,7 +125,7 @@ export function InfinitePersonList({
       busy.current = false;
       setLoading(false);
     }
-  }, [profileId, kind, router]);
+  }, [sourceKey, router]);
 
   useEffect(() => {
     const node = sentinel.current;

@@ -44,8 +44,8 @@ export async function FollowListPage({
         <p className="text-muted-foreground">{tf("listLocked", { name })}</p>
       ) : (
         <InfinitePersonList
-          profileId={profile.id}
-          kind={kind}
+          key={`${kind}-${profile.id}`}
+          source={{ type: "follows", profileId: profile.id, kind }}
           initialItems={list.items}
           initialNextCursor={list.nextCursor}
           labels={{

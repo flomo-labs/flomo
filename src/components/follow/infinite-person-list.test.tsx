@@ -8,10 +8,12 @@ import {
   type InfinitePersonListLabels,
 } from "./infinite-person-list";
 
-const { loadMorePeople, removeFollowerAction } = vi.hoisted(() => ({
-  loadMorePeople: vi.fn(),
-  removeFollowerAction: vi.fn(),
-}));
+const { loadMorePeople, loadMorePeopleSearch, removeFollowerAction } =
+  vi.hoisted(() => ({
+    loadMorePeople: vi.fn(),
+    loadMorePeopleSearch: vi.fn(),
+    removeFollowerAction: vi.fn(),
+  }));
 
 vi.mock("@/app/_follow/actions", () => ({
   loadMorePeople,
@@ -19,6 +21,7 @@ vi.mock("@/app/_follow/actions", () => ({
   follow: vi.fn(),
   unfollow: vi.fn(),
 }));
+vi.mock("@/app/_people/actions", () => ({ loadMorePeopleSearch }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -91,8 +94,7 @@ const CURSOR_3 = { at: "2026-01-01T00:00:00.000000Z", id: person(3).profileId };
 function renderList(hasMore = true) {
   render(
     <InfinitePersonList
-      profileId="owner"
-      kind="followers"
+      source={{ type: "follows", profileId: "owner", kind: "followers" }}
       initialItems={[person(1), person(2)]}
       initialNextCursor={hasMore ? CURSOR_2 : null}
       labels={labels}
@@ -203,11 +205,32 @@ describe("InfinitePersonList", () => {
     expect(screen.queryByText(labels.loadFailed)).toBeNull();
   });
 
+  it("na busca de pessoas pede o trecho seguinte pela ação da busca", async () => {
+    loadMorePeopleSearch.mockResolvedValue({
+      ok: true,
+      value: { items: [person(3)], nextCursor: null },
+    });
+    render(
+      <InfinitePersonList
+        source={{ type: "search", query: "pessoa" }}
+        initialItems={[person(1), person(2)]}
+        initialNextCursor={{ rank: 1, handle: "p2" }}
+        labels={labels}
+      />,
+    );
+    act(() => trigger());
+    await screen.findByText("Pessoa 3");
+    expect(loadMorePeopleSearch).toHaveBeenCalledWith({
+      query: "pessoa",
+      after: { rank: 1, handle: "p2" },
+    });
+    expect(loadMorePeople).not.toHaveBeenCalled();
+  });
+
   it("mostra o estado vazio quando não há ninguém", () => {
     render(
       <InfinitePersonList
-        profileId="owner"
-        kind="followers"
+        source={{ type: "follows", profileId: "owner", kind: "followers" }}
         initialItems={[]}
         initialNextCursor={null}
         labels={labels}
