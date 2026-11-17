@@ -156,11 +156,13 @@ export const comments = pgTable(
       t.id.desc().nullsFirst(),
     ),
     ownRowsOnly("comments", t.userId),
-    // Soma-se (OR) à policy do dono: outras pessoas leem só o publicado.
+    // Soma-se (OR) à policy do dono: outras pessoas leem só o publicado. O
+    // conjunto de autores ocultos é calculado uma vez por consulta (0034), não
+    // por linha.
     pgPolicy("comments_select_published_visible_author", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${t.moderationStatus} = 'published' and app.comment_author_visible(${t.userId})`,
+      using: sql`${t.moderationStatus} = 'published' and app.current_user_id() is not null and ${t.userId} not in (select app.comment_hidden_author_ids())`,
     }),
   ],
 );
