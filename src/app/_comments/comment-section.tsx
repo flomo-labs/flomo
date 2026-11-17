@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { SectionHeader } from "@/components/section-header";
-import { getFormatter, getTranslations } from "next-intl/server";
-import { CommentForm } from "./comment-form";
-import { CommentItem, type CommentItemLabels } from "./comment-item";
-import { getMyComments } from "./state";
+import { COMMENT_PAGE_SIZE } from "@/components/comments/constants";
+import { getTranslations } from "next-intl/server";
+import { CommentBlock } from "./comment-block";
+import { getCommentLabels } from "./labels";
+import { commentsFor, getMyComments, getOtherComments } from "./state";
 
-// Seção "Comentários" da página do título: o formulário e os comentários do
-// próprio usuário. Ler os de outras pessoas é da Fase 2.1.
+// Seção "Comentários" da página do título: o formulário, os comentários do
+// próprio usuário e os de outras pessoas (primeira página lida aqui; as
+// seguintes, no navegador). Os de temporada e episódio ficam em cada um deles
+// (`ScopedComments`). Visitante só vê o convite para entrar: anônimo não lê.
 export async function CommentSection({
   titleId,
   loginHref,
@@ -14,31 +17,12 @@ export async function CommentSection({
   titleId: string;
   loginHref: string;
 }) {
-  const [t, format, view] = await Promise.all([
+  const [t, labels, view, others] = await Promise.all([
     getTranslations("Comments"),
-    getFormatter(),
+    getCommentLabels(),
     getMyComments(titleId),
+    getOtherComments(titleId, COMMENT_PAGE_SIZE),
   ]);
-
-  const form = {
-    body: t("body"),
-    placeholder: t("placeholder"),
-    spoilers: t("spoilersOption"),
-    counter: t.raw("counter") as string,
-    submit: t("submit"),
-    cancel: t("cancel"),
-    failed: t("failed"),
-  };
-  const item: CommentItemLabels = {
-    form: { ...form, submit: t("save") },
-    spoilers: t("spoilersBadge"),
-    moderated: t("moderated"),
-    edited: t("edited"),
-    edit: t("edit"),
-    remove: t("remove"),
-    confirmRemove: t("confirmRemove"),
-    failed: t("failed"),
-  };
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="comentarios">
@@ -52,32 +36,12 @@ export async function CommentSection({
       ) : view.kind === "unavailable" ? (
         <p className="text-muted-foreground">{t("unavailable")}</p>
       ) : (
-        <>
-          <CommentForm target={{ titleId }} labels={form} />
-          {view.comments.length === 0 ? (
-            <p className="text-muted-foreground">{t("empty")}</p>
-          ) : (
-            <ul className="flex flex-col gap-6">
-              {view.comments.map((comment) => (
-                <li key={comment.id}>
-                  <CommentItem
-                    comment={{
-                      id: comment.id,
-                      body: comment.body,
-                      containsSpoilers: comment.containsSpoilers,
-                      edited: comment.updatedAt > comment.createdAt,
-                    }}
-                    date={format.dateTime(comment.createdAt, {
-                      dateStyle: "medium",
-                    })}
-                    moderated={comment.moderationStatus !== "published"}
-                    labels={item}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+        <CommentBlock
+          scope={{ titleId }}
+          own={commentsFor(view.comments, {})}
+          initial={others.kind === "ok" ? others.page : undefined}
+          labels={labels}
+        />
       )}
     </section>
   );

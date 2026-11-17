@@ -12,6 +12,7 @@ import { getLibraryState } from "@/app/_library/state";
 import { StatusSlot } from "@/app/_library/status-slot";
 import { WatchSlot } from "@/app/_library/watch-slot";
 import { CommentSection } from "@/app/_comments/comment-section";
+import { ScopedComments } from "@/app/_comments/scoped-comments";
 import { RatingSlot } from "@/app/_ratings/rating-slot";
 import { getRatingSummary } from "@/app/_ratings/state";
 import { BackLink } from "@/components/back-link";
@@ -366,6 +367,13 @@ async function Seasons({
               >
                 <Episodes titleId={title.id} seasonNumber={n} />
               </Suspense>
+              <Suspense fallback={null}>
+                <ScopedComments
+                  titleId={title.id}
+                  seasonId={season.id}
+                  targetName={label(n)}
+                />
+              </Suspense>
             </SeasonAccordionItem>
           );
         })}
@@ -435,6 +443,17 @@ async function Episodes({
             />
             <RatingSlot titleId={titleId} episodeId={episode.id} />
           </Suspense>
+          <div className="col-span-3 empty:hidden">
+            <Suspense fallback={null}>
+              <ScopedComments
+                titleId={titleId}
+                episodeId={episode.id}
+                targetName={t("episodeLabel", {
+                  number: episode.episodeNumber,
+                })}
+              />
+            </Suspense>
+          </div>
         </li>
       ))}
     </ol>

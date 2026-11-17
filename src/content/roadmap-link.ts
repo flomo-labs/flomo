@@ -6,4 +6,4 @@ export const ROADMAP_TITLE = "O que vem por aí no Flomo";
 // Revisão do roadmap: o selo "Novo" aparece até a pessoa abrir a página com
 // esta revisão. Troque o valor (ex.: a data) ao acrescentar uma novidade em
 // `roadmap.ts`, para o selo voltar a quem já tinha visto.
-export const ROADMAP_REVISION = "2026-11-08";
+export const ROADMAP_REVISION = "2026-11-17";
