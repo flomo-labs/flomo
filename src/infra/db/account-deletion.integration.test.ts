@@ -10,6 +10,7 @@ import {
 import {
   blocks,
   comments,
+  discoverPreferences,
   episodes,
   follows,
   ratings,
@@ -102,6 +103,9 @@ async function seedEverything(tx: Tx, userId: string) {
     await utx
       .insert(comments)
       .values({ userId, titleId: movie.id, body: "Comentário de teste" });
+    await utx
+      .insert(discoverPreferences)
+      .values({ userId, hiddenIds: ["now_playing"] });
   });
 }
 

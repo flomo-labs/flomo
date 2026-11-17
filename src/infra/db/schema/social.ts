@@ -14,6 +14,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { DISCOVER_PREFERENCES_MAX_ITEMS } from "@/contracts/discover-preferences";
 import { COMMENT_MAX_LENGTH, MODERATION_STATUSES } from "@/contracts/comment";
 import { authenticatedRole } from "drizzle-orm/supabase";
 import { episodes, seasons, titles } from "./catalog";
@@ -318,3 +319,45 @@ export const followAttempts = pgTable(
     index("follow_attempts_follower_created_idx").on(t.followerId, t.createdAt),
   ],
 ).enableRLS();
+
+// Preferências da tela Descobrir (Fase 2.10, #111): uma linha por usuário, só
+// com o que ele mudou. `order_ids` e `hidden_ids` são listas de ids estáveis
+// das listas do Descobrir (`src/contracts/discover-preferences.ts`); o banco só
+// limita o tamanho, e quem valida os ids é o Zod (id desconhecido é ignorado na
+// leitura e lista nova entra no fim, então lista nova não pede migration).
+// Sem linha = ordem e exibição padrão. Morre em cascata com o perfil (ADR-003,
+// seção 9); RLS: só o dono lê e escreve a própria linha.
+export const discoverPreferences = pgTable(
+  "discover_preferences",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    orderIds: text("order_ids")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    hiddenIds: text("hidden_ids")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Mantido pelo trigger app.set_updated_at.
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    check(
+      "discover_preferences_order_size",
+      sql`cardinality(${t.orderIds}) <= ${sql.raw(String(DISCOVER_PREFERENCES_MAX_ITEMS))}`,
+    ),
+    check(
+      "discover_preferences_hidden_size",
+      sql`cardinality(${t.hiddenIds}) <= ${sql.raw(String(DISCOVER_PREFERENCES_MAX_ITEMS))}`,
+    ),
+    ownRowsOnly("discover_preferences", t.userId),
+  ],
+);
