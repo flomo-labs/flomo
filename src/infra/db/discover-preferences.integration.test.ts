@@ -59,9 +59,6 @@ describe("discover_preferences", () => {
       );
       expect(changed?.orderIds).toEqual(["now_playing", "trending"]);
       expect(changed?.hiddenIds).toEqual(["trending"]);
-      expect(changed?.updatedAt.getTime()).toBeGreaterThanOrEqual(
-        changed?.createdAt.getTime() ?? 0,
-      );
 
       await asUser(tx, me, (utx) =>
         utx
@@ -71,6 +68,25 @@ describe("discover_preferences", () => {
       expect(
         await asUser(tx, me, (utx) => utx.select().from(discoverPreferences)),
       ).toHaveLength(0);
+    }));
+
+  it("o trigger atualiza updated_at ao alterar", () =>
+    inRollback(async (tx) => {
+      const me = await createUser(tx);
+      const old = new Date("2020-01-01T00:00:00Z");
+      await asUser(tx, me, (utx) =>
+        utx.insert(discoverPreferences).values({ userId: me, updatedAt: old }),
+      );
+      await asUser(tx, me, (utx) =>
+        utx
+          .update(discoverPreferences)
+          .set({ hiddenIds: ["trending"] })
+          .where(eq(discoverPreferences.userId, me)),
+      );
+      const [row] = await asUser(tx, me, (utx) =>
+        utx.select().from(discoverPreferences),
+      );
+      expect(row?.updatedAt.getTime()).toBeGreaterThan(old.getTime());
     }));
 
   it("ninguém grava nem lê a linha de outro usuário", () =>

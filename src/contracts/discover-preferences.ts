@@ -51,6 +51,9 @@ export type DiscoverPreferences = {
 // Ordem final das listas: as da preferência na ordem salva, e as que a
 // preferência não conhece (lista nova) no fim, na ordem padrão.
 export function resolveDiscoverOrder(order: readonly DiscoverListId[]) {
-  const rest = DISCOVER_LIST_IDS.filter((id) => !order.includes(id));
-  return [...order, ...rest];
+  const known = [...new Set(order)].filter((id) =>
+    DISCOVER_LIST_IDS.includes(id),
+  );
+  const rest = DISCOVER_LIST_IDS.filter((id) => !known.includes(id));
+  return [...known, ...rest];
 }

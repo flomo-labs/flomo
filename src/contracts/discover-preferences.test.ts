@@ -53,4 +53,14 @@ describe("resolveDiscoverOrder", () => {
       "trending",
     ]);
   });
+
+  it("ignora repetição e id desconhecido na entrada", () => {
+    expect(
+      resolveDiscoverOrder([
+        "now_playing",
+        "now_playing",
+        "xyz" as unknown as "trending",
+      ]),
+    ).toEqual(["now_playing", "trending"]);
+  });
 });
