@@ -71,10 +71,6 @@ $$;
 --> statement-breakpoint
 revoke execute on function app.comments_set_title() from public;
 --> statement-breakpoint
-create trigger comments_set_title
-before insert or update of season_id, episode_id, title_id on public.comments
-for each row execute function app.comments_set_title();
---> statement-breakpoint
 ALTER TABLE "comments" ADD COLUMN "season_id" uuid;--> statement-breakpoint
 ALTER TABLE "comments" ADD COLUMN "episode_id" uuid;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_season_id_seasons_id_fk" FOREIGN KEY ("season_id") REFERENCES "public"."seasons"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -82,3 +78,7 @@ ALTER TABLE "comments" ADD CONSTRAINT "comments_episode_id_episodes_id_fk" FOREI
 CREATE INDEX "comments_title_created_idx" ON "comments" USING btree ("title_id","created_at" DESC NULLS FIRST,"id" DESC NULLS FIRST);--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_season_or_episode" CHECK ("comments"."season_id" is null or "comments"."episode_id" is null);--> statement-breakpoint
 CREATE POLICY "comments_select_published_visible_author" ON "comments" AS PERMISSIVE FOR SELECT TO "authenticated" USING ("comments"."moderation_status" = 'published' and app.comment_author_visible("comments"."user_id"));
+--> statement-breakpoint
+create trigger comments_set_title
+before insert or update of season_id, episode_id, title_id on public.comments
+for each row execute function app.comments_set_title();

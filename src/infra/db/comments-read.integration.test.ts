@@ -42,7 +42,7 @@ async function person(tx: Tx, isPrivate: boolean) {
 async function catalog(tx: Tx) {
   const [series] = await tx
     .insert(titles)
-    .values({ mediaType: "series", originalTitle: "Série" })
+    .values({ mediaType: "tv", originalTitle: "Série" })
     .returning({ id: titles.id });
   const [other] = await tx
     .insert(titles)
