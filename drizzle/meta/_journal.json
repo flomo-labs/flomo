@@ -239,6 +239,13 @@
       "when": 1794895169665,
       "tag": "0033_autor_comentario_seguidor_aceito",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794937101377,
+      "tag": "0034_comentarios_leitura_sem_funcao_por_linha",
+      "breakpoints": true
     }
   ]
 }

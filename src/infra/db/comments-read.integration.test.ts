@@ -166,6 +166,39 @@ describe("leitura de comentários de outras pessoas (migration 0032)", () => {
       expect(await visibleTo(tx, other, titleId)).toEqual([id]);
     }));
 
+  it("com autores de todos os tipos no mesmo título, cada leitor vê só o que a regra permite (migration 0034)", () =>
+    inRollback(async (tx) => {
+      const publicAuthor = await person(tx, false);
+      const privateFollowed = await person(tx, true);
+      const privateStranger = await person(tx, true);
+      const blocker = await person(tx, false);
+      const privateBlocker = await person(tx, true);
+      const viewer = await person(tx, false);
+      const { titleId } = await catalog(tx);
+      const pub = await comment(tx, publicAuthor, titleId);
+      const followed = await comment(tx, privateFollowed, titleId);
+      await comment(tx, privateStranger, titleId);
+      await comment(tx, blocker, titleId);
+      await comment(tx, privateBlocker, titleId);
+      await tx.insert(follows).values([
+        { followerId: viewer, followeeId: privateFollowed },
+        { followerId: viewer, followeeId: privateBlocker },
+      ]);
+      await tx
+        .update(follows)
+        .set({ status: "accepted" })
+        .where(eq(follows.followerId, viewer));
+      await tx.insert(blocks).values([
+        { blockerId: blocker, blockedId: viewer },
+        { blockerId: privateBlocker, blockedId: viewer },
+      ]);
+      expect((await visibleTo(tx, viewer, titleId)).sort()).toEqual(
+        [pub, followed].sort(),
+      );
+      // Estranho: público, o próprio comentário e quem não o bloqueou; nenhum privado alheio.
+      expect(await visibleTo(tx, privateStranger, titleId)).toHaveLength(3);
+    }));
+
   it("outra pessoa continua sem poder alterar nem apagar o comentário", () =>
     inRollback(async (tx) => {
       const author = await person(tx, false);
