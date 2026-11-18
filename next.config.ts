@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  // Tela já visitada fica 30 s no navegador: voltar a ela não refaz a busca
+  // no servidor nem mostra esqueleto. Ações que gravam dados chamam
+  // revalidatePath, que invalida esse cache na hora (ver app/_library/actions).
+  experimental: { staleTimes: { dynamic: 30 } },
   // Perfil em /@handle. Pastas com @ são slots no App Router, então a página
   // mora em /perfil/[handle] e o endereço curto é reescrito para ela.
   async rewrites() {
