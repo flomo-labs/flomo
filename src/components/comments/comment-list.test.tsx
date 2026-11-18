@@ -40,6 +40,8 @@ function comment(id: string, body: string): PublicComment {
     episodeId: null,
     body,
     containsSpoilers: false,
+    likeCount: 0,
+    likedByMe: false,
     createdAt: new Date("2026-11-17T12:00:00Z"),
     updatedAt: new Date("2026-11-17T12:00:00Z"),
     author: { id: "a", handle: "ana", displayName: "Ana", avatarUrl: null },
@@ -118,10 +120,7 @@ describe("CommentList", () => {
         value: page([comment("c1", "Primeiro")], null),
       });
     render(
-      <CommentList
-        scope={{ titleId: TITLE, seasonId: "s" }}
-        labels={labels}
-      />,
+      <CommentList scope={{ titleId: TITLE, seasonId: "s" }} labels={labels} />,
     );
     expect((await screen.findByRole("alert")).textContent).toBe(
       "Não foi possível carregar.",

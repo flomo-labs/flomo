@@ -9,6 +9,7 @@ import {
 } from "./integration-test-utils";
 import {
   blocks,
+  commentLikes,
   comments,
   discoverPreferences,
   episodes,
@@ -100,9 +101,13 @@ async function seedEverything(tx: Tx, userId: string) {
     await utx
       .insert(ratings)
       .values({ userId, titleId: movie.id, halfStars: 7 });
-    await utx
+    const [comment] = await utx
       .insert(comments)
-      .values({ userId, titleId: movie.id, body: "Comentário de teste" });
+      .values({ userId, titleId: movie.id, body: "Comentário de teste" })
+      .returning({ id: comments.id });
+    // Curtida no próprio comentário (permitida): cobre a coluna `user_id` de
+    // `comment_likes`.
+    await utx.insert(commentLikes).values({ commentId: comment.id, userId });
     await utx
       .insert(discoverPreferences)
       .values({ userId, hiddenIds: ["now_playing"] });

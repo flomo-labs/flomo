@@ -2,11 +2,12 @@ import { and, desc, eq, ne, notExists, sql } from "drizzle-orm";
 import type { ModerationStatus } from "@/contracts/comment";
 import type {
   CommentAuthor,
+  CommentLikes,
   CommentRecord,
   CommentRepository,
 } from "@/domain/comment/ports";
 import type { Tx } from "./client";
-import { blocks, comments, episodes, seasons } from "./schema";
+import { blocks, commentLikes, comments, episodes, seasons } from "./schema";
 
 function toRecord(row: typeof comments.$inferSelect): CommentRecord {
   return {
@@ -27,7 +28,61 @@ function toRecord(row: typeof comments.$inferSelect): CommentRecord {
 // (RLS), mas desde a migration 0032 ler também alcança os publicados de
 // outras pessoas: o filtro por `userId` é obrigatório nas consultas "meus".
 export function createCommentRepository(tx: Tx): CommentRepository {
+  // Pela função `app.comment_like_summaries` (migration 0036): a policy de
+  // `comment_likes` só mostra as curtidas do próprio usuário, e a função já
+  // deixa de fora o comentário que ele não pode ler.
+  async function likeSummaries(
+    commentIds: string[],
+  ): Promise<Map<string, CommentLikes>> {
+    const map = new Map<string, CommentLikes>();
+    if (commentIds.length === 0) return map;
+    const found = await tx.execute<{
+      comment_id: string;
+      like_count: number;
+      liked_by_me: boolean;
+    }>(
+      sql`select comment_id, like_count, liked_by_me from app.comment_like_summaries(array[${sql.join(
+        commentIds.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )}])`,
+    );
+    for (const r of found) {
+      map.set(r.comment_id, {
+        likeCount: r.like_count,
+        likedByMe: r.liked_by_me,
+      });
+    }
+    return map;
+  }
+
+  const noLikes: CommentLikes = { likeCount: 0, likedByMe: false };
+
   return {
+    async like(userId, commentId) {
+      // `app.can_like_comment` é a mesma regra da policy de insert; checar antes
+      // devolve "não pode" sem depender de erro 42501. A policy segue como
+      // defesa em dupla.
+      const allowed = await tx.execute<{ ok: boolean }>(
+        sql`select app.can_like_comment(${commentId}::uuid) as ok`,
+      );
+      if (!allowed[0]?.ok) return undefined;
+      await tx
+        .insert(commentLikes)
+        .values({ commentId, userId })
+        .onConflictDoNothing();
+      return (await likeSummaries([commentId])).get(commentId) ?? noLikes;
+    },
+    async unlike(userId, commentId) {
+      await tx
+        .delete(commentLikes)
+        .where(
+          and(
+            eq(commentLikes.commentId, commentId),
+            eq(commentLikes.userId, userId),
+          ),
+        );
+      return (await likeSummaries([commentId])).get(commentId) ?? noLikes;
+    },
     async insert(userId, titleId, scope, body, containsSpoilers) {
       // O trigger da 0032 acerta `title_id` pelo alvo; aqui já vem o certo.
       const [row] = await tx
@@ -62,7 +117,11 @@ export function createCommentRepository(tx: Tx): CommentRepository {
         .from(comments)
         .where(and(eq(comments.userId, userId), eq(comments.titleId, titleId)))
         .orderBy(desc(comments.createdAt), desc(comments.id));
-      return rows.map(toRecord);
+      const likes = await likeSummaries(rows.map((r) => r.id));
+      return rows.map((r) => ({
+        ...toRecord(r),
+        ...(likes.get(r.id) ?? noLikes),
+      }));
     },
     async findScopeTitleId(scope) {
       if ("seasonId" in scope) {
@@ -145,11 +204,13 @@ export function createCommentRepository(tx: Tx): CommentRepository {
           });
         }
       }
+      const likes = await likeSummaries(rows.map((r) => r.comment.id));
       return rows.map((r) => {
         const { moderationStatus, ...record } = toRecord(r.comment);
         void moderationStatus;
         return {
           ...record,
+          ...(likes.get(r.comment.id) ?? noLikes),
           author: authors.get(r.comment.userId) ?? null,
           cursorAt: r.cursorAt,
         };
