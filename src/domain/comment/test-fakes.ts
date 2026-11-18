@@ -17,14 +17,47 @@ export function createFakeComments(catalog: {
   episodes?: Record<string, string>;
   // Quem o usuário pode ler (id do autor); sem a chave, todos. Imita o RLS.
   readable?: (viewerId: string, authorId: string) => boolean;
+  // Bloqueio de quem curte sobre o autor (impede curtir; não esconde).
+  blocked?: (viewerId: string, authorId: string) => boolean;
   authors?: Record<string, CommentAuthor>;
 }) {
   const rows: (CommentRecord & { userId: string })[] = [];
+  // Curtidas: "comentário|pessoa".
+  const likes = new Set<string>();
+  const summaryOf = (
+    viewerId: string,
+    r: CommentRecord & { userId: string },
+  ) => ({
+    likeCount: [...likes].filter((k) => k.startsWith(`${r.id}|`)).length,
+    likedByMe: likes.has(`${r.id}|${viewerId}`),
+  });
+  // Pode ler: publicado e autor visível (o próprio sempre).
+  const canRead = (viewerId: string, r: CommentRecord & { userId: string }) =>
+    r.moderationStatus === "published" &&
+    (r.userId === viewerId || (catalog.readable?.(viewerId, r.userId) ?? true));
   let nextId = 1;
   let clock = Date.parse("2026-10-18T12:00:00Z");
   const tick = () => new Date((clock += 1000));
 
   const repo: CommentRepository = {
+    async like(userId, commentId) {
+      const row = rows.find((r) => r.id === commentId);
+      if (
+        !row ||
+        !canRead(userId, row) ||
+        catalog.blocked?.(userId, row.userId)
+      )
+        return undefined;
+      likes.add(`${commentId}|${userId}`);
+      return summaryOf(userId, row);
+    },
+    async unlike(userId, commentId) {
+      likes.delete(`${commentId}|${userId}`);
+      const row = rows.find((r) => r.id === commentId);
+      return row && canRead(userId, row)
+        ? summaryOf(userId, row)
+        : { likeCount: 0, likedByMe: false };
+    },
     async insert(userId, titleId, scope, body, containsSpoilers) {
       const at = tick();
       const row = {
@@ -60,7 +93,7 @@ export function createFakeComments(catalog: {
     async listMine(userId, titleId) {
       return rows
         .filter((r) => r.userId === userId && r.titleId === titleId)
-        .map(strip)
+        .map((r) => ({ ...strip(r), ...summaryOf(userId, r) }))
         .reverse();
     },
     async findScopeTitleId(scope: CommentScope) {
@@ -101,6 +134,7 @@ export function createFakeComments(catalog: {
           void moderationStatus;
           return {
             ...rest,
+            ...summaryOf(viewerId, r),
             author: catalog.authors?.[userId] ?? null,
             cursorAt: cursorOf(r),
           };

@@ -3,8 +3,10 @@ import { USER } from "../library/test-fakes";
 import {
   createComment,
   deleteComment,
+  likeComment,
   listMyComments,
   listTitleComments,
+  unlikeComment,
   updateComment,
 } from "./comments";
 import { createFakeComments } from "./test-fakes";
@@ -252,5 +254,93 @@ describe("listTitleComments", () => {
         after: { at: "2026-10-18", id: SEASON },
       }),
     ).toMatchObject({ error: { code: "INVALID_INPUT" } });
+  });
+});
+
+describe("likeComment e unlikeComment", () => {
+  it("curte e descurte, conta de todos e mostra a própria curtida; curtir de novo não duplica", async () => {
+    const s = setup();
+    const made = await createComment(s.deps, OTHER_USER, { titleId: MOVIE, body: "texto" });
+    if (!made.ok) throw new Error("setup");
+    const id = made.value.id;
+    expect(await likeComment(s.deps, USER, { commentId: id })).toEqual({
+      ok: true,
+      value: { likeCount: 1, likedByMe: true },
+    });
+    expect(await likeComment(s.deps, USER, { commentId: id })).toMatchObject({
+      ok: true,
+      value: { likeCount: 1, likedByMe: true },
+    });
+    expect(await likeComment(s.deps, OTHER_USER, { commentId: id })).toMatchObject({
+      ok: true,
+      value: { likeCount: 2, likedByMe: true },
+    });
+    const list = await listTitleComments(s.deps, USER, { titleId: MOVIE });
+    expect(list).toMatchObject({
+      ok: true,
+      value: { items: [{ likeCount: 2, likedByMe: true }] },
+    });
+    expect(await unlikeComment(s.deps, USER, { commentId: id })).toEqual({
+      ok: true,
+      value: { likeCount: 1, likedByMe: false },
+    });
+    // Sem curtida não é erro.
+    expect(await unlikeComment(s.deps, USER, { commentId: id })).toMatchObject({
+      ok: true,
+      value: { likeCount: 1, likedByMe: false },
+    });
+  });
+
+  it("permite curtir o próprio comentário", async () => {
+    const s = setup();
+    const made = await createComment(s.deps, USER, { titleId: MOVIE, body: "meu" });
+    if (!made.ok) throw new Error("setup");
+    expect(await likeComment(s.deps, USER, { commentId: made.value.id })).toMatchObject({
+      ok: true,
+      value: { likeCount: 1, likedByMe: true },
+    });
+    expect(await listMyComments(s.deps, USER, { titleId: MOVIE })).toMatchObject({
+      ok: true,
+      value: [{ likeCount: 1, likedByMe: true }],
+    });
+  });
+
+  it("recusa como inexistente o comentário que a pessoa não pode ler ou de autor que ela bloqueou", async () => {
+    const s = createFakeComments({
+      titles: { [MOVIE]: "movie" },
+      readable: (viewer, author) => !(viewer === USER.id && author === OTHER_USER.id),
+    });
+    const hidden = await createComment(s.deps, OTHER_USER, { titleId: MOVIE, body: "x" });
+    if (!hidden.ok) throw new Error("setup");
+    expect(await likeComment(s.deps, USER, { commentId: hidden.value.id })).toMatchObject({
+      ok: false,
+      error: { code: "COMMENT_NOT_FOUND" },
+    });
+    const blocking = createFakeComments({
+      titles: { [MOVIE]: "movie" },
+      blocked: (viewer, author) => viewer === USER.id && author === OTHER_USER.id,
+    });
+    const other = await createComment(blocking.deps, OTHER_USER, { titleId: MOVIE, body: "y" });
+    if (!other.ok) throw new Error("setup");
+    expect(await likeComment(blocking.deps, USER, { commentId: other.value.id })).toMatchObject({
+      ok: false,
+      error: { code: "COMMENT_NOT_FOUND" },
+    });
+    expect(await likeComment(s.deps, USER, { commentId: MISSING })).toMatchObject({
+      ok: false,
+      error: { code: "COMMENT_NOT_FOUND" },
+    });
+  });
+
+  it("recusa entrada malformada", async () => {
+    const s = setup();
+    expect(await likeComment(s.deps, USER, { commentId: "x" })).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INPUT" },
+    });
+    expect(await unlikeComment(s.deps, USER, {})).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INPUT" },
+    });
   });
 });
