@@ -168,6 +168,54 @@ export const comments = pgTable(
   ],
 );
 
+// Curtidas nos comentários (#396). Uma linha por par comentário → pessoa que
+// curtiu. Só a contagem e o "eu curti" chegam à tela, sem lista de quem curtiu.
+//
+// - Morre em cascata com o comentário e com o perfil (ADR-003, seção 9).
+// - Qualquer usuário logado curte, inclusive o próprio comentário, desde que
+//   `app.can_like_comment` (migration 0036) deixe: comentário publicado, autor
+//   visível a quem curte e sem bloqueio entre os dois. Descurtir não depende
+//   disso (o dono sempre apaga a própria curtida).
+// - RLS: cada pessoa só enxerga, cria e apaga as próprias linhas; sem UPDATE.
+//   A contagem de todos vem de `app.comment_like_summaries` (security
+//   definer), que só devolve comentário que quem pergunta já pode ler.
+// - Bloquear não apaga curtidas antigas, e a contagem continua total.
+export const commentLikes = pgTable(
+  "comment_likes",
+  {
+    commentId: uuid("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Também serve à contagem por comentário (comment_id vem primeiro).
+    primaryKey({ columns: [t.commentId, t.userId] }),
+    // Apagar o perfil apaga as curtidas dele em cascata.
+    index("comment_likes_user_idx").on(t.userId),
+    pgPolicy("comment_likes_select_own", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${t.userId} = ${currentUserId}`,
+    }),
+    pgPolicy("comment_likes_insert_own_if_allowed", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${t.userId} = ${currentUserId} and app.can_like_comment(${t.commentId})`,
+    }),
+    pgPolicy("comment_likes_delete_own", {
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${t.userId} = ${currentUserId}`,
+    }),
+  ],
+);
+
 // Seguidores (Fase 2.1). Uma linha por par seguidor → seguido, com estado:
 // `accepted` (segue; perfil público segue direto) ou `requested` (solicitação
 // a perfil privado, esperando o dono). Quem foi aceito vê o perfil completo,
