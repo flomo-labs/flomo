@@ -22,6 +22,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
+- Trocar de tela ficou mais fluido: as telas visitadas há menos de 30 segundos reaparecem na hora e, ao abrir uma tela, ela já mostra o título e o esqueleto do próprio conteúdo em vez de um esqueleto genérico (#400).
 - No Descobrir, o título "Em alta esta semana em" passou a "Em alta em" e o espaço até o seletor de serviço ficou menor (#343).
 
 ### Corrigido
