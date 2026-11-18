@@ -22,10 +22,6 @@ export type CommentRecord = {
   updatedAt: Date;
 };
 
-// Curtidas de um comentário que a pessoa pode ler (#396): quantas pessoas
-// curtiram (total, de todas) e se ela mesma curtiu.
-export type CommentLikes = { likeCount: number; likedByMe: boolean };
-
 // Alvo de um comentário abaixo do título.
 export type CommentScope = { seasonId: string } | { episodeId: string };
 
@@ -41,11 +37,10 @@ export type CommentAuthor = {
 
 // Comentário de outra pessoa, já publicado. `cursorAt` é a data de criação com
 // microssegundos, para o cursor da próxima página.
-export type PublicComment = Omit<CommentRecord, "moderationStatus"> &
-  CommentLikes & {
-    author: CommentAuthor | null;
-    cursorAt: string;
-  };
+export type PublicComment = Omit<CommentRecord, "moderationStatus"> & {
+  author: CommentAuthor | null;
+  cursorAt: string;
+};
 
 export interface CommentRepository {
   insert(
@@ -65,10 +60,7 @@ export interface CommentRepository {
   delete(userId: string, commentId: string): Promise<void>;
   // Comentários do usuário no título (de qualquer alvo), do mais recente para
   // o mais antigo.
-  listMine(
-    userId: string,
-    titleId: string,
-  ): Promise<(CommentRecord & CommentLikes)[]>;
+  listMine(userId: string, titleId: string): Promise<CommentRecord[]>;
   // Título da temporada ou do episódio; `undefined` se não existe.
   findScopeTitleId(scope: CommentScope): Promise<string | undefined>;
   // Comentários publicados de outras pessoas (nunca os do `viewerId`) que o
@@ -81,13 +73,6 @@ export interface CommentRepository {
     limit: number,
     after: CommentListCursor | null,
   ): Promise<PublicComment[]>;
-  // Curte; curtir de novo o que já curtiu não muda nada. `undefined` se o
-  // usuário não pode curtir (comentário inexistente, não publicado, de autor
-  // que ele não vê, ou com bloqueio dele sobre o autor).
-  like(userId: string, commentId: string): Promise<CommentLikes | undefined>;
-  // Tira a curtida do próprio usuário (sem erro se não havia). Devolve o estado
-  // atual; zerado se o comentário já não é legível para ele.
-  unlike(userId: string, commentId: string): Promise<CommentLikes>;
 }
 
 export type CommentDeps = {

@@ -55,9 +55,6 @@ export const updateCommentInputSchema = z.object({
 
 export const deleteCommentInputSchema = z.object({ commentId: z.uuid() });
 
-// Curtir e descurtir um comentário (#396).
-export const likeCommentInputSchema = z.object({ commentId: z.uuid() });
-
 export const listMyCommentsInputSchema = z.object({ titleId: z.uuid() });
 
 // Comentários de outras pessoas, em páginas. Sem `seasonId` nem `episodeId`,

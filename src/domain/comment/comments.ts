@@ -2,7 +2,6 @@ import {
   type CommentListCursor,
   createCommentInputSchema,
   deleteCommentInputSchema,
-  likeCommentInputSchema,
   listMyCommentsInputSchema,
   listTitleCommentsInputSchema,
   updateCommentInputSchema,
@@ -11,7 +10,6 @@ import { fail, ok, type Result } from "../result";
 import type { AuthenticatedUser } from "../user";
 import type {
   CommentDeps,
-  CommentLikes,
   CommentRecord,
   CommentScope,
   PublicComment,
@@ -109,7 +107,7 @@ export async function listMyComments(
   deps: Pick<CommentDeps, "comments">,
   user: AuthenticatedUser,
   input: unknown,
-): Promise<Result<(CommentRecord & CommentLikes)[], "INVALID_INPUT">> {
+): Promise<Result<CommentRecord[], "INVALID_INPUT">> {
   const parsed = listMyCommentsInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Título inválido.");
   return ok(await deps.comments.listMine(user.id, parsed.data.titleId));
@@ -130,9 +128,7 @@ export async function listTitleComments(
   deps: CommentDeps,
   user: AuthenticatedUser,
   input: unknown,
-): Promise<
-  Result<CommentPage, "INVALID_INPUT" | "TITLE_NOT_FOUND" | "TARGET_NOT_FOUND">
-> {
+): Promise<Result<CommentPage, "INVALID_INPUT" | "TITLE_NOT_FOUND" | "TARGET_NOT_FOUND">> {
   const parsed = listTitleCommentsInputSchema.safeParse(input);
   if (!parsed.success) return invalidInput(parsed.error.issues);
   const { titleId, limit, after } = parsed.data;
@@ -158,33 +154,4 @@ export async function listTitleComments(
     next:
       rows.length > limit && last ? { at: last.cursorAt, id: last.id } : null,
   });
-}
-
-// Curte um comentário (#396). Qualquer usuário logado curte, inclusive o
-// próprio comentário, desde que o possa ler e não tenha bloqueado o autor; o
-// banco decide (RLS, migration 0036). Quando não pode, a resposta é a de
-// comentário inexistente, sem revelar bloqueio nem perfil privado. Curtir de
-// novo é inofensivo. Devolve a contagem atual.
-export async function likeComment(
-  deps: Pick<CommentDeps, "comments">,
-  user: AuthenticatedUser,
-  input: unknown,
-): Promise<Result<CommentLikes, "INVALID_INPUT" | "COMMENT_NOT_FOUND">> {
-  const parsed = likeCommentInputSchema.safeParse(input);
-  if (!parsed.success) return fail("INVALID_INPUT", "Dados inválidos.");
-  const likes = await deps.comments.like(user.id, parsed.data.commentId);
-  if (!likes) return fail("COMMENT_NOT_FOUND", "Comentário não encontrado.");
-  return ok(likes);
-}
-
-// Tira a própria curtida. Sem erro se não havia curtida. Devolve a contagem
-// atual.
-export async function unlikeComment(
-  deps: Pick<CommentDeps, "comments">,
-  user: AuthenticatedUser,
-  input: unknown,
-): Promise<Result<CommentLikes, "INVALID_INPUT">> {
-  const parsed = likeCommentInputSchema.safeParse(input);
-  if (!parsed.success) return fail("INVALID_INPUT", "Dados inválidos.");
-  return ok(await deps.comments.unlike(user.id, parsed.data.commentId));
 }

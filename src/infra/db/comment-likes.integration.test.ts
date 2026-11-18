@@ -1,7 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import type { Tx } from "./client";
-import { createCommentRepository } from "./comment-repository";
 import {
   asUser,
   closeTestDb,
@@ -51,12 +50,45 @@ async function scene(tx: Tx, authorPrivate = false) {
   return { author, commentId: row.id };
 }
 
-const like = (tx: Tx, userId: string, commentId: string) =>
-  asUser(tx, userId, (t) => createCommentRepository(t).like(userId, commentId));
-const unlike = (tx: Tx, userId: string, commentId: string) =>
-  asUser(tx, userId, (t) =>
-    createCommentRepository(t).unlike(userId, commentId),
+type Likes = { likeCount: number; likedByMe: boolean };
+
+// Contagem e "eu curti" pela função da migration; zerado se o comentário não é
+// legível para quem pergunta.
+async function summary(t: Tx, commentId: string): Promise<Likes> {
+  const rows = await t.execute<{ like_count: number; liked_by_me: boolean }>(
+    sql`select like_count, liked_by_me from app.comment_like_summaries(array[${commentId}::uuid])`,
   );
+  return rows[0]
+    ? { likeCount: rows[0].like_count, likedByMe: rows[0].liked_by_me }
+    : { likeCount: 0, likedByMe: false };
+}
+
+// `undefined` quando a regra (app.can_like_comment) não deixa curtir.
+const like = (tx: Tx, userId: string, commentId: string) =>
+  asUser(tx, userId, async (t): Promise<Likes | undefined> => {
+    const [allowed] = await t.execute<{ ok: boolean }>(
+      sql`select app.can_like_comment(${commentId}::uuid) as ok`,
+    );
+    if (!allowed?.ok) return undefined;
+    await t
+      .insert(commentLikes)
+      .values({ commentId, userId })
+      .onConflictDoNothing();
+    return summary(t, commentId);
+  });
+
+const unlike = (tx: Tx, userId: string, commentId: string) =>
+  asUser(tx, userId, async (t) => {
+    await t
+      .delete(commentLikes)
+      .where(
+        and(
+          eq(commentLikes.commentId, commentId),
+          eq(commentLikes.userId, userId),
+        ),
+      );
+    return summary(t, commentId);
+  });
 
 describe("curtidas nos comentários (migration 0036)", () => {
   it("curte, conta de todos, curtir de novo não duplica e descurtir apaga só a própria", () =>
