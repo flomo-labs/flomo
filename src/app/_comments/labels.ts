@@ -13,6 +13,11 @@ export type CommentLabels = {
 // temporadas e os episódios (os componentes de cliente recebem tudo pronto).
 export async function getCommentLabels(): Promise<CommentLabels> {
   const t = await getTranslations("Comments");
+  const likes = {
+    like: t("like"),
+    unlike: t("unlike"),
+    failed: t("likeFailed"),
+  };
   const form: CommentFormLabels = {
     body: t("body"),
     placeholder: t("placeholder"),
@@ -33,6 +38,7 @@ export async function getCommentLabels(): Promise<CommentLabels> {
       remove: t("remove"),
       confirmRemove: t("confirmRemove"),
       failed: t("failed"),
+      likes,
     },
     list: {
       card: {
@@ -42,6 +48,7 @@ export async function getCommentLabels(): Promise<CommentLabels> {
         showSpoiler: t("showSpoiler"),
         hideSpoiler: t("hideSpoiler"),
         edited: t("edited"),
+        likes,
       },
       empty: t("othersEmpty"),
       loadMore: t("loadMore"),

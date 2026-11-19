@@ -6,6 +6,10 @@ import { profileInitials } from "@/app/_profile/initials";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  CommentLikeButton,
+  type CommentLikeLabels,
+} from "./comment-like-button";
 
 export type CommentCardLabels = {
   // Nome mostrado quando o perfil do autor não é legível (perfil privado).
@@ -16,6 +20,7 @@ export type CommentCardLabels = {
   showSpoiler: string;
   hideSpoiler: string;
   edited: string;
+  likes: CommentLikeLabels;
 };
 
 export type CommentCardData = {
@@ -23,6 +28,8 @@ export type CommentCardData = {
   body: string;
   containsSpoilers: boolean;
   edited: boolean;
+  likeCount: number;
+  likedByMe: boolean;
   // Já formatada (`formatCommentDate`).
   date: string;
   // `null`: perfil privado que o usuário segue; o comentário vem sem autor.
@@ -78,7 +85,9 @@ export function CommentCard({
       </div>
       {hidden ? (
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-muted-foreground">{labels.spoilerHidden}</p>
+          <p className="text-sm text-muted-foreground">
+            {labels.spoilerHidden}
+          </p>
           <Button
             type="button"
             variant="outline"
@@ -105,6 +114,11 @@ export function CommentCard({
           ) : null}
         </>
       )}
+      <CommentLikeButton
+        commentId={comment.id}
+        initial={{ likeCount: comment.likeCount, likedByMe: comment.likedByMe }}
+        labels={labels.likes}
+      />
     </article>
   );
 }

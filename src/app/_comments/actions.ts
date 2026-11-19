@@ -4,11 +4,14 @@ import { revalidatePath } from "next/cache";
 import {
   createComment,
   deleteComment,
+  likeComment,
   listTitleComments,
+  unlikeComment,
   updateComment,
   type CommentErrorCode,
   type CommentPage,
 } from "@/domain/comment/comments";
+import type { CommentLikes } from "@/domain/comment/ports";
 import { fail, type Result } from "@/domain/result";
 import { withUser } from "@/infra/db/client";
 import { createCommentRepository } from "@/infra/db/comment-repository";
@@ -88,4 +91,37 @@ export async function loadTitleComments(
       input,
     ),
   );
+}
+
+export type CommentLikeResult = Result<
+  CommentLikes,
+  CommentErrorCode | "UNAUTHENTICATED"
+>;
+
+// Curtir e descurtir (#397). Devolvem a contagem atual para a tela se acertar
+// com o servidor. Não revalidam a página: a contagem fica no componente e
+// recarregar a página lê de novo.
+async function runLike(
+  useCase: (
+    deps: { comments: ReturnType<typeof createCommentRepository> },
+    user: { id: string },
+    input: unknown,
+  ) => Promise<Result<CommentLikes, CommentErrorCode>>,
+  input: unknown,
+): Promise<CommentLikeResult> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  return withUser(user.claims, (tx) =>
+    useCase({ comments: createCommentRepository(tx) }, { id: user.id }, input),
+  );
+}
+
+export async function addCommentLike(input: unknown) {
+  return runLike(likeComment, input);
+}
+
+export async function removeCommentLike(input: unknown) {
+  return runLike(unlikeComment, input);
 }

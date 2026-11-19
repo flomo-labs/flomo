@@ -67,7 +67,10 @@ export function CommentList({
         }
         setItems((prev) => {
           const seen = new Set(prev.map((c) => c.id));
-          return [...prev, ...result.value.items.filter((c) => !seen.has(c.id))];
+          return [
+            ...prev,
+            ...result.value.items.filter((c) => !seen.has(c.id)),
+          ];
         });
         setNext(result.value.next);
         setReady(true);
@@ -117,6 +120,8 @@ export function CommentList({
                   body: comment.body,
                   containsSpoilers: comment.containsSpoilers,
                   edited: comment.updatedAt > comment.createdAt,
+                  likeCount: comment.likeCount,
+                  likedByMe: comment.likedByMe,
                   date: formatCommentDate(comment.createdAt),
                   author: comment.author,
                 }}
