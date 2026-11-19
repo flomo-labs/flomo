@@ -82,32 +82,38 @@ async function SearchBody({
   return (
     <>
       <SearchForm query={query} people={kind === "pessoas"} media={media} />
-      <SearchKindTabs
-        query={query}
-        kind={kind}
-        canSearchPeople={Boolean(await getCurrentUser())}
-        labels={{
-          aria: t("kindLabel"),
-          titles: t("kindTitles"),
-          people: t("kindPeople"),
-        }}
-      />
+      {/* Abas à esquerda e filtro de tipo à direita; no celular, sem espaço,
+          o filtro desce para a linha de baixo. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <SearchKindTabs
+          query={query}
+          kind={kind}
+          canSearchPeople={Boolean(await getCurrentUser())}
+          labels={{
+            aria: t("kindLabel"),
+            titles: t("kindTitles"),
+            people: t("kindPeople"),
+          }}
+        />
+        {kind === "titulos" ? (
+          <div className="sm:ml-auto">
+            <SearchMediaFilter
+              query={query}
+              media={media}
+              labels={{
+                aria: t("mediaLabel"),
+                all: t("mediaAll"),
+                series: t("mediaSeries"),
+                movies: t("mediaMovies"),
+              }}
+            />
+          </div>
+        ) : null}
+      </div>
       {kind === "pessoas" ? (
         <PeopleResults query={query} />
       ) : (
-        <>
-          <SearchMediaFilter
-            query={query}
-            media={media}
-            labels={{
-              aria: t("mediaLabel"),
-              all: t("mediaAll"),
-              series: t("mediaSeries"),
-              movies: t("mediaMovies"),
-            }}
-          />
-          <Results query={query} page={page} media={media} />
-        </>
+        <Results query={query} page={page} media={media} />
       )}
     </>
   );
