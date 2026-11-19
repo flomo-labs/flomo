@@ -4,10 +4,18 @@ import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
 import { SearchCombobox } from "@/components/catalog/search-combobox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { SearchMedia } from "@/lib/search-url";
 
 // Campo de busca da página (GET /buscar?q=), só no celular: no desktop o campo
 // do cabeçalho faz esse papel. Funciona sem JavaScript (Enter envia).
-export async function SearchForm({ query = "" }: { query?: string }) {
+export async function SearchForm({
+  query = "",
+  media = "tudo",
+}: {
+  query?: string;
+  // Filtro de tipo ativo: uma nova busca o mantém.
+  media?: SearchMedia;
+}) {
   const t = await getTranslations("Search");
   const tm = await getTranslations("MediaType");
   return (
@@ -17,6 +25,9 @@ export async function SearchForm({ query = "" }: { query?: string }) {
       role="search"
       className="flex flex-col gap-2 md:hidden"
     >
+      {media !== "tudo" ? (
+        <input type="hidden" name="midia" value={media} />
+      ) : null}
       <Label htmlFor="q" className="sr-only">
         {t("label")}
       </Label>

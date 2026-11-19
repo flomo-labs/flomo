@@ -17,14 +17,17 @@ import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterRowSkeleton } from "@/components/loading/poster-row-skeleton";
 import { SearchForm } from "@/components/catalog/search-form";
 import { SearchKindTabs } from "@/components/catalog/search-kind-tabs";
-import {
-  SearchMediaFilter,
-  type SearchMedia,
-} from "@/components/catalog/search-media-filter";
+import { SearchMediaFilter } from "@/components/catalog/search-media-filter";
 import { PeopleResults } from "@/app/_people/people-results";
 import { Button } from "@/components/ui/button";
-import { SEARCH_MAX_PAGE, type MediaType } from "@/contracts/catalog";
+import { SEARCH_MAX_PAGE } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
+import {
+  mediaTypeOf,
+  parseMedia,
+  type SearchMedia,
+  searchHref,
+} from "@/lib/search-url";
 import { titleRefPath } from "@/lib/title-paths";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,16 +37,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 function firstValue(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
-}
-
-// Filtro de tipo da URL (`midia`) e o tipo de catálogo de cada um.
-const MEDIA_TYPE_OF: Record<Exclude<SearchMedia, "tudo">, MediaType> = {
-  series: "tv",
-  filmes: "movie",
-};
-
-function parseMedia(value: string): SearchMedia {
-  return value === "series" || value === "filmes" ? value : "tudo";
 }
 
 export default function BuscarPage({ searchParams }: PageProps<"/buscar">) {
@@ -88,7 +81,7 @@ async function SearchBody({
 
   return (
     <>
-      <SearchForm query={query} />
+      <SearchForm query={query} media={kind === "pessoas" ? "tudo" : media} />
       <SearchKindTabs
         query={query}
         kind={kind}
@@ -133,7 +126,7 @@ async function Results({
   const result = await searchCatalog({
     query,
     page,
-    ...(media !== "tudo" && { mediaType: MEDIA_TYPE_OF[media] }),
+    mediaType: mediaTypeOf(media),
   });
 
   if (!result.ok) {
@@ -145,6 +138,10 @@ async function Results({
   }
   const { items, totalPages, totalResults } = result.value;
   if (items.length === 0) {
+    // Página além do fim (link antigo): não diz que não há nada.
+    if (page > 1) {
+      return <p className="text-muted-foreground">{t("emptyPage")}</p>;
+    }
     return (
       <p className="text-muted-foreground">
         {media === "tudo"
@@ -260,12 +257,7 @@ async function Pagination({
   const t = await getTranslations("Search");
   const lastPage = Math.min(totalPages, SEARCH_MAX_PAGE);
   if (lastPage <= 1) return null;
-  const href = (target: number) => {
-    const params = new URLSearchParams({ q: query });
-    if (media !== "tudo") params.set("midia", media);
-    params.set("pagina", String(target));
-    return `/buscar?${params}`;
-  };
+  const href = (target: number) => searchHref({ query, media, page: target });
   return (
     <nav
       aria-label={t("pagination")}

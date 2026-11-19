@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SegmentedControl } from "@/components/segmented-control";
-
-export type SearchMedia = "tudo" | "series" | "filmes";
+import { type SearchMedia, searchHref } from "@/lib/search-url";
 
 // Filtra os resultados da busca de títulos por tipo (Tudo, Séries, Filmes),
 // mantendo o termo (`/buscar?q=`; Séries leva `midia=series` e Filmes
@@ -29,9 +28,7 @@ export function SearchMediaFilter({
         { value: "filmes", label: labels.movies },
       ]}
       onChange={(next) => {
-        const params = new URLSearchParams({ q: query });
-        if (next !== "tudo") params.set("midia", next);
-        router.push(`/buscar?${params}`);
+        router.push(searchHref({ query, media: next }));
       }}
     />
   );
