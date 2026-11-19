@@ -5,7 +5,7 @@ import {
   listTitleComments,
   type CommentPage,
 } from "@/domain/comment/comments";
-import type { CommentRecord } from "@/domain/comment/ports";
+import type { CommentLikes, CommentRecord } from "@/domain/comment/ports";
 import { withUser } from "@/infra/db/client";
 import { createCommentRepository } from "@/infra/db/comment-repository";
 import { createLibraryRepository } from "@/infra/db/library-repository";
@@ -14,7 +14,7 @@ import { getCurrentUser } from "../_auth/session";
 export type MyCommentsView =
   | { kind: "anonymous" }
   | { kind: "unavailable" }
-  | { kind: "ok"; comments: CommentRecord[] };
+  | { kind: "ok"; comments: (CommentRecord & CommentLikes)[] };
 
 // Comentários do usuário no título, lidos uma vez por requisição.
 export const getMyComments = cache(
@@ -46,9 +46,7 @@ export const getOtherComments = cache(
   async (
     titleId: string,
     limit: number,
-  ): Promise<
-    { kind: "ok"; page: CommentPage } | { kind: "unavailable" }
-  > => {
+  ): Promise<{ kind: "ok"; page: CommentPage } | { kind: "unavailable" }> => {
     const user = await getCurrentUser();
     if (!user) return { kind: "unavailable" };
     try {
@@ -75,10 +73,10 @@ export const getOtherComments = cache(
 // Comentários do próprio usuário num alvo: o título (sem temporada nem
 // episódio), uma temporada ou um episódio. `listMyComments` traz os de todos
 // os alvos do título.
-export function commentsFor(
-  all: CommentRecord[],
+export function commentsFor<T extends CommentRecord>(
+  all: T[],
   scope: { seasonId?: string; episodeId?: string },
-): CommentRecord[] {
+): T[] {
   return all.filter((c) =>
     scope.episodeId
       ? c.episodeId === scope.episodeId

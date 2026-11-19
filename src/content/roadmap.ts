@@ -20,12 +20,6 @@ export const ROADMAP_STATUS_LABEL: Record<RoadmapStatus, string> = {
 
 export const roadmap: readonly RoadmapItem[] = [
   {
-    id: "curtidas-nos-comentarios",
-    title: "Curtidas nos comentários",
-    description: "Curta os comentários de outras pessoas.",
-    status: "planned",
-  },
-  {
     id: "descobrir-personalizado",
     title: "Personalizar o Descobrir",
     description: "Escolha quais listas aparecem no Descobrir e em que ordem.",

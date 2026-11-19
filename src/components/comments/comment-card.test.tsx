@@ -1,12 +1,17 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CommentCard,
   type CommentCardData,
   type CommentCardLabels,
 } from "./comment-card";
+
+vi.mock("@/app/_comments/actions", () => ({
+  addCommentLike: vi.fn(),
+  removeCommentLike: vi.fn(),
+}));
 
 const labels: CommentCardLabels = {
   anonymousAuthor: "Pessoa do Flomo",
@@ -15,6 +20,11 @@ const labels: CommentCardLabels = {
   showSpoiler: "Mostrar spoiler",
   hideSpoiler: "Esconder spoiler",
   edited: "editado",
+  likes: {
+    like: "Curtir comentário",
+    unlike: "Remover curtida",
+    failed: "Não foi possível curtir este comentário.",
+  },
 };
 
 const base: CommentCardData = {
@@ -22,6 +32,8 @@ const base: CommentCardData = {
   body: "Que final!",
   containsSpoilers: false,
   edited: false,
+  likeCount: 0,
+  likedByMe: false,
   date: "17 de nov. de 2026",
   author: { handle: "maria", displayName: "Maria Souza" },
 };

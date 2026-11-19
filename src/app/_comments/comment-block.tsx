@@ -1,5 +1,5 @@
 import type { CommentPage } from "@/domain/comment/comments";
-import type { CommentRecord } from "@/domain/comment/ports";
+import type { CommentLikes, CommentRecord } from "@/domain/comment/ports";
 import {
   CommentList,
   type CommentListScope,
@@ -20,7 +20,7 @@ export function CommentBlock({
   labels,
 }: {
   scope: CommentListScope;
-  own: CommentRecord[];
+  own: (CommentRecord & CommentLikes)[];
   initial?: CommentPage;
   labels: CommentLabels;
 }) {
@@ -37,6 +37,8 @@ export function CommentBlock({
                   body: comment.body,
                   containsSpoilers: comment.containsSpoilers,
                   edited: comment.updatedAt > comment.createdAt,
+                  likeCount: comment.likeCount,
+                  likedByMe: comment.likedByMe,
                 }}
                 date={formatCommentDate(comment.createdAt)}
                 moderated={comment.moderationStatus !== "published"}

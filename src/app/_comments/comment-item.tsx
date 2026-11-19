@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  CommentLikeButton,
+  type CommentLikeLabels,
+} from "@/components/comments/comment-like-button";
 import { removeComment } from "./actions";
 import { CommentForm, type CommentFormLabels } from "./comment-form";
 
@@ -15,10 +19,11 @@ export type CommentItemLabels = {
   remove: string;
   confirmRemove: string;
   failed: string;
+  likes: CommentLikeLabels;
 };
 
 // Um comentário do próprio usuário: texto, edição no lugar e exclusão com
-// confirmação. `moderated` aparece só quando o comentário não está publicado.
+// confirmação, e as curtidas (só publicado: oculto não recebe). `moderated` aparece só quando o comentário não está publicado.
 export function CommentItem({
   comment,
   date,
@@ -30,6 +35,8 @@ export function CommentItem({
     body: string;
     containsSpoilers: boolean;
     edited: boolean;
+    likeCount: number;
+    likedByMe: boolean;
   };
   date: string;
   moderated: boolean;
@@ -85,6 +92,16 @@ export function CommentItem({
           {error}
         </p>
       ) : null}
+      {moderated ? null : (
+        <CommentLikeButton
+          commentId={comment.id}
+          initial={{
+            likeCount: comment.likeCount,
+            likedByMe: comment.likedByMe,
+          }}
+          labels={labels.likes}
+        />
+      )}
       <div className="flex gap-2">
         <Button
           type="button"

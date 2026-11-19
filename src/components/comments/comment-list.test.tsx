@@ -19,6 +19,11 @@ const labels: CommentListLabels = {
     showSpoiler: "Mostrar spoiler",
     hideSpoiler: "Esconder spoiler",
     edited: "editado",
+    likes: {
+      like: "Curtir comentário",
+      unlike: "Remover curtida",
+      failed: "Não foi possível curtir este comentário.",
+    },
   },
   empty: "Ninguém comentou ainda.",
   loadMore: "Carregar mais",
