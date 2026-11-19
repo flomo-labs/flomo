@@ -178,13 +178,17 @@ export async function likeComment(
 }
 
 // Tira a própria curtida. Sem erro se não havia curtida. Devolve a contagem
-// atual.
+// atual; se o comentário já não é legível para quem descurte, a resposta é a de
+// comentário inexistente (a curtida própria, se havia, é removida mesmo assim),
+// em vez de uma contagem zerada inventada (#404).
 export async function unlikeComment(
   deps: Pick<CommentDeps, "comments">,
   user: AuthenticatedUser,
   input: unknown,
-): Promise<Result<CommentLikes, "INVALID_INPUT">> {
+): Promise<Result<CommentLikes, "INVALID_INPUT" | "COMMENT_NOT_FOUND">> {
   const parsed = likeCommentInputSchema.safeParse(input);
   if (!parsed.success) return fail("INVALID_INPUT", "Dados inválidos.");
-  return ok(await deps.comments.unlike(user.id, parsed.data.commentId));
+  const likes = await deps.comments.unlike(user.id, parsed.data.commentId);
+  if (!likes) return fail("COMMENT_NOT_FOUND", "Comentário não encontrado.");
+  return ok(likes);
 }

@@ -86,8 +86,9 @@ export interface CommentRepository {
   // que ele não vê, ou com bloqueio dele sobre o autor).
   like(userId: string, commentId: string): Promise<CommentLikes | undefined>;
   // Tira a curtida do próprio usuário (sem erro se não havia). Devolve o estado
-  // atual; zerado se o comentário já não é legível para ele.
-  unlike(userId: string, commentId: string): Promise<CommentLikes>;
+  // atual; `undefined` se o comentário já não é legível para ele (a curtida
+  // própria é removida mesmo assim).
+  unlike(userId: string, commentId: string): Promise<CommentLikes | undefined>;
 }
 
 export type CommentDeps = {

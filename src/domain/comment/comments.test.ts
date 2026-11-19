@@ -332,6 +332,29 @@ describe("likeComment e unlikeComment", () => {
     });
   });
 
+  it("descurtir comentário que deixou de ser legível dá 'não encontrado', sem contagem zerada (#404)", async () => {
+    let visible = true;
+    const s = createFakeComments({
+      titles: { [MOVIE]: "movie" },
+      readable: (viewer, author) =>
+        visible || !(viewer === USER.id && author === OTHER_USER.id),
+    });
+    const made = await createComment(s.deps, OTHER_USER, { titleId: MOVIE, body: "x" });
+    if (!made.ok) throw new Error("setup");
+    const id = made.value.id;
+    await likeComment(s.deps, OTHER_USER, { commentId: id });
+    await likeComment(s.deps, USER, { commentId: id });
+    visible = false;
+    expect(await unlikeComment(s.deps, USER, { commentId: id })).toMatchObject({
+      ok: false,
+      error: { code: "COMMENT_NOT_FOUND" },
+    });
+    expect(await unlikeComment(s.deps, USER, { commentId: MISSING })).toMatchObject({
+      ok: false,
+      error: { code: "COMMENT_NOT_FOUND" },
+    });
+  });
+
   it("recusa entrada malformada", async () => {
     const s = setup();
     expect(await likeComment(s.deps, USER, { commentId: "x" })).toMatchObject({
