@@ -1,11 +1,15 @@
 import { getTranslations } from "next-intl/server";
+import { getCurrentUser } from "@/app/_auth/session";
 import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
+import { getSearchPeopleLabels } from "@/components/catalog/search-people-labels";
 import { HeaderSearchField } from "./header-search-field";
 
 // Campo do cabeçalho do desktop: sugestões enquanto digita e, ao enviar,
 // /buscar (funciona sem JavaScript). No celular a busca fica na própria tela.
 export async function HeaderSearch() {
   const t = await getTranslations();
+  // O filtro Usuários só existe para quem entrou na conta.
+  const signedIn = Boolean(await getCurrentUser());
   return (
     <form
       action="/buscar"
@@ -14,6 +18,7 @@ export async function HeaderSearch() {
     >
       <HeaderSearchField
         ariaLabel={t("Search.headerLabel")}
+        peopleLabels={signedIn ? await getSearchPeopleLabels() : undefined}
         labels={{
           placeholder: t("Search.headerPlaceholder"),
           clear: t("Search.clear"),

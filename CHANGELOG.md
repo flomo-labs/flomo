@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Filtro nas sugestões da busca: quem entrou na conta escolhe, no menu que abre ao digitar, entre "Séries e filmes" e "Usuários" (a partir de 3 letras, até 5 contas pelo @usuário ou nome, sem bloqueios nem perfis ocultos), sem sair da tela; Enter ou "Ver todos" abre a Buscar já na aba escolhida ("Séries e filmes" abre em Tudo). As abas da tela Buscar passam a se chamar "Séries e filmes" e "Usuários" (#410).
 - Filtros na tela Buscar: as pílulas Tudo, Séries e Filmes acima dos resultados mostram só o tipo escolhido; a escolha vai na URL (`?midia=series` ou `?midia=filmes`), trocar de filtro volta à primeira página e a paginação mantém o filtro. Na aba Pessoas as pílulas não aparecem (#107).
 - Base para filtrar a busca por tipo: a busca do catálogo aceita só séries ou só filmes (a paginação e o cache valem para o tipo escolhido). Sem `mediaType` continua buscando os dois juntos. Os filtros na tela Buscar vêm em outra tarefa (#104).
 - Curtir e descurtir comentários passam a ter limite de pedidos por usuário; passando do limite, o coração mostra "Muitas requisições. Tente de novo em instantes." e volta ao estado anterior. A leitura de mais comentários também ganha limite (#405).

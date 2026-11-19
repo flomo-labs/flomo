@@ -6,6 +6,7 @@ import { parseMedia } from "@/lib/search-url";
 import {
   SearchCombobox,
   type SearchComboboxLabels,
+  type SearchPeopleLabels,
 } from "@/components/catalog/search-combobox";
 
 // Campo do cabeçalho. Em /buscar vem preenchido com o termo da URL (e a
@@ -15,9 +16,11 @@ import {
 export function HeaderSearchField({
   ariaLabel,
   labels,
+  peopleLabels,
 }: {
   ariaLabel: string;
   labels: SearchComboboxLabels;
+  peopleLabels?: SearchPeopleLabels;
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
@@ -37,6 +40,10 @@ export function HeaderSearchField({
         className="h-9 rounded-full pl-9"
         listClassName="right-0 left-auto w-[22rem]"
         labels={labels}
+        peopleLabels={peopleLabels}
+        initialKind={
+          onSearch && params.get("tipo") === "pessoas" ? "pessoas" : "titulos"
+        }
       />
     </>
   );
