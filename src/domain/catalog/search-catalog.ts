@@ -31,12 +31,21 @@ export async function searchCatalog(
     return fail("INVALID_INPUT", parsed.error.issues[0].message);
   }
   const query = normalizeSearchQuery(parsed.data.query);
-  const { page } = parsed.data;
-  const key = `search:${CATALOG_LOCALE}:${page}:${query}`;
+  const { page, mediaType } = parsed.data;
+  // A busca sem tipo mantém a chave original; a por tipo ganha o tipo antes
+  // da página (e nunca colide com a outra, que tem um número ali).
+  const key = mediaType
+    ? `search:${CATALOG_LOCALE}:${mediaType}:${page}:${query}`
+    : `search:${CATALOG_LOCALE}:${page}:${query}`;
 
   const fetchAndStore = () =>
     singleFlight(key, async () => {
-      const result = await deps.provider.search(query, page, CATALOG_LOCALE);
+      const result = await deps.provider.search(
+        query,
+        page,
+        CATALOG_LOCALE,
+        mediaType,
+      );
       await deps.store.writeSearch(
         key,
         result,

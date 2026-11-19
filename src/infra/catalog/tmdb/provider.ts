@@ -5,6 +5,7 @@ import {
 } from "@/domain/catalog/ports";
 import type {
   CatalogRef,
+  MediaType,
   ProviderEpisode,
   ProviderSeason,
   ProviderTitle,
@@ -213,11 +214,17 @@ function mapListItem(
   return null;
 }
 
-export function mapSearch(data: unknown): SearchPage {
-  const raw = parse(searchResultSchema, data, "search/multi");
+// Na busca por tipo (`search/movie`, `search/tv`) os itens não trazem
+// `media_type`: o tipo vem da própria consulta.
+export function mapSearch(data: unknown, mediaType?: MediaType): SearchPage {
+  const raw = parse(
+    searchResultSchema,
+    data,
+    mediaType ? `search/${mediaType}` : "search/multi",
+  );
   // Pessoas também aparecem na busca multi; o catálogo ainda não tem pessoas.
   const items = raw.results
-    .map((result) => mapListItem(result, result.media_type))
+    .map((result) => mapListItem(result, mediaType ?? result.media_type))
     .filter((item) => item !== null);
   return {
     page: raw.page,
@@ -486,8 +493,8 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
   }
 
   return {
-    async search(query, page, locale) {
-      const data = await client.get("search/multi", {
+    async search(query, page, locale, mediaType) {
+      const data = await client.get(`search/${mediaType ?? "multi"}`, {
         query,
         page,
         language: locale,
@@ -496,7 +503,7 @@ export function createTmdbProvider(client: TmdbClient): CatalogProvider {
       if (data === null) {
         throw new CatalogUnavailableError("Busca do TMDB indisponível.");
       }
-      return mapSearch(data);
+      return mapSearch(data, mediaType);
     },
 
     async fetchTitle(ref, locale) {

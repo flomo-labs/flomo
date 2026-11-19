@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Base para filtrar a busca por tipo: a busca do catálogo aceita só séries ou só filmes (a paginação e o cache valem para o tipo escolhido). Sem `mediaType` continua buscando os dois juntos. Os filtros na tela Buscar vêm em outra tarefa (#104).
 - Curtir e descurtir comentários passam a ter limite de pedidos por usuário; passando do limite, o coração mostra "Muitas requisições. Tente de novo em instantes." e volta ao estado anterior. A leitura de mais comentários também ganha limite (#405).
 - Curtir comentários: cada comentário (de outras pessoas e o seu) ganha um coração com a contagem de curtidas; tocar curte e toca de novo tira a curtida, e a contagem muda na hora. Quem foi bloqueado por quem escreveu o comentário vê a contagem, mas ao tentar curtir recebe "Não foi possível curtir este comentário." (#397).
 - Base para curtir comentários: o servidor já permite curtir e descurtir um comentário (inclusive o próprio) e devolve a contagem de curtidas e se você curtiu nos comentários; só a contagem, sem lista de quem curtiu. Não dá para curtir comentário que você não pode ler nem de quem você bloqueou. O botão na tela vem em outra tarefa (#396).

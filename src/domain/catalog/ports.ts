@@ -2,6 +2,7 @@ import type {
   CatalogEpisode,
   CatalogRef,
   CatalogTitle,
+  MediaType,
   ProviderTitle,
   SearchItem,
   SearchPage,
@@ -23,7 +24,13 @@ export class CatalogUnavailableError extends Error {
 }
 
 export interface CatalogProvider {
-  search(query: string, page: number, locale: string): Promise<SearchPage>;
+  // Sem `mediaType`, busca filmes e séries juntos.
+  search(
+    query: string,
+    page: number,
+    locale: string,
+    mediaType?: MediaType,
+  ): Promise<SearchPage>;
   // `null` quando o título não existe no provedor.
   fetchTitle(ref: CatalogRef, locale: string): Promise<ProviderTitle | null>;
   // Itens de uma prateleira (já sem conteúdo adulto), no máximo `limit`.

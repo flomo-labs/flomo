@@ -35,10 +35,52 @@ describe("searchCatalog", () => {
     const result = await searchCatalog(deps, { query: " Breaking  Bad " });
 
     expect(result).toEqual({ ok: true, value: searchPage() });
-    expect(provider.search).toHaveBeenCalledWith("breaking bad", 1, "pt-BR");
+    expect(provider.search).toHaveBeenCalledWith(
+      "breaking bad",
+      1,
+      "pt-BR",
+      undefined,
+    );
     expect(memory.searches.get(KEY)?.expiresAt).toEqual(
       new Date(NOW.getTime() + 24 * 60 * 60 * 1000),
     );
+  });
+
+  it("por tipo: repassa o tipo ao provedor e guarda numa chave própria", async () => {
+    const { deps, provider, memory } = fakeDeps();
+    await searchCatalog(deps, { query: "Breaking Bad", mediaType: "tv" });
+    await searchCatalog(deps, { query: "Breaking Bad", mediaType: "movie" });
+
+    expect(provider.search).toHaveBeenNthCalledWith(
+      1,
+      "breaking bad",
+      1,
+      "pt-BR",
+      "tv",
+    );
+    expect(provider.search).toHaveBeenNthCalledWith(
+      2,
+      "breaking bad",
+      1,
+      "pt-BR",
+      "movie",
+    );
+    expect(memory.searches.has("search:pt-BR:tv:1:breaking bad")).toBe(true);
+    expect(memory.searches.has("search:pt-BR:movie:1:breaking bad")).toBe(true);
+    expect(memory.searches.has(KEY)).toBe(false);
+  });
+
+  it("tipo inválido: INVALID_INPUT sem chamar o provedor", async () => {
+    const { deps, provider } = fakeDeps();
+    const result = await searchCatalog(deps, {
+      query: "dark",
+      mediaType: "person",
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INPUT" },
+    });
+    expect(provider.search).not.toHaveBeenCalled();
   });
 
   it("com cache válido, não chama o provedor", async () => {
@@ -71,7 +113,12 @@ describe("searchCatalog", () => {
   it("separa o cache por página", async () => {
     const { deps, provider } = fakeDeps();
     await searchCatalog(deps, { query: "breaking bad", page: 2 });
-    expect(provider.search).toHaveBeenCalledWith("breaking bad", 2, "pt-BR");
+    expect(provider.search).toHaveBeenCalledWith(
+      "breaking bad",
+      2,
+      "pt-BR",
+      undefined,
+    );
   });
 
   it("com o provedor fora do ar e sem cache, devolve CATALOG_UNAVAILABLE", async () => {
