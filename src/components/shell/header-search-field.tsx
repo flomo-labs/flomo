@@ -33,7 +33,7 @@ export function HeaderSearchField({
         media={onSearch ? parseMedia(params.get("midia")) : "tudo"}
       />
       <SearchCombobox
-        key={`${pathname}|${query}`}
+        key={`${pathname}|${query}|${onSearch ? params.get("tipo") : ""}`}
         defaultValue={query}
         withIcon
         ariaLabel={ariaLabel}

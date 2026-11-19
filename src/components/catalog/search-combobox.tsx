@@ -107,6 +107,7 @@ export function SearchCombobox({
   const [fetched, setFetched] = useState<{
     query: string;
     items: Suggestion[];
+    failed?: boolean;
   }>({ query: "", items: [] });
   const [open, setOpen] = useState(false);
   // Só busca sugestões depois que a pessoa digita: em /buscar?q=… o campo já
@@ -148,6 +149,10 @@ export function SearchCombobox({
   const optionCount = peopleMode ? people.length : items.length;
   const seeAllIndex = optionCount;
   const hasOptions = optionCount > 0;
+  // Com o filtro, a lista (ao menos "Ver todos") fica visível mesmo sem
+  // sugestões, para a busca completa continuar ao alcance do teclado.
+  const hasList =
+    hasOptions || Boolean(peopleLabels && !(peopleMode && peopleTooShort));
   // Sem o filtro o menu só abre com sugestões; com ele abre depois de digitar,
   // para dar acesso ao filtro Usuários mesmo quando não há título.
   const expanded =
@@ -165,9 +170,11 @@ export function SearchCombobox({
           : peopleSettled && people.length === 0
             ? peopleLabels.emptyPeople.replace("{query}", () => personTerm)
             : null
-      : titlesSettled && items.length === 0
-        ? peopleLabels.emptyTitles.replace("{query}", () => query)
-        : null;
+      : titlesSettled && fetched.failed
+        ? peopleLabels.failed
+        : titlesSettled && items.length === 0
+          ? peopleLabels.emptyTitles.replace("{query}", () => query)
+          : null;
 
   useEffect(() => {
     if (!peopleMode || !typed || peopleTooShort) return;
@@ -200,7 +207,11 @@ export function SearchCombobox({
           `/api/sugestoes?${new URLSearchParams({ q: query })}`,
           { signal: controller.signal },
         );
-        if (!response.ok) return setFetched({ query: "", items: [] });
+        if (!response.ok) {
+          setFetched({ query: query.toLowerCase(), items: [], failed: true });
+          setOpen(true);
+          return;
+        }
         const body: { items: Suggestion[] } = await response.json();
         setFetched({ query: query.toLowerCase(), items: body.items });
         setActive(-1);
@@ -268,7 +279,7 @@ export function SearchCombobox({
       peopleLabels &&
       event.key === "Enter" &&
       !event.nativeEvent.isComposing &&
-      (!expanded || active < 0 || !hasOptions) &&
+      (!expanded || active < 0 || !hasList) &&
       query
     ) {
       event.preventDefault();
@@ -281,7 +292,7 @@ export function SearchCombobox({
       setOpen(false);
       return;
     }
-    if (!hasOptions) return;
+    if (!hasList) return;
     const last = seeAllIndex;
     if (event.key === "ArrowDown") {
       event.preventDefault();
@@ -321,7 +332,7 @@ export function SearchCombobox({
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={
-          expanded && hasOptions && active >= 0 ? optionId(active) : undefined
+          expanded && hasList && active >= 0 ? optionId(active) : undefined
         }
         aria-label={ariaLabel}
         value={value}
@@ -391,7 +402,7 @@ export function SearchCombobox({
               ? peopleLabels.suggestions
               : labels.suggestions
           }
-          hidden={!hasOptions}
+          hidden={!hasList}
         >
           {items.map((item, index) => (
             <li

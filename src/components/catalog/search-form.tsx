@@ -56,6 +56,7 @@ async function SearchField({
   const signedIn = Boolean(await getCurrentUser());
   return (
     <SearchCombobox
+      key={people ? "pessoas" : "titulos"}
       id="q"
       defaultValue={query}
       withIcon

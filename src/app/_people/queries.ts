@@ -1,5 +1,7 @@
 import "server-only";
 import {
+  normalizePeopleQuery,
+  PEOPLE_SEARCH_MIN_LENGTH,
   PEOPLE_SEARCH_PAGE_SIZE,
   PEOPLE_SUGGESTION_LIMIT,
   type PeopleSearchCursor,
@@ -103,6 +105,10 @@ export async function loadPeopleSuggestions(
   user: CurrentUser,
   query: string,
 ): Promise<PeopleSuggestionsPage> {
+  // Termo curto não consulta o banco nem gasta o freio.
+  if (normalizePeopleQuery(query).length < PEOPLE_SEARCH_MIN_LENGTH) {
+    return { ok: true, tooShort: true, items: [] };
+  }
   if (!checkSuggestionRate(user.id, Date.now()).allowed) {
     return { ok: false, code: "RATE_LIMITED" };
   }
