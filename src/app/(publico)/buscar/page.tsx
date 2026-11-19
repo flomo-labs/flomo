@@ -79,37 +79,41 @@ async function SearchBody({
   // Sem termo não há o que mostrar: as listas ficam em Descobrir.
   if (!query) redirect("/descobrir");
 
+  const canSearchPeople = Boolean(await getCurrentUser());
+
   return (
     <>
       <SearchForm query={query} people={kind === "pessoas"} media={media} />
       {/* Abas à esquerda e filtro de tipo à direita; no celular, sem espaço,
           o filtro desce para a linha de baixo. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <SearchKindTabs
-          query={query}
-          kind={kind}
-          canSearchPeople={Boolean(await getCurrentUser())}
-          labels={{
-            aria: t("kindLabel"),
-            titles: t("kindTitles"),
-            people: t("kindPeople"),
-          }}
-        />
-        {kind === "titulos" ? (
-          <div className="sm:ml-auto">
-            <SearchMediaFilter
-              query={query}
-              media={media}
-              labels={{
-                aria: t("mediaLabel"),
-                all: t("mediaAll"),
-                series: t("mediaSeries"),
-                movies: t("mediaMovies"),
-              }}
-            />
-          </div>
-        ) : null}
-      </div>
+      {canSearchPeople || kind === "titulos" ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <SearchKindTabs
+            query={query}
+            kind={kind}
+            canSearchPeople={canSearchPeople}
+            labels={{
+              aria: t("kindLabel"),
+              titles: t("kindTitles"),
+              people: t("kindPeople"),
+            }}
+          />
+          {kind === "titulos" ? (
+            <div className={canSearchPeople ? "sm:ml-auto" : undefined}>
+              <SearchMediaFilter
+                query={query}
+                media={media}
+                labels={{
+                  aria: t("mediaLabel"),
+                  all: t("mediaAll"),
+                  series: t("mediaSeries"),
+                  movies: t("mediaMovies"),
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {kind === "pessoas" ? (
         <PeopleResults query={query} />
       ) : (
