@@ -113,4 +113,25 @@ describe("CommentLikeButton", () => {
         .getAttribute("aria-pressed"),
     ).toBe("false");
   });
+
+  it("mostra a mensagem do servidor quando o limite de pedidos é atingido", async () => {
+    addCommentLike.mockResolvedValue({
+      ok: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Muitas requisições. Tente de novo em instantes.",
+      },
+    });
+    setup(2, false);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Curtir comentário" }),
+    );
+    expect(await screen.findByRole("alert")).toHaveProperty(
+      "textContent",
+      "Muitas requisições. Tente de novo em instantes.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Curtir comentário" }).textContent,
+    ).toBe("2");
+  });
 });
