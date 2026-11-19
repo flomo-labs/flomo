@@ -42,12 +42,14 @@ function firstValue(value: string | string[] | undefined): string {
 export default function BuscarPage({ searchParams }: PageProps<"/buscar">) {
   return (
     <>
-      <BackLink fallbackHref="/descobrir" />
-      <SearchHeading />
+      <header className="flex items-center gap-3">
+        <BackLink fallbackHref="/descobrir" variant="icon" />
+        <SearchHeading />
+      </header>
       <Suspense
         fallback={
           <LoadingRegion>
-            <PosterRowSkeleton className="flex max-w-reading flex-col gap-3" />
+            <PosterRowSkeleton className="flex flex-col gap-3" />
           </LoadingRegion>
         }
       >
@@ -188,7 +190,7 @@ async function Results({
       <p className="text-sm text-muted-foreground">
         {t("results", { count: totalResults, query })}
       </p>
-      <ul className="flex max-w-reading flex-col gap-3">
+      <ul className="flex flex-col gap-3">
         {items.map((item) => (
           <li key={`${item.ref.mediaType}-${item.ref.externalId}`}>
             <ResultCard
