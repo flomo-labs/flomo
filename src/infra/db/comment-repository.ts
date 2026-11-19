@@ -93,7 +93,7 @@ export function createCommentRepository(tx: Tx): CommentRepository {
             eq(commentLikes.userId, userId),
           ),
         );
-      return (await likeSummaries([commentId])).get(commentId) ?? noLikes;
+      return (await likeSummaries([commentId])).get(commentId);
     },
     async insert(userId, titleId, scope, body, containsSpoilers) {
       // O trigger da 0032 acerta `title_id` pelo alvo; aqui já vem o certo.
