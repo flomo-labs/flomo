@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SegmentedControl } from "@/components/segmented-control";
+import { searchHref } from "@/lib/search-url";
 
 export type SearchKind = "titulos" | "pessoas";
 
@@ -31,9 +32,7 @@ export function SearchKindTabs({
         { value: "pessoas", label: labels.people },
       ]}
       onChange={(next) => {
-        const params = new URLSearchParams({ q: query });
-        if (next === "pessoas") params.set("tipo", "pessoas");
-        router.push(`/buscar?${params}`);
+        router.push(searchHref({ query, people: next === "pessoas" }));
       }}
     />
   );

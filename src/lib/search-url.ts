@@ -38,3 +38,18 @@ export function searchHref({
   if (page && page > 1) params.set("pagina", String(page));
   return `/buscar?${params}`;
 }
+
+// Endereço de uma nova busca feita de qualquer tela: só em /buscar ela herda a
+// aba e o filtro atuais (em outra tela começa limpa).
+export function nextSearchHref(
+  query: string,
+  pathname: string,
+  current: { get(name: string): string | null },
+): string {
+  if (pathname !== "/buscar") return searchHref({ query });
+  return searchHref({
+    query,
+    people: current.get("tipo") === "pessoas",
+    media: parseMedia(current.get("midia")),
+  });
+}

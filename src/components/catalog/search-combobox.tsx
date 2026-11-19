@@ -15,7 +15,7 @@ import {
   SUGGESTION_MIN_LENGTH,
   type Suggestion,
 } from "@/contracts/catalog";
-import { parseMedia, searchHref } from "@/lib/search-url";
+import { nextSearchHref } from "@/lib/search-url";
 import { titleRefPath } from "@/lib/title-paths";
 import { cn } from "@/lib/utils";
 
@@ -136,16 +136,7 @@ export function SearchCombobox({
 
   function openSearch() {
     setOpen(false);
-    // Nova busca feita na aba Pessoas continua nela; a de títulos mantém o
-    // filtro de tipo.
-    const onSearch = pathname === "/buscar";
-    router.push(
-      searchHref({
-        query,
-        people: onSearch && searchParams.get("tipo") === "pessoas",
-        media: onSearch ? parseMedia(searchParams.get("midia")) : "tudo",
-      }),
-    );
+    router.push(nextSearchHref(query, pathname, searchParams));
   }
 
   function openSuggestion(index: number) {

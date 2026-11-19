@@ -81,7 +81,7 @@ async function SearchBody({
 
   return (
     <>
-      <SearchForm query={query} media={kind === "pessoas" ? "tudo" : media} />
+      <SearchForm query={query} people={kind === "pessoas"} media={media} />
       <SearchKindTabs
         query={query}
         kind={kind}
@@ -140,7 +140,18 @@ async function Results({
   if (items.length === 0) {
     // Página além do fim (link antigo): não diz que não há nada.
     if (page > 1) {
-      return <p className="text-muted-foreground">{t("emptyPage")}</p>;
+      return (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-muted-foreground">{t("emptyPage")}</p>
+          <Button
+            variant="outline"
+            render={<Link href={searchHref({ query, media })} />}
+            nativeButton={false}
+          >
+            {t("backToFirst")}
+          </Button>
+        </div>
+      );
     }
     return (
       <p className="text-muted-foreground">

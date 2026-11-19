@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { mediaTypeOf, parseMedia, searchHref } from "./search-url";
+import {
+  mediaTypeOf,
+  nextSearchHref,
+  parseMedia,
+  searchHref,
+} from "./search-url";
 
 describe("parseMedia", () => {
   it("aceita só series e filmes; o resto vira tudo", () => {
@@ -38,6 +43,28 @@ describe("searchHref", () => {
   it("aba Pessoas não leva o filtro", () => {
     expect(searchHref({ query: "ana", people: true, media: "series" })).toBe(
       "/buscar?q=ana&tipo=pessoas",
+    );
+  });
+});
+
+describe("nextSearchHref", () => {
+  const params = (query: string) => new URLSearchParams(query);
+
+  it("em /buscar mantém o filtro de tipo", () => {
+    expect(nextSearchHref("lost", "/buscar", params("q=x&midia=series"))).toBe(
+      "/buscar?q=lost&midia=series",
+    );
+  });
+
+  it("em /buscar mantém a aba Pessoas e descarta o filtro", () => {
+    expect(
+      nextSearchHref("ana", "/buscar", params("q=x&tipo=pessoas&midia=series")),
+    ).toBe("/buscar?q=ana&tipo=pessoas");
+  });
+
+  it("fora de /buscar começa limpa", () => {
+    expect(nextSearchHref("lost", "/descobrir", params("midia=series"))).toBe(
+      "/buscar?q=lost",
     );
   });
 });

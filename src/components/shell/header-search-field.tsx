@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
+import { SearchStateFields } from "@/components/catalog/search-state-fields";
+import { parseMedia } from "@/lib/search-url";
 import {
   SearchCombobox,
   type SearchComboboxLabels,
@@ -20,15 +22,22 @@ export function HeaderSearchField({
   const pathname = usePathname();
   const params = useSearchParams();
   const query = pathname === "/buscar" ? (params.get("q") ?? "") : "";
+  const onSearch = pathname === "/buscar";
   return (
-    <SearchCombobox
-      key={`${pathname}|${query}`}
-      defaultValue={query}
-      withIcon
-      ariaLabel={ariaLabel}
-      className="h-9 rounded-full pl-9"
-      listClassName="right-0 left-auto w-[22rem]"
-      labels={labels}
-    />
+    <>
+      <SearchStateFields
+        people={onSearch && params.get("tipo") === "pessoas"}
+        media={onSearch ? parseMedia(params.get("midia")) : "tudo"}
+      />
+      <SearchCombobox
+        key={`${pathname}|${query}`}
+        defaultValue={query}
+        withIcon
+        ariaLabel={ariaLabel}
+        className="h-9 rounded-full pl-9"
+        listClassName="right-0 left-auto w-[22rem]"
+        labels={labels}
+      />
+    </>
   );
 }

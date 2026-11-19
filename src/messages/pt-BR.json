@@ -26,7 +26,8 @@
     "mediaSeries": "Séries",
     "mediaMovies": "Filmes",
     "emptyFiltered": "Não encontramos {media, select, series {nenhuma série} filmes {nenhum filme} other {nenhum título}} para “{query}”. Confira a grafia, tente outro nome ou veja em Tudo.",
-    "emptyPage": "Não há mais resultados nesta página. Volte para a primeira."
+    "emptyPage": "Não há mais resultados nesta página.",
+    "backToFirst": "Voltar à primeira página"
   },
   "PeopleSearch": {
     "title": "Pessoas",
