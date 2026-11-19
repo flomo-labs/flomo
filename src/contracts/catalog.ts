@@ -20,6 +20,8 @@ export const catalogSearchInputSchema = z.object({
       `A busca pode ter no máximo ${SEARCH_QUERY_MAX_LENGTH} caracteres.`,
     ),
   page: z.coerce.number().int().min(1).max(SEARCH_MAX_PAGE).default(1),
+  // Sem `mediaType`, busca filmes e séries juntos.
+  mediaType: z.enum(MEDIA_TYPES).optional(),
 });
 export type CatalogSearchInput = z.input<typeof catalogSearchInputSchema>;
 

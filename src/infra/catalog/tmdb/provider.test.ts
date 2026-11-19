@@ -193,6 +193,32 @@ describe("createTmdbProvider", () => {
     });
   });
 
+  it("busca por tipo: usa search/movie ou search/tv e marca o tipo", async () => {
+    const get = vi.fn(async () => ({
+      page: 1,
+      total_pages: 1,
+      total_results: 2,
+      results: [
+        { id: 7, name: "Dark", original_name: "Dark" },
+        { id: 0, name: "inválido" },
+      ],
+    }));
+    const page = await createTmdbProvider({ get }).search(
+      "dark",
+      1,
+      "pt-BR",
+      "tv",
+    );
+    expect(get).toHaveBeenCalledWith("search/tv", {
+      query: "dark",
+      page: 1,
+      language: "pt-BR",
+      include_adult: false,
+    });
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0].ref).toEqual({ mediaType: "tv", externalId: "7" });
+  });
+
   it("filme inexistente: null", async () => {
     const provider = createTmdbProvider({ get: vi.fn(async () => null) });
     await expect(
