@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
+import { getCurrentUser } from "@/app/_auth/session";
 import { Suspense } from "react";
 import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
+import { getSearchPeopleLabels } from "@/components/catalog/search-people-labels";
 import { SearchStateFields } from "@/components/catalog/search-state-fields";
 import { SearchCombobox } from "@/components/catalog/search-combobox";
 import { Label } from "@/components/ui/label";
@@ -20,7 +22,6 @@ export async function SearchForm({
   media?: SearchMedia;
 }) {
   const t = await getTranslations("Search");
-  const tm = await getTranslations("MediaType");
   return (
     <form
       action="/buscar"
@@ -35,23 +36,43 @@ export async function SearchForm({
       {/* O campo lê a URL (useSearchParams): sem Suspense a tela não monta o
           casco estático, e a navegação cairia num esqueleto de página inteira. */}
       <Suspense fallback={<Skeleton className="h-11 rounded-full" />}>
-        <SearchCombobox
-          id="q"
-          defaultValue={query}
-          withIcon
-          required
-          className="h-11 rounded-full pl-9 text-base"
-          labels={{
-            placeholder: t("placeholder"),
-            clear: t("clear"),
-            suggestions: t("suggestions"),
-            seeAll: t.raw("seeAll"),
-            movie: tm("movie"),
-            tv: tm("tv"),
-            quickAdd: await getQuickAddLabels(),
-          }}
-        />
+        <SearchField query={query} people={people} />
       </Suspense>
     </form>
+  );
+}
+
+// O campo em si, separado para ler a sessão dentro do Suspense: quem entrou na
+// conta ganha o filtro Séries e filmes / Usuários no menu de sugestões.
+async function SearchField({
+  query,
+  people,
+}: {
+  query: string;
+  people: boolean;
+}) {
+  const t = await getTranslations("Search");
+  const tm = await getTranslations("MediaType");
+  const signedIn = Boolean(await getCurrentUser());
+  return (
+    <SearchCombobox
+      key={people ? "pessoas" : "titulos"}
+      id="q"
+      defaultValue={query}
+      withIcon
+      required
+      peopleLabels={signedIn ? await getSearchPeopleLabels() : undefined}
+      initialKind={people ? "pessoas" : "titulos"}
+      className="h-11 rounded-full pl-9 text-base"
+      labels={{
+        placeholder: t("placeholder"),
+        clear: t("clear"),
+        suggestions: t("suggestions"),
+        seeAll: t.raw("seeAll"),
+        movie: tm("movie"),
+        tv: tm("tv"),
+        quickAdd: await getQuickAddLabels(),
+      }}
+    />
   );
 }

@@ -11,6 +11,9 @@ export const PEOPLE_SEARCH_MAX_QUERY_LENGTH = 50;
 export const PEOPLE_SEARCH_MAX_INPUT_LENGTH = 500;
 export const PEOPLE_SEARCH_PAGE_SIZE = 20;
 export const PEOPLE_SEARCH_MAX_PAGE_SIZE = 50;
+// Usuários mostrados nas sugestões do campo de busca (a lista completa fica na
+// tela Buscar).
+export const PEOPLE_SUGGESTION_LIMIT = 5;
 
 // Tira espaços das pontas e o `@` inicial (quem cola `@fulano`). O mínimo conta
 // depois disso, como no banco.
@@ -43,4 +46,9 @@ export const searchPeopleInputSchema = z.object({
 export const loadMorePeopleSearchInputSchema = z.object({
   query: z.string().max(PEOPLE_SEARCH_MAX_INPUT_LENGTH),
   after: peopleSearchCursorSchema,
+});
+
+// Sugestões do campo de busca: só o termo, sem cursor (primeiro trecho).
+export const suggestPeopleInputSchema = z.object({
+  query: z.string().max(PEOPLE_SEARCH_MAX_INPUT_LENGTH),
 });

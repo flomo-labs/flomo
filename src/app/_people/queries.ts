@@ -1,6 +1,9 @@
 import "server-only";
 import {
+  normalizePeopleQuery,
+  PEOPLE_SEARCH_MIN_LENGTH,
   PEOPLE_SEARCH_PAGE_SIZE,
+  PEOPLE_SUGGESTION_LIMIT,
   type PeopleSearchCursor,
 } from "@/contracts/people-search";
 import { searchPeople } from "@/domain/people-search/search-people";
@@ -19,6 +22,22 @@ const checkSearchRate = createRateLimiter({
   windowMs: 60_000,
   maxKeys: 5000,
 });
+
+// Freio das sugestões de usuários ao digitar (uma consulta por pausa na
+// digitação), separado do da lista completa.
+const checkSuggestionRate = createRateLimiter({
+  limit: 60,
+  windowMs: 60_000,
+  maxKeys: 5000,
+});
+
+export type PeopleSuggestionsPage =
+  | {
+      ok: true;
+      tooShort: boolean;
+      items: { handle: string; displayName: string | null }[];
+    }
+  | { ok: false; code: "RATE_LIMITED" | "INVALID_INPUT" };
 
 export type PeopleSearchPage =
   | {
@@ -74,6 +93,39 @@ export async function loadPeopleSearch(
         last && all.length > PEOPLE_SEARCH_PAGE_SIZE
           ? { rank: last.rank, handle: last.handle }
           : null,
+    } as const;
+  });
+}
+
+// Até PEOPLE_SUGGESTION_LIMIT usuários para o menu de sugestões da busca. Mesma
+// regra de quem aparece da busca completa (função `app.search_people`, sem
+// você, bloqueios nem perfis que não podem ser achados), sem a relação de
+// seguir.
+export async function loadPeopleSuggestions(
+  user: CurrentUser,
+  query: string,
+): Promise<PeopleSuggestionsPage> {
+  // Termo curto não consulta o banco nem gasta o freio.
+  if (normalizePeopleQuery(query).length < PEOPLE_SEARCH_MIN_LENGTH) {
+    return { ok: true, tooShort: true, items: [] };
+  }
+  if (!checkSuggestionRate(user.id, Date.now()).allowed) {
+    return { ok: false, code: "RATE_LIMITED" };
+  }
+  return withUser(user.claims, async (tx) => {
+    const result = await searchPeople(
+      { people: createPeopleSearchRepository(tx) },
+      { id: user.id },
+      { query, limit: PEOPLE_SUGGESTION_LIMIT, after: null },
+    );
+    if (!result.ok) return { ok: false, code: "INVALID_INPUT" } as const;
+    return {
+      ok: true,
+      tooShort: result.value.tooShort,
+      items: result.value.people.map((p) => ({
+        handle: p.handle,
+        displayName: p.displayName,
+      })),
     } as const;
   });
 }
