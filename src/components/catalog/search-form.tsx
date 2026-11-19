@@ -1,13 +1,24 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
+import { SearchStateFields } from "@/components/catalog/search-state-fields";
 import { SearchCombobox } from "@/components/catalog/search-combobox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { SearchMedia } from "@/lib/search-url";
 
 // Campo de busca da página (GET /buscar?q=), só no celular: no desktop o campo
 // do cabeçalho faz esse papel. Funciona sem JavaScript (Enter envia).
-export async function SearchForm({ query = "" }: { query?: string }) {
+export async function SearchForm({
+  query = "",
+  people = false,
+  media = "tudo",
+}: {
+  query?: string;
+  // Aba (Pessoas) e filtro de tipo ativos: uma nova busca os mantém.
+  people?: boolean;
+  media?: SearchMedia;
+}) {
   const t = await getTranslations("Search");
   const tm = await getTranslations("MediaType");
   return (
@@ -17,6 +28,7 @@ export async function SearchForm({ query = "" }: { query?: string }) {
       role="search"
       className="flex flex-col gap-2 md:hidden"
     >
+      <SearchStateFields people={people} media={media} />
       <Label htmlFor="q" className="sr-only">
         {t("label")}
       </Label>

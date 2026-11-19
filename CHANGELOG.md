@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Filtros na tela Buscar: as pílulas Tudo, Séries e Filmes acima dos resultados mostram só o tipo escolhido; a escolha vai na URL (`?midia=series` ou `?midia=filmes`), trocar de filtro volta à primeira página e a paginação mantém o filtro. Na aba Pessoas as pílulas não aparecem (#107).
 - Base para filtrar a busca por tipo: a busca do catálogo aceita só séries ou só filmes (a paginação e o cache valem para o tipo escolhido). Sem `mediaType` continua buscando os dois juntos. Os filtros na tela Buscar vêm em outra tarefa (#104).
 - Curtir e descurtir comentários passam a ter limite de pedidos por usuário; passando do limite, o coração mostra "Muitas requisições. Tente de novo em instantes." e volta ao estado anterior. A leitura de mais comentários também ganha limite (#405).
 - Curtir comentários: cada comentário (de outras pessoas e o seu) ganha um coração com a contagem de curtidas; tocar curte e toca de novo tira a curtida, e a contagem muda na hora. Quem foi bloqueado por quem escreveu o comentário vê a contagem, mas ao tentar curtir recebe "Não foi possível curtir este comentário." (#397).

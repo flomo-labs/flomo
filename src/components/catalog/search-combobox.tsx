@@ -15,6 +15,7 @@ import {
   SUGGESTION_MIN_LENGTH,
   type Suggestion,
 } from "@/contracts/catalog";
+import { nextSearchHref } from "@/lib/search-url";
 import { titleRefPath } from "@/lib/title-paths";
 import { cn } from "@/lib/utils";
 
@@ -135,12 +136,7 @@ export function SearchCombobox({
 
   function openSearch() {
     setOpen(false);
-    const params = new URLSearchParams({ q: query });
-    // Nova busca feita na aba Pessoas continua nela.
-    if (pathname === "/buscar" && searchParams.get("tipo") === "pessoas") {
-      params.set("tipo", "pessoas");
-    }
-    router.push(`/buscar?${params}`);
+    router.push(nextSearchHref(query, pathname, searchParams));
   }
 
   function openSuggestion(index: number) {
