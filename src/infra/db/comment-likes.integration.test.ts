@@ -165,7 +165,10 @@ describe("curtidas nos comentários (migration 0036)", () => {
       // O autor bloqueia `other`: `other` não lê mais o comentário.
       await tx.insert(blocks).values({ blockerId: author, blockedId: other });
       expect(await like(tx, other, commentId)).toBeUndefined();
-      expect(await unlike(tx, other, commentId)).toBeUndefined();
+      expect(await unlike(tx, other, commentId)).toEqual({
+        likeCount: 0,
+        likedByMe: false,
+      });
     }));
 
   it("comentário oculto pela plataforma não recebe curtida nem mostra contagem", () =>
