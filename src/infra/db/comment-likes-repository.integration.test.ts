@@ -56,6 +56,13 @@ describe("repositório de comentários: curtidas", () => {
         createCommentRepository(t).unlike(viewer, commentId),
       );
       expect(unliked).toEqual({ likeCount: 0, likedByMe: false });
+      const unlikedMissing = await asUser(tx, viewer, (t) =>
+        createCommentRepository(t).unlike(
+          viewer,
+          "00000000-0000-4000-8000-000000000000",
+        ),
+      );
+      expect(unlikedMissing).toBeUndefined();
     }));
 
   it("listOthers e listMine trazem likeCount e likedByMe", () =>

@@ -56,7 +56,7 @@ export function createFakeComments(catalog: {
       const row = rows.find((r) => r.id === commentId);
       return row && canRead(userId, row)
         ? summaryOf(userId, row)
-        : { likeCount: 0, likedByMe: false };
+        : undefined;
     },
     async insert(userId, titleId, scope, body, containsSpoilers) {
       const at = tick();
