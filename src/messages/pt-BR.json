@@ -20,7 +20,12 @@
     "headerPlaceholder": "Buscar títulos",
     "kindLabel": "O que buscar",
     "kindTitles": "Filmes e séries",
-    "kindPeople": "Pessoas"
+    "kindPeople": "Pessoas",
+    "mediaLabel": "Tipo de título",
+    "mediaAll": "Tudo",
+    "mediaSeries": "Séries",
+    "mediaMovies": "Filmes",
+    "emptyFiltered": "Não encontramos {media, select, series {nenhuma série} other {nenhum filme}} para “{query}”. Confira a grafia, tente outro nome ou veja em Tudo."
   },
   "PeopleSearch": {
     "title": "Pessoas",

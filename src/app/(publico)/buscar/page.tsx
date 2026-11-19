@@ -17,9 +17,13 @@ import { LoadingRegion } from "@/components/loading/loading-region";
 import { PosterRowSkeleton } from "@/components/loading/poster-row-skeleton";
 import { SearchForm } from "@/components/catalog/search-form";
 import { SearchKindTabs } from "@/components/catalog/search-kind-tabs";
+import {
+  SearchMediaFilter,
+  type SearchMedia,
+} from "@/components/catalog/search-media-filter";
 import { PeopleResults } from "@/app/_people/people-results";
 import { Button } from "@/components/ui/button";
-import { SEARCH_MAX_PAGE } from "@/contracts/catalog";
+import { SEARCH_MAX_PAGE, type MediaType } from "@/contracts/catalog";
 import type { SearchItem } from "@/domain/catalog/types";
 import { titleRefPath } from "@/lib/title-paths";
 
@@ -30,6 +34,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 function firstValue(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+// Filtro de tipo da URL (`midia`) e o tipo de catálogo de cada um.
+const MEDIA_TYPE_OF: Record<Exclude<SearchMedia, "tudo">, MediaType> = {
+  series: "tv",
+  filmes: "movie",
+};
+
+function parseMedia(value: string): SearchMedia {
+  return value === "series" || value === "filmes" ? value : "tudo";
 }
 
 export default function BuscarPage({ searchParams }: PageProps<"/buscar">) {
@@ -64,6 +78,7 @@ async function SearchBody({
   const params = await searchParams;
   const kind = firstValue(params.tipo) === "pessoas" ? "pessoas" : "titulos";
   const query = firstValue(params.q).trim();
+  const media = parseMedia(firstValue(params.midia));
   // Página fora do intervalo vira a mais próxima (o TMDB só vai até a 500).
   const requested = Math.trunc(Number(firstValue(params.pagina))) || 1;
   const page = Math.min(Math.max(requested, 1), SEARCH_MAX_PAGE);
@@ -87,15 +102,39 @@ async function SearchBody({
       {kind === "pessoas" ? (
         <PeopleResults query={query} />
       ) : (
-        <Results query={query} page={page} />
+        <>
+          <SearchMediaFilter
+            query={query}
+            media={media}
+            labels={{
+              aria: t("mediaLabel"),
+              all: t("mediaAll"),
+              series: t("mediaSeries"),
+              movies: t("mediaMovies"),
+            }}
+          />
+          <Results query={query} page={page} media={media} />
+        </>
       )}
     </>
   );
 }
 
-async function Results({ query, page }: { query: string; page: number }) {
+async function Results({
+  query,
+  page,
+  media,
+}: {
+  query: string;
+  page: number;
+  media: SearchMedia;
+}) {
   const t = await getTranslations("Search");
-  const result = await searchCatalog({ query, page });
+  const result = await searchCatalog({
+    query,
+    page,
+    ...(media !== "tudo" && { mediaType: MEDIA_TYPE_OF[media] }),
+  });
 
   if (!result.ok) {
     return (
@@ -106,7 +145,13 @@ async function Results({ query, page }: { query: string; page: number }) {
   }
   const { items, totalPages, totalResults } = result.value;
   if (items.length === 0) {
-    return <p className="text-muted-foreground">{t("empty", { query })}</p>;
+    return (
+      <p className="text-muted-foreground">
+        {media === "tudo"
+          ? t("empty", { query })
+          : t("emptyFiltered", { query, media })}
+      </p>
+    );
   }
 
   // Quais resultados já estão na biblioteca: uma consulta para a página toda.
@@ -140,6 +185,7 @@ async function Results({ query, page }: { query: string; page: number }) {
       </ul>
       <Pagination
         query={query}
+        media={media}
         page={result.value.page}
         totalPages={totalPages}
       />
@@ -202,18 +248,24 @@ async function ResultCard({
 
 async function Pagination({
   query,
+  media,
   page,
   totalPages,
 }: {
   query: string;
+  media: SearchMedia;
   page: number;
   totalPages: number;
 }) {
   const t = await getTranslations("Search");
   const lastPage = Math.min(totalPages, SEARCH_MAX_PAGE);
   if (lastPage <= 1) return null;
-  const href = (target: number) =>
-    `/buscar?${new URLSearchParams({ q: query, pagina: String(target) })}`;
+  const href = (target: number) => {
+    const params = new URLSearchParams({ q: query });
+    if (media !== "tudo") params.set("midia", media);
+    params.set("pagina", String(target));
+    return `/buscar?${params}`;
+  };
   return (
     <nav
       aria-label={t("pagination")}
