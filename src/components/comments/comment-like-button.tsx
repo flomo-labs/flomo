@@ -28,7 +28,7 @@ export function CommentLikeButton({
   labels: CommentLikeLabels;
 }) {
   const [state, setState] = useState(initial);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
 
   async function toggle() {
@@ -36,7 +36,7 @@ export function CommentLikeButton({
     busy.current = true;
     const previous = state;
     const liking = !previous.likedByMe;
-    setError(false);
+    setError(null);
     setState({
       likedByMe: liking,
       likeCount: Math.max(0, previous.likeCount + (liking ? 1 : -1)),
@@ -49,11 +49,16 @@ export function CommentLikeButton({
         setState(result.value);
       } else {
         setState(previous);
-        setError(true);
+        // Limite de pedidos: a mensagem do servidor diz para esperar um instante.
+        setError(
+          result.error.code === "RATE_LIMITED"
+            ? result.error.message
+            : labels.failed,
+        );
       }
     } catch {
       setState(previous);
-      setError(true);
+      setError(labels.failed);
     } finally {
       busy.current = false;
     }
@@ -75,7 +80,7 @@ export function CommentLikeButton({
       </Button>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
-          {labels.failed}
+          {error}
         </p>
       ) : null}
     </div>

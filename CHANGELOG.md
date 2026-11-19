@@ -8,6 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
+- Curtir e descurtir comentários passam a ter limite de pedidos por usuário; passando do limite, o coração mostra "Muitas requisições. Tente de novo em instantes." e volta ao estado anterior. A leitura de mais comentários também ganha limite (#405).
 - Curtir comentários: cada comentário (de outras pessoas e o seu) ganha um coração com a contagem de curtidas; tocar curte e toca de novo tira a curtida, e a contagem muda na hora. Quem foi bloqueado por quem escreveu o comentário vê a contagem, mas ao tentar curtir recebe "Não foi possível curtir este comentário." (#397).
 - Base para curtir comentários: o servidor já permite curtir e descurtir um comentário (inclusive o próprio) e devolve a contagem de curtidas e se você curtiu nos comentários; só a contagem, sem lista de quem curtiu. Não dá para curtir comentário que você não pode ler nem de quem você bloqueou. O botão na tela vem em outra tarefa (#396).
 - Comentários de outras pessoas: a página do título mostra os comentários de quem tem perfil público (e de perfil privado que você segue), do mais recente ao mais antigo, 10 por vez com "Carregar mais"; comentário com spoiler fica escondido até você tocar em "Mostrar spoiler" e quem tem perfil privado seguido aparece como "Pessoa do Flomo". O botão "Comentários" de cada temporada e episódio abre o mesmo bloco (seus comentários, o formulário e os de outras pessoas), e agora dá para comentar numa temporada ou episódio. Visitante vê só o convite para entrar (#79).

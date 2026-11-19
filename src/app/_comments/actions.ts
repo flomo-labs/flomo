@@ -16,6 +16,7 @@ import { fail, type Result } from "@/domain/result";
 import { withUser } from "@/infra/db/client";
 import { createCommentRepository } from "@/infra/db/comment-repository";
 import { createLibraryRepository } from "@/infra/db/library-repository";
+import { createRateLimiter } from "@/lib/rate-limit";
 import { getCurrentUser } from "../_auth/session";
 
 // Camada fina (ADR-004): resolve o usuário, chama o caso de uso dentro do
@@ -27,6 +28,25 @@ export type CommentActionResult = Result<
   Record<string, never>,
   CommentErrorCode | "UNAUTHENTICATED"
 >;
+
+// Freios por usuário (#405) nas ações de curtir e de ler comentários: cada
+// chamada abre transação, confere permissão e lê a contagem, então um laço de
+// um cliente logado gera carga no banco. O uso normal fica longe dos limites.
+// Contam na memória de cada instância, como os das sugestões da busca e da
+// rolagem de pessoas (src/lib/rate-limit.ts), então são um freio parcial.
+// Curtir e descurtir dividem o mesmo contador, para alternar não burlar o limite.
+const checkLikeRate = createRateLimiter({
+  limit: 30,
+  windowMs: 60_000,
+  maxKeys: 5000,
+});
+const checkLoadCommentsRate = createRateLimiter({
+  limit: 60,
+  windowMs: 60_000,
+  maxKeys: 5000,
+});
+
+const RATE_LIMITED_MESSAGE = "Muitas requisições. Tente de novo em instantes.";
 
 type UseCase = (
   deps: {
@@ -76,10 +96,15 @@ export async function removeComment(input: unknown) {
 // episódio, em páginas). Não revalida página nenhuma.
 export async function loadTitleComments(
   input: unknown,
-): Promise<Result<CommentPage, CommentErrorCode | "UNAUTHENTICATED">> {
+): Promise<
+  Result<CommentPage, CommentErrorCode | "UNAUTHENTICATED" | "RATE_LIMITED">
+> {
   const user = await getCurrentUser();
   if (!user) {
     return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  if (!checkLoadCommentsRate(user.id, Date.now()).allowed) {
+    return fail("RATE_LIMITED", RATE_LIMITED_MESSAGE);
   }
   return withUser(user.claims, (tx) =>
     listTitleComments(
@@ -95,7 +120,7 @@ export async function loadTitleComments(
 
 export type CommentLikeResult = Result<
   CommentLikes,
-  CommentErrorCode | "UNAUTHENTICATED"
+  CommentErrorCode | "UNAUTHENTICATED" | "RATE_LIMITED"
 >;
 
 // Curtir e descurtir (#397). Devolvem a contagem atual para a tela se acertar
@@ -112,6 +137,9 @@ async function runLike(
   const user = await getCurrentUser();
   if (!user) {
     return fail("UNAUTHENTICATED", "Sua sessão expirou. Entre de novo.");
+  }
+  if (!checkLikeRate(user.id, Date.now()).allowed) {
+    return fail("RATE_LIMITED", RATE_LIMITED_MESSAGE);
   }
   return withUser(user.claims, (tx) =>
     useCase({ comments: createCommentRepository(tx) }, { id: user.id }, input),
