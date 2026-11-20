@@ -8,7 +8,7 @@ import { HeaderSearchField } from "./header-search-field";
 // /buscar (funciona sem JavaScript). No celular a busca fica na própria tela.
 export async function HeaderSearch() {
   const t = await getTranslations();
-  // O filtro Usuários só existe para quem entrou na conta.
+  // A seção Usuários só existe para quem entrou na conta.
   const signedIn = Boolean(await getCurrentUser());
   return (
     <form
@@ -23,6 +23,8 @@ export async function HeaderSearch() {
           placeholder: t("Search.headerPlaceholder"),
           clear: t("Search.clear"),
           suggestions: t("Search.suggestions"),
+          titlesHeading: t("Search.kindTitles"),
+          seeAllShort: t("Search.seeAllShort"),
           seeAll: t.raw("Search.seeAll"),
           movie: t("MediaType.movie"),
           tv: t("MediaType.tv"),

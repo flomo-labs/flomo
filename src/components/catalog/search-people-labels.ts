@@ -2,15 +2,12 @@ import { getTranslations } from "next-intl/server";
 import { PEOPLE_SEARCH_MIN_LENGTH } from "@/contracts/people-search";
 import type { SearchPeopleLabels } from "./search-combobox";
 
-// Textos do filtro Séries e filmes / Usuários do menu de sugestões da busca.
-// Só quem entrou na conta recebe: para visitante o menu fica como antes, sem o
-// filtro.
+// Textos da seção Usuários do menu de sugestões da busca. Só quem entrou na
+// conta recebe: para visitante o menu mostra só a seção de títulos.
 export async function getSearchPeopleLabels(): Promise<SearchPeopleLabels> {
   const t = await getTranslations("Search");
   return {
-    kindLabel: t("kindLabel"),
-    kindTitles: t("kindTitles"),
-    kindPeople: t("kindPeople"),
+    heading: t("kindPeople"),
     suggestions: t("peopleSuggestions"),
     seeAll: t.raw("seeAllPeople"),
     tooShort: t("suggestionsTooShort", { min: PEOPLE_SEARCH_MIN_LENGTH }),
