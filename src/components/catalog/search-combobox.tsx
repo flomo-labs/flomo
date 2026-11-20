@@ -111,7 +111,7 @@ export function SearchCombobox({
   // Só busca sugestões depois que a pessoa digita: em /buscar?q=… o campo já
   // vem preenchido e a lista não deve abrir sozinha por cima dos resultados.
   const [typed, setTyped] = useState(false);
-  const [active, setActive] = useState(-1);
+  const [activeRaw, setActive] = useState(-1);
   const [fetchedPeople, setFetchedPeople] = useState<{
     term: string;
     items: PersonSuggestion[];
@@ -144,6 +144,9 @@ export function SearchCombobox({
   // Opções navegáveis por setas: títulos e depois usuários, numa lista só.
   const optionCount = items.length + people.length;
   const hasOptions = optionCount > 0;
+  // O destaque some se a lista encolheu por baixo dele (ex.: os usuários
+  // sumiram enquanto a pessoa continua digitando).
+  const active = activeRaw < optionCount ? activeRaw : -1;
   // Sem a seção Usuários o menu só abre com sugestões; com ela abre depois de
   // digitar, para mostrar as duas seções (e o aviso) mesmo sem título.
   const expanded =
@@ -182,7 +185,6 @@ export function SearchCombobox({
         items: result?.ok ? result.value.items : [],
         failed: !result?.ok,
       });
-      setActive(-1);
       setOpen(true);
     }, DEBOUNCE_MS);
     return () => {
@@ -207,7 +209,6 @@ export function SearchCombobox({
         }
         const body: { items: Suggestion[] } = await response.json();
         setFetched({ query: query.toLowerCase(), items: body.items });
-        setActive(-1);
         setOpen(true);
         const owned = await refsInLibrary({
           refs: body.items.map((i) => ({
@@ -255,6 +256,7 @@ export function SearchCombobox({
   }
 
   function openSuggestion(index: number) {
+    if (index >= optionCount) return;
     setOpen(false);
     router.push(
       index < items.length
