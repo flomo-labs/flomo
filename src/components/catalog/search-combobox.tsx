@@ -10,8 +10,8 @@ import {
   type QuickAddLabels,
 } from "@/components/catalog/quick-add-button";
 import { SearchPersonSuggestion } from "@/components/catalog/search-person-suggestion";
+import { SearchSuggestionSection } from "@/components/catalog/search-suggestion-section";
 import { Icon } from "@/components/icon";
-import { SegmentedControl } from "@/components/segmented-control";
 import { Input } from "@/components/ui/input";
 import {
   normalizePeopleQuery,
@@ -28,20 +28,16 @@ import { cn } from "@/lib/utils";
 
 const DEBOUNCE_MS = 300;
 
-// Filtro do menu de sugestões: títulos (séries e filmes) ou usuários.
-type Kind = "titulos" | "pessoas";
-
 type PersonSuggestion = { handle: string; displayName: string | null };
 
-// Textos do filtro do menu. Só quem entrou na conta recebe; sem eles o menu
-// mostra só títulos, sem o filtro.
+// Textos da seção Usuários do menu. Só quem entrou na conta recebe; sem eles o
+// menu mostra só a seção de títulos.
 export type SearchPeopleLabels = {
-  kindLabel: string;
-  kindTitles: string;
-  kindPeople: string;
+  // Título da seção ("Usuários").
+  heading: string;
   // Nome da lista de usuários para leitores de tela.
   suggestions: string;
-  // "Ver todos os usuários para “{query}”"
+  // "Ver tudo em Usuários para “{query}”" (nome acessível do "Ver tudo").
   seeAll: string;
   // "Digite pelo menos 3 letras…"
   tooShort: string;
@@ -57,7 +53,11 @@ export type SearchComboboxLabels = {
   clear: string;
   // Nome da lista de sugestões para leitores de tela.
   suggestions: string;
-  // "Ver todos os resultados para “{query}”"
+  // Título da seção de títulos ("Séries e filmes").
+  titlesHeading: string;
+  // Texto visível do "Ver tudo" de cada seção.
+  seeAllShort: string;
+  // "Ver tudo em Séries e filmes para “{query}”" (nome acessível).
   seeAll: string;
   movie: string;
   tv: string;
@@ -66,12 +66,13 @@ export type SearchComboboxLabels = {
 };
 
 // Campo de busca com sugestões: depois de 2 letras e uma pausa, mostra até 5
-// títulos (GET /api/sugestoes). Para quem entrou, o menu tem o filtro Séries e
-// filmes / Usuários; Usuários pede 3 letras e mostra até 5 contas. Enter sem
-// escolher uma sugestão, ou "Ver todos", abre /buscar já no filtro escolhido;
-// sem JavaScript o formulário que o contém envia a busca do mesmo jeito. Usado no cabeçalho e na tela de busca. Com texto no campo,
-// um "x" à direita apaga tudo e devolve o foco ao campo (o "x" nativo do
-// `type="search"` fica escondido).
+// títulos (GET /api/sugestoes). Para quem entrou, o menu tem duas seções ao
+// mesmo tempo, Séries e filmes e Usuários (3 letras, até 5 contas), cada uma com
+// "Ver tudo ›" que abre /buscar na aba correspondente. Enter sem escolher uma
+// sugestão abre /buscar em Séries e filmes; sem JavaScript o formulário que o
+// contém envia a busca do mesmo jeito. Usado no cabeçalho e na tela de busca.
+// Com texto no campo, um "x" à direita apaga tudo e devolve o foco ao campo (o
+// "x" nativo do `type="search"` fica escondido).
 export function SearchCombobox({
   id,
   defaultValue = "",
@@ -82,7 +83,6 @@ export function SearchCombobox({
   listClassName,
   ariaLabel,
   peopleLabels,
-  initialKind = "titulos",
 }: {
   id?: string;
   defaultValue?: string;
@@ -92,10 +92,8 @@ export function SearchCombobox({
   className?: string;
   listClassName?: string;
   ariaLabel?: string;
-  // Presente só para quem entrou na conta: liga o filtro Usuários.
+  // Presente só para quem entrou na conta: liga a seção Usuários.
   peopleLabels?: SearchPeopleLabels;
-  // Filtro com que o menu abre (em /buscar, o da aba aberta).
-  initialKind?: Kind;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -114,9 +112,6 @@ export function SearchCombobox({
   // vem preenchido e a lista não deve abrir sozinha por cima dos resultados.
   const [typed, setTyped] = useState(false);
   const [active, setActive] = useState(-1);
-  const [kind, setKind] = useState<Kind>(
-    peopleLabels ? initialKind : "titulos",
-  );
   const [fetchedPeople, setFetchedPeople] = useState<{
     term: string;
     items: PersonSuggestion[];
@@ -134,50 +129,48 @@ export function SearchCombobox({
     query.length >= SUGGESTION_MIN_LENGTH &&
     (query.toLowerCase().startsWith(fetched.query) ||
       fetched.query.startsWith(query.toLowerCase()));
-  const titleItems = sameSearch ? fetched.items : [];
+  const items = sameSearch ? fetched.items : [];
   const titlesSettled = sameSearch && fetched.query === query.toLowerCase();
 
   // Usuários: o termo conta sem o "@" inicial e pede 3 letras, como no banco.
   const personTerm = normalizePeopleQuery(query);
   const peopleTooShort = personTerm.length < PEOPLE_SEARCH_MIN_LENGTH;
   const peopleSettled = fetchedPeople?.term === personTerm;
-  const peopleItems = peopleSettled && fetchedPeople ? fetchedPeople.items : [];
+  const people =
+    peopleLabels && !peopleTooShort && peopleSettled && fetchedPeople
+      ? fetchedPeople.items
+      : [];
 
-  const peopleMode = kind === "pessoas" && Boolean(peopleLabels);
-  const people = peopleMode ? peopleItems : [];
-  const items = peopleMode ? [] : titleItems;
-  const optionCount = peopleMode ? people.length : items.length;
-  const seeAllIndex = optionCount;
+  // Opções navegáveis por setas: títulos e depois usuários, numa lista só.
+  const optionCount = items.length + people.length;
   const hasOptions = optionCount > 0;
-  // Com o filtro, a lista (ao menos "Ver todos") fica visível mesmo sem
-  // sugestões, para a busca completa continuar ao alcance do teclado.
-  const hasList =
-    hasOptions || Boolean(peopleLabels && !(peopleMode && peopleTooShort));
-  // Sem o filtro o menu só abre com sugestões; com ele abre depois de digitar,
-  // para dar acesso ao filtro Usuários mesmo quando não há título.
+  // Sem a seção Usuários o menu só abre com sugestões; com ela abre depois de
+  // digitar, para mostrar as duas seções (e o aviso) mesmo sem título.
   const expanded =
     open &&
     (peopleLabels
       ? typed && query.length >= SUGGESTION_MIN_LENGTH
       : hasOptions);
-  const message = !peopleLabels
+  const titlesMessage = !peopleLabels
     ? null
-    : peopleMode
-      ? peopleTooShort
-        ? peopleLabels.tooShort
-        : peopleSettled && fetchedPeople?.failed
-          ? peopleLabels.failed
-          : peopleSettled && people.length === 0
-            ? peopleLabels.emptyPeople.replace("{query}", () => personTerm)
-            : null
-      : titlesSettled && fetched.failed
+    : titlesSettled && fetched.failed
+      ? peopleLabels.failed
+      : titlesSettled && items.length === 0
+        ? peopleLabels.emptyTitles.replace("{query}", () => query)
+        : null;
+  const peopleMessage = !peopleLabels
+    ? null
+    : peopleTooShort
+      ? peopleLabels.tooShort
+      : peopleSettled && fetchedPeople?.failed
         ? peopleLabels.failed
-        : titlesSettled && items.length === 0
-          ? peopleLabels.emptyTitles.replace("{query}", () => query)
+        : peopleSettled && people.length === 0
+          ? peopleLabels.emptyPeople.replace("{query}", () => personTerm)
           : null;
 
+  const hasPeople = Boolean(peopleLabels);
   useEffect(() => {
-    if (!peopleMode || !typed || peopleTooShort) return;
+    if (!hasPeople || !typed || peopleTooShort) return;
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       const result = await suggestPeople({ query: personTerm }).catch(
@@ -196,10 +189,10 @@ export function SearchCombobox({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [peopleMode, typed, peopleTooShort, personTerm]);
+  }, [hasPeople, typed, peopleTooShort, personTerm]);
 
   useEffect(() => {
-    if (peopleMode || !typed || query.length < SUGGESTION_MIN_LENGTH) return;
+    if (!typed || query.length < SUGGESTION_MIN_LENGTH) return;
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
@@ -235,15 +228,7 @@ export function SearchCombobox({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, typed, peopleMode]);
-
-  function changeKind(next: Kind) {
-    setKind(next);
-    setActive(-1);
-    setTyped(true);
-    setOpen(true);
-    input.current?.focus();
-  }
+  }, [query, typed]);
 
   function clear() {
     setValue("");
@@ -252,38 +237,44 @@ export function SearchCombobox({
     input.current?.focus();
   }
 
-  function openSearch() {
+  // "Ver tudo" de Séries e filmes e Enter sem escolher: com a seção Usuários
+  // abre a Buscar em Tudo (o filtro Tudo/Séries/Filmes é da tela de
+  // resultados); sem ela, a busca herda a aba e o filtro da URL.
+  function openTitlesSearch() {
     setOpen(false);
-    // Com o filtro do menu, "Séries e filmes" abre a Buscar em Tudo (o filtro
-    // Tudo/Séries/Filmes é da tela de resultados); sem ele, a busca herda a
-    // aba e o filtro da URL.
     router.push(
       peopleLabels
-        ? searchHref({ query, people: peopleMode })
+        ? searchHref({ query })
         : nextSearchHref(query, pathname, searchParams),
     );
   }
 
+  function openPeopleSearch() {
+    setOpen(false);
+    router.push(searchHref({ query, people: true }));
+  }
+
   function openSuggestion(index: number) {
-    if (index === seeAllIndex) return openSearch();
     setOpen(false);
     router.push(
-      peopleMode ? `/@${people[index].handle}` : titleRefPath(items[index]),
+      index < items.length
+        ? titleRefPath(items[index])
+        : `/@${people[index - items.length].handle}`,
     );
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    // Com o filtro, o Enter abre a busca no filtro escolhido: os campos
-    // escondidos do formulário só sabem o da URL.
+    // Com a seção Usuários, o Enter sem escolher abre a busca em Séries e
+    // filmes: os campos escondidos do formulário só sabem o da URL.
     if (
       peopleLabels &&
       event.key === "Enter" &&
       !event.nativeEvent.isComposing &&
-      (!expanded || active < 0 || !hasList) &&
+      (!expanded || active < 0 || !hasOptions) &&
       query
     ) {
       event.preventDefault();
-      return openSearch();
+      return openTitlesSearch();
     }
     if (!expanded) return;
     if (event.key === "Escape") {
@@ -292,8 +283,8 @@ export function SearchCombobox({
       setOpen(false);
       return;
     }
-    if (!hasList) return;
-    const last = seeAllIndex;
+    if (!hasOptions) return;
+    const last = optionCount - 1;
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setActive((current) => (current >= last ? 0 : current + 1));
@@ -307,6 +298,13 @@ export function SearchCombobox({
   }
 
   const optionId = (index: number) => `${listId}-${index}`;
+  const titlesListId = `${listId}-titulos`;
+  const peopleListId = `${listId}-usuarios`;
+  const optionClass = (index: number) =>
+    cn(
+      "flex cursor-pointer items-center gap-3 rounded-xl p-1.5",
+      active === index && "bg-muted",
+    );
 
   return (
     <div
@@ -329,10 +327,12 @@ export function SearchCombobox({
         type="search"
         role="combobox"
         aria-expanded={expanded}
-        aria-controls={listId}
+        aria-controls={
+          peopleLabels ? `${titlesListId} ${peopleListId}` : titlesListId
+        }
         aria-autocomplete="list"
         aria-activedescendant={
-          expanded && hasList && active >= 0 ? optionId(active) : undefined
+          expanded && hasOptions && active >= 0 ? optionId(active) : undefined
         }
         aria-label={ariaLabel}
         value={value}
@@ -366,43 +366,22 @@ export function SearchCombobox({
       ) : null}
       <div
         hidden={!expanded}
-        // Mantém o foco no campo ao clicar numa sugestão ou no filtro.
+        // Mantém o foco no campo ao clicar numa sugestão ou em "Ver tudo".
         onMouseDown={(event) => event.preventDefault()}
         className={cn(
           "absolute top-full z-50 mt-2 w-full min-w-0 sm:min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
           listClassName,
         )}
       >
-        {peopleLabels ? (
-          <div className="flex overflow-x-auto px-1 pt-0.5 pb-1.5">
-            <SegmentedControl
-              value={kind}
-              ariaLabel={peopleLabels.kindLabel}
-              options={[
-                { value: "titulos", label: peopleLabels.kindTitles },
-                { value: "pessoas", label: peopleLabels.kindPeople },
-              ]}
-              onChange={changeKind}
-            />
-          </div>
-        ) : null}
-        {message ? (
-          <p
-            role="status"
-            className="px-2.5 py-2 text-sm text-muted-foreground"
-          >
-            {message}
-          </p>
-        ) : null}
-        <ul
-          id={listId}
-          role="listbox"
-          aria-label={
-            peopleMode && peopleLabels
-              ? peopleLabels.suggestions
-              : labels.suggestions
-          }
-          hidden={!hasList}
+        <SearchSuggestionSection
+          heading={labels.titlesHeading}
+          seeAllLabel={labels.seeAllShort}
+          seeAllAriaLabel={labels.seeAll.replace("{query}", () => query)}
+          onSeeAll={openTitlesSearch}
+          message={titlesMessage}
+          listId={titlesListId}
+          listLabel={labels.suggestions}
+          empty={items.length === 0}
         >
           {items.map((item, index) => (
             <li
@@ -412,10 +391,7 @@ export function SearchCombobox({
               aria-selected={active === index}
               onMouseEnter={() => setActive(index)}
               onClick={() => openSuggestion(index)}
-              className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-xl p-1.5",
-                active === index && "bg-muted",
-              )}
+              className={optionClass(index)}
             >
               <Poster
                 path={item.posterPath}
@@ -446,43 +422,43 @@ export function SearchCombobox({
               />
             </li>
           ))}
-          {people.map((person, index) => (
-            <li
-              key={person.handle}
-              id={optionId(index)}
-              role="option"
-              aria-selected={active === index}
-              onMouseEnter={() => setActive(index)}
-              onClick={() => openSuggestion(index)}
-              className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-xl p-1.5",
-                active === index && "bg-muted",
-              )}
-            >
-              <SearchPersonSuggestion
-                handle={person.handle}
-                displayName={person.displayName}
-              />
-            </li>
-          ))}
-          <li role="presentation" className="my-1 h-px bg-border" />
-          <li
-            id={optionId(seeAllIndex)}
-            role="option"
-            aria-selected={active === seeAllIndex}
-            onMouseEnter={() => setActive(seeAllIndex)}
-            onClick={openSearch}
-            className={cn(
-              "cursor-pointer truncate rounded-xl px-2.5 py-2 text-sm text-sidebar-primary",
-              active === seeAllIndex && "bg-muted",
+        </SearchSuggestionSection>
+        {peopleLabels ? (
+          <SearchSuggestionSection
+            heading={peopleLabels.heading}
+            seeAllLabel={labels.seeAllShort}
+            seeAllAriaLabel={peopleLabels.seeAll.replace(
+              "{query}",
+              () => personTerm,
             )}
+            // Com menos de 3 letras a busca de usuários não roda: sem "Ver tudo".
+            onSeeAll={peopleTooShort ? undefined : openPeopleSearch}
+            message={peopleMessage}
+            listId={peopleListId}
+            listLabel={peopleLabels.suggestions}
+            empty={people.length === 0}
           >
-            {(peopleMode && peopleLabels
-              ? peopleLabels.seeAll
-              : labels.seeAll
-            ).replace("{query}", () => (peopleMode ? personTerm : query))}
-          </li>
-        </ul>
+            {people.map((person, i) => {
+              const index = items.length + i;
+              return (
+                <li
+                  key={person.handle}
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={active === index}
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => openSuggestion(index)}
+                  className={optionClass(index)}
+                >
+                  <SearchPersonSuggestion
+                    handle={person.handle}
+                    displayName={person.displayName}
+                  />
+                </li>
+              );
+            })}
+          </SearchSuggestionSection>
+        ) : null}
       </div>
     </div>
   );

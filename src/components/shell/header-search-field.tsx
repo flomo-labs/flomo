@@ -41,9 +41,6 @@ export function HeaderSearchField({
         listClassName="right-0 left-auto w-[22rem]"
         labels={labels}
         peopleLabels={peopleLabels}
-        initialKind={
-          onSearch && params.get("tipo") === "pessoas" ? "pessoas" : "titulos"
-        }
       />
     </>
   );

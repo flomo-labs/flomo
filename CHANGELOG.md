@@ -28,6 +28,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Alterado
 
+- Sugestões da busca em duas seções: quem entrou na conta vê, ao digitar, "Séries e filmes" e "Usuários" ao mesmo tempo (no lugar do filtro no menu), cada uma com "Ver tudo ›" que abre a Buscar na aba correspondente (Séries e filmes abre em Tudo); Enter sem escolher continua abrindo a Buscar. Usuários segue pedindo 3 letras e mostra até 5 contas. Visitante vê só a seção de títulos (#412).
 - Trocar de tela ficou mais fluido: as telas visitadas há menos de 30 segundos reaparecem na hora e, ao abrir uma tela, ela já mostra o título e o esqueleto do próprio conteúdo em vez de um esqueleto genérico (#400).
 - No Descobrir, o título "Em alta esta semana em" passou a "Em alta em" e o espaço até o seletor de serviço ficou menor (#343).
 

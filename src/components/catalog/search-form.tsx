@@ -62,12 +62,13 @@ async function SearchField({
       withIcon
       required
       peopleLabels={signedIn ? await getSearchPeopleLabels() : undefined}
-      initialKind={people ? "pessoas" : "titulos"}
       className="h-11 rounded-full pl-9 text-base"
       labels={{
         placeholder: t("placeholder"),
         clear: t("clear"),
         suggestions: t("suggestions"),
+        titlesHeading: t("kindTitles"),
+        seeAllShort: t("seeAllShort"),
         seeAll: t.raw("seeAll"),
         movie: tm("movie"),
         tv: tm("tv"),
