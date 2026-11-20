@@ -271,7 +271,21 @@ export function SearchCombobox({
   useEffect(() => {
     const layer = root.current;
     const viewport = window.visualViewport;
-    if (!screen || !layer || !viewport) return;
+    if (!screen || !layer) return;
+    // O iOS ignora `overflow: hidden` no body e rola a página por baixo quando
+    // o toque cai fora da lista. Então a página inteira fica invisível
+    // enquanto a busca ocupa a tela; a camada, filha do body, se mostra de
+    // novo (visibility herda, mas o filho pode sobrescrever).
+    const body = document.body;
+    const previousVisibility = body.style.visibility;
+    body.style.visibility = "hidden";
+    layer.style.visibility = "visible";
+    if (!viewport) {
+      return () => {
+        body.style.visibility = previousVisibility;
+        layer.style.visibility = "";
+      };
+    }
     const sync = () => {
       // A camada vai até o fim da janela do layout, por baixo do teclado e da
       // barra dele, que no iOS é translúcida: assim a tela de baixo nunca
@@ -296,6 +310,8 @@ export function SearchCombobox({
       layer.style.height = "";
       layer.style.bottom = "";
       layer.style.removeProperty("--search-keyboard");
+      layer.style.visibility = "";
+      body.style.visibility = previousVisibility;
     };
   }, [screen]);
 
@@ -396,7 +412,7 @@ export function SearchCombobox({
       className={cn(
         "relative min-w-0 flex-1",
         screen &&
-          "max-md:fixed max-md:inset-0 max-md:z-50 max-md:flex max-md:flex-col max-md:bg-background",
+          "max-md:fixed max-md:inset-0 max-md:z-50 max-md:overscroll-contain max-md:flex max-md:flex-col max-md:bg-background",
       )}
       onBlur={(event) => {
         if (!root.current?.contains(event.relatedTarget)) setOpen(false);
