@@ -12,6 +12,7 @@ import {
 import { SearchPersonSuggestion } from "@/components/catalog/search-person-suggestion";
 import { SearchSuggestionSection } from "@/components/catalog/search-suggestion-section";
 import { Icon } from "@/components/icon";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   normalizePeopleQuery,
@@ -45,6 +46,12 @@ export type SearchPeopleLabels = {
   emptyPeople: string;
   emptyTitles: string;
   failed: string;
+};
+
+// Textos do modo tela cheia do celular (voltar e Cancelar).
+export type SearchMobileScreenLabels = {
+  back: string;
+  cancel: string;
 };
 
 export type SearchComboboxLabels = {
@@ -83,6 +90,7 @@ export function SearchCombobox({
   listClassName,
   ariaLabel,
   peopleLabels,
+  mobileScreen,
 }: {
   id?: string;
   defaultValue?: string;
@@ -94,6 +102,10 @@ export function SearchCombobox({
   ariaLabel?: string;
   // Presente só para quem entrou na conta: liga a seção Usuários.
   peopleLabels?: SearchPeopleLabels;
+  // Só no celular (abaixo de md): ao tocar no campo a busca ocupa a tela, com
+  // voltar e Cancelar ao lado do campo, e as sugestões viram a lista da própria
+  // tela, que rola sozinha, em vez de um menu sobre a página (#413).
+  mobileScreen?: SearchMobileScreenLabels;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -108,6 +120,9 @@ export function SearchCombobox({
     failed?: boolean;
   }>({ query: "", items: [] });
   const [open, setOpen] = useState(false);
+  // Modo tela cheia do celular ligado (só com `mobileScreen`).
+  const [engaged, setEngaged] = useState(false);
+  const screen = Boolean(mobileScreen) && engaged;
   // Só busca sugestões depois que a pessoa digita: em /buscar?q=… o campo já
   // vem preenchido e a lista não deve abrir sozinha por cima dos resultados.
   const [typed, setTyped] = useState(false);
@@ -150,7 +165,7 @@ export function SearchCombobox({
   // Sem a seção Usuários o menu só abre com sugestões; com ela abre depois de
   // digitar, para mostrar as duas seções (e o aviso) mesmo sem título.
   const expanded =
-    open &&
+    (open || screen) &&
     (peopleLabels
       ? typed && query.length >= SUGGESTION_MIN_LENGTH
       : hasOptions);
@@ -231,6 +246,32 @@ export function SearchCombobox({
     };
   }, [query, typed]);
 
+  // Navegou (escolheu uma sugestão, enviou a busca, usou o voltar do
+  // navegador): a tela cheia fecha.
+  const locationKey = `${pathname}?${searchParams.toString()}`;
+  const [seenLocation, setSeenLocation] = useState(locationKey);
+  if (seenLocation !== locationKey) {
+    setSeenLocation(locationKey);
+    setEngaged(false);
+  }
+
+  // Com a tela cheia aberta a página de baixo não rola.
+  useEffect(() => {
+    if (!screen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [screen]);
+
+  function closeScreen() {
+    setEngaged(false);
+    setOpen(false);
+    setActive(-1);
+    input.current?.blur();
+  }
+
   function clear() {
     setValue("");
     setOpen(false);
@@ -243,6 +284,7 @@ export function SearchCombobox({
   // resultados); sem ela, a busca herda a aba e o filtro da URL.
   function openTitlesSearch() {
     setOpen(false);
+    setEngaged(false);
     router.push(
       peopleLabels
         ? searchHref({ query })
@@ -252,12 +294,14 @@ export function SearchCombobox({
 
   function openPeopleSearch() {
     setOpen(false);
+    setEngaged(false);
     router.push(searchHref({ query, people: true }));
   }
 
   function openSuggestion(index: number) {
     if (index >= optionCount) return;
     setOpen(false);
+    setEngaged(false);
     router.push(
       index < items.length
         ? titleRefPath(items[index])
@@ -277,6 +321,10 @@ export function SearchCombobox({
     ) {
       event.preventDefault();
       return openTitlesSearch();
+    }
+    if (screen && event.key === "Escape") {
+      event.preventDefault();
+      return closeScreen();
     }
     if (!expanded) return;
     if (event.key === "Escape") {
@@ -311,67 +359,116 @@ export function SearchCombobox({
   return (
     <div
       ref={root}
-      className="relative min-w-0 flex-1"
+      className={cn(
+        "relative min-w-0 flex-1",
+        screen &&
+          "max-md:fixed max-md:inset-0 max-md:z-50 max-md:flex max-md:flex-col max-md:bg-background",
+      )}
       onBlur={(event) => {
         if (!root.current?.contains(event.relatedTarget)) setOpen(false);
       }}
     >
-      {withIcon ? (
-        <Icon
-          name="search"
-          className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
-        />
-      ) : null}
-      <Input
-        ref={input}
-        id={id}
-        name="q"
-        type="search"
-        role="combobox"
-        aria-expanded={expanded}
-        aria-controls={
-          peopleLabels ? `${titlesListId} ${peopleListId}` : titlesListId
-        }
-        aria-autocomplete="list"
-        aria-activedescendant={
-          expanded && hasOptions && active >= 0 ? optionId(active) : undefined
-        }
-        aria-label={ariaLabel}
-        value={value}
-        onChange={(event) => {
-          setValue(event.target.value);
-          setTyped(true);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={onKeyDown}
-        placeholder={labels.placeholder}
-        maxLength={SEARCH_QUERY_MAX_LENGTH}
-        autoComplete="off"
-        required={required}
+      <div
         className={cn(
-          "[&::-webkit-search-cancel-button]:appearance-none",
-          value && "pr-10",
-          className,
+          "relative flex min-w-0 items-center",
+          screen && "max-md:gap-2 max-md:p-3",
         )}
-      />
-      {value ? (
-        <button
-          type="button"
-          aria-label={labels.clear}
-          title={labels.clear}
-          onClick={clear}
-          className="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:size-10"
-        >
-          <Icon name="close" className="size-4" />
-        </button>
-      ) : null}
+      >
+        {screen && mobileScreen ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            aria-label={mobileScreen.back}
+            onClick={closeScreen}
+            className="shrink-0 rounded-full bg-muted hover:bg-muted/80 md:hidden"
+          >
+            <Icon
+              name="chevronForward"
+              className="size-4 -translate-x-[0.5px] rotate-180 pointer-coarse:size-5.5"
+            />
+          </Button>
+        ) : null}
+        <div className="relative min-w-0 flex-1">
+          {withIcon ? (
+            <Icon
+              name="search"
+              className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+          ) : null}
+          <Input
+            ref={input}
+            id={id}
+            name="q"
+            type="search"
+            role="combobox"
+            aria-expanded={expanded}
+            aria-controls={
+              peopleLabels ? `${titlesListId} ${peopleListId}` : titlesListId
+            }
+            aria-autocomplete="list"
+            aria-activedescendant={
+              expanded && hasOptions && active >= 0
+                ? optionId(active)
+                : undefined
+            }
+            aria-label={ariaLabel}
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              setTyped(true);
+              setOpen(true);
+            }}
+            // Também ao tocar: se o campo seguiu focado depois de fechar (ex.:
+            // Enter sem a URL mudar), não há novo "focus" para reabrir.
+            onClick={() => {
+              if (mobileScreen) setEngaged(true);
+            }}
+            onFocus={() => {
+              setOpen(true);
+              if (mobileScreen) setEngaged(true);
+            }}
+            onKeyDown={onKeyDown}
+            placeholder={labels.placeholder}
+            maxLength={SEARCH_QUERY_MAX_LENGTH}
+            autoComplete="off"
+            required={required}
+            className={cn(
+              "[&::-webkit-search-cancel-button]:appearance-none",
+              value && "pr-10",
+              className,
+            )}
+          />
+          {value ? (
+            <button
+              type="button"
+              aria-label={labels.clear}
+              title={labels.clear}
+              onClick={clear}
+              className="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:size-10"
+            >
+              <Icon name="close" className="size-4" />
+            </button>
+          ) : null}
+        </div>
+        {screen && mobileScreen ? (
+          <button
+            type="button"
+            onClick={closeScreen}
+            className="shrink-0 cursor-pointer px-1 text-sm font-medium text-sidebar-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden pointer-coarse:min-h-11"
+          >
+            {mobileScreen.cancel}
+          </button>
+        ) : null}
+      </div>
       <div
         hidden={!expanded}
         // Mantém o foco no campo ao clicar numa sugestão ou em "Ver tudo".
         onMouseDown={(event) => event.preventDefault()}
         className={cn(
           "absolute top-full z-50 mt-2 w-full min-w-0 sm:min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
+          screen &&
+            "max-md:static max-md:mt-0 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:rounded-none max-md:border-0 max-md:bg-background max-md:px-3 max-md:shadow-none",
           listClassName,
         )}
       >

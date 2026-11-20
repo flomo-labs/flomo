@@ -175,3 +175,46 @@ describe("SearchCombobox: seções Séries e filmes e Usuários", () => {
     expect(field.getAttribute("aria-expanded")).toBe("false");
   });
 });
+
+describe("SearchCombobox: tela cheia no celular (#413)", () => {
+  const mobileScreen = { back: "Voltar", cancel: "Cancelar" };
+
+  it("sem mobileScreen não há voltar nem Cancelar", async () => {
+    render(<SearchCombobox labels={labels} ariaLabel="Buscar" />);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
+  });
+
+  it("ao focar mostra voltar e Cancelar; Cancelar fecha mantendo o texto", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
+    const field = screen.getByRole("combobox");
+    await userEvent.type(field, "ana");
+    expect(screen.getByRole("button", { name: "Voltar" })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
+    expect((field as HTMLInputElement).value).toBe("ana");
+  });
+
+  it("Esc e voltar também fecham", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
+  });
+});
