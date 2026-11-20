@@ -8,7 +8,7 @@ Como preencher: [docs/versionamento.md](docs/versionamento.md).
 
 ### Adicionado
 
-- Busca no celular em tela cheia: ao tocar no campo de busca a tela é tomada pela busca, com botão de voltar e "Cancelar" ao lado do campo, e as sugestões (Séries e filmes e Usuários) viram uma lista na própria tela, que rola sozinha, no lugar do menu sobre a página que atrapalhava a rolagem. No computador nada muda (#413).
+- Busca no celular em tela cheia: ao tocar no campo de busca a tela é tomada pela busca, com um botão X à direita do campo que fecha a busca e apaga o texto, e as sugestões (Séries e filmes e Usuários) viram uma lista na própria tela, que rola sozinha, no lugar do menu sobre a página que atrapalhava a rolagem. No computador nada muda (#413).
 - Filtro nas sugestões da busca: quem entrou na conta escolhe, no menu que abre ao digitar, entre "Séries e filmes" e "Usuários" (a partir de 3 letras, até 5 contas pelo @usuário ou nome, sem bloqueios nem perfis ocultos), sem sair da tela; Enter ou "Ver todos" abre a Buscar já na aba escolhida ("Séries e filmes" abre em Tudo). As abas da tela Buscar passam a se chamar "Séries e filmes" e "Usuários" (#410).
 - Filtros na tela Buscar: as pílulas Tudo, Séries e Filmes acima dos resultados mostram só o tipo escolhido; a escolha vai na URL (`?midia=series` ou `?midia=filmes`), trocar de filtro volta à primeira página e a paginação mantém o filtro. Na aba Pessoas as pílulas não aparecem (#107).
 - Base para filtrar a busca por tipo: a busca do catálogo aceita só séries ou só filmes (a paginação e o cache valem para o tipo escolhido). Sem `mediaType` continua buscando os dois juntos. Os filtros na tela Buscar vêm em outra tarefa (#104).

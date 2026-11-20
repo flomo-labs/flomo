@@ -62,7 +62,7 @@ async function SearchField({
       withIcon
       required
       peopleLabels={signedIn ? await getSearchPeopleLabels() : undefined}
-      mobileScreen={{ back: t("back"), cancel: t("cancel") }}
+      mobileScreen={{ close: t("closeSearch") }}
       className="h-11 rounded-full pl-9 text-base"
       labels={{
         placeholder: t("placeholder"),

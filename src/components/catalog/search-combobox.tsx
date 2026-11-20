@@ -48,10 +48,10 @@ export type SearchPeopleLabels = {
   failed: string;
 };
 
-// Textos do modo tela cheia do celular (voltar e Cancelar).
+// Textos do modo tela cheia do celular.
 export type SearchMobileScreenLabels = {
-  back: string;
-  cancel: string;
+  // Botão X à direita do campo: fecha a tela e apaga a busca.
+  close: string;
 };
 
 export type SearchComboboxLabels = {
@@ -103,7 +103,7 @@ export function SearchCombobox({
   // Presente só para quem entrou na conta: liga a seção Usuários.
   peopleLabels?: SearchPeopleLabels;
   // Só no celular (abaixo de md): ao tocar no campo a busca ocupa a tela, com
-  // voltar e Cancelar ao lado do campo, e as sugestões viram a lista da própria
+  // um X à direita do campo, e as sugestões viram a lista da própria
   // tela, que rola sozinha, em vez de um menu sobre a página (#413).
   mobileScreen?: SearchMobileScreenLabels;
 }) {
@@ -324,7 +324,10 @@ export function SearchCombobox({
     };
   }, [screen]);
 
+  // Fecha a tela cheia e apaga o que foi digitado (como o X do iOS).
   function closeScreen() {
+    setValue("");
+    setTyped(false);
     setEngaged(false);
     setOpen(false);
     setActive(-1);
@@ -433,21 +436,6 @@ export function SearchCombobox({
           screen && "max-md:gap-2 max-md:p-3",
         )}
       >
-        {screen && mobileScreen ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            aria-label={mobileScreen.back}
-            onClick={closeScreen}
-            className="shrink-0 rounded-full bg-muted hover:bg-muted/80 md:hidden"
-          >
-            <Icon
-              name="chevronForward"
-              className="size-4 -translate-x-[0.5px] rotate-180 pointer-coarse:size-5.5"
-            />
-          </Button>
-        ) : null}
         <div className="relative min-w-0 flex-1">
           {withIcon ? (
             <Icon
@@ -511,13 +499,17 @@ export function SearchCombobox({
           ) : null}
         </div>
         {screen && mobileScreen ? (
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="icon"
+            aria-label={mobileScreen.close}
+            title={mobileScreen.close}
             onClick={closeScreen}
-            className="shrink-0 cursor-pointer px-1 text-sm font-medium text-sidebar-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden pointer-coarse:min-h-11"
+            className="shrink-0 rounded-full bg-muted hover:bg-muted/80 md:hidden"
           >
-            {mobileScreen.cancel}
-          </button>
+            <Icon name="close" className="size-4 pointer-coarse:size-5" />
+          </Button>
         ) : null}
       </div>
       <div
