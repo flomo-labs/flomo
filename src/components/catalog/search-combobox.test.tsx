@@ -107,9 +107,9 @@ describe("SearchCombobox: seções Séries e filmes e Usuários", () => {
     expect(screen.getByText("Séries e filmes")).toBeTruthy();
     expect(screen.getByText("Usuários")).toBeTruthy();
     expect(suggestPeople).toHaveBeenCalledWith({ query: "ana" });
-    expect(screen.getAllByRole("button", { name: /^Ver tudo em/ })).toHaveLength(
-      2,
-    );
+    expect(
+      screen.getAllByRole("button", { name: /^Ver tudo em/ }),
+    ).toHaveLength(2);
   });
 
   it("escolher um usuário abre o perfil", async () => {
@@ -173,5 +173,48 @@ describe("SearchCombobox: seções Séries e filmes e Usuários", () => {
     expect(field.getAttribute("aria-expanded")).toBe("true");
     await userEvent.keyboard("{Escape}");
     expect(field.getAttribute("aria-expanded")).toBe("false");
+  });
+});
+
+describe("SearchCombobox: tela cheia no celular (#413)", () => {
+  const mobileScreen = { close: "Fechar a busca" };
+  const closeButton = () =>
+    screen.queryByRole("button", { name: "Fechar a busca" });
+
+  it("sem mobileScreen não há botão de fechar", async () => {
+    render(<SearchCombobox labels={labels} ariaLabel="Buscar" />);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(closeButton()).toBeNull();
+  });
+
+  it("ao focar mostra o X; ele fecha e apaga a busca", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    expect(closeButton()).toBeNull();
+    const field = screen.getByRole("combobox");
+    await userEvent.type(field, "ana");
+    await userEvent.click(closeButton()!);
+    expect(closeButton()).toBeNull();
+    expect((field as HTMLInputElement).value).toBe("");
+  });
+
+  it("Esc também fecha e apaga", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    const field = screen.getByRole("combobox");
+    await userEvent.type(field, "ana");
+    await userEvent.keyboard("{Escape}");
+    expect(closeButton()).toBeNull();
+    expect((field as HTMLInputElement).value).toBe("");
   });
 });
