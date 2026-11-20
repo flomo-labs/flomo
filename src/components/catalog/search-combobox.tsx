@@ -119,6 +119,8 @@ export function SearchCombobox({
     items: Suggestion[];
     failed?: boolean;
   }>({ query: "", items: [] });
+  // As respostas das sugestões só abrem o menu se o campo ainda está em uso:
+  // ao voltar de outra tela a busca é refeita e não deve reabrir o menu antigo.
   const [open, setOpen] = useState(false);
   // Modo tela cheia do celular ligado (só com `mobileScreen`).
   const [engaged, setEngaged] = useState(false);
@@ -200,7 +202,7 @@ export function SearchCombobox({
         items: result?.ok ? result.value.items : [],
         failed: !result?.ok,
       });
-      setOpen(true);
+      if (document.activeElement === input.current) setOpen(true);
     }, DEBOUNCE_MS);
     return () => {
       clearTimeout(timer);
@@ -219,12 +221,12 @@ export function SearchCombobox({
         );
         if (!response.ok) {
           setFetched({ query: query.toLowerCase(), items: [], failed: true });
-          setOpen(true);
+          if (document.activeElement === input.current) setOpen(true);
           return;
         }
         const body: { items: Suggestion[] } = await response.json();
         setFetched({ query: query.toLowerCase(), items: body.items });
-        setOpen(true);
+        if (document.activeElement === input.current) setOpen(true);
         const owned = await refsInLibrary({
           refs: body.items.map((i) => ({
             mediaType: i.mediaType,
