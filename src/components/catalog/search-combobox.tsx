@@ -253,7 +253,14 @@ export function SearchCombobox({
   if (seenLocation !== locationKey) {
     setSeenLocation(locationKey);
     setEngaged(false);
+    setOpen(false);
+    setActive(-1);
   }
+  // Voltar de outra tela (ex.: de "Ver tudo") traz o campo como ficou, ainda
+  // com foco; sem tirá-lo o menu antigo reabriria sozinho.
+  useEffect(() => {
+    input.current?.blur();
+  }, [locationKey]);
 
   // Com a tela cheia aberta a página de baixo não rola.
   useEffect(() => {
