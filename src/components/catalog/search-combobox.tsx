@@ -273,9 +273,18 @@ export function SearchCombobox({
     const viewport = window.visualViewport;
     if (!screen || !layer || !viewport) return;
     const sync = () => {
+      // A camada vai até o fim da janela do layout, por baixo do teclado e da
+      // barra dele, que no iOS é translúcida: assim a tela de baixo nunca
+      // aparece. A lista reserva o espaço do teclado para o fim dela ficar
+      // alcançável.
+      const covered = Math.max(
+        0,
+        window.innerHeight - viewport.offsetTop - viewport.height,
+      );
       layer.style.top = `${viewport.offsetTop}px`;
-      layer.style.height = `${viewport.height}px`;
+      layer.style.height = `${window.innerHeight}px`;
       layer.style.bottom = "auto";
+      layer.style.setProperty("--search-keyboard", `${covered}px`);
     };
     sync();
     viewport.addEventListener("resize", sync);
@@ -286,6 +295,7 @@ export function SearchCombobox({
       layer.style.top = "";
       layer.style.height = "";
       layer.style.bottom = "";
+      layer.style.removeProperty("--search-keyboard");
     };
   }, [screen]);
 
@@ -492,7 +502,7 @@ export function SearchCombobox({
         className={cn(
           "absolute top-full z-50 mt-2 w-full min-w-0 sm:min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
           screen &&
-            "max-md:static max-md:mt-0 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:rounded-none max-md:border-0 max-md:bg-background max-md:px-3 max-md:shadow-none",
+            "max-md:static max-md:mt-0 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:pb-[var(--search-keyboard,0px)] max-md:rounded-none max-md:border-0 max-md:bg-background max-md:px-3 max-md:shadow-none",
           listClassName,
         )}
       >
