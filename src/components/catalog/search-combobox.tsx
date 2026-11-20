@@ -265,6 +265,30 @@ export function SearchCombobox({
     };
   }, [screen]);
 
+  // No iOS o teclado não encolhe a janela do layout: ele desloca a área
+  // visível. A camada acompanha a área visível (visualViewport), senão a tela
+  // de baixo aparece por trás ao rolar com o teclado aberto.
+  useEffect(() => {
+    const layer = root.current;
+    const viewport = window.visualViewport;
+    if (!screen || !layer || !viewport) return;
+    const sync = () => {
+      layer.style.top = `${viewport.offsetTop}px`;
+      layer.style.height = `${viewport.height}px`;
+      layer.style.bottom = "auto";
+    };
+    sync();
+    viewport.addEventListener("resize", sync);
+    viewport.addEventListener("scroll", sync);
+    return () => {
+      viewport.removeEventListener("resize", sync);
+      viewport.removeEventListener("scroll", sync);
+      layer.style.top = "";
+      layer.style.height = "";
+      layer.style.bottom = "";
+    };
+  }, [screen]);
+
   function closeScreen() {
     setEngaged(false);
     setOpen(false);
