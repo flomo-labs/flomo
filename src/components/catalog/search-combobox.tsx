@@ -4,13 +4,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { suggestPeople } from "@/app/_people/actions";
 import { refsInLibrary } from "@/app/_library/actions";
-import { Poster } from "@/components/catalog/poster";
 import {
   QuickAddButton,
   type QuickAddLabels,
 } from "@/components/catalog/quick-add-button";
 import { SearchPersonSuggestion } from "@/components/catalog/search-person-suggestion";
+import { useRecentSearches } from "@/components/catalog/use-recent-searches";
 import { SearchRecentItem } from "@/components/catalog/search-recent-item";
+import { SearchTitleSuggestion } from "@/components/catalog/search-title-suggestion";
 import { SearchSuggestionSection } from "@/components/catalog/search-suggestion-section";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
@@ -25,13 +26,9 @@ import {
   type Suggestion,
 } from "@/contracts/catalog";
 import {
-  addRecentSearch,
-  loadRecentSearches,
-  type RecentSearch,
   recentKey,
   recentName,
-  removeRecentSearch,
-  saveRecentSearches,
+  type RecentSearch,
 } from "@/lib/recent-searches";
 import { nextSearchHref, searchHref } from "@/lib/search-url";
 import { titleRefPath } from "@/lib/title-paths";
@@ -166,7 +163,16 @@ export function SearchCombobox({
   // Buscas recentes deste aparelho. Lidas ao focar o campo (e não na
   // montagem) para o servidor e o navegador renderizarem o mesmo HTML e para
   // valer o que outra aba ou o outro campo da página guardou.
-  const [recents, setRecents] = useState<RecentSearch[]>([]);
+  const {
+    recents,
+    refresh: loadRecents,
+    remember,
+    forget,
+    forgetAll,
+  } = useRecentSearches({
+    enabled: Boolean(recentLabels),
+    signedIn: Boolean(peopleLabels),
+  });
 
   const query = value.trim();
   // A resposta guardada só vale enquanto a pessoa continua na mesma busca
@@ -379,31 +385,12 @@ export function SearchCombobox({
     };
   }, [screen]);
 
-  // Fecha a tela cheia e apaga o que foi digitado (como o X do iOS).
+  // Relê as recentes, só com o campo vazio (digitando a lista não aparece).
   function refreshRecents() {
-    if (recentLabels) setRecents(loadRecentSearches());
+    if (!typed && value === "") loadRecents();
   }
 
-  // Guarda o que acabou de ser feito: um termo buscado ou uma sugestão aceita
-  // (lê o armazenamento de novo: outra aba pode ter mudado a lista).
-  function remember(item: RecentSearch) {
-    if (!recentLabels) return;
-    const next = addRecentSearch(loadRecentSearches(), item);
-    saveRecentSearches(next);
-    setRecents(next);
-  }
-
-  function forget(item: RecentSearch) {
-    const next = removeRecentSearch(loadRecentSearches(), item);
-    saveRecentSearches(next);
-    setRecents(next);
-  }
-
-  function forgetAll() {
-    saveRecentSearches([]);
-    setRecents([]);
-  }
-
+  // Fecha a tela cheia e apaga o que foi digitado (como o X do iOS).
   function closeScreen() {
     setValue("");
     setTyped(false);
@@ -415,7 +402,7 @@ export function SearchCombobox({
 
   function clear() {
     setValue("");
-    refreshRecents();
+    loadRecents();
     setOpen(true);
     setActive(-1);
     input.current?.focus();
@@ -706,21 +693,14 @@ export function SearchCombobox({
                   onClick={() => openSuggestion(index)}
                   className={optionClass(index)}
                 >
-                  <Poster
-                    path={item.posterPath}
-                    size="w92"
-                    alt=""
-                    className="w-8 shrink-0 sm:w-10"
+                  <SearchTitleSuggestion
+                    title={item.title}
+                    posterPath={item.posterPath}
+                    kindLabel={
+                      item.mediaType === "movie" ? labels.movie : labels.tv
+                    }
+                    year={item.year}
                   />
-                  <div className="min-w-0 flex-1">
-                    <div className="line-clamp-1 text-sm font-semibold break-words">
-                      {item.title}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {item.mediaType === "movie" ? labels.movie : labels.tv}
-                      {item.year ? ` · ${item.year}` : ""}
-                    </div>
-                  </div>
                   <QuickAddButton
                     target={{
                       mediaType: item.mediaType,

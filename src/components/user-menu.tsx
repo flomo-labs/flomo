@@ -1,5 +1,6 @@
 "use client";
 
+import { clearRecentSearches } from "@/lib/recent-searches";
 import Link from "next/link";
 import { ROADMAP_PATH } from "@/content/roadmap-link";
 import { NotificationDot } from "@/components/notification-dot";
@@ -112,7 +113,7 @@ export function UserMenu({
           Configurações
         </DropdownMenuItem>
         <RoadmapMenuItem className={ITEM} />
-        <form action={signOut}>
+        <form action={signOut} onSubmit={clearRecentSearches}>
           <DropdownMenuItem
             nativeButton
             render={<button type="submit" />}

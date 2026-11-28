@@ -1,4 +1,4 @@
-import { Poster } from "@/components/catalog/poster";
+import { SearchTitleSuggestion } from "@/components/catalog/search-title-suggestion";
 import { SearchPersonSuggestion } from "@/components/catalog/search-person-suggestion";
 import { Icon } from "@/components/icon";
 import type { RecentSearch } from "@/lib/recent-searches";
@@ -31,21 +31,12 @@ export function SearchRecentItem({
         </>
       ) : item.kind === "title" ? (
         <>
-          <Poster
-            path={item.posterPath}
-            size="w92"
-            alt=""
-            className="w-8 shrink-0 sm:w-10"
+          <SearchTitleSuggestion
+            title={item.title}
+            posterPath={item.posterPath}
+            kindLabel={item.mediaType === "movie" ? labels.movie : labels.tv}
+            year={item.year}
           />
-          <div className="min-w-0 flex-1">
-            <div className="line-clamp-1 text-sm font-semibold break-words">
-              {item.title}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {item.mediaType === "movie" ? labels.movie : labels.tv}
-              {item.year ? ` · ${item.year}` : ""}
-            </div>
-          </div>
         </>
       ) : (
         <SearchPersonSuggestion

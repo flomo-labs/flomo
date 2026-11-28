@@ -10,9 +10,15 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchCombobox, type SearchPeopleLabels } from "./search-combobox";
 
-const { push, suggestPeople } = vi.hoisted(() => ({
+const { push, suggestPeople, recentActions } = vi.hoisted(() => ({
   push: vi.fn(),
   suggestPeople: vi.fn(),
+  recentActions: {
+    listRecents: vi.fn(),
+    recordRecent: vi.fn(),
+    removeRecent: vi.fn(),
+    clearRecents: vi.fn(),
+  },
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
@@ -23,6 +29,7 @@ vi.mock("@/app/_library/actions", () => ({
   refsInLibrary: vi.fn(async () => ({ ok: true, value: [] })),
 }));
 vi.mock("@/app/_people/actions", () => ({ suggestPeople }));
+vi.mock("@/app/_recent-search/actions", () => recentActions);
 vi.mock("@/components/catalog/quick-add-button", () => ({
   QuickAddButton: () => null,
 }));
@@ -250,7 +257,7 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
   };
   const KEY = "flomo:buscas-recentes";
   const q = (term: string) => ({ kind: "query", term });
-  const stored = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
+  const stored = () => JSON.parse(sessionStorage.getItem(KEY) ?? "null");
   function renderRecent(props: { signedIn?: boolean } = {}) {
     render(
       <SearchCombobox
@@ -262,10 +269,24 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
     );
     return screen.getByRole("combobox");
   }
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    sessionStorage.clear();
+    recentActions.listRecents.mockResolvedValue({
+      ok: true,
+      value: { items: [] },
+    });
+    for (const action of [
+      recentActions.recordRecent,
+      recentActions.removeRecent,
+      recentActions.clearRecents,
+    ]) {
+      action.mockResolvedValue({ ok: true, value: {} });
+    }
+  });
+  afterEach(() => Object.values(recentActions).forEach((a) => a.mockReset()));
 
   it("campo vazio e em foco lista as recentes, da mais nova para a mais antiga", async () => {
-    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    sessionStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
     const field = renderRecent();
     await userEvent.click(field);
     const options = screen.getAllByRole("option");
@@ -280,7 +301,7 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
   });
 
   it("somem ao digitar", async () => {
-    localStorage.setItem(KEY, JSON.stringify([q("dark")]));
+    sessionStorage.setItem(KEY, JSON.stringify([q("dark")]));
     const field = renderRecent();
     await userEvent.click(field);
     await userEvent.type(field, "x");
@@ -288,7 +309,7 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
   });
 
   it("clicar num item preenche o campo, busca e sobe o termo", async () => {
-    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    sessionStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
     const field = renderRecent();
     await userEvent.click(field);
     await userEvent.click(screen.getByText("the bear"));
@@ -298,7 +319,7 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
   });
 
   it("o × remove só o item, sem buscar", async () => {
-    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    sessionStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
     await userEvent.click(renderRecent());
     await userEvent.click(
       screen.getByRole("button", {
@@ -310,7 +331,7 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
   });
 
   it("Limpar apaga todas", async () => {
-    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    sessionStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
     await userEvent.click(renderRecent());
     await userEvent.click(
       screen.getByRole("button", { name: "Limpar as buscas recentes" }),
@@ -319,16 +340,48 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
     expect(screen.queryAllByRole("option")).toHaveLength(0);
   });
 
-  it("Enter guarda o termo (logado), no máximo 8 sem repetir", async () => {
-    localStorage.setItem(
-      KEY,
-      JSON.stringify(Array.from({ length: 8 }, (_, i) => q(`t${i}`))),
+  it("logado: a lista vem do servidor e o visitante não chama o servidor", async () => {
+    recentActions.listRecents.mockResolvedValue({
+      ok: true,
+      value: { items: [q("dark"), q("the bear")] },
+    });
+    const field = renderRecent({ signedIn: true });
+    await userEvent.click(field);
+    await waitFor(() =>
+      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+        "dark",
+        "the bear",
+      ]),
     );
+    cleanup();
+    recentActions.listRecents.mockClear();
+    await userEvent.click(renderRecent());
+    expect(recentActions.listRecents).not.toHaveBeenCalled();
+  });
+
+  it("logado: Enter registra o termo no servidor e não no navegador", async () => {
     const field = renderRecent({ signedIn: true });
     await userEvent.type(field, "Dark{Enter}");
-    const list = stored();
-    expect(list).toHaveLength(8);
-    expect(list[0]).toEqual(q("Dark"));
+    expect(recentActions.recordRecent).toHaveBeenCalledWith(q("Dark"));
+    expect(stored()).toBeNull();
+  });
+
+  it("logado: remover um item e Limpar chamam o servidor", async () => {
+    recentActions.listRecents.mockResolvedValue({
+      ok: true,
+      value: { items: [q("dark"), q("the bear")] },
+    });
+    await userEvent.click(renderRecent({ signedIn: true }));
+    await userEvent.click(
+      await screen.findByRole("button", {
+        name: "Remover “dark” das buscas recentes",
+      }),
+    );
+    expect(recentActions.removeRecent).toHaveBeenCalledWith(q("dark"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Limpar as buscas recentes" }),
+    );
+    expect(recentActions.clearRecents).toHaveBeenCalled();
   });
 
   it("visitante: Enter guarda o termo e o formulário segue", async () => {
@@ -337,24 +390,32 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
     expect(stored()).toEqual([q("severance")]);
   });
 
-  it("usuário aceito vai para as recentes e reabre pelo perfil", async () => {
+  it("usuário aceito vai para o servidor só com o handle", async () => {
     mockPeople([ana]);
     const field = renderRecent({ signedIn: true });
     await userEvent.type(field, "ana");
     await userEvent.click(await screen.findByText("Ana Souza"));
-    expect(stored()).toEqual([
-      { kind: "person", handle: "ana", displayName: "Ana Souza" },
-    ]);
-    push.mockReset();
-    await userEvent.clear(field);
-    await userEvent.click(field);
-    expect(screen.getByText("@ana")).toBeTruthy();
+    expect(recentActions.recordRecent).toHaveBeenCalledWith({
+      kind: "person",
+      handle: "ana",
+    });
+  });
+
+  it("usuário recente (visitante não vê) abre o perfil", async () => {
+    recentActions.listRecents.mockResolvedValue({
+      ok: true,
+      value: {
+        items: [{ kind: "person", handle: "ana", displayName: "Ana Souza" }],
+      },
+    });
+    await userEvent.click(renderRecent({ signedIn: true }));
+    expect(await screen.findByText("@ana")).toBeTruthy();
     await userEvent.click(screen.getByText("Ana Souza"));
     expect(push).toHaveBeenCalledWith("/@ana");
   });
 
   it("título aceito aparece com nome e tipo · ano e abre o título", async () => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       KEY,
       JSON.stringify([
         {
@@ -378,7 +439,7 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
     expect(push).toHaveBeenCalledWith("/titulo/ref/serie/70523");
   });
 
-  it("localStorage indisponível não quebra", async () => {
+  it("sessionStorage indisponível não quebra", async () => {
     const spy = vi
       .spyOn(Storage.prototype, "getItem")
       .mockImplementation(() => {

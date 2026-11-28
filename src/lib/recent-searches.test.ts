@@ -86,6 +86,13 @@ describe("parseRecentSearches", () => {
     ]);
     expect(parseRecentSearches(raw)).toEqual([title, person]);
   });
+  it("descarta handle e id fora do formato", () => {
+    const raw = JSON.stringify([
+      { kind: "person", handle: "../x", displayName: null },
+      { ...title, externalId: "1/../2" },
+    ]);
+    expect(parseRecentSearches(raw)).toEqual([]);
+  });
   it("valores inválidos viram lista vazia", () => {
     expect(parseRecentSearches(null)).toEqual([]);
     expect(parseRecentSearches("{")).toEqual([]);
@@ -93,7 +100,7 @@ describe("parseRecentSearches", () => {
   });
 });
 
-describe("localStorage indisponível", () => {
+describe("sessionStorage indisponível", () => {
   const broken = {
     getItem: () => {
       throw new Error("bloqueado");
@@ -106,7 +113,7 @@ describe("localStorage indisponível", () => {
     },
   };
   it("não lança ao ler nem ao gravar", () => {
-    vi.stubGlobal("localStorage", broken);
+    vi.stubGlobal("sessionStorage", broken);
     expect(loadRecentSearches()).toEqual([]);
     expect(() => saveRecentSearches([q("a")])).not.toThrow();
     expect(() => saveRecentSearches([])).not.toThrow();

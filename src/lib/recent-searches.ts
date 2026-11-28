@@ -1,25 +1,17 @@
-// Buscas recentes (#414): ficam só no aparelho (localStorage), da mais nova
-// para a mais antiga, sem repetir e até `RECENT_SEARCHES_MAX`. Cada item é um
-// termo buscado ou uma sugestão aceita (título ou usuário, com o que a lista
-// mostra: nome, ano e pôster). Nada vai
-// para o servidor. Toda leitura e escrita é protegida: em modo privado ou com
-// dados bloqueados o `localStorage` pode lançar erro, e a busca segue sem
-// histórico.
+// Buscas recentes do visitante (#414): ficam só na visita (`sessionStorage`, some
+// ao fechar a aba), da mais nova para a mais antiga, sem repetir e até
+// `RECENT_SEARCHES_MAX`. Quem entrou na conta guarda no servidor (#425, ver
+// `use-recent-searches.ts`); as funções puras daqui valem para os dois. Cada
+// item é um termo buscado ou uma sugestão aceita (título ou usuário). Toda
+// leitura e escrita no armazenamento é protegida: em modo privado ou com dados
+// bloqueados ele pode lançar erro, e a busca segue sem histórico.
+
+import type { RecentSearchItem } from "@/domain/recent-search/ports";
 
 export const RECENT_SEARCHES_KEY = "flomo:buscas-recentes";
 export const RECENT_SEARCHES_MAX = 8;
 
-export type RecentSearch =
-  | { kind: "query"; term: string }
-  | {
-      kind: "title";
-      mediaType: "movie" | "tv";
-      externalId: string;
-      title: string;
-      year: string | null;
-      posterPath: string | null;
-    }
-  | { kind: "person"; handle: string; displayName: string | null };
+export type RecentSearch = RecentSearchItem;
 
 // Identidade do item para não repetir (termo sem diferenciar maiúsculas).
 export function recentKey(item: RecentSearch): string {
@@ -68,6 +60,11 @@ export function removeRecentSearch(
   return list.filter((entry) => recentKey(entry) !== key);
 }
 
+// Formatos que o app gera; evita montar um caminho a partir de um valor
+// alterado à mão no armazenamento.
+const HANDLE_SAFE = /^[A-Za-z0-9._]{1,50}$/;
+const EXTERNAL_ID_SAFE = /^[A-Za-z0-9_-]{1,40}$/;
+
 const isText = (value: unknown): value is string =>
   typeof value === "string" && value.trim() !== "";
 const orNull = (value: unknown) => (typeof value === "string" ? value : null);
@@ -84,7 +81,8 @@ function parseItem(raw: unknown): RecentSearch | null {
   if (
     r.kind === "title" &&
     (r.mediaType === "movie" || r.mediaType === "tv") &&
-    isText(r.externalId) &&
+    typeof r.externalId === "string" &&
+    EXTERNAL_ID_SAFE.test(r.externalId) &&
     isText(r.title)
   ) {
     return {
@@ -96,7 +94,11 @@ function parseItem(raw: unknown): RecentSearch | null {
       posterPath: orNull(r.posterPath),
     };
   }
-  if (r.kind === "person" && isText(r.handle)) {
+  if (
+    r.kind === "person" &&
+    typeof r.handle === "string" &&
+    HANDLE_SAFE.test(r.handle)
+  ) {
     return {
       kind: "person",
       handle: r.handle,
@@ -123,7 +125,7 @@ export function parseRecentSearches(raw: string | null): RecentSearch[] {
 
 export function loadRecentSearches(): RecentSearch[] {
   try {
-    return parseRecentSearches(localStorage.getItem(RECENT_SEARCHES_KEY));
+    return parseRecentSearches(sessionStorage.getItem(RECENT_SEARCHES_KEY));
   } catch {
     return [];
   }
@@ -131,9 +133,14 @@ export function loadRecentSearches(): RecentSearch[] {
 
 export function saveRecentSearches(list: readonly RecentSearch[]): void {
   try {
-    if (list.length === 0) localStorage.removeItem(RECENT_SEARCHES_KEY);
-    else localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(list));
+    if (list.length === 0) sessionStorage.removeItem(RECENT_SEARCHES_KEY);
+    else sessionStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(list));
   } catch {
     // Sem armazenamento: o histórico só não persiste.
   }
+}
+
+// Ao sair da conta o histórico da visita some junto.
+export function clearRecentSearches(): void {
+  saveRecentSearches([]);
 }
