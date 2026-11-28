@@ -113,6 +113,7 @@ export function SearchCombobox({
   const listId = useId();
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(defaultValue);
   const [fetched, setFetched] = useState<{
     query: string;
@@ -264,13 +265,30 @@ export function SearchCombobox({
     input.current?.blur();
   }, [locationKey]);
 
-  // Com a tela cheia aberta a página de baixo não rola.
+  // Com a tela cheia aberta a página de baixo não rola. O iOS ignora
+  // `overflow: hidden` no body, então o gesto de rolar é cancelado em tudo que
+  // não é a lista de sugestões (e na lista, quando ela não tem o que rolar). Nas
+  // pontas da lista, `overscroll-contain` impede que o gesto passe para a página.
   useEffect(() => {
     if (!screen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const block = (event: TouchEvent) => {
+      const el = list.current;
+      if (
+        el &&
+        event.target instanceof Node &&
+        el.contains(event.target) &&
+        el.scrollHeight > el.clientHeight
+      ) {
+        return;
+      }
+      event.preventDefault();
+    };
+    document.addEventListener("touchmove", block, { passive: false });
     return () => {
       document.body.style.overflow = previous;
+      document.removeEventListener("touchmove", block);
     };
   }, [screen]);
 
@@ -513,13 +531,14 @@ export function SearchCombobox({
         ) : null}
       </div>
       <div
+        ref={list}
         hidden={!expanded}
         // Mantém o foco no campo ao clicar numa sugestão ou em "Ver tudo".
         onMouseDown={(event) => event.preventDefault()}
         className={cn(
           "absolute top-full z-50 mt-2 w-full min-w-0 sm:min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
           screen &&
-            "max-md:static max-md:mt-0 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:pb-[var(--search-keyboard,0px)] max-md:rounded-none max-md:border-0 max-md:bg-background max-md:px-3 max-md:shadow-none",
+            "max-md:static max-md:mt-0 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:overscroll-contain max-md:pb-[var(--search-keyboard,0px)] max-md:rounded-none max-md:border-0 max-md:bg-background max-md:px-3 max-md:shadow-none",
           listClassName,
         )}
       >

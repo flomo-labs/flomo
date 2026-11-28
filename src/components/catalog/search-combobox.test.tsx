@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchCombobox, type SearchPeopleLabels } from "./search-combobox";
@@ -216,5 +222,21 @@ describe("SearchCombobox: tela cheia no celular (#413)", () => {
     await userEvent.keyboard("{Escape}");
     expect(closeButton()).toBeNull();
     expect((field as HTMLInputElement).value).toBe("");
+  });
+
+  it("com a tela cheia aberta o gesto de rolar fora da lista é cancelado", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    // Fechada, a página rola normalmente.
+    expect(fireEvent.touchMove(document.body)).toBe(true);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(fireEvent.touchMove(document.body)).toBe(false);
+    await userEvent.click(closeButton()!);
+    expect(fireEvent.touchMove(document.body)).toBe(true);
   });
 });
