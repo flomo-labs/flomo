@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchCombobox, type SearchPeopleLabels } from "./search-combobox";
@@ -107,9 +113,9 @@ describe("SearchCombobox: seções Séries e filmes e Usuários", () => {
     expect(screen.getByText("Séries e filmes")).toBeTruthy();
     expect(screen.getByText("Usuários")).toBeTruthy();
     expect(suggestPeople).toHaveBeenCalledWith({ query: "ana" });
-    expect(screen.getAllByRole("button", { name: /^Ver tudo em/ })).toHaveLength(
-      2,
-    );
+    expect(
+      screen.getAllByRole("button", { name: /^Ver tudo em/ }),
+    ).toHaveLength(2);
   });
 
   it("escolher um usuário abre o perfil", async () => {
@@ -173,5 +179,64 @@ describe("SearchCombobox: seções Séries e filmes e Usuários", () => {
     expect(field.getAttribute("aria-expanded")).toBe("true");
     await userEvent.keyboard("{Escape}");
     expect(field.getAttribute("aria-expanded")).toBe("false");
+  });
+});
+
+describe("SearchCombobox: tela cheia no celular (#413)", () => {
+  const mobileScreen = { close: "Fechar a busca" };
+  const closeButton = () =>
+    screen.queryByRole("button", { name: "Fechar a busca" });
+
+  it("sem mobileScreen não há botão de fechar", async () => {
+    render(<SearchCombobox labels={labels} ariaLabel="Buscar" />);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(closeButton()).toBeNull();
+  });
+
+  it("ao focar mostra o X; ele fecha e apaga a busca", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    expect(closeButton()).toBeNull();
+    const field = screen.getByRole("combobox");
+    await userEvent.type(field, "ana");
+    await userEvent.click(closeButton()!);
+    expect(closeButton()).toBeNull();
+    expect((field as HTMLInputElement).value).toBe("");
+  });
+
+  it("Esc também fecha e apaga", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    const field = screen.getByRole("combobox");
+    await userEvent.type(field, "ana");
+    await userEvent.keyboard("{Escape}");
+    expect(closeButton()).toBeNull();
+    expect((field as HTMLInputElement).value).toBe("");
+  });
+
+  it("com a tela cheia aberta o gesto de rolar fora da lista é cancelado", async () => {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        mobileScreen={mobileScreen}
+      />,
+    );
+    // Fechada, a página rola normalmente.
+    expect(fireEvent.touchMove(document.body)).toBe(true);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(fireEvent.touchMove(document.body)).toBe(false);
+    await userEvent.click(closeButton()!);
+    expect(fireEvent.touchMove(document.body)).toBe(true);
   });
 });
