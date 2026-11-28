@@ -260,6 +260,13 @@
       "when": 1794965108733,
       "tag": "0036_curtidas_comentarios",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795841101060,
+      "tag": "0037_historico_buscas_recentes",
+      "breakpoints": true
     }
   ]
 }

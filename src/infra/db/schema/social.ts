@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   bigserial,
   boolean,
   check,
@@ -15,6 +16,10 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { DISCOVER_PREFERENCES_MAX_ITEMS } from "@/contracts/discover-preferences";
+import {
+  RECENT_SEARCH_TERM_MAX_LENGTH,
+  RECENT_SEARCH_TITLE_MAX_LENGTH,
+} from "@/contracts/recent-search";
 import { COMMENT_MAX_LENGTH, MODERATION_STATUSES } from "@/contracts/comment";
 import { authenticatedRole } from "drizzle-orm/supabase";
 import { episodes, seasons, titles } from "./catalog";
@@ -409,3 +414,82 @@ export const discoverPreferences = pgTable(
     ownRowsOnly("discover_preferences", t.userId),
   ],
 );
+
+// Buscas recentes de quem entrou na conta (#425): até 8 por pessoa (o gatilho
+// `recent_searches_trim` apaga o excedente, o mais antigo primeiro). Cada linha
+// é um termo buscado (`query`), um título aceito da sugestão (`title`, com o que
+// a lista mostra) ou uma pessoa aceita (`person`, só o `profile_id`: nome e
+// foto vêm do perfil atual, nunca de uma cópia). `dedupe_key` é calculada pelo
+// banco e decide a repetição: o termo sem diferenciar maiúsculas, o título pelo
+// tipo e id do provedor, a pessoa pelo perfil. Registrar de novo o mesmo item é
+// um upsert que o traz para o topo (`used_at`). Os limites de texto repetem
+// `src/contracts/recent-search.ts`. Morre em cascata com o perfil de quem
+// buscou e com o da pessoa buscada (ADR-003, seção 9). RLS: só o dono lê e
+// escreve as próprias linhas; quem filtra pessoa bloqueada na leitura é
+// `app.recent_searches` (migration 0037).
+export const recentSearches = pgTable(
+  "recent_searches",
+  {
+    id: bigint("id", { mode: "number" })
+      .primaryKey()
+      .generatedAlwaysAsIdentity(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    term: text("term"),
+    mediaType: text("media_type"),
+    externalId: text("external_id"),
+    title: text("title"),
+    year: text("year"),
+    posterPath: text("poster_path"),
+    profileId: uuid("profile_id").references(() => profiles.id, {
+      onDelete: "cascade",
+    }),
+    dedupeKey: text("dedupe_key").generatedAlwaysAs(
+      sql`case "kind" when 'query' then 'q:' || lower("term") when 'title' then 't:' || "media_type" || '-' || "external_id" else 'p:' || "profile_id"::text end`,
+    ),
+    // `clock_timestamp` (e não `now`) para dois registros na mesma transação
+    // terem horas diferentes.
+    usedAt: timestamp("used_at", { withTimezone: true })
+      .notNull()
+      .default(sql`clock_timestamp()`),
+  },
+  (t) => [
+    uniqueIndex("recent_searches_user_key_idx").on(t.userId, t.dedupeKey),
+    index("recent_searches_user_used_idx").on(t.userId, t.usedAt),
+    check(
+      "recent_searches_shape",
+      sql`(
+        ${t.kind} = 'query'
+          and ${t.term} is not null and ${t.mediaType} is null and ${t.externalId} is null
+          and ${t.title} is null and ${t.year} is null and ${t.posterPath} is null
+          and ${t.profileId} is null
+      ) or (
+        ${t.kind} = 'title'
+          and ${t.term} is null and ${t.mediaType} in ('movie', 'tv')
+          and ${t.externalId} is not null and ${t.title} is not null
+          and ${t.profileId} is null
+      ) or (
+        ${t.kind} = 'person'
+          and ${t.profileId} is not null and ${t.profileId} <> ${t.userId}
+          and ${t.term} is null and ${t.mediaType} is null and ${t.externalId} is null
+          and ${t.title} is null and ${t.year} is null and ${t.posterPath} is null
+      )`,
+    ),
+    check(
+      "recent_searches_term_format",
+      sql`${t.term} is null or (${t.term} = btrim(${t.term}) and char_length(${t.term}) between 1 and ${sql.raw(String(RECENT_SEARCH_TERM_MAX_LENGTH))})`,
+    ),
+    check(
+      "recent_searches_title_format",
+      sql`${t.kind} <> 'title' or (
+        ${t.externalId} ~ '^[1-9][0-9]{0,9}$'
+        and char_length(${t.title}) between 1 and ${sql.raw(String(RECENT_SEARCH_TITLE_MAX_LENGTH))}
+        and (${t.year} is null or ${t.year} ~ '^[0-9]{4}$')
+        and (${t.posterPath} is null or ${t.posterPath} ~ '^/[A-Za-z0-9_-]{1,100}\\.[A-Za-z0-9]{2,5}$')
+      )`,
+    ),
+    ownRowsOnly("recent_searches", t.userId),
+  ],
+).enableRLS();
