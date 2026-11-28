@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/app/_auth/session";
 import { Suspense } from "react";
 import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
 import { getSearchPeopleLabels } from "@/components/catalog/search-people-labels";
+import { getSearchRecentLabels } from "@/components/catalog/search-recent-labels";
 import { SearchStateFields } from "@/components/catalog/search-state-fields";
 import { SearchCombobox } from "@/components/catalog/search-combobox";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,7 @@ async function SearchField({
       required
       peopleLabels={signedIn ? await getSearchPeopleLabels() : undefined}
       mobileScreen={{ close: t("closeSearch") }}
+      recentLabels={await getSearchRecentLabels()}
       className="h-11 rounded-full pl-9 text-base"
       labels={{
         placeholder: t("placeholder"),

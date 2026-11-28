@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/app/_auth/session";
 import { getQuickAddLabels } from "@/components/catalog/quick-add-labels";
 import { getSearchPeopleLabels } from "@/components/catalog/search-people-labels";
+import { getSearchRecentLabels } from "@/components/catalog/search-recent-labels";
 import { HeaderSearchField } from "./header-search-field";
 
 // Campo do cabeçalho do desktop: sugestões enquanto digita e, ao enviar,
@@ -19,6 +20,7 @@ export async function HeaderSearch() {
       <HeaderSearchField
         ariaLabel={t("Search.headerLabel")}
         peopleLabels={signedIn ? await getSearchPeopleLabels() : undefined}
+        recentLabels={await getSearchRecentLabels()}
         labels={{
           placeholder: t("Search.headerPlaceholder"),
           clear: t("Search.clear"),

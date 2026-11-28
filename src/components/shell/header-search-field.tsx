@@ -7,6 +7,7 @@ import {
   SearchCombobox,
   type SearchComboboxLabels,
   type SearchPeopleLabels,
+  type SearchRecentLabels,
 } from "@/components/catalog/search-combobox";
 
 // Campo do cabeçalho. Em /buscar vem preenchido com o termo da URL (e a
@@ -17,10 +18,12 @@ export function HeaderSearchField({
   ariaLabel,
   labels,
   peopleLabels,
+  recentLabels,
 }: {
   ariaLabel: string;
   labels: SearchComboboxLabels;
   peopleLabels?: SearchPeopleLabels;
+  recentLabels?: SearchRecentLabels;
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
@@ -41,6 +44,7 @@ export function HeaderSearchField({
         listClassName="right-0 left-auto w-[22rem]"
         labels={labels}
         peopleLabels={peopleLabels}
+        recentLabels={recentLabels}
       />
     </>
   );
