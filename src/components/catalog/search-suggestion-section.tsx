@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 // Uma seção do menu de sugestões da busca (Séries e filmes, Usuários): título,
-// "Ver tudo ›" à direita, aviso opcional e a lista de opções (`li` do
+// "Ver tudo ›" (ou "Limpar", nas buscas recentes) à direita, aviso opcional e a lista de opções (`li` do
 // `SearchCombobox`, que cuida de clique, destaque e teclado).
 export function SearchSuggestionSection({
   heading,
@@ -13,6 +13,7 @@ export function SearchSuggestionSection({
   listId,
   listLabel,
   empty,
+  chevron = true,
   children,
   className,
 }: {
@@ -26,6 +27,9 @@ export function SearchSuggestionSection({
   listLabel: string;
   // Lista sem opções: fica escondida (só o título e o aviso aparecem).
   empty: boolean;
+  // Seta › depois do texto da ação ('Ver tudo ›'); as buscas recentes usam
+  // 'Limpar' sem ela.
+  chevron?: boolean;
   children: ReactNode;
   className?: string;
 }) {
@@ -42,7 +46,13 @@ export function SearchSuggestionSection({
             onClick={onSeeAll}
             className="cursor-pointer rounded-full px-1.5 py-0.5 text-xs text-sidebar-primary outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:py-2.5"
           >
-            {seeAllLabel} <span aria-hidden="true">›</span>
+            {seeAllLabel}
+            {chevron ? (
+              <>
+                {" "}
+                <span aria-hidden="true">›</span>
+              </>
+            ) : null}
           </button>
         ) : null}
       </div>

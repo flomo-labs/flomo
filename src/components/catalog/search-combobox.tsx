@@ -10,6 +10,7 @@ import {
   type QuickAddLabels,
 } from "@/components/catalog/quick-add-button";
 import { SearchPersonSuggestion } from "@/components/catalog/search-person-suggestion";
+import { SearchRecentItem } from "@/components/catalog/search-recent-item";
 import { SearchSuggestionSection } from "@/components/catalog/search-suggestion-section";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,15 @@ import {
   SUGGESTION_MIN_LENGTH,
   type Suggestion,
 } from "@/contracts/catalog";
+import {
+  addRecentSearch,
+  loadRecentSearches,
+  type RecentSearch,
+  recentKey,
+  recentName,
+  removeRecentSearch,
+  saveRecentSearches,
+} from "@/lib/recent-searches";
 import { nextSearchHref, searchHref } from "@/lib/search-url";
 import { titleRefPath } from "@/lib/title-paths";
 import { cn } from "@/lib/utils";
@@ -52,6 +62,17 @@ export type SearchPeopleLabels = {
 export type SearchMobileScreenLabels = {
   // Botão X à direita do campo: fecha a tela e apaga a busca.
   close: string;
+};
+
+// Textos das buscas recentes (campo vazio). Sem eles o recurso fica desligado.
+export type SearchRecentLabels = {
+  // Título da seção ("Buscas recentes") e nome da lista para leitores de tela.
+  heading: string;
+  // Botão que apaga todas ("Limpar") e seu nome acessível.
+  clear: string;
+  clearAria: string;
+  // "Remover “{term}” das buscas recentes" (nome acessível do "×" de cada item).
+  remove: string;
 };
 
 export type SearchComboboxLabels = {
@@ -91,6 +112,7 @@ export function SearchCombobox({
   ariaLabel,
   peopleLabels,
   mobileScreen,
+  recentLabels,
 }: {
   id?: string;
   defaultValue?: string;
@@ -106,6 +128,9 @@ export function SearchCombobox({
   // um X à direita do campo, e as sugestões viram a lista da própria
   // tela, que rola sozinha, em vez de um menu sobre a página (#413).
   mobileScreen?: SearchMobileScreenLabels;
+  // Liga as buscas recentes (#414): com o campo vazio o menu lista as últimas
+  // buscas guardadas neste aparelho.
+  recentLabels?: SearchRecentLabels;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -138,6 +163,10 @@ export function SearchCombobox({
   // Sugestões que já estão na biblioteca ("mediaType-externalId"). Vem de uma
   // consulta para a lista toda, depois das sugestões; sem login fica vazio.
   const [inLibrary, setInLibrary] = useState<ReadonlySet<string>>(new Set());
+  // Buscas recentes deste aparelho. Lidas ao focar o campo (e não na
+  // montagem) para o servidor e o navegador renderizarem o mesmo HTML e para
+  // valer o que outra aba ou o outro campo da página guardou.
+  const [recents, setRecents] = useState<RecentSearch[]>([]);
 
   const query = value.trim();
   // A resposta guardada só vale enquanto a pessoa continua na mesma busca
@@ -159,8 +188,15 @@ export function SearchCombobox({
       ? fetchedPeople.items
       : [];
 
-  // Opções navegáveis por setas: títulos e depois usuários, numa lista só.
-  const optionCount = items.length + people.length;
+  // Campo vazio: o menu mostra as buscas recentes no lugar das sugestões.
+  const showRecent =
+    Boolean(recentLabels) && query === "" && recents.length > 0;
+
+  // Opções navegáveis por setas: títulos e depois usuários, numa lista só (ou
+  // as buscas recentes, com o campo vazio).
+  const optionCount = showRecent
+    ? recents.length
+    : items.length + people.length;
   const hasOptions = optionCount > 0;
   // O destaque some se a lista encolheu por baixo dele (ex.: os usuários
   // sumiram enquanto a pessoa continua digitando).
@@ -169,9 +205,10 @@ export function SearchCombobox({
   // digitar, para mostrar as duas seções (e o aviso) mesmo sem título.
   const expanded =
     (open || screen) &&
-    (peopleLabels
-      ? typed && query.length >= SUGGESTION_MIN_LENGTH
-      : hasOptions);
+    (showRecent ||
+      (peopleLabels
+        ? typed && query.length >= SUGGESTION_MIN_LENGTH
+        : hasOptions));
   const titlesMessage = !peopleLabels
     ? null
     : titlesSettled && fetched.failed
@@ -343,6 +380,30 @@ export function SearchCombobox({
   }, [screen]);
 
   // Fecha a tela cheia e apaga o que foi digitado (como o X do iOS).
+  function refreshRecents() {
+    if (recentLabels) setRecents(loadRecentSearches());
+  }
+
+  // Guarda o que acabou de ser feito: um termo buscado ou uma sugestão aceita
+  // (lê o armazenamento de novo: outra aba pode ter mudado a lista).
+  function remember(item: RecentSearch) {
+    if (!recentLabels) return;
+    const next = addRecentSearch(loadRecentSearches(), item);
+    saveRecentSearches(next);
+    setRecents(next);
+  }
+
+  function forget(item: RecentSearch) {
+    const next = removeRecentSearch(loadRecentSearches(), item);
+    saveRecentSearches(next);
+    setRecents(next);
+  }
+
+  function forgetAll() {
+    saveRecentSearches([]);
+    setRecents([]);
+  }
+
   function closeScreen() {
     setValue("");
     setTyped(false);
@@ -354,7 +415,8 @@ export function SearchCombobox({
 
   function clear() {
     setValue("");
-    setOpen(false);
+    refreshRecents();
+    setOpen(true);
     setActive(-1);
     input.current?.focus();
   }
@@ -362,31 +424,60 @@ export function SearchCombobox({
   // "Ver tudo" de Séries e filmes e Enter sem escolher: com a seção Usuários
   // abre a Buscar em Tudo (o filtro Tudo/Séries/Filmes é da tela de
   // resultados); sem ela, a busca herda a aba e o filtro da URL.
-  function openTitlesSearch() {
+  function openTitlesSearch(term = query) {
     setOpen(false);
     setEngaged(false);
+    remember({ kind: "query", term });
     router.push(
       peopleLabels
-        ? searchHref({ query })
-        : nextSearchHref(query, pathname, searchParams),
+        ? searchHref({ query: term })
+        : nextSearchHref(term, pathname, searchParams),
+    );
+  }
+
+  // Clicar numa recente: um termo preenche o campo e executa a busca; um
+  // título ou usuário aceito abre direto, e sobe para o topo da lista.
+  function openRecent(item: RecentSearch) {
+    if (item.kind === "query") {
+      setValue(item.term);
+      return openTitlesSearch(item.term);
+    }
+    setOpen(false);
+    setEngaged(false);
+    remember(item);
+    router.push(
+      item.kind === "title" ? titleRefPath(item) : `/@${item.handle}`,
     );
   }
 
   function openPeopleSearch() {
     setOpen(false);
     setEngaged(false);
+    remember({ kind: "query", term: query });
     router.push(searchHref({ query, people: true }));
   }
 
   function openSuggestion(index: number) {
     if (index >= optionCount) return;
+    if (showRecent) return openRecent(recents[index]);
     setOpen(false);
     setEngaged(false);
-    router.push(
-      index < items.length
-        ? titleRefPath(items[index])
-        : `/@${people[index - items.length].handle}`,
-    );
+    if (index < items.length) {
+      const { mediaType, externalId, title, year, posterPath } = items[index];
+      remember({
+        kind: "title",
+        mediaType,
+        externalId,
+        title,
+        year,
+        posterPath,
+      });
+      router.push(titleRefPath(items[index]));
+    } else {
+      const { handle, displayName } = people[index - items.length];
+      remember({ kind: "person", handle, displayName });
+      router.push(`/@${handle}`);
+    }
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -401,6 +492,16 @@ export function SearchCombobox({
     ) {
       event.preventDefault();
       return openTitlesSearch();
+    }
+    // Visitante: o formulário envia a busca sozinho; só guarda o termo.
+    if (
+      !peopleLabels &&
+      event.key === "Enter" &&
+      !event.nativeEvent.isComposing &&
+      (!expanded || active < 0) &&
+      query
+    ) {
+      remember({ kind: "query", term: query });
     }
     if (screen && event.key === "Escape") {
       event.preventDefault();
@@ -430,6 +531,7 @@ export function SearchCombobox({
   const optionId = (index: number) => `${listId}-${index}`;
   const titlesListId = `${listId}-titulos`;
   const peopleListId = `${listId}-usuarios`;
+  const recentListId = `${listId}-recentes`;
   const optionClass = (index: number) =>
     cn(
       "flex cursor-pointer items-center gap-3 rounded-xl p-1.5",
@@ -469,7 +571,11 @@ export function SearchCombobox({
             role="combobox"
             aria-expanded={expanded}
             aria-controls={
-              peopleLabels ? `${titlesListId} ${peopleListId}` : titlesListId
+              showRecent
+                ? recentListId
+                : peopleLabels
+                  ? `${titlesListId} ${peopleListId}`
+                  : titlesListId
             }
             aria-autocomplete="list"
             aria-activedescendant={
@@ -487,9 +593,11 @@ export function SearchCombobox({
             // Também ao tocar: se o campo seguiu focado depois de fechar (ex.:
             // Enter sem a URL mudar), não há novo "focus" para reabrir.
             onClick={() => {
+              refreshRecents();
               if (mobileScreen) setEngaged(true);
             }}
             onFocus={() => {
+              refreshRecents();
               setOpen(true);
               if (mobileScreen) setEngaged(true);
             }}
@@ -542,76 +650,55 @@ export function SearchCombobox({
           listClassName,
         )}
       >
-        <SearchSuggestionSection
-          heading={labels.titlesHeading}
-          seeAllLabel={labels.seeAllShort}
-          seeAllAriaLabel={labels.seeAll.replace("{query}", () => query)}
-          onSeeAll={openTitlesSearch}
-          message={titlesMessage}
-          listId={titlesListId}
-          listLabel={labels.suggestions}
-          empty={items.length === 0}
-        >
-          {items.map((item, index) => (
-            <li
-              key={`${item.mediaType}-${item.externalId}`}
-              id={optionId(index)}
-              role="option"
-              aria-selected={active === index}
-              onMouseEnter={() => setActive(index)}
-              onClick={() => openSuggestion(index)}
-              className={optionClass(index)}
-            >
-              <Poster
-                path={item.posterPath}
-                size="w92"
-                alt=""
-                className="w-8 shrink-0 sm:w-10"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="line-clamp-1 text-sm font-semibold break-words">
-                  {item.title}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {item.mediaType === "movie" ? labels.movie : labels.tv}
-                  {item.year ? ` · ${item.year}` : ""}
-                </div>
-              </div>
-              <QuickAddButton
-                target={{
-                  mediaType: item.mediaType,
-                  externalId: item.externalId,
-                }}
-                title={item.title}
-                inLibrary={inLibrary.has(
-                  `${item.mediaType}-${item.externalId}`,
-                )}
-                labels={labels.quickAdd}
-                className="mr-1 shrink-0"
-              />
-            </li>
-          ))}
-        </SearchSuggestionSection>
-        {peopleLabels ? (
+        {showRecent && recentLabels ? (
           <SearchSuggestionSection
-            heading={peopleLabels.heading}
-            seeAllLabel={labels.seeAllShort}
-            seeAllAriaLabel={peopleLabels.seeAll.replace(
-              "{query}",
-              () => personTerm,
-            )}
-            // Com menos de 3 letras a busca de usuários não roda: sem "Ver tudo".
-            onSeeAll={peopleTooShort ? undefined : openPeopleSearch}
-            message={peopleMessage}
-            listId={peopleListId}
-            listLabel={peopleLabels.suggestions}
-            empty={people.length === 0}
+            heading={recentLabels.heading}
+            seeAllLabel={recentLabels.clear}
+            seeAllAriaLabel={recentLabels.clearAria}
+            onSeeAll={forgetAll}
+            chevron={false}
+            message={null}
+            listId={recentListId}
+            listLabel={recentLabels.heading}
+            empty={false}
           >
-            {people.map((person, i) => {
-              const index = items.length + i;
-              return (
+            {recents.map((item, index) => (
+              <li
+                key={recentKey(item)}
+                id={optionId(index)}
+                role="option"
+                aria-selected={active === index}
+                onMouseEnter={() => setActive(index)}
+                onClick={() => openSuggestion(index)}
+                className={optionClass(index)}
+              >
+                <SearchRecentItem
+                  item={item}
+                  labels={labels}
+                  removeLabel={recentLabels.remove.replace("{term}", () =>
+                    recentName(item),
+                  )}
+                  onRemove={() => forget(item)}
+                />
+              </li>
+            ))}
+          </SearchSuggestionSection>
+        ) : null}
+        {showRecent ? null : (
+          <>
+            <SearchSuggestionSection
+              heading={labels.titlesHeading}
+              seeAllLabel={labels.seeAllShort}
+              seeAllAriaLabel={labels.seeAll.replace("{query}", () => query)}
+              onSeeAll={() => openTitlesSearch()}
+              message={titlesMessage}
+              listId={titlesListId}
+              listLabel={labels.suggestions}
+              empty={items.length === 0}
+            >
+              {items.map((item, index) => (
                 <li
-                  key={person.handle}
+                  key={`${item.mediaType}-${item.externalId}`}
                   id={optionId(index)}
                   role="option"
                   aria-selected={active === index}
@@ -619,15 +706,74 @@ export function SearchCombobox({
                   onClick={() => openSuggestion(index)}
                   className={optionClass(index)}
                 >
-                  <SearchPersonSuggestion
-                    handle={person.handle}
-                    displayName={person.displayName}
+                  <Poster
+                    path={item.posterPath}
+                    size="w92"
+                    alt=""
+                    className="w-8 shrink-0 sm:w-10"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="line-clamp-1 text-sm font-semibold break-words">
+                      {item.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {item.mediaType === "movie" ? labels.movie : labels.tv}
+                      {item.year ? ` · ${item.year}` : ""}
+                    </div>
+                  </div>
+                  <QuickAddButton
+                    target={{
+                      mediaType: item.mediaType,
+                      externalId: item.externalId,
+                    }}
+                    title={item.title}
+                    inLibrary={inLibrary.has(
+                      `${item.mediaType}-${item.externalId}`,
+                    )}
+                    labels={labels.quickAdd}
+                    className="mr-1 shrink-0"
                   />
                 </li>
-              );
-            })}
-          </SearchSuggestionSection>
-        ) : null}
+              ))}
+            </SearchSuggestionSection>
+            {peopleLabels ? (
+              <SearchSuggestionSection
+                heading={peopleLabels.heading}
+                seeAllLabel={labels.seeAllShort}
+                seeAllAriaLabel={peopleLabels.seeAll.replace(
+                  "{query}",
+                  () => personTerm,
+                )}
+                // Com menos de 3 letras a busca de usuários não roda: sem "Ver tudo".
+                onSeeAll={peopleTooShort ? undefined : openPeopleSearch}
+                message={peopleMessage}
+                listId={peopleListId}
+                listLabel={peopleLabels.suggestions}
+                empty={people.length === 0}
+              >
+                {people.map((person, i) => {
+                  const index = items.length + i;
+                  return (
+                    <li
+                      key={person.handle}
+                      id={optionId(index)}
+                      role="option"
+                      aria-selected={active === index}
+                      onMouseEnter={() => setActive(index)}
+                      onClick={() => openSuggestion(index)}
+                      className={optionClass(index)}
+                    >
+                      <SearchPersonSuggestion
+                        handle={person.handle}
+                        displayName={person.displayName}
+                      />
+                    </li>
+                  );
+                })}
+              </SearchSuggestionSection>
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );

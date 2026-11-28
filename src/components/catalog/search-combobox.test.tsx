@@ -240,3 +240,153 @@ describe("SearchCombobox: tela cheia no celular (#413)", () => {
     expect(fireEvent.touchMove(document.body)).toBe(true);
   });
 });
+
+describe("SearchCombobox: buscas recentes (#414)", () => {
+  const recentLabels = {
+    heading: "Buscas recentes",
+    clear: "Limpar",
+    clearAria: "Limpar as buscas recentes",
+    remove: "Remover “{term}” das buscas recentes",
+  };
+  const KEY = "flomo:buscas-recentes";
+  const q = (term: string) => ({ kind: "query", term });
+  const stored = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
+  function renderRecent(props: { signedIn?: boolean } = {}) {
+    render(
+      <SearchCombobox
+        labels={labels}
+        ariaLabel="Buscar"
+        recentLabels={recentLabels}
+        peopleLabels={props.signedIn ? peopleLabels : undefined}
+      />,
+    );
+    return screen.getByRole("combobox");
+  }
+  beforeEach(() => localStorage.clear());
+
+  it("campo vazio e em foco lista as recentes, da mais nova para a mais antiga", async () => {
+    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    const field = renderRecent();
+    await userEvent.click(field);
+    const options = screen.getAllByRole("option");
+    expect(options.map((o) => o.textContent)).toEqual(["dark", "the bear"]);
+    expect(field.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("não abre sem histórico nem sem recentLabels", async () => {
+    const field = renderRecent();
+    await userEvent.click(field);
+    expect(field.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("somem ao digitar", async () => {
+    localStorage.setItem(KEY, JSON.stringify([q("dark")]));
+    const field = renderRecent();
+    await userEvent.click(field);
+    await userEvent.type(field, "x");
+    expect(screen.queryByText("Buscas recentes")).toBeNull();
+  });
+
+  it("clicar num item preenche o campo, busca e sobe o termo", async () => {
+    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    const field = renderRecent();
+    await userEvent.click(field);
+    await userEvent.click(screen.getByText("the bear"));
+    expect((field as HTMLInputElement).value).toBe("the bear");
+    expect(push).toHaveBeenCalledWith(expect.stringContaining("q=the+bear"));
+    expect(stored()).toEqual([q("the bear"), q("dark")]);
+  });
+
+  it("o × remove só o item, sem buscar", async () => {
+    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    await userEvent.click(renderRecent());
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "Remover “dark” das buscas recentes",
+      }),
+    );
+    expect(push).not.toHaveBeenCalled();
+    expect(stored()).toEqual([q("the bear")]);
+  });
+
+  it("Limpar apaga todas", async () => {
+    localStorage.setItem(KEY, JSON.stringify([q("dark"), q("the bear")]));
+    await userEvent.click(renderRecent());
+    await userEvent.click(
+      screen.getByRole("button", { name: "Limpar as buscas recentes" }),
+    );
+    expect(stored()).toBeNull();
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+  });
+
+  it("Enter guarda o termo (logado), no máximo 8 sem repetir", async () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify(Array.from({ length: 8 }, (_, i) => q(`t${i}`))),
+    );
+    const field = renderRecent({ signedIn: true });
+    await userEvent.type(field, "Dark{Enter}");
+    const list = stored();
+    expect(list).toHaveLength(8);
+    expect(list[0]).toEqual(q("Dark"));
+  });
+
+  it("visitante: Enter guarda o termo e o formulário segue", async () => {
+    const field = renderRecent();
+    await userEvent.type(field, "severance{Enter}");
+    expect(stored()).toEqual([q("severance")]);
+  });
+
+  it("usuário aceito vai para as recentes e reabre pelo perfil", async () => {
+    mockPeople([ana]);
+    const field = renderRecent({ signedIn: true });
+    await userEvent.type(field, "ana");
+    await userEvent.click(await screen.findByText("Ana Souza"));
+    expect(stored()).toEqual([
+      { kind: "person", handle: "ana", displayName: "Ana Souza" },
+    ]);
+    push.mockReset();
+    await userEvent.clear(field);
+    await userEvent.click(field);
+    expect(screen.getByText("@ana")).toBeTruthy();
+    await userEvent.click(screen.getByText("Ana Souza"));
+    expect(push).toHaveBeenCalledWith("/@ana");
+  });
+
+  it("título aceito aparece com nome e tipo · ano e abre o título", async () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify([
+        {
+          kind: "title",
+          mediaType: "tv",
+          externalId: "70523",
+          title: "Dark",
+          year: "2017",
+          posterPath: null,
+        },
+      ]),
+    );
+    await userEvent.click(renderRecent());
+    expect(screen.getByText("Série · 2017")).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: "Remover “Dark” das buscas recentes",
+      }),
+    ).toBeTruthy();
+    await userEvent.click(screen.getByText("Dark"));
+    expect(push).toHaveBeenCalledWith("/titulo/ref/serie/70523");
+  });
+
+  it("localStorage indisponível não quebra", async () => {
+    const spy = vi
+      .spyOn(Storage.prototype, "getItem")
+      .mockImplementation(() => {
+        throw new Error("bloqueado");
+      });
+    const field = renderRecent();
+    await userEvent.click(field);
+    expect(field.getAttribute("aria-expanded")).toBe("false");
+    spy.mockRestore();
+  });
+});
