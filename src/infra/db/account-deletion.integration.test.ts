@@ -15,6 +15,7 @@ import {
   episodes,
   follows,
   ratings,
+  recentSearches,
   seasons,
   titles,
   userEpisodeProgress,
@@ -137,6 +138,18 @@ async function blockEachOther(tx: Tx, a: string, b: string) {
   );
 }
 
+// Cada par (a, b) é "a buscou b" no histórico de buscas recentes: cobre as duas
+// colunas de `recent_searches` (quem buscou e a pessoa buscada).
+async function searchedPeople(tx: Tx, pairs: [string, string][]) {
+  for (const [searcher, searched] of pairs) {
+    await asUser(tx, searcher, (utx) =>
+      utx
+        .insert(recentSearches)
+        .values({ userId: searcher, kind: "person", profileId: searched }),
+    );
+  }
+}
+
 async function countsByTable(tx: Tx, columns: UserColumn[], userId: string) {
   const counts: Record<string, number> = {};
   for (const col of columns) {
@@ -170,6 +183,14 @@ describe("exclusão de conta", () => {
       const blocked = await createUser(tx);
       await blockEachOther(tx, owner, blocked);
       await blockEachOther(tx, other, blocked);
+      // Buscas recentes: o dono busca o outro e vice-versa; o outro e uma
+      // terceira pessoa também se buscam, para sobrar linha dele depois.
+      await searchedPeople(tx, [
+        [owner, other],
+        [other, owner],
+        [other, bystander],
+        [bystander, other],
+      ]);
       const columns = await userColumns(tx);
 
       // O preparo cobre todas as tabelas: sem isso, "zero depois" não prova
