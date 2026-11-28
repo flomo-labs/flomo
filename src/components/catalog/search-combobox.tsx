@@ -387,7 +387,7 @@ export function SearchCombobox({
 
   // Relê as recentes, só com o campo vazio (digitando a lista não aparece).
   function refreshRecents() {
-    if (!typed && value === "") loadRecents();
+    if (value === "") loadRecents();
   }
 
   // Fecha a tela cheia e apaga o que foi digitado (como o X do iOS).
@@ -402,8 +402,12 @@ export function SearchCombobox({
 
   function clear() {
     setValue("");
-    loadRecents();
-    setOpen(true);
+    if (recentLabels) {
+      loadRecents();
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
     setActive(-1);
     input.current?.focus();
   }
@@ -574,6 +578,9 @@ export function SearchCombobox({
             value={value}
             onChange={(event) => {
               setValue(event.target.value);
+              // Texto novo, lista nova: o destaque anterior não vale mais (senão o
+              // Enter abriria a sugestão que ficou marcada em vez de buscar).
+              setActive(-1);
               setTyped(true);
               setOpen(true);
             }}
@@ -630,6 +637,9 @@ export function SearchCombobox({
         hidden={!expanded}
         // Mantém o foco no campo ao clicar numa sugestão ou em "Ver tudo".
         onMouseDown={(event) => event.preventDefault()}
+        // O destaque do mouse só vale enquanto o mouse está sobre a lista: ao
+        // sair, o Enter volta a buscar o que foi digitado.
+        onMouseLeave={() => setActive(-1)}
         className={cn(
           "absolute top-full z-50 mt-2 w-full min-w-0 sm:min-w-72 overflow-hidden rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
           screen &&

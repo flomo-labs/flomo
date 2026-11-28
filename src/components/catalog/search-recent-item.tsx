@@ -30,14 +30,12 @@ export function SearchRecentItem({
           <span className="min-w-0 flex-1 truncate text-sm">{item.term}</span>
         </>
       ) : item.kind === "title" ? (
-        <>
-          <SearchTitleSuggestion
-            title={item.title}
-            posterPath={item.posterPath}
-            kindLabel={item.mediaType === "movie" ? labels.movie : labels.tv}
-            year={item.year}
-          />
-        </>
+        <SearchTitleSuggestion
+          title={item.title}
+          posterPath={item.posterPath}
+          kindLabel={item.mediaType === "movie" ? labels.movie : labels.tv}
+          year={item.year}
+        />
       ) : (
         <SearchPersonSuggestion
           handle={item.handle}

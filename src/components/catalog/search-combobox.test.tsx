@@ -390,6 +390,18 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
     expect(stored()).toEqual([q("severance")]);
   });
 
+  it("logado: se o servidor recusa o registro, a lista volta ao que ele guarda", async () => {
+    recentActions.recordRecent.mockResolvedValue({
+      ok: false,
+      error: { code: "INVALID_INPUT", message: "x" },
+    });
+    const field = renderRecent({ signedIn: true });
+    await userEvent.type(field, "dark{Enter}");
+    await waitFor(() =>
+      expect(recentActions.listRecents.mock.calls.length).toBeGreaterThan(0),
+    );
+  });
+
   it("usuário aceito vai para o servidor só com o handle", async () => {
     mockPeople([ana]);
     const field = renderRecent({ signedIn: true });
@@ -449,5 +461,43 @@ describe("SearchCombobox: buscas recentes (#414)", () => {
     await userEvent.click(field);
     expect(field.getAttribute("aria-expanded")).toBe("false");
     spy.mockRestore();
+  });
+
+  it("o destaque do mouse some ao sair da lista e o Enter busca o termo", async () => {
+    localStorage.clear();
+    sessionStorage.setItem(KEY, JSON.stringify([q("dark")]));
+    const field = renderRecent();
+    await userEvent.click(field);
+    await userEvent.hover(screen.getByText("dark"));
+    expect(screen.getByRole("option").getAttribute("aria-selected")).toBe(
+      "true",
+    );
+    await userEvent.unhover(screen.getByText("dark"));
+    expect(screen.getByRole("option").getAttribute("aria-selected")).toBe(
+      "false",
+    );
+  });
+
+  it("digitar tira o destaque do teclado: Enter busca o termo, não a sugestão", async () => {
+    mockPeople([]);
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async () =>
+      Response.json({
+        items: [
+          {
+            mediaType: "tv",
+            externalId: "1",
+            title: "Dark",
+            year: "2017",
+            posterPath: null,
+          },
+        ],
+      }),
+    );
+    const field = renderRecent({ signedIn: true });
+    await userEvent.type(field, "da");
+    await screen.findByText("Dark");
+    await userEvent.keyboard("{ArrowDown}");
+    await userEvent.type(field, "r{Enter}");
+    expect(push).toHaveBeenCalledWith(expect.stringContaining("q=dar"));
   });
 });

@@ -139,8 +139,3 @@ export function saveRecentSearches(list: readonly RecentSearch[]): void {
     // Sem armazenamento: o histórico só não persiste.
   }
 }
-
-// Ao sair da conta o histórico da visita some junto.
-export function clearRecentSearches(): void {
-  saveRecentSearches([]);
-}

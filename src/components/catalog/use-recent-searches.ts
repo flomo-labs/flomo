@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   clearRecents,
   listRecents,
@@ -50,18 +50,43 @@ export function useRecentSearches({
   signedIn: boolean;
 }) {
   const [recents, setRecents] = useState<RecentSearch[]>([]);
+  // Conta as mudanças locais: uma leitura que começou antes de uma mudança é
+  // descartada, para não trazer de volta o que a pessoa acabou de remover.
+  const version = useRef(0);
+  const loading = useRef(false);
 
   // Relê a lista (outra aba, o outro campo da página ou outro aparelho podem
   // ter mudado).
   const refresh = useCallback(() => {
     if (!enabled) return;
     if (!signedIn) return setRecents(loadRecentSearches());
+    // Uma leitura por vez (foco e clique chegam juntos).
+    if (loading.current) return;
+    loading.current = true;
+    const started = version.current;
     listRecents()
       .then((result) => {
-        if (result.ok) setRecents(result.value.items);
+        if (result.ok && version.current === started) {
+          setRecents(result.value.items);
+        }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        loading.current = false;
+      });
   }, [enabled, signedIn]);
+
+  // Se o servidor recusou uma mudança, volta ao que ele guarda.
+  const settle = useCallback(
+    (call: Promise<{ ok: boolean }>) => {
+      call
+        .then((result) => {
+          if (!result.ok) refresh();
+        })
+        .catch(() => refresh());
+    },
+    [refresh],
+  );
 
   const remember = useCallback(
     (item: RecentSearch) => {
@@ -71,10 +96,11 @@ export function useRecentSearches({
         saveRecentSearches(next);
         return setRecents(next);
       }
+      version.current += 1;
       setRecents((current) => addRecentSearch(current, item));
-      recordRecent(recordInput(item)).catch(() => {});
+      settle(recordRecent(recordInput(item)));
     },
-    [enabled, signedIn],
+    [enabled, signedIn, settle],
   );
 
   const forget = useCallback(
@@ -84,17 +110,19 @@ export function useRecentSearches({
         saveRecentSearches(next);
         return setRecents(next);
       }
+      version.current += 1;
       setRecents((current) => removeRecentSearch(current, item));
-      removeRecent(keyOf(item)).catch(() => {});
+      settle(removeRecent(keyOf(item)));
     },
-    [signedIn],
+    [signedIn, settle],
   );
 
   const forgetAll = useCallback(() => {
+    version.current += 1;
     setRecents([]);
-    if (signedIn) clearRecents().catch(() => {});
+    if (signedIn) settle(clearRecents());
     else saveRecentSearches([]);
-  }, [signedIn]);
+  }, [signedIn, settle]);
 
   return { recents, refresh, remember, forget, forgetAll };
 }
